@@ -14,6 +14,7 @@ import java.io.UnsupportedEncodingException;
 
 import org.cyberneko.html.HTMLConfiguration;
 import org.cyberneko.html.HTMLElements;
+import org.cyberneko.html.HTMLEntities;
 import org.cyberneko.html.filters.DefaultFilter;
 
 import org.apache.xerces.util.XMLAttributesImpl;
@@ -224,7 +225,7 @@ public class Writer
         fElementDepth--;
         fNormalize = true;
         /***
-        // NOTE: Not sure if this is waht should be done in the case where
+        // NOTE: Not sure if this is what should be done in the case where
         //       the encoding is not explitly declared within the HEAD. So
         //       I'm leaving it commented out for now. -Ac
         if (element.rawname.equalsIgnoreCase("head") && !fSeenHttpEquiv) {
@@ -247,6 +248,21 @@ public class Writer
     public void startGeneralEntity(String name, XMLResourceIdentifier id, String encoding, Augmentations augs)
         throws XNIException {
         fPrintChars = false;
+        if (name.startsWith("#")) {
+            try {
+                boolean hex = name.startsWith("#x");
+                int offset = hex ? 2 : 1;
+                int base = hex ? 16 : 10;
+                int value = Integer.parseInt(name.substring(offset), base);
+                String entity = HTMLEntities.get(value);
+                if (entity != null) {
+                    name = entity;
+                }
+            }
+            catch (NumberFormatException e) {
+                // ignore
+            }
+        }
         printEntity(name);
         super.startGeneralEntity(name, id, encoding, augs);
     } // startGeneralEntity(String,XMLResourceIdentifier,String,Augmentations)
@@ -283,7 +299,7 @@ public class Writer
             for (int i = 0; i < text.length; i++) {
                 char c = text.ch[text.offset + i];
                 if (c != '\n') {
-                    String entity = entity(c);
+                    String entity = HTMLEntities.get(c);
                     if (entity != null) {
                         printEntity(entity);
                     }
@@ -383,31 +399,6 @@ public class Writer
         fPrinter.flush();
     } // printEntity(String)
 
-    //
-    // Private static methods
-    //
-
-    // NOTE: These methods are private because I have every intention
-    //       of removing them later to be replaced with something that
-    //       is designed better. -Ac
-
-    /** Returns the name of the entity for the specified character. */
-    private static String entity(char c) {
-        switch (c) {
-            case 0x0026: return "amp";
-            case 0x003c: return "lt";
-            case 0x00a0: return "nbsp";
-            case 0x00a9: return "copy";
-            case 0x00ae: return "reg";
-            case 0x2014: return "mdash";
-            case 0x00a7: return "sect";
-            case 0x00b7: return "middot";
-            case 0x00e9: return "eacute";
-            case 0x003e: return "gt";
-        }
-        return null;
-    } // entity(char):String
-    
     //
     // MAIN
     //

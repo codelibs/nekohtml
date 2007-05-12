@@ -1125,6 +1125,10 @@ public class HTMLScanner
             }
             return str.toString();
         }
+        else {
+            fCurrentEntity.offset--;
+            fCurrentEntity.columnNumber--;
+        }
         return null;
     } // scanLiteral():String
 
@@ -1192,12 +1196,10 @@ public class HTMLScanner
                 str.append(';');
                 break;
             }
-            if (!Character.isLetterOrDigit((char)c) && c != '#') {
+            if (c == -1) {
                 if (fReportErrors) {
                     fErrorReporter.reportWarning("HTML1004", null);
                 }
-                fCurrentEntity.offset--;
-                fCurrentEntity.columnNumber--;
                 if (content && fDocumentHandler != null && fElementCount >= fElementDepth) {
                     fEndLineNumber = fCurrentEntity.lineNumber;
                     fEndColumnNumber = fCurrentEntity.columnNumber;
@@ -1205,10 +1207,12 @@ public class HTMLScanner
                 }
                 return -1;
             }
-            if (c == -1) {
+            if (!Character.isLetterOrDigit((char)c) && c != '#') {
                 if (fReportErrors) {
                     fErrorReporter.reportWarning("HTML1004", null);
                 }
+                fCurrentEntity.offset--;
+                fCurrentEntity.columnNumber--;
                 if (content && fDocumentHandler != null && fElementCount >= fElementDepth) {
                     fEndLineNumber = fCurrentEntity.lineNumber;
                     fEndColumnNumber = fCurrentEntity.columnNumber;

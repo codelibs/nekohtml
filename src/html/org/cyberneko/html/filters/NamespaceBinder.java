@@ -522,7 +522,7 @@ public class NamespaceBinder
      * <code>NamespaceContext</code> interface methods so that it can
      * be used across all versions of Xerces2.
      */
-    static class NamespaceSupport
+    public static class NamespaceSupport
         implements NamespaceContext {
 
         //
