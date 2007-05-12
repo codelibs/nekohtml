@@ -121,7 +121,19 @@ public class HTMLScanner
      * Strip HTML comment delimiters ("&lt;!--" and "--&gt;") from SCRIPT
      * tag contents.
      */
-    public static final String STRIP_COMMENT_DELIMITERS = "http://cyberneko.org/html/features/scanner/script/strip-comment-delims";
+    public static final String SCRIPT_STRIP_COMMENT_DELIMS = "http://cyberneko.org/html/features/scanner/script/strip-comment-delims";
+
+    /** 
+     * Strip HTML comment delimiters ("&lt;!--" and "--&gt;") from STYLE
+     * tag contents.
+     */
+    public static final String STYLE_STRIP_COMMENT_DELIMS = "http://cyberneko.org/html/features/scanner/style/strip-comment-delims";
+
+    /**
+     * Ignore specified charset found in the &lt;meta equiv='Content-Type'
+     * content='text/html;charset=...'&gt; tag.
+     */
+    public static final String IGNORE_SPECIFIED_CHARSET = "http://cyberneko.org/html/features/scanner/ignore-specified-charset";
 
     /** Recognized features. */
     private static final String[] RECOGNIZED_FEATURES = {
@@ -130,13 +142,17 @@ public class HTMLScanner
         NOTIFY_CHAR_REFS,
         NOTIFY_XML_BUILTIN_REFS,
         NOTIFY_HTML_BUILTIN_REFS,
-        STRIP_COMMENT_DELIMITERS,
+        SCRIPT_STRIP_COMMENT_DELIMS,
+        STYLE_STRIP_COMMENT_DELIMS,
+        IGNORE_SPECIFIED_CHARSET,
     };
 
     /** Recognized features defaults. */
     private static final Boolean[] RECOGNIZED_FEATURES_DEFAULTS = {
         null,
         null,
+        Boolean.FALSE,
+        Boolean.FALSE,
         Boolean.FALSE,
         Boolean.FALSE,
         Boolean.FALSE,
@@ -244,8 +260,14 @@ public class HTMLScanner
     /** Notify HTML built-in general entity references. */
     protected boolean fNotifyHtmlBuiltinRefs;
 
-    /** Strip comment delimiters. */
-    protected boolean fStripCommentDelims;
+    /** Strip comment delimiters from SCRIPT tags. */
+    protected boolean fScriptStripCommentDelims;
+
+    /** Strip comment delimiters from STYLE tags. */
+    protected boolean fStyleStripCommentDelims;
+
+    /** Ignore specified character set. */
+    protected boolean fIgnoreSpecifiedCharset;
 
     // properties
 
@@ -510,7 +532,9 @@ public class HTMLScanner
         fNotifyCharRefs = manager.getFeature(NOTIFY_CHAR_REFS);
         fNotifyXmlBuiltinRefs = manager.getFeature(NOTIFY_XML_BUILTIN_REFS);
         fNotifyHtmlBuiltinRefs = manager.getFeature(NOTIFY_HTML_BUILTIN_REFS);
-        fStripCommentDelims = manager.getFeature(STRIP_COMMENT_DELIMITERS);
+        fScriptStripCommentDelims = manager.getFeature(SCRIPT_STRIP_COMMENT_DELIMS);
+        fStyleStripCommentDelims = manager.getFeature(STYLE_STRIP_COMMENT_DELIMS);
+        fIgnoreSpecifiedCharset = manager.getFeature(IGNORE_SPECIFIED_CHARSET);
 
         // get properties
         fNamesElems = getNamesValue(String.valueOf(manager.getProperty(NAMES_ELEMS)));
@@ -524,9 +548,29 @@ public class HTMLScanner
     public void setFeature(String featureId, boolean state)
         throws XMLConfigurationException {
 
-        if (featureId.equals(AUGMENTATIONS)) {
-            fAugmentations = state;
-            return;
+        if (featureId.equals(AUGMENTATIONS)) { 
+            fAugmentations = state; 
+        }
+        else if (featureId.equals(IGNORE_SPECIFIED_CHARSET)) { 
+            fIgnoreSpecifiedCharset = state; 
+        }
+        else if (featureId.equals(NOTIFY_CHAR_REFS)) { 
+            fNotifyCharRefs = state; 
+        }
+        else if (featureId.equals(NOTIFY_XML_BUILTIN_REFS)) { 
+            fNotifyXmlBuiltinRefs = state; 
+        }
+        else if (featureId.equals(NOTIFY_HTML_BUILTIN_REFS)) { 
+            fNotifyHtmlBuiltinRefs = state; 
+        }
+        else if (featureId.equals(SCRIPT_STRIP_COMMENT_DELIMS)) { 
+            fScriptStripCommentDelims = state; 
+        }
+        else if (featureId.equals(STYLE_STRIP_COMMENT_DELIMS)) { 
+            fStyleStripCommentDelims = state; 
+        }
+        else if (featureId.equals(IGNORE_SPECIFIED_CHARSET)) { 
+            fIgnoreSpecifiedCharset = state; 
         }
 
     } // setFeature(String,boolean)
@@ -1261,6 +1305,11 @@ public class HTMLScanner
 
     /** Skips newlines and returns the number of newlines skipped. */
     protected int skipNewlines() throws IOException {
+        return skipNewlines(Integer.MAX_VALUE);
+    } // skipNewlines():int
+
+    /** Skips newlines and returns the number of newlines skipped. */
+    protected int skipNewlines(int maxlines) throws IOException {
         if (DEBUG_BUFFER) {
             System.out.print("(skipNewlines: ");
             printBuffer();
@@ -1310,7 +1359,8 @@ public class HTMLScanner
                     fCurrentEntity.offset--;
                     break;
                 }
-            } while (fCurrentEntity.offset < fCurrentEntity.length - 1);
+            } while (newlines < maxlines &&
+                     fCurrentEntity.offset < fCurrentEntity.length - 1);
             fCurrentEntity.lineNumber += newlines;
             fCurrentEntity.columnNumber = 1;
         }
@@ -1322,7 +1372,7 @@ public class HTMLScanner
             System.out.println();
         }
         return newlines;
-    } // skipNewlines():int
+    } // skipNewlines(int):int
 
     // infoset utility methods
 
@@ -1964,7 +2014,7 @@ public class HTMLScanner
                         }
                         String content = getValue(fAttributes, "content");
                         int index1 = content != null ? content.toLowerCase().indexOf("charset=") : -1;
-                        if (index1 != -1) {
+                        if (index1 != -1 && !fIgnoreSpecifiedCharset) {
                             int index2 = content.indexOf(';', index1);
                             String charset = index2 != -1 ? content.substring(index1+8, index2) : content.substring(index1+8);
                             try {
@@ -2293,6 +2343,9 @@ public class HTMLScanner
         /** True if &lt;script&gt; element. */
         protected boolean fScript;
 
+        /** True if &lt;style&gt; element. */
+        protected boolean fStyle;
+
         /** True if &lt;textarea&gt; element. */
         protected boolean fTextarea;
 
@@ -2312,6 +2365,7 @@ public class HTMLScanner
         public Scanner setElementName(String ename) {
             fElementName = ename;
             fScript = fElementName.equalsIgnoreCase("SCRIPT");
+            fStyle = fElementName.equalsIgnoreCase("STYLE");
             fTextarea = fElementName.equalsIgnoreCase("TEXTAREA");
             return this;
         } // setElementName(String):Scanner
@@ -2336,8 +2390,20 @@ public class HTMLScanner
                                 c = read();
                                 if (c == '!' && read() == '-' && read() == '-') {
                                     fStringBuffer.clear();
-                                    boolean strip = fScript && fStripCommentDelims;
-                                    if (!strip) {
+                                    boolean strip = (fScript && fScriptStripCommentDelims) ||
+                                                    (fStyle && fStyleStripCommentDelims);
+                                    if (strip) {
+                                        do {
+                                            c = read();
+                                            if (c == '\r' || c == '\n') {
+                                                fCurrentEntity.columnNumber--;
+                                                fCurrentEntity.offset--;
+                                                break;
+                                            }
+                                        } while (c != -1);
+                                        skipNewlines(1);
+                                    }
+                                    else {
                                         fStringBuffer.append("<!--");
                                     }
                                     comment = true;
@@ -2423,7 +2489,8 @@ public class HTMLScanner
         /** Scan characters. */
         protected void scanCharacters(XMLStringBuffer buffer,
                                       boolean comment) throws IOException {
-            boolean strip = fScript && fStripCommentDelims;
+            boolean strip = (fScript && fScriptStripCommentDelims) ||
+                            (fStyle && fStyleStripCommentDelims);
             while (true) {
                 int c = read();
                 if (c == -1 || (!comment && (c == '<' || c == '&'))) {

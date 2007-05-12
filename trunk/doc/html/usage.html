@@ -114,8 +114,7 @@ org.apache.html.dom.HTMLDocumentImpl
 This source code is included in the <code>src/html/sample/</code> directory.
 <p>
 In addition to the provided DOM and SAX parser classes, NekoHTML
-also provides a (currently <font color=red>experimental</font>)
-DOM fragment parser class. The <code>DOMFragmentParser</code>
+also provides a DOM fragment parser class. The <code>DOMFragmentParser</code>
 class, found in the <code>org.cyberneko.html.parsers</code>
 package, in can be used to parse fragments of HTML documents 
 into their corresponding DOM nodes. The following example shows 
@@ -165,10 +164,9 @@ the factory for parsed nodes. These nodes are then appended in
 document order to the document fragment object.
 <p>
 <strong>Note:</strong>
-The document fragment object passed to the <code>parse</code>
-method <strong>must</strong> be created from a DOM document
-object of type <code>org.w3c.dom.html.HTMLDocument</code>. If
-not, a class cast exception will be thrown.
+In order for HTML DOM objects to be created, the document fragment 
+object passed to the <code>parse</code> method should be created from 
+a DOM document object of type <code>org.w3c.dom.html.HTMLDocument</code>. 
 
 <a name='custom'></a>
 <h2>Custom Parser Classes</h2>

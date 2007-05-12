@@ -25,6 +25,29 @@ Changes
 
 <h2>Releases</h2>
 <dl>
+ <dt>Version 0.8.1 (30 Sep 2003)
+     [<a href='http://www.apache.org/~andyc/neko/nekohtml-0.8.1.zip'>zip</a>]
+     [<a href='http://www.apache.org/~andyc/neko/nekohtml-0.8.1.tar.gz'>tgz</a>]
+ <dd>Fixed bug reported by Yuan Ji that allowed multiple &lt;html&gt; tags;
+     fixed bug in stripping leading comments in &lt;script&gt; tags 
+       as reported by Lawrence McCartin;
+     added feature to be able to strip HTML comment delimiters (i.e. "&lt;!--" 
+       and "--&gt;") from &lt;style&gt; element content suggested by
+       Lawrence McCartin;
+     updated DOMParser to work around a bug in the Xerces HTML DOM
+       implementation when a doctype node was inserted into the document,
+       reported by Troy Waldrep;
+     updated the DOMFragmentParser to allow setting of features and
+       properties as requested by Paul Reeves;
+     changed the status of the document fragment parser from experimental
+       to <font color=green>supported</font>;
+     added feature to allow application to ignore a character encoding
+       specified in a &lt;meta http-equiv='Content-Type' 
+       content='text/html;charset=...'&gt; tag requested by Roger Fullerton;
+     and
+     changed feature identifier for document fragment tag balancing to
+       be more in line with other features (but retained old feature
+       identifier for backwards compatibility).
  <dt>Version 0.8 (05 Aug 2003)
      [<a href='http://www.apache.org/~andyc/neko/nekohtml-0.8.zip'>zip</a>]
      [<a href='http://www.apache.org/~andyc/neko/nekohtml-0.8.tar.gz'>tgz</a>]

@@ -70,8 +70,11 @@ public class HTMLTagBalancer
     /** Report errors. */
     protected static final String REPORT_ERRORS = "http://cyberneko.org/html/features/report-errors";
 
+    /** Document fragment balancing only (deprecated). */
+    protected static final String DOCUMENT_FRAGMENT_DEPRECATED = "http://cyberneko.org/html/features/document-fragment";
+
     /** Document fragment balancing only. */
-    protected static final String DOCUMENT_FRAGMENT = "http://cyberneko.org/html/features/document-fragment";
+    protected static final String DOCUMENT_FRAGMENT = "http://cyberneko.org/html/features/balance-tags/document-fragment";
 
     /** Ignore outside content. */
     protected static final String IGNORE_OUTSIDE_CONTENT = "http://cyberneko.org/html/features/balance-tags/ignore-outside-content";
@@ -80,12 +83,14 @@ public class HTMLTagBalancer
     private static final String[] RECOGNIZED_FEATURES = {
         AUGMENTATIONS,
         REPORT_ERRORS,
+        DOCUMENT_FRAGMENT_DEPRECATED,
         DOCUMENT_FRAGMENT,
         IGNORE_OUTSIDE_CONTENT,
     };
 
     /** Recognized features defaults. */
     private static final Boolean[] RECOGNIZED_FEATURES_DEFAULTS = {
+        null,
         null,
         null,
         Boolean.FALSE,
@@ -260,7 +265,8 @@ public class HTMLTagBalancer
         // get features
         fAugmentations = manager.getFeature(AUGMENTATIONS);
         fReportErrors = manager.getFeature(REPORT_ERRORS);
-        fDocumentFragment = manager.getFeature(DOCUMENT_FRAGMENT);
+        fDocumentFragment = manager.getFeature(DOCUMENT_FRAGMENT) ||
+                            manager.getFeature(DOCUMENT_FRAGMENT_DEPRECATED);
 
         // get properties
         fNamesElems = getNamesValue(String.valueOf(manager.getProperty(NAMES_ELEMS)));
@@ -485,7 +491,10 @@ public class HTMLTagBalancer
         // get element information
         HTMLElements.Element element = HTMLElements.getElement(elem.rawname);
 
-        // ignore multiple head  and body elements
+        // ignore multiple html, head, body elements
+        if (fSeenRootElement && element.code == HTMLElements.HTML) {
+            return;
+        }
         if (element.code == HTMLElements.HEAD) {
             if (fSeenHeadElement) {
                 return;

@@ -79,7 +79,7 @@ The NekoHTML parser supports the following features:
  <tr>
   <td>
    <a name='document-fragment'></a>
-   <span class='id'>http://cyberneko.org/html/features/document-fragment</span>
+   <span class='id'>http://cyberneko.org/html/features/balance-tags/document-fragment</span>
    <br>
    Specifies if the tag balancer should operate as if a fragment
    of HTML is being parsed. With this feature set, the tag balancer
@@ -88,8 +88,7 @@ The NekoHTML parser supports the following features:
    the &lt;body&gt; element will still be inserted. This feature should 
    <strong>not</strong> be used when using the <code>DOMParser</code>
    class. In order to parse a DOM <code>DocumentFragment</code>, use the
-   <font color='red'>experimental</font> <code>DOMFragmentParser</code>
-   class.
+   <code>DOMFragmentParser</code> class.
   <td align='center'>false
  <tr>
   <td>
@@ -128,11 +127,30 @@ The NekoHTML parser supports the following features:
   <td align='center'>false
  <tr>
   <td>
-   <a name='strip-comment-delims'></a>
+   <a name='ignore-specified-charset'></a>
+   <span class='id'>http://cyberneko.org/html/features/scanner/ignore-specified-charset</span>
+   <br>
+   Specifies whether to ignore the character encoding specified within the 
+   &lt;meta http-equiv='Content-Type' content='text/html;charset=...'&gt; 
+   tag. By default, NekoHTML checks this tag for a charset and changes the 
+   character encoding of the scanning reader object. Setting this feature 
+   to <code>true</code> allows the application to override this behavior.
+  <td align='center'>false
+ <tr>
+  <td>
+   <a name='script-strip-comment-delims'></a>
    <span class='id'>http://cyberneko.org/html/features/scanner/script/strip-comment-delims</span>
    <br>
    Specifies whether the scanner should strip HTML comment delimiters
    (i.e. "&lt;!--" and "--&gt;") from &lt;script&gt; element content.
+  <td align='center'>false
+ <tr>
+  <td>
+   <a name='style-strip-comment-delims'></a>
+   <span class='id'>http://cyberneko.org/html/features/scanner/style/strip-comment-delims</span>
+   <br>
+   Specifies whether the scanner should strip HTML comment delimiters
+   (i.e. "&lt;!--" and "--&gt;") from &lt;style&gt; element content.
   <td align='center'>false
  <tr>
   <td>
