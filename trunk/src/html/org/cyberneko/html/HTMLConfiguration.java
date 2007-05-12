@@ -17,6 +17,7 @@ import java.util.Properties;
 import java.util.ResourceBundle;
 import java.util.Vector;
                                                                                
+import org.apache.xerces.util.DefaultErrorHandler;
 import org.apache.xerces.util.ObjectFactory;
 import org.apache.xerces.util.ParserConfigurationSettings;
 import org.apache.xerces.xni.XMLDocumentHandler;
@@ -130,7 +131,7 @@ public class HTMLConfiguration
     protected XMLDTDContentModelHandler fDTDContentModelHandler;
 
     /** Error handler. */
-    protected XMLErrorHandler fErrorHandler;
+    protected XMLErrorHandler fErrorHandler = new DefaultErrorHandler();
 
     // other settings
 

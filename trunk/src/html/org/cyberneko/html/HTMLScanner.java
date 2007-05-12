@@ -969,7 +969,21 @@ public class HTMLScanner
                 }
             }
         }
-        skipMarkup(true);
+        int c;
+        while ((c = read()) != -1) {
+            if (c == '<') {
+                fCurrentEntity.offset--;
+                fCurrentEntity.columnNumber--;
+                break;
+            }
+            if (c == '>') {
+                break;
+            }
+            if (c == '[') {
+                skipMarkup(true);
+                break;
+            }
+        }
 
         if (fDocumentHandler != null) {
             fDocumentHandler.doctypeDecl(root, pubid, sysid, null);
@@ -990,10 +1004,15 @@ public class HTMLScanner
                 if (c == '\r' || c == '\n') {
                     fCurrentEntity.offset--;
                     fCurrentEntity.columnNumber--;
-                    int newlines = skipNewlines();
-                    for (int i = 0; i < newlines; i++) {
-                        str.append('\n');
-                    }
+                    // NOTE: This collapses newlines to a single space.
+                    //       [Q] Is this the right thing to do here? -Ac
+                    skipNewlines();
+                    str.append(' ');
+                }
+                else if (c == '<') {
+                    fCurrentEntity.offset--;
+                    fCurrentEntity.columnNumber--;
+                    break;
                 }
                 else {
                     str.append((char)c);
@@ -1270,7 +1289,7 @@ public class HTMLScanner
     /** Skips whitespace. */
     protected boolean skipSpaces() throws IOException {
         if (DEBUG_BUFFER) {
-            System.out.print("(skipMarkup: ");
+            System.out.print("(skipSpaces: ");
             printBuffer();
             System.out.println();
         }
@@ -1791,6 +1810,11 @@ public class HTMLScanner
             }
             int newlines = skipNewlines();
             if (newlines == 0 && fCurrentEntity.offset == fCurrentEntity.length) {
+                if (DEBUG_BUFFER) {
+                    System.out.print(")scanCharacters: ");
+                    printBuffer();
+                    System.out.println();
+                }
                 return;
             }
             char c;
@@ -1821,7 +1845,7 @@ public class HTMLScanner
                 printBuffer();
                 System.out.println();
             }
-        } // scanCharacters(int)
+        } // scanCharacters()
 
         /** Scans a comment. */
         protected void scanComment() throws IOException {
@@ -1924,13 +1948,14 @@ public class HTMLScanner
             fStringBuffer.clear();
             while (true) {
                 int c = read();
-                if (c == '?') {
+                if (c == '?' || c == '/') {
+                    char c0 = (char)c;
                     c = read();
                     if (c == '>') {
                         break;
                     }
                     else {
-                        fStringBuffer.append('?');
+                        fStringBuffer.append(c0);
                         fCurrentEntity.offset--;
                         fCurrentEntity.columnNumber--;
                         continue;
@@ -2090,9 +2115,7 @@ public class HTMLScanner
         protected boolean scanAttribute(XMLAttributesImpl attributes,
                                         boolean[] empty)
             throws IOException {
-            if (!skipSpaces() && fReportErrors) {
-                fErrorReporter.reportError("HTML1013", null);
-            }
+            boolean skippedSpaces = skipSpaces();
             fBeginLineNumber = fCurrentEntity.lineNumber;
             fBeginColumnNumber = fCurrentEntity.columnNumber;
             int c = read();
@@ -2114,6 +2137,9 @@ public class HTMLScanner
                 }
                 empty[0] = skipMarkup(false);
                 return false;
+            }
+            if (!skippedSpaces && fReportErrors) {
+                fErrorReporter.reportError("HTML1013", new Object[] { aname });
             }
             aname = modifyName(aname, fNamesAttrs);
             skipSpaces();
@@ -2489,6 +2515,11 @@ public class HTMLScanner
         /** Scan characters. */
         protected void scanCharacters(XMLStringBuffer buffer,
                                       boolean comment) throws IOException {
+            if (DEBUG_BUFFER) {
+                System.out.print("(scanCharacters, comment="+comment+": ");
+                printBuffer();
+                System.out.println();
+            }
             boolean strip = (fScript && fScriptStripCommentDelims) ||
                             (fStyle && fStyleStripCommentDelims);
             while (true) {
@@ -2506,9 +2537,12 @@ public class HTMLScanner
                     buffer.append('\n');
                     c = read();
                     if (c != '\n') {
-                        if (c == -1 || (!comment && c == '<')) {
+                        if (c == -1 || (!comment && c == '<') || c == '-') {
                             fCurrentEntity.offset--;
                             fCurrentEntity.columnNumber--;
+                            if (comment && c == '-') {
+                                continue;
+                            }
                             break;
                         }
                         buffer.append((char)c);
@@ -2547,6 +2581,11 @@ public class HTMLScanner
                 fEndLineNumber = fCurrentEntity.lineNumber;
                 fEndColumnNumber = fCurrentEntity.columnNumber;
                 fDocumentHandler.characters(buffer, locationAugs());
+            }
+            if (DEBUG_BUFFER) {
+                System.out.print(")scanCharacters: ");
+                printBuffer();
+                System.out.println();
             }
         } // scanCharacters(StringBuffer)
 
