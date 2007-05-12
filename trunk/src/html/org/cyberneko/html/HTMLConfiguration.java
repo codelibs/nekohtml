@@ -9,6 +9,7 @@ package org.cyberneko.html;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
+import java.lang.reflect.InvocationTargetException;
 import java.text.MessageFormat;
 import java.util.Locale;
 import java.util.MissingResourceException;
@@ -536,7 +537,13 @@ public class HTMLConfiguration
                         filterMethod.invoke(filter, new Object[] { lastSource });
                     }
                 }
-                catch (Exception e) {
+                catch (IllegalAccessException e) {
+                    // ignore
+                } 
+                catch (InvocationTargetException e) {
+                    // ignore
+                } 
+                catch (NoSuchMethodException e) {
                     // ignore
                 }
                 lastSource.setDocumentHandler(filter);

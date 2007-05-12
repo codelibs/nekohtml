@@ -25,6 +25,23 @@ Changes
 
 <h2>Releases</h2>
 <dl>
+ <dt>Version 0.7.4 (03 Mar 2003)
+     [<a href='http://www.apache.org/~andyc/neko/nekohtml-0.7.4.zip'>zip</a>]
+     [<a href='http://www.apache.org/~andyc/neko/nekohtml-0.7.4.tar.gz'>tgz</a>]
+ <dd>Fixed &lt;form&gt; element balancing problem reported by Dan Rocco;
+     fixed null pointer exception reported by Michael Dynin that was
+       caused by a null XMLResourceIdentifier object passed to the 
+       startGeneralEntity method in the Xerces DOM parser classes;
+     fixed handling of &lt;font&gt; element as requested by Arno Schatz
+       to better match current browsers;
+     replaced generic catch exception blocks with explicit catch blocks
+       suggested by Arno Schatz;
+     fixed &lt;center&gt; tag-balancing problem reported by Russell Gold;
+     fixed null pointer exception caused by null namespace context
+       object passed to Xerces SAX parser class reported by David Leslie;
+     and
+     added FAQ entry describing how to insert custom filters before
+       the tag-balancer.
  <dt>Version 0.7.3 (28 Jan 2003)
      [<a href='http://www.apache.org/~andyc/neko/nekohtml-0.7.3.zip'>zip</a>]
      [<a href='http://www.apache.org/~andyc/neko/nekohtml-0.7.3.tar.gz'>tgz</a>]

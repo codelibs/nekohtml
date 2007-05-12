@@ -27,8 +27,10 @@ import java.util.Stack;
 
 import org.apache.xerces.util.AugmentationsImpl;
 import org.apache.xerces.util.EncodingMap;
+import org.apache.xerces.util.NamespaceSupport;
 import org.apache.xerces.util.URI;
 import org.apache.xerces.util.XMLAttributesImpl;
+import org.apache.xerces.util.XMLResourceIdentifierImpl;
 import org.apache.xerces.util.XMLStringBuffer;
 import org.apache.xerces.xni.Augmentations;
 import org.apache.xerces.xni.NamespaceContext;
@@ -337,6 +339,9 @@ public class HTMLScanner
     /** Single boolean array. */
     private final boolean[] fSingleBoolean = { false };
 
+    /** Resource identifier. */
+    private final XMLResourceIdentifierImpl fResourceId = new XMLResourceIdentifierImpl();
+
     //
     // Public methods
     //
@@ -386,7 +391,7 @@ public class HTMLScanner
                 try {
                     fCurrentEntity.stream.close();
                 }
-                catch (Exception e) {
+                catch (IOException e) {
                     // ignore
                 }
             }
@@ -396,7 +401,7 @@ public class HTMLScanner
                 try {
                     fCurrentEntity.stream.close();
                 }
-                catch (Exception e) {
+                catch (IOException e) {
                     // ignore
                 }
             }
@@ -405,7 +410,7 @@ public class HTMLScanner
             try {
                 fCurrentEntity.stream.close();
             }
-            catch (Exception e) {
+            catch (IOException e) {
                 // ignore
             }
         }
@@ -726,9 +731,8 @@ public class HTMLScanner
              // expand id
              uri = new URI(base, id);
         }
-        catch (Exception e) {
+        catch (URI.MalformedURIException e) {
             // let it go through
-
         }
 
         if (uri == null) {
@@ -1116,15 +1120,32 @@ public class HTMLScanner
                 try {
                     method.invoke(augs, null);
                 }
-                catch (Exception e) {
+                catch (IllegalAccessException e) {
                     // NOTE: This should not happen! -Ac
                     augs = new AugmentationsImpl();
-                }
+                } 
+                catch (InvocationTargetException e) {
+                    // NOTE: This should not happen! -Ac
+                    augs = new AugmentationsImpl();
+                } 
             }
             augs.putItem(AUGMENTATIONS, fLocationItem);
         }
         return augs;
     } // locationAugs():Augmentations
+
+    /** Returns an empty resource identifier. */
+    protected final XMLResourceIdentifier resourceId() {
+        /***/
+        fResourceId.clear();
+        return fResourceId;
+        /***
+        // NOTE: Unfortunately, the Xerces DOM parser classes expect a
+        //       non-null resource identifier object to be passed to
+        //       startGeneralEntity. -Ac
+        return null;
+        /***/
+    } // resourceId():XMLResourceIdentifier
 
     //
     // Protected static methods
@@ -1384,7 +1405,7 @@ public class HTMLScanner
                                 }
                                 XMLLocator locator = HTMLScanner.this;
                                 String encoding = fIANAEncoding;
-                                NamespaceContext nscontext = null;
+                                NamespaceContext nscontext = new NamespaceSupport();
                                 Augmentations augs = locationAugs();
                                 try {
                                     // NOTE: Hack to allow the default filter to work with
@@ -1402,10 +1423,13 @@ public class HTMLScanner
                                     };
                                     method.invoke(fDocumentHandler, params);
                                 }
-                                catch (XNIException e) {
-                                    throw e;
-                                }
-                                catch (Exception e) {
+                                catch (IllegalAccessException e) {
+                                    throw new XNIException(e);
+                                } 
+                                catch (InvocationTargetException e) {
+                                    throw new XNIException(e);
+                                } 
+                                catch (NoSuchMethodException e) {
                                     try {
                                         // NOTE: Hack to allow the default filter to work with
                                         //       old and new versions of the XNI document handler
@@ -1420,10 +1444,15 @@ public class HTMLScanner
                                         };
                                         method.invoke(fDocumentHandler, params);
                                     }
-                                    catch (XNIException ex) {
-                                        throw ex;
-                                    }
-                                    catch (Exception ex) {
+                                    catch (IllegalAccessException ex) {
+                                        // NOTE: Should never reach here!
+                                        throw new XNIException(ex);
+                                    } 
+                                    catch (InvocationTargetException ex) {
+                                        // NOTE: Should never reach here!
+                                        throw new XNIException(ex);
+                                    } 
+                                    catch (NoSuchMethodException ex) {
                                         // NOTE: Should never reach here!
                                         throw new XNIException(ex);
                                     }
@@ -1525,7 +1554,7 @@ public class HTMLScanner
                         fEndLineNumber = fCurrentEntity.lineNumber;
                         fEndColumnNumber = fCurrentEntity.columnNumber;
                         if (fNotifyCharRefs) {
-                            XMLResourceIdentifier id = null;
+                            XMLResourceIdentifier id = resourceId();
                             String encoding = null;
                             fDocumentHandler.startGeneralEntity(name, id, encoding, locationAugs());
                         }
@@ -1567,7 +1596,7 @@ public class HTMLScanner
                 fEndColumnNumber = fCurrentEntity.columnNumber;
                 boolean notify = fNotifyHtmlBuiltinRefs || (fNotifyXmlBuiltinRefs && builtinXmlRef(name));
                 if (notify) {
-                    XMLResourceIdentifier id = null;
+                    XMLResourceIdentifier id = resourceId();
                     String encoding = null;
                     fDocumentHandler.startGeneralEntity(name, id, encoding, locationAugs());
                 }

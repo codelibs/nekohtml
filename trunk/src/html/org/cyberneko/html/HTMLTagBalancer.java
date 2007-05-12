@@ -337,10 +337,13 @@ public class HTMLTagBalancer
                 };
                 method.invoke(fDocumentHandler, params);
             }
-            catch (XNIException e) {
-                throw e;
-            }
-            catch (Exception e) {
+            catch (IllegalAccessException e) {
+                throw new XNIException(e);
+            } 
+            catch (InvocationTargetException e) {
+                throw new XNIException(e);                
+            } 
+            catch (NoSuchMethodException e) {
                 try {
                     // NOTE: Hack to allow the default filter to work with
                     //       old and new versions of the XNI document handler
@@ -355,10 +358,15 @@ public class HTMLTagBalancer
                     };
                     method.invoke(fDocumentHandler, params);
                 }
-                catch (XNIException ex) {
-                    throw ex;
-                }
-                catch (Exception ex) {
+                catch (IllegalAccessException ex) {
+                    // NOTE: Should never reach here!
+                    throw new XNIException(ex);
+                } 
+                catch (InvocationTargetException ex) {
+                    // NOTE: Should never reach here!
+                    throw new XNIException(ex);                
+                } 
+                catch (NoSuchMethodException ex) {
                     // NOTE: Should never reach here!
                     throw new XNIException(ex);
                 }
@@ -938,10 +946,14 @@ public class HTMLTagBalancer
                 try {
                     method.invoke(augs, null);
                 }
-                catch (Exception e) {
+                catch (IllegalAccessException e) {
                     // NOTE: This should not happen! -Ac
                     augs = new AugmentationsImpl();
-                }
+                } 
+                catch (InvocationTargetException e) {
+                    // NOTE: This should not happen! -Ac
+                    augs = new AugmentationsImpl();
+                } 
             }
             augs.putItem(AUGMENTATIONS, SYNTHESIZED_ITEM);
         }
