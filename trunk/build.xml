@@ -4,7 +4,7 @@
 
  <!-- PROPERTIES -->
  <property name='name'      value='NekoHTML'/>
- <property name='version'   value='0.2'/>
+ <property name='version'   value='0.2.1'/>
  <property name='copyright' value='(C) Copyright 2002, Andy Clark. All rights reserved.'/>
   
  <property name='jarfile' value='nekohtml.jar'/>
@@ -23,7 +23,7 @@
 
  <target name='compile'>
   <mkdir dir="bin"/>
-  <javac srcdir='src' destdir='bin'/>
+  <javac srcdir='src' destdir='bin' includes='org/**'/>
  </target>
 
  <target name='jar' depends='compile'>
