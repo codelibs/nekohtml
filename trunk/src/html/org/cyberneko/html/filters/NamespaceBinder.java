@@ -590,12 +590,12 @@ public class NamespaceBinder
 
         /** Push context. */
         public void pushContext() {
-            if (fTop == fLevels.length) {
+            if (++fTop == fLevels.length) {
                 int[] iarray = new int[fLevels.length + 10];
                 System.arraycopy(fLevels, 0, iarray, 0, fLevels.length);
                 fLevels = iarray;
             }
-            fLevels[++fTop] = fLevels[fTop-1];
+            fLevels[fTop] = fLevels[fTop-1];
         } // pushContext()
 
         /** Pop context. */
