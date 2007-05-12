@@ -21,7 +21,7 @@ import org.w3c.dom.html.HTMLDocument;
  *
  * @author Andy Clark
  *
- * @version $Id$
+ * @version $Id: TestHTMLDOMFragment.java,v 1.3 2004/02/19 20:00:17 andyc Exp $
  */
 public class TestHTMLDOMFragment {
 

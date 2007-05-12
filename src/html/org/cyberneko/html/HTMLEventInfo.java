@@ -13,7 +13,7 @@ package org.cyberneko.html;
  *
  * @author Andy Clark
  *
- * @version $Id$
+ * @version $Id: HTMLEventInfo.java,v 1.3 2004/02/19 20:00:17 andyc Exp $
  */
 public interface HTMLEventInfo {
 

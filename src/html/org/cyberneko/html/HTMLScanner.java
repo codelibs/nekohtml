@@ -25,7 +25,6 @@ import java.lang.reflect.Method;
 import java.net.URL;
 import java.util.Stack;
 
-import org.apache.xerces.util.AugmentationsImpl;
 import org.apache.xerces.util.EncodingMap;
 import org.apache.xerces.util.NamespaceSupport;
 import org.apache.xerces.util.URI;
@@ -59,7 +58,9 @@ import org.apache.xerces.xni.parser.XMLInputSource;
  * <li>http://apache.org/xml/features/scanner/notify-char-refs
  * <li>http://apache.org/xml/features/scanner/notify-builtin-refs
  * <li>http://cyberneko.org/html/features/scanner/notify-builtin-refs
+ * <li>http://cyberneko.org/html/features/scanner/script/strip-cdata-delims
  * <li>http://cyberneko.org/html/features/scanner/script/strip-comment-delims
+ * <li>http://cyberneko.org/html/features/scanner/style/strip-cdata-delims
  * <li>http://cyberneko.org/html/features/scanner/style/strip-comment-delims
  * <li>http://cyberneko.org/html/features/scanner/ignore-specified-charset
  * <li>http://cyberneko.org/html/features/scanner/cdata-sections
@@ -82,7 +83,7 @@ import org.apache.xerces.xni.parser.XMLInputSource;
  *
  * @author Andy Clark
  *
- * @version $Id$
+ * @version $Id: HTMLScanner.java,v 1.16 2004/11/17 06:02:56 andyc Exp $
  */
 public class HTMLScanner 
     implements XMLDocumentScanner, XMLLocator, HTMLComponent {
@@ -157,10 +158,22 @@ public class HTMLScanner
     public static final String SCRIPT_STRIP_COMMENT_DELIMS = "http://cyberneko.org/html/features/scanner/script/strip-comment-delims";
 
     /** 
+     * Strip XHTML CDATA delimiters ("&lt;![CDATA[" and "]]&gt;") from 
+     * SCRIPT tag contents.
+     */
+    public static final String SCRIPT_STRIP_CDATA_DELIMS = "http://cyberneko.org/html/features/scanner/script/strip-cdata-delims";
+
+    /** 
      * Strip HTML comment delimiters ("&lt;!&minus;&minus;" and 
      * "&minus;&minus;&gt;") from STYLE tag contents.
      */
     public static final String STYLE_STRIP_COMMENT_DELIMS = "http://cyberneko.org/html/features/scanner/style/strip-comment-delims";
+
+    /** 
+     * Strip XHTML CDATA delimiters ("&lt;![CDATA[" and "]]&gt;") from 
+     * STYLE tag contents.
+     */
+    public static final String STYLE_STRIP_CDATA_DELIMS = "http://cyberneko.org/html/features/scanner/style/strip-cdata-delims";
 
     /**
      * Ignore specified charset found in the &lt;meta equiv='Content-Type'
@@ -184,7 +197,9 @@ public class HTMLScanner
         NOTIFY_CHAR_REFS,
         NOTIFY_XML_BUILTIN_REFS,
         NOTIFY_HTML_BUILTIN_REFS,
+        SCRIPT_STRIP_CDATA_DELIMS,
         SCRIPT_STRIP_COMMENT_DELIMS,
+        STYLE_STRIP_CDATA_DELIMS,
         STYLE_STRIP_COMMENT_DELIMS,
         IGNORE_SPECIFIED_CHARSET,
         CDATA_SECTIONS,
@@ -196,6 +211,8 @@ public class HTMLScanner
     private static final Boolean[] RECOGNIZED_FEATURES_DEFAULTS = {
         null,
         null,
+        Boolean.FALSE,
+        Boolean.FALSE,
         Boolean.FALSE,
         Boolean.FALSE,
         Boolean.FALSE,
@@ -321,8 +338,14 @@ public class HTMLScanner
     /** Notify HTML built-in general entity references. */
     protected boolean fNotifyHtmlBuiltinRefs;
 
+    /** Strip CDATA delimiters from SCRIPT tags. */
+    protected boolean fScriptStripCDATADelims;
+
     /** Strip comment delimiters from SCRIPT tags. */
     protected boolean fScriptStripCommentDelims;
+
+    /** Strip CDATA delimiters from STYLE tags. */
+    protected boolean fStyleStripCDATADelims;
 
     /** Strip comment delimiters from STYLE tags. */
     protected boolean fStyleStripCommentDelims;
@@ -432,7 +455,7 @@ public class HTMLScanner
     private final XMLStringBuffer fNonNormAttr = new XMLStringBuffer(128);
 
     /** Augmentations. */
-    private final Augmentations fInfosetAugs = new AugmentationsImpl();
+    private final HTMLAugmentations fInfosetAugs = new HTMLAugmentations();
 
     /** Location infoset item. */
     private final LocationItem fLocationItem = new LocationItem();
@@ -608,7 +631,9 @@ public class HTMLScanner
         fNotifyCharRefs = manager.getFeature(NOTIFY_CHAR_REFS);
         fNotifyXmlBuiltinRefs = manager.getFeature(NOTIFY_XML_BUILTIN_REFS);
         fNotifyHtmlBuiltinRefs = manager.getFeature(NOTIFY_HTML_BUILTIN_REFS);
+        fScriptStripCDATADelims = manager.getFeature(SCRIPT_STRIP_CDATA_DELIMS);
         fScriptStripCommentDelims = manager.getFeature(SCRIPT_STRIP_COMMENT_DELIMS);
+        fStyleStripCDATADelims = manager.getFeature(STYLE_STRIP_CDATA_DELIMS);
         fStyleStripCommentDelims = manager.getFeature(STYLE_STRIP_COMMENT_DELIMS);
         fIgnoreSpecifiedCharset = manager.getFeature(IGNORE_SPECIFIED_CHARSET);
         fCDATASections = manager.getFeature(CDATA_SECTIONS);
@@ -644,8 +669,14 @@ public class HTMLScanner
         else if (featureId.equals(NOTIFY_HTML_BUILTIN_REFS)) { 
             fNotifyHtmlBuiltinRefs = state; 
         }
+        else if (featureId.equals(SCRIPT_STRIP_CDATA_DELIMS)) { 
+            fScriptStripCDATADelims = state; 
+        }
         else if (featureId.equals(SCRIPT_STRIP_COMMENT_DELIMS)) { 
             fScriptStripCommentDelims = state; 
+        }
+        else if (featureId.equals(STYLE_STRIP_CDATA_DELIMS)) { 
+            fStyleStripCDATADelims = state; 
         }
         else if (featureId.equals(STYLE_STRIP_COMMENT_DELIMS)) { 
             fStyleStripCommentDelims = state; 
@@ -1506,33 +1537,7 @@ public class HTMLScanner
             fLocationItem.setValues(fBeginLineNumber, fBeginColumnNumber, 
                                     fEndLineNumber, fEndColumnNumber);
             augs = fInfosetAugs;
-            Class cls = augs.getClass();
-            Method method = null;
-            try {
-                method = cls.getMethod("clear", null);
-            }
-            catch (NoSuchMethodException e) {
-                try {
-                    method = cls.getMethod("removeAllItems", null);
-                }
-                catch (NoSuchMethodException e2) {
-                    // NOTE: This should not happen! -Ac
-                    augs = new AugmentationsImpl();
-                }
-            }
-            if (method != null) {
-                try {
-                    method.invoke(augs, null);
-                }
-                catch (IllegalAccessException e) {
-                    // NOTE: This should not happen! -Ac
-                    augs = new AugmentationsImpl();
-                } 
-                catch (InvocationTargetException e) {
-                    // NOTE: This should not happen! -Ac
-                    augs = new AugmentationsImpl();
-                } 
-            }
+            augs.removeAllItems();
             augs.putItem(AUGMENTATIONS, fLocationItem);
         }
         return augs;
@@ -1543,33 +1548,7 @@ public class HTMLScanner
         Augmentations augs = null;
         if (fAugmentations) {
             augs = fInfosetAugs;
-            Class cls = augs.getClass();
-            Method method = null;
-            try {
-                method = cls.getMethod("clear", null);
-            }
-            catch (NoSuchMethodException e) {
-                try {
-                    method = cls.getMethod("removeAllItems", null);
-                }
-                catch (NoSuchMethodException e2) {
-                    // NOTE: This should not happen! -Ac
-                    augs = new AugmentationsImpl();
-                }
-            }
-            if (method != null) {
-                try {
-                    method.invoke(augs, null);
-                }
-                catch (IllegalAccessException e) {
-                    // NOTE: This should not happen! -Ac
-                    augs = new AugmentationsImpl();
-                } 
-                catch (InvocationTargetException e) {
-                    // NOTE: This should not happen! -Ac
-                    augs = new AugmentationsImpl();
-                } 
-            }
+            augs.removeAllItems();
             augs.putItem(AUGMENTATIONS, SYNTHESIZED_ITEM);
         }
         return augs;
@@ -2696,74 +2675,17 @@ public class HTMLScanner
             do {
                 try {
                     next = false;
-                    boolean comment = false;
+                    int delimiter = -1;
                     switch (fScannerState) {
                         case STATE_CONTENT: {
                             fBeginLineNumber = fCurrentEntity.lineNumber;
                             fBeginColumnNumber = fCurrentEntity.columnNumber;
                             int c = read();
                             if (c == '<') {
-                                c = read();
-                                if (c == '!' && read() == '-' && read() == '-') {
-                                    fStringBuffer.clear();
-                                    boolean strip = (fScript && fScriptStripCommentDelims) ||
-                                                    (fStyle && fStyleStripCommentDelims);
-                                    if (strip) {
-                                        do {
-                                            c = read();
-                                            if (c == '\r' || c == '\n') {
-                                                fCurrentEntity.columnNumber--;
-                                                fCurrentEntity.offset--;
-                                                break;
-                                            }
-                                        } while (c != -1);
-                                        skipNewlines(1);
-                                    }
-                                    else {
-                                        fStringBuffer.append("<!--");
-                                    }
-                                    comment = true;
-                                }
-                                else if (c == '/') {
-                                    String ename = scanName();
-                                    if (ename != null) {
-                                        if (ename.equalsIgnoreCase(fElementName)) {
-                                            if (read() == '>') {
-                                                ename = modifyName(ename, fNamesElems);
-                                                if (fDocumentHandler != null && fElementCount >= fElementDepth) {
-                                                    fQName.setValues(null, ename, ename, null);
-                                                    if (DEBUG_CALLBACKS) {
-                                                        System.out.println("endElement("+fQName+")");
-                                                    }
-                                                    fEndLineNumber = fCurrentEntity.lineNumber;
-                                                    fEndColumnNumber = fCurrentEntity.columnNumber;
-                                                    fDocumentHandler.endElement(fQName, locationAugs());
-                                                }
-                                                setScanner(fContentScanner);
-                                                setScannerState(STATE_CONTENT);
-                                                return true;
-                                            }
-                                            else {
-                                                fCurrentEntity.offset--;
-                                                fCurrentEntity.columnNumber--;
-                                            }
-                                        }
-                                        fStringBuffer.clear();
-                                        fStringBuffer.append("</");
-                                        fStringBuffer.append(ename);
-                                    }
-                                    else {
-                                        fStringBuffer.clear();
-                                        fStringBuffer.append("</");
-                                    }
-                                }
-                                else {
-                                    fStringBuffer.clear();
-                                    fStringBuffer.append('<');
-                                    fStringBuffer.append((char)c);
-                                }
+                                setScannerState(STATE_MARKUP_BRACKET);
+                                continue;
                             }
-                            else if (c == '&') {
+                            if (c == '&') {
                                 if (fTextarea) {
                                     scanEntityRef(fStringBuffer, true);
                                     continue;
@@ -2782,9 +2704,95 @@ public class HTMLScanner
                                 fCurrentEntity.columnNumber--;
                                 fStringBuffer.clear();
                             }
-                            scanCharacters(fStringBuffer, comment);
+                            scanCharacters(fStringBuffer, -1);
                             break;
-                        }
+                        } // case STATE_CONTENT
+                        case STATE_MARKUP_BRACKET: {
+                            int c = read();
+                            if (c == '!') {
+                                if (skip("--", false)) {
+                                    fStringBuffer.clear();
+                                    boolean strip = (fScript && fScriptStripCommentDelims) ||
+                                                    (fStyle && fStyleStripCommentDelims);
+                                    if (strip) {
+                                        do {
+                                            c = read();
+                                            if (c == '\r' || c == '\n') {
+                                                fCurrentEntity.columnNumber--;
+                                                fCurrentEntity.offset--;
+                                                break;
+                                            }
+                                        } while (c != -1);
+                                        skipNewlines(1);
+                                        delimiter = '-';
+                                    }
+                                    else {
+                                        fStringBuffer.append("<!--");
+                                    }
+                                }
+                                else if (skip("[CDATA[", false)) {
+                                    fStringBuffer.clear();
+                                    boolean strip = (fScript && fScriptStripCDATADelims) ||
+                                                    (fStyle  && fStyleStripCDATADelims);
+                                    if (strip) {
+                                        do {
+                                            c = read();
+                                            if (c == '\r' || c == '\n') {
+                                                fCurrentEntity.columnNumber--;
+                                                fCurrentEntity.offset--;
+                                                break;
+                                            }
+                                        } while (c != -1);
+                                        skipNewlines(1);
+                                        delimiter = ']';
+                                    }
+                                    else {
+                                        fStringBuffer.append("<![CDATA[");
+                                    }
+                                }
+                            }
+                            else if (c == '/') {
+                                String ename = scanName();
+                                if (ename != null) {
+                                    if (ename.equalsIgnoreCase(fElementName)) {
+                                        if (read() == '>') {
+                                            ename = modifyName(ename, fNamesElems);
+                                            if (fDocumentHandler != null && fElementCount >= fElementDepth) {
+                                                fQName.setValues(null, ename, ename, null);
+                                                if (DEBUG_CALLBACKS) {
+                                                    System.out.println("endElement("+fQName+")");
+                                                }
+                                                fEndLineNumber = fCurrentEntity.lineNumber;
+                                                fEndColumnNumber = fCurrentEntity.columnNumber;
+                                                fDocumentHandler.endElement(fQName, locationAugs());
+                                            }
+                                            setScanner(fContentScanner);
+                                            setScannerState(STATE_CONTENT);
+                                            return true;
+                                        }
+                                        else {
+                                            fCurrentEntity.offset--;
+                                            fCurrentEntity.columnNumber--;
+                                        }
+                                    }
+                                    fStringBuffer.clear();
+                                    fStringBuffer.append("</");
+                                    fStringBuffer.append(ename);
+                                }
+                                else {
+                                    fStringBuffer.clear();
+                                    fStringBuffer.append("</");
+                                }
+                            }
+                            else {
+                                fStringBuffer.clear();
+                                fStringBuffer.append('<');
+                                fStringBuffer.append((char)c);
+                            }
+                            scanCharacters(fStringBuffer, delimiter);
+                            setScannerState(STATE_CONTENT);
+                            break;
+                        } // case STATE_MARKUP_BRACKET
                     } // switch
                 } // try
                 catch (EOFException e) {
@@ -2809,17 +2817,19 @@ public class HTMLScanner
 
         /** Scan characters. */
         protected void scanCharacters(XMLStringBuffer buffer,
-                                      boolean comment) throws IOException {
+                                      int delimiter) throws IOException {
             if (DEBUG_BUFFER) {
-                System.out.print("(scanCharacters, comment="+comment+": ");
+                System.out.print("(scanCharacters, delimiter="+delimiter+": ");
                 printBuffer();
                 System.out.println();
             }
             boolean strip = (fScript && fScriptStripCommentDelims) ||
-                            (fStyle && fStyleStripCommentDelims);
+                            (fScript && fScriptStripCDATADelims) ||
+                            (fStyle  && fStyleStripCommentDelims) ||
+                            (fStyle  && fStyleStripCDATADelims);
             while (true) {
                 int c = read();
-                if (c == -1 || (!comment && (c == '<' || c == '&'))) {
+                if (c == -1 || (delimiter == -1 && (c == '<' || c == '&'))) {
                     if (c != -1) {
                         fCurrentEntity.offset--;
                         fCurrentEntity.columnNumber--;
@@ -2835,14 +2845,14 @@ public class HTMLScanner
                         buffer.append('\n');
                     }
                 }
-                else if (comment && c == '-') {
+                else if (delimiter != -1 && c == (char)delimiter) {
                     int count = 0;
                     do {
                         count++;
                         c = read();
-                    } while (c == '-');
+                    } while (c == (char)delimiter);
                     for (int i = strip && c == '>' ? 2 : 0; i < count; i++) {
-                        buffer.append('-');
+                        buffer.append((char)delimiter);
                     }
                     if (c == -1 || (count >= 2 && c == '>')) {
                         if (!strip) {

@@ -80,7 +80,7 @@ import org.apache.xerces.xni.XNIException;
  *
  * @author Andy Clark
  *
- * @version $Id$
+ * @version $Id: ElementRemover.java,v 1.4 2004/02/19 20:00:17 andyc Exp $
  */
 public class ElementRemover
     extends DefaultFilter {

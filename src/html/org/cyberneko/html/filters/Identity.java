@@ -43,7 +43,7 @@ import org.apache.xerces.xni.parser.XMLParserConfiguration;
  *
  * @author Andy Clark
  *
- * @version $Id$
+ * @version $Id: Identity.java,v 1.3 2004/02/19 20:00:17 andyc Exp $
  */
 public class Identity
     extends DefaultFilter {

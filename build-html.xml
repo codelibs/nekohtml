@@ -1,9 +1,9 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<!-- $Id$ -->
+<!-- $Id: build-html.xml,v 1.20 2004/11/18 04:54:01 andyc Exp $ -->
 <project default='all' basedir='.'>
 
  <!-- PROPERTIES -->
- <property name='version'   value='0.9.3'/>
+ <property name='version'   value='0.9.4'/>
  <property name='name'      value='nekohtml'/>
  <property name='fullname'  value='${name}-${version}'/>
  <property name='Title'     value='NekoHTML'/>
@@ -25,7 +25,7 @@
  <property name='contents.misc'   value='LICENSE,LICENSE_apache,README_html,TODO_html,build.bat,build-html.xml,build-html-test.xml'/>
  <property name='contents.jars'   value='${jarfile},${jarfileXni},${jarfileSamples}'/>
  <property name='contents.source' value='src/html/META-INF/**,src/html/**/*.java,src/html/**/*.properties'/>
- <property name='contents.docs'   value='doc/style.css,doc/html/**,data/html/test*.html,data/html/canonical/*'/>
+ <property name='contents.docs'   value='doc/style.css,doc/html/**,data/html/test*.html*,data/html/canonical/*'/>
  <property name='contents.libs'   value='lib/xercesMinimal.jar'/>
  <property name='contents' 
            value='${contents.misc},${contents.jars},${contents.source},${contents.docs},${contents.libs}'/>
@@ -48,7 +48,7 @@
 
  <target name='compile' depends='version'>
   <mkdir dir="bin/html"/>
-  <javac srcdir='src/html' destdir='bin/html' includes='org/**,sample/**'/>
+  <javac srcdir='src/html' destdir='bin/html' includes='org/**,sample/**' debug='true'/>
   <javac srcdir='bin/html/src' destdir='bin/html' includes='org/**'/>
  </target>
 
@@ -109,7 +109,6 @@
   <mkdir dir='${version.dir.java}/'/>
   <dependset>
    <srcfilelist dir='.' files='build-html.xml'/>
-   <srcfileset dir='src/html' includes='**/*.java'/>
    <targetfilelist dir='.' files='${version.manifest},${version.java}'/>
   </dependset>
   <available property='available.version' file='${version.java}'/>

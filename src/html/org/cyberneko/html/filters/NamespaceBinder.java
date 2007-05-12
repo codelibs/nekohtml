@@ -35,7 +35,7 @@ import org.apache.xerces.xni.parser.XMLConfigurationException;
  * 
  * @author Andy Clark
  * 
- * @version $Id$
+ * @version $Id: NamespaceBinder.java,v 1.5 2004/11/03 06:15:19 andyc Exp $
  */
 public class NamespaceBinder
     extends DefaultFilter {
@@ -147,7 +147,7 @@ public class NamespaceBinder
     // temp vars
 
     /** QName. */
-    private static final QName fQName = new QName();
+    private final QName fQName = new QName();
 
     //
     // HTMLComponent methods

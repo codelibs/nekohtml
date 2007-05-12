@@ -10,7 +10,6 @@ package org.cyberneko.html;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
-import org.apache.xerces.util.AugmentationsImpl;
 import org.apache.xerces.util.XMLAttributesImpl;
 import org.apache.xerces.xni.Augmentations;
 import org.apache.xerces.xni.NamespaceContext;
@@ -55,7 +54,7 @@ import org.apache.xerces.xni.parser.XMLDocumentSource;
  *
  * @author Andy Clark
  *
- * @version $Id$
+ * @version $Id: HTMLTagBalancer.java,v 1.19 2004/11/18 04:32:17 andyc Exp $
  */
 public class HTMLTagBalancer
     implements XMLDocumentFilter, HTMLComponent {
@@ -230,7 +229,7 @@ public class HTMLTagBalancer
     private final XMLAttributes fEmptyAttrs = new XMLAttributesImpl();
 
     /** Augmentations. */
-    private final Augmentations fInfosetAugs = new AugmentationsImpl();
+    private final HTMLAugmentations fInfosetAugs = new HTMLAugmentations();
 
     //
     // HTMLComponent methods
@@ -282,6 +281,7 @@ public class HTMLTagBalancer
         fReportErrors = manager.getFeature(REPORT_ERRORS);
         fDocumentFragment = manager.getFeature(DOCUMENT_FRAGMENT) ||
                             manager.getFeature(DOCUMENT_FRAGMENT_DEPRECATED);
+        fIgnoreOutsideContent = manager.getFeature(IGNORE_OUTSIDE_CONTENT);
 
         // get properties
         fNamesElems = getNamesValue(String.valueOf(manager.getProperty(NAMES_ELEMS)));
@@ -300,6 +300,10 @@ public class HTMLTagBalancer
         }
         if (featureId.equals(REPORT_ERRORS)) {
             fReportErrors = state;
+            return;
+        }
+        if (featureId.equals(IGNORE_OUTSIDE_CONTENT)) {
+            fIgnoreOutsideContent = state;
             return;
         }
 
@@ -549,17 +553,6 @@ public class HTMLTagBalancer
                         pname = modifyName(pname, fNamesElems);
                         int pdepth = getParentDepth(pelement.parent, pelement.bounds);
                         if (pdepth != -1) {
-                            for (int i = 1; i < pdepth; i++) {
-                                Info info = fElementStack.peek();
-                                if (fReportErrors) {
-                                    String iname = modifyName(info.qname.rawname, fNamesElems);
-                                    String ename = elem.rawname;
-                                    String ppname = pelement.parent[0].name;
-                                    ppname = modifyName(ppname, fNamesElems);
-                                    fErrorReporter.reportWarning("HTML2003", new Object[]{iname,ename,pname,ppname});
-                                }
-                                endElement(info.qname, synthesizedAugs());
-                            }
                             QName qname = new QName(null, pname, pname, null);
                             if (fReportErrors) {
                                 String ename = elem.rawname;
@@ -604,7 +597,8 @@ public class HTMLTagBalancer
                     for (int j = length - 1; j >= i; j--) {
                         info = fElementStack.pop();
                         if (fDocumentHandler != null) {
-                            callEndElement(info.qname, null);
+                            // PATCH: Marc-André Morissette
+                            callEndElement(info.qname, synthesizedAugs());
                         }
                     }
                     length = i;
@@ -890,7 +884,8 @@ public class HTMLTagBalancer
                 fErrorReporter.reportWarning("HTML2007", new Object[]{ename,iname});
             }
             if (fDocumentHandler != null) {
-                callEndElement(info.qname, augs);
+                // PATCH: Marc-André Morissette
+                callEndElement(info.qname, i < depth - 1 ? synthesizedAugs() : augs);
             }
         }
 
@@ -1076,33 +1071,7 @@ public class HTMLTagBalancer
         Augmentations augs = null;
         if (fAugmentations) {
             augs = fInfosetAugs;
-            Class cls = augs.getClass();
-            Method method = null;
-            try {
-                method = cls.getMethod("clear", null);
-            }
-            catch (NoSuchMethodException e) {
-                try {
-                    method = cls.getMethod("removeAllItems", null);
-                }
-                catch (NoSuchMethodException e2) {
-                    // NOTE: This should not happen! -Ac
-                    augs = new AugmentationsImpl();
-                }
-            }
-            if (method != null) {
-                try {
-                    method.invoke(augs, null);
-                }
-                catch (IllegalAccessException e) {
-                    // NOTE: This should not happen! -Ac
-                    augs = new AugmentationsImpl();
-                } 
-                catch (InvocationTargetException e) {
-                    // NOTE: This should not happen! -Ac
-                    augs = new AugmentationsImpl();
-                } 
-            }
+            augs.removeAllItems();
             augs.putItem(AUGMENTATIONS, SYNTHESIZED_ITEM);
         }
         return augs;

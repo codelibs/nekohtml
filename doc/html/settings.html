@@ -216,7 +216,7 @@ The NekoHTML parser supports the following features:
    character encoding of the scanning reader object. Setting this feature 
    to <code>true</code> allows the application to override this behavior.
    <p class='see'>
-   <a href='#default-encoding'>http://cyberneko.org/html/properties/default-encoding</a>
+   See: <a href='#default-encoding'>http://cyberneko.org/html/properties/default-encoding</a>
   <td align='center'>false
  <tr>
   <td>
@@ -225,6 +225,22 @@ The NekoHTML parser supports the following features:
    <br>
    Specifies whether the scanner should strip HTML comment delimiters
    (i.e. "&lt;!--" and "--&gt;") from &lt;script&gt; element content.
+   <p class='see'>
+   See: <a href='#style-strip-comment-delims'>http://cyberneko.org/html/features/scanner/style/strip-comment-delims</a>
+   <br>
+   See: <a href='#script-strip-cdata-delims'>http://cyberneko.org/html/features/scanner/script/strip-cdata-delims</a>
+  <td align='center'>false
+ <tr>
+  <td>
+   <a name='script-strip-cdata-delims'></a>
+   <span class='id'>http://cyberneko.org/html/features/scanner/script/strip-cdata-delims</span>
+   <br>
+   Specifies whether the scanner should strip XHTML CDATA delimiters
+   (i.e. "&lt;![CDATA[" and "]]&gt;") from &lt;script&gt; element content.
+   <p class='see'>
+   See: <a href='#style-strip-cdata-delims'>http://cyberneko.org/html/features/scanner/style/strip-cdata-delims</a>
+   <br>
+   See: <a href='#script-strip-comment-delims'>http://cyberneko.org/html/features/scanner/script/strip-comment-delims</a>
   <td align='center'>false
  <tr>
   <td>
@@ -233,6 +249,22 @@ The NekoHTML parser supports the following features:
    <br>
    Specifies whether the scanner should strip HTML comment delimiters
    (i.e. "&lt;!--" and "--&gt;") from &lt;style&gt; element content.
+   <p class='see'>
+   See: <a href='#script-strip-comment-delims'>http://cyberneko.org/html/features/scanner/script/strip-comment-delims</a>
+   <br>
+   See: <a href='#style-strip-cdata-delims'>http://cyberneko.org/html/features/scanner/style/strip-cdata-delims</a>
+  <td align='center'>false
+ <tr>
+  <td>
+   <a name='style-strip-cdata-delims'></a>
+   <span class='id'>http://cyberneko.org/html/features/scanner/style/strip-cdata-delims</span>
+   <br>
+   Specifies whether the scanner should strip XHTML CDATA delimiters
+   (i.e. "&lt;![CDATA[" and "]]&gt;") from &lt;style&gt; element content.
+   <p class='see'>
+   See: <a href='#script-strip-cdata-delims'>http://cyberneko.org/html/features/scanner/script/strip-cdata-delims</a>
+   <br>
+   See: <a href='#style-strip-comment-delims'>http://cyberneko.org/html/features/scanner/style/strip-comment-delims</a>
   <td align='center'>false
  <tr>
   <td>
