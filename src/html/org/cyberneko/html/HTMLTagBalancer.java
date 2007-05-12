@@ -400,7 +400,7 @@ public class HTMLTagBalancer
             }
             String ename = modifyName("html", fNamesElems);
             fQName.setValues(null, ename, ename, null);
-            startElement(fQName, emptyAttributes(), synthesizedAugs());
+            startElement(fQName, null, synthesizedAugs());
             endElement(fQName, synthesizedAugs());
         }
 
@@ -478,7 +478,7 @@ public class HTMLTagBalancer
                     fErrorReporter.reportWarning("HTML2002", new Object[]{ename,pname});
                 }
                 QName qname = new QName(null, pname, pname, null);
-                startElement(qname, emptyAttributes(), synthesizedAugs());
+                startElement(qname, null, synthesizedAugs());
             }
             else {
                 HTMLElements.Element pelement = element.parent[0];
@@ -505,7 +505,7 @@ public class HTMLTagBalancer
                                 String ename = elem.rawname;
                                 fErrorReporter.reportWarning("HTML2004", new Object[]{ename,pname});
                             }
-                            startElement(qname, emptyAttributes(), synthesizedAugs());
+                            startElement(qname, null, synthesizedAugs());
                         }
                     }
                 }
@@ -568,6 +568,9 @@ public class HTMLTagBalancer
         // call handler
         fSeenRootElement = true;
         if (element != null && element.isEmpty()) {
+            if (attrs == null) {
+                attrs = emptyAttributes();
+            }
             if (fDocumentHandler != null) {
                 fDocumentHandler.emptyElement(elem, attrs, augs);
             }
@@ -575,6 +578,9 @@ public class HTMLTagBalancer
         else {
             boolean inline = element != null && element.isInline();
             fElementStack.push(new Info(element, elem, inline ? attrs : null));
+            if (attrs == null) {
+                attrs = emptyAttributes();
+            }
             if (fDocumentHandler != null) {
                 fDocumentHandler.startElement(elem, attrs, augs);
             }
@@ -701,7 +707,7 @@ public class HTMLTagBalancer
             if (fReportErrors) {
                 fErrorReporter.reportWarning("HTML2006", new Object[]{ename});
             }
-            startElement(fQName, emptyAttributes(), synthesizedAugs());
+            startElement(fQName, null, synthesizedAugs());
         }
 
         // handle character content in head
@@ -719,7 +725,7 @@ public class HTMLTagBalancer
                 fQName.setValues(null, hname, hname, null);
                 endElement(fQName, synthesizedAugs());
                 fQName.setValues(null, bname, bname, null);
-                startElement(fQName, emptyAttributes(), synthesizedAugs());
+                startElement(fQName, null, synthesizedAugs());
             }
         }
 
@@ -788,9 +794,6 @@ public class HTMLTagBalancer
             for (int i = 0; i < size; i++) {
                 Info info = (Info)fInlineStack.pop();
                 XMLAttributes attributes = info.attributes;
-                if (attributes == null) {
-                    attributes = emptyAttributes();
-                }
                 if (fReportErrors) {
                     String iname = info.qname.rawname;
                     fErrorReporter.reportWarning("HTML2008", new Object[]{iname});
