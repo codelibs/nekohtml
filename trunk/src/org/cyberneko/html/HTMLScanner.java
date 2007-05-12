@@ -146,6 +146,9 @@ public class HTMLScanner
     /** String buffer. */
     protected final XMLStringBuffer fStringBuffer = new XMLStringBuffer(1024);
 
+    /** String buffer. */
+    private final XMLStringBuffer fStringBuffer2 = new XMLStringBuffer(1024);
+
     //
     // XMLDocumentScanner methods
     //
@@ -596,10 +599,18 @@ public class HTMLScanner
                                 next = true;
                             }
                             else if (c == '&') {
-                                char ce = scanEntityRef();
+                                int ce = scanEntityRef(fStringBuffer);
                                 if (fDocumentHandler != null && fElementCount >= fElementDepth) {
-                                    fStringBuffer.clear();
-                                    fStringBuffer.append(ce);
+                                    if (ce == -1) {
+                                        String text = fStringBuffer.toString();
+                                        fStringBuffer.clear();
+                                        fStringBuffer.append('&');
+                                        fStringBuffer.append(text);
+                                    }
+                                    else {
+                                        fStringBuffer.clear();
+                                        fStringBuffer.append((char)ce);
+                                    }
                                     if (DEBUG_CALLBACKS) {
                                         System.out.println("characters("+fStringBuffer+')');
                                     }
@@ -686,23 +697,24 @@ public class HTMLScanner
         //
 
         /** Scans an entity reference. */
-        protected char scanEntityRef() throws IOException {
-            fStringBuffer.clear();
+        protected int scanEntityRef(XMLStringBuffer str) throws IOException {
+            str.clear();
             while (true) {
                 int c = read();
-                if (c == '<' || c == '&' || c == '>' || Character.isSpace((char)c)) {
-                    fCharOffset--;
-                    break;
-                }
                 if (c == ';') {
                     break;
                 }
-                if (c == -1) {
-                    throw new EOFException();
+                //if (c == '<' || c == '&' || c == '>' || Character.isSpace((char)c)) {
+                if (!Character.isLetterOrDigit((char)c) && c != '#') {
+                    fCharOffset--;
+                    return -1;
                 }
-                fStringBuffer.append((char)c);
+                if (c == -1) {
+                    return -1;
+                }
+                str.append((char)c);
             }
-            if (fStringBuffer.length == 0) {
+            if (str.length == 0) {
                 return '&';
             }
 
@@ -720,13 +732,16 @@ public class HTMLScanner
                 catch (NumberFormatException e) {
                     // REVISIT: What should be done with this?
                 }
-                return (char)value;
+                return value;
             }
 
             int c = HTMLEntities.get(name);
-            return (char)c;
+            if (c == -1) {
+                str.append(';');
+            }
+            return c;
         
-        } // scanEntityRef():char
+        } // scanEntityRef():int
 
         /** Scans characters. */
         protected void scanCharacters() throws IOException {
@@ -1043,8 +1058,14 @@ public class HTMLScanner
                         throw new EOFException();
                     }
                     if (c == '&') {
-                        char ce = scanEntityRef();
-                        fStringBuffer.append(ce);
+                        int ce = scanEntityRef(fStringBuffer2);
+                        if (ce != -1) {
+                            fStringBuffer.append((char)ce);
+                        }
+                        else {
+                            fStringBuffer.append('&');
+                            fStringBuffer.append(fStringBuffer2);
+                        }
                     }
                     else if (c != quote) {
                         fStringBuffer.append((char)c);
