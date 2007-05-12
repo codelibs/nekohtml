@@ -112,6 +112,12 @@ public class HTMLScanner
      */
     public static final String NOTIFY_HTML_BUILTIN_REFS = "http://cyberneko.org/html/features/scanner/notify-builtin-refs";
 
+    /** 
+     * Strip HTML comment delimiters ("&lt;!--" and "--&gt;") from SCRIPT
+     * tag contents.
+     */
+    public static final String STRIP_COMMENT_DELIMITERS = "http://cyberneko.org/html/features/scanner/script/strip-comment-delims";
+
     /** Recognized features. */
     private static final String[] RECOGNIZED_FEATURES = {
         AUGMENTATIONS,
@@ -119,12 +125,14 @@ public class HTMLScanner
         NOTIFY_CHAR_REFS,
         NOTIFY_XML_BUILTIN_REFS,
         NOTIFY_HTML_BUILTIN_REFS,
+        STRIP_COMMENT_DELIMITERS,
     };
 
     /** Recognized features defaults. */
     private static final Boolean[] RECOGNIZED_FEATURES_DEFAULTS = {
         null,
         null,
+        Boolean.FALSE,
         Boolean.FALSE,
         Boolean.FALSE,
         Boolean.FALSE,
@@ -230,6 +238,9 @@ public class HTMLScanner
 
     /** Notify HTML built-in general entity references. */
     protected boolean fNotifyHtmlBuiltinRefs;
+
+    /** Strip comment delimiters. */
+    protected boolean fStripCommentDelims;
 
     // properties
 
@@ -351,6 +362,49 @@ public class HTMLScanner
                                            literalSystemId, expandedSystemId);
     } // pushInputSource(XMLInputSource)
 
+    /**
+     * Cleans up used resources. For example, if scanning is terminated
+     * early, then this method ensures all remaining open streams are
+     * closed.
+     *
+     * @param closeall Close all streams, including the original.
+     *                 This is used in cases when the application has
+     *                 opened the original document stream and should
+     *                 be responsible for closing it.
+     */
+    public void cleanup(boolean closeall) {
+        int size = fCurrentEntityStack.size();
+        if (size > 0) {
+            // current entity is not the original, so close it
+            if (fCurrentEntity != null) {
+                try {
+                    fCurrentEntity.stream.close();
+                }
+                catch (Exception e) {
+                    // ignore
+                }
+            }
+            // close remaining streams
+            for (int i = closeall ? 0 : 1; i < size; i++) {
+                fCurrentEntity = (CurrentEntity)fCurrentEntityStack.pop();
+                try {
+                    fCurrentEntity.stream.close();
+                }
+                catch (Exception e) {
+                    // ignore
+                }
+            }
+        }
+        else if (closeall && fCurrentEntity != null) {
+            try {
+                fCurrentEntity.stream.close();
+            }
+            catch (Exception e) {
+                // ignore
+            }
+        }
+    } // cleanup(boolean)
+
     //
     // XMLLocator methods
     //
@@ -435,6 +489,7 @@ public class HTMLScanner
         fNotifyCharRefs = manager.getFeature(NOTIFY_CHAR_REFS);
         fNotifyXmlBuiltinRefs = manager.getFeature(NOTIFY_XML_BUILTIN_REFS);
         fNotifyHtmlBuiltinRefs = manager.getFeature(NOTIFY_HTML_BUILTIN_REFS);
+        fStripCommentDelims = manager.getFeature(STRIP_COMMENT_DELIMITERS);
 
         // get properties
         fNamesElems = getNamesValue(String.valueOf(manager.getProperty(NAMES_ELEMS)));
@@ -834,7 +889,7 @@ public class HTMLScanner
             while (fCurrentEntity.offset < fCurrentEntity.length) {
                 char c = fCurrentEntity.buffer[fCurrentEntity.offset];
                 if (!Character.isLetterOrDigit(c) &&
-                    !(c == '-' || c == '.' || c == ':')) {
+                    !(c == '-' || c == '.' || c == ':' || c == '_')) {
                     break;
                 }
                 fCurrentEntity.offset++;
@@ -863,7 +918,7 @@ public class HTMLScanner
     } // scanName():String
 
     /** Skips markup. */
-    protected void skipMarkup() throws IOException {
+    protected void skipMarkup(boolean balance) throws IOException {
         if (DEBUG_BUFFER) {
             System.out.print("(skipMarkup: ");
             printBuffer();
@@ -879,7 +934,7 @@ public class HTMLScanner
             while (fCurrentEntity.offset < fCurrentEntity.length) {
                 char c = fCurrentEntity.buffer[fCurrentEntity.offset++];
                 fCurrentEntity.columnNumber++;
-                if (c == '<') {
+                if (balance && c == '<') {
                     depth++;
                 }
                 else if (c == '>') {
@@ -1226,7 +1281,7 @@ public class HTMLScanner
                                     if (fReportErrors) {
                                         fErrorReporter.reportError("HTML1002", null);
                                     }
-                                    skipMarkup();
+                                    skipMarkup(true);
                                 }
                             }
                             else if (c == '?') {
@@ -1536,7 +1591,7 @@ public class HTMLScanner
             if (fReportErrors) {
                 fErrorReporter.reportWarning("HTML1008", null);
             }
-            skipMarkup();
+            skipMarkup(false);
             if (DEBUG_BUFFER) {
                 System.out.print(")scanPI: ");
                 printBuffer();
@@ -1668,7 +1723,7 @@ public class HTMLScanner
                 if (fReportErrors) {
                     fErrorReporter.reportError("HTML1011", null);
                 }
-                skipMarkup();
+                skipMarkup(false);
                 return false;
             }
             aname = modifyName(aname, fNamesAttrs);
@@ -1688,13 +1743,13 @@ public class HTMLScanner
                     addLocationItem(attributes, attributes.getLength() - 1);
                 }
                 if (c == '/') {
-                    skipMarkup();
+                    skipMarkup(false);
                 }
                 return false;
             }
             if (c == '/' || c == '>') {
                 if (c == '/') {
-                    skipMarkup();
+                    skipMarkup(false);
                 }
                 fQName.setValues(null, aname, aname, null);
                 attributes.addAttribute(fQName, "CDATA", "");
@@ -1813,7 +1868,7 @@ public class HTMLScanner
             if (fReportErrors && ename == null) {
                 fErrorReporter.reportError("HTML1012", null);
             }
-            skipMarkup();
+            skipMarkup(false);
             if (ename != null) {
                 ename = modifyName(ename, fNamesElems);
                 if (fDocumentHandler != null && fElementCount >= fElementDepth) {
@@ -1847,6 +1902,9 @@ public class HTMLScanner
         /** Name of element whose content needs to be scanned as text. */
         protected String fElementName;
 
+        /** True if &lt;script&gt; element. */
+        protected boolean fScript;
+
         // temp vars
 
         /** A qualified name. */
@@ -1862,6 +1920,7 @@ public class HTMLScanner
         /** Sets the element name. */
         public Scanner setElementName(String ename) {
             fElementName = ename;
+            fScript = fElementName.equalsIgnoreCase("SCRIPT");
             return this;
         } // setElementName(String):Scanner
 
@@ -1875,6 +1934,7 @@ public class HTMLScanner
             do {
                 try {
                     next = false;
+                    boolean comment = false;
                     switch (fScannerState) {
                         case STATE_CONTENT: {
                             fBeginLineNumber = fCurrentEntity.lineNumber;
@@ -1882,12 +1942,20 @@ public class HTMLScanner
                             int c = read();
                             if (c == '<') {
                                 c = read();
-                                if (c == '/') {
+                                if (c == '!' && read() == '-' && read() == '-') {
+                                    fStringBuffer.clear();
+                                    boolean strip = fScript && fStripCommentDelims;
+                                    if (!strip) {
+                                        fStringBuffer.append("<!--");
+                                    }
+                                    comment = true;
+                                }
+                                else if (c == '/') {
                                     String ename = scanName();
                                     if (ename != null) {
                                         if (ename.equalsIgnoreCase(fElementName)) {
                                             ename = modifyName(ename, fNamesElems);
-                                            skipMarkup();
+                                            skipMarkup(false);
                                             if (fDocumentHandler != null && fElementCount >= fElementDepth) {
                                                 fQName.setValues(null, ename, ename, null);
                                                 if (DEBUG_CALLBACKS) {
@@ -1923,10 +1991,11 @@ public class HTMLScanner
                                 throw new EOFException();
                             }
                             else {
+                                fCurrentEntity.offset--;
+                                fCurrentEntity.columnNumber--;
                                 fStringBuffer.clear();
-                                fStringBuffer.append((char)c);
                             }
-                            scanCharacters(fStringBuffer);
+                            scanCharacters(fStringBuffer, comment);
                             break;
                         }
                     } // switch
@@ -1952,10 +2021,12 @@ public class HTMLScanner
         //
 
         /** Scan characters. */
-        protected void scanCharacters(XMLStringBuffer buffer) throws IOException {
+        protected void scanCharacters(XMLStringBuffer buffer,
+                                      boolean comment) throws IOException {
+            boolean strip = fScript && fStripCommentDelims;
             while (true) {
                 int c = read();
-                if (c == -1 || c == '<') {
+                if (c == -1 || (!comment && c == '<')) {
                     if (c == '<') {
                         fCurrentEntity.offset--;
                         fCurrentEntity.columnNumber--;
@@ -1963,10 +2034,12 @@ public class HTMLScanner
                     break;
                 }
                 if (c == '\r') {
+                    fCurrentEntity.columnNumber = 1;
+                    fCurrentEntity.lineNumber++;
                     buffer.append('\n');
                     c = read();
                     if (c != '\n') {
-                        if (c == -1 || c == '<') {
+                        if (c == -1 || (!comment && c == '<')) {
                             fCurrentEntity.offset--;
                             fCurrentEntity.columnNumber--;
                             break;
@@ -1974,8 +2047,30 @@ public class HTMLScanner
                         buffer.append((char)c);
                     }
                 }
+                else if (comment && c == '-') {
+                    int count = 0;
+                    do {
+                        count++;
+                        c = read();
+                    } while (c == '-');
+                    for (int i = strip && c == '>' ? 2 : 0; i < count; i++) {
+                        buffer.append('-');
+                    }
+                    if (c == -1 || (count >= 2 && c == '>')) {
+                        if (!strip) {
+                            buffer.append((char)c);
+                        }
+                        break;
+                    }
+                    fCurrentEntity.offset--;
+                    fCurrentEntity.columnNumber--;
+                }
                 else {
                     buffer.append((char)c);
+                    if (c == '\n') {
+                        fCurrentEntity.columnNumber = 1;
+                        fCurrentEntity.lineNumber++;
+                    }
                 }
             }
             if (buffer.length > 0 && fDocumentHandler != null && fElementCount >= fElementDepth) {

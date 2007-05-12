@@ -217,9 +217,9 @@ public class HTMLElements {
         // CODE - - (%inline;)*
         ELEMENTS.addElement(new Element(CODE, "CODE", Element.INLINE, BODY, null));
         // COL - O EMPTY
-        ELEMENTS.addElement(new Element(COL, "COL", 0, COLGROUP, new short[]{COL}));
+        ELEMENTS.addElement(new Element(COL, "COL", Element.EMPTY, TABLE, null));
         // COLGROUP - O (COL)*
-        ELEMENTS.addElement(new Element(COLGROUP, "COLGROUP", 0, TABLE, new short[]{COLGROUP}));
+        ELEMENTS.addElement(new Element(COLGROUP, "COLGROUP", 0, TABLE, new short[]{COL,COLGROUP}));
         // COMMENT
         ELEMENTS.addElement(new Element(COMMENT, "COMMENT", Element.SPECIAL, HTML, null));
         // DEL - - (%flow;)*
@@ -374,9 +374,9 @@ public class HTMLElements {
         // TABLE - - (CAPTION?, (COL*|COLGROUP*), THEAD?, TFOOT?, TBODY+)
         ELEMENTS.addElement(new Element(TABLE, "TABLE", Element.BLOCK|Element.CONTAINER, BODY, null));
         // TBODY O O (TR)+
-        ELEMENTS.addElement(new Element(TBODY, "TBODY", 0, TABLE, new short[]{THEAD,TD,TH,TR}));
+        ELEMENTS.addElement(new Element(TBODY, "TBODY", 0, TABLE, new short[]{THEAD,TD,TH,TR,COLGROUP}));
         // TD - O (%flow;)*
-        ELEMENTS.addElement(new Element(TD, "TD", 0, TABLE, new short[]{TD,TH}));
+        ELEMENTS.addElement(new Element(TD, "TD", 0, TR, new short[]{TD,TH}));
         // TEXTAREA - - (#PCDATA)
         ELEMENTS.addElement(new Element(TEXTAREA, "TEXTAREA", Element.SPECIAL, FORM, null));
         // TFOOT - O (TR)+
@@ -384,11 +384,11 @@ public class HTMLElements {
         // TH - O (%flow;)*
         ELEMENTS.addElement(new Element(TH, "TH", 0, TR, new short[]{TD,TH}));
         // THEAD - O (TR)+
-        ELEMENTS.addElement(new Element(THEAD, "THEAD", 0, TABLE, null));
+        ELEMENTS.addElement(new Element(THEAD, "THEAD", 0, TABLE, new short[]{COLGROUP}));
         // TITLE - - (#PCDATA) -(%head.misc;)
         ELEMENTS.addElement(new Element(TITLE, "TITLE", 0, new short[]{HEAD,BODY}, null));
         // TR - O (TH|TD)+
-        ELEMENTS.addElement(new Element(TR, "TR", Element.BLOCK, TABLE, new short[]{TD,TH,TR}));
+        ELEMENTS.addElement(new Element(TR, "TR", Element.BLOCK, TABLE, new short[]{TD,TH,TR,COLGROUP}));
         // TT - - (%inline;)*
         ELEMENTS.addElement(new Element(TT, "TT", Element.INLINE, BODY, null));
         // U, 
