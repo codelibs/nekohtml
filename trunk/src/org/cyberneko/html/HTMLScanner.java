@@ -4,11 +4,13 @@ package org.cyberneko.html;
 
 import java.io.EOFException;
 import java.io.FileInputStream;
+import java.io.FilterInputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.IOException;
 import java.io.PushbackReader;
 import java.io.Reader;
+import java.io.UnsupportedEncodingException;
 
 import org.apache.xerces.util.XMLAttributesImpl;
 import org.apache.xerces.util.XMLStringBuffer;
@@ -49,8 +51,13 @@ public class HTMLScanner
     /** State: end document. */
     protected static final short STATE_END_DOCUMENT = 11;
 
+    // defaults
+
     /** Default buffer size. */
-    private static final int DEFAULT_BUFFER_SIZE = 2048;
+    protected static final int DEFAULT_BUFFER_SIZE = 2048;
+
+    /** Default encoding. */
+    protected static final String DEFAULT_ENCODING = "Cp1252";
 
     // debugging
 
@@ -63,14 +70,20 @@ public class HTMLScanner
     /** Set to true to debug the buffer. */
     private static final boolean DEBUG_BUFFER = false;
 
+    /** Set to true to debug callbacks. */
+    protected static final boolean DEBUG_CALLBACKS = false;
+
     //
     // Data
     //
 
     // state
 
+    /** The playback byte stream. */
+    protected PlaybackInputStream fByteStream;
+
     /** The character stream. */
-    protected Reader fIn;
+    protected Reader fCharStream;
 
     /** The current scanner. */
     protected Scanner fScanner;
@@ -80,6 +93,12 @@ public class HTMLScanner
 
     /** The document handler. */
     protected XMLDocumentHandler fDocumentHandler;
+
+    /** Element count. */
+    protected int fElementCount;
+
+    /** Element depth. */
+    protected int fElementDepth;
 
     // scanners
 
@@ -96,13 +115,13 @@ public class HTMLScanner
     // buffering
 
     /** Character buffer. */
-    protected final char[] fBuffer = new char[DEFAULT_BUFFER_SIZE];
+    protected final char[] fCharBuffer = new char[DEFAULT_BUFFER_SIZE];
 
     /** Offset into character buffer. */
-    protected int fOffset = 0;
+    protected int fCharOffset = 0;
 
     /** Length of characters read into character buffer. */
-    protected int fLength = 0;
+    protected int fCharLength = 0;
 
     // temp vars
 
@@ -118,23 +137,28 @@ public class HTMLScanner
 
     /** Sets the input source. */
     public void setInputSource(XMLInputSource source) throws IOException {
+        fElementCount = 0;
+        fElementDepth = -1;
+        fByteStream = null;
         Reader reader = source.getCharacterStream();
         if (reader == null) {
-            InputStream stream = source.getByteStream();
-            if (stream == null) {
+            InputStream inputStream = source.getByteStream();
+            if (inputStream == null) {
                 String systemId = source.getSystemId();
-                stream = new FileInputStream(systemId);
+                inputStream = new FileInputStream(systemId);
             }
-            //reader = new InputStreamReader(stream, "UTF-8");
-            //reader = new InputStreamReader(stream, "ISO-8859-1");
-            //reader = new InputStreamReader(stream, "ISO8859_1");
-            reader = new InputStreamReader(stream, "Cp1252");
+            fByteStream = new PlaybackInputStream(inputStream);
+            String encoding = fByteStream.detectEncoding();
+            if (encoding == null) {
+                encoding = DEFAULT_ENCODING;
+            }
+            reader = new InputStreamReader(fByteStream, encoding);
         }
-        fIn = reader;
+        fCharStream = reader;
         setScanner(fContentScanner);
         setScannerState(STATE_START_DOCUMENT);
-        fOffset = 0;
-        fLength = 0;
+        fCharOffset = 0;
+        fCharLength = 0;
     } // setInputSource(XMLInputSource)
 
     /** Scans the document. */
@@ -159,12 +183,12 @@ public class HTMLScanner
 
     /** Reads a single character. */
     protected int read() throws IOException {
-        if (fOffset == fLength) {
+        if (fCharOffset == fCharLength) {
             if (load(0) == -1) {
                 return -1;
             }
         }
-        return fBuffer[fOffset++];
+        return fCharBuffer[fCharOffset++];
     } // read():int
 
     /** 
@@ -179,9 +203,9 @@ public class HTMLScanner
             printBuffer();
             System.out.println();
         }
-        int count = fIn.read(fBuffer, offset, fBuffer.length - offset);
-        fLength = count != -1 ? count + offset : offset;
-        fOffset = offset;
+        int count = fCharStream.read(fCharBuffer, offset, fCharBuffer.length - offset);
+        fCharLength = count != -1 ? count + offset : offset;
+        fCharOffset = offset;
         if (DEBUG_BUFFER) { 
             System.out.print(")load: ");
             printBuffer();
@@ -226,7 +250,7 @@ public class HTMLScanner
             printBuffer();
             System.out.println();
         }
-        if (fOffset == fLength) {
+        if (fCharOffset == fCharLength) {
             if (load(0) == -1) {
                 if (DEBUG_BUFFER) {
                     System.out.print(")scanName: ");
@@ -236,19 +260,19 @@ public class HTMLScanner
                 return null;
             }
         }
-        int offset = fOffset;
+        int offset = fCharOffset;
         while (true) {
-            while (fOffset < fLength) {
-                char c = fBuffer[fOffset];
+            while (fCharOffset < fCharLength) {
+                char c = fCharBuffer[fCharOffset];
                 if (!Character.isLetterOrDigit(c) &&
                     !(c == '-' || c == '.' || c == ':')) {
                     break;
                 }
-                fOffset++;
+                fCharOffset++;
             }
-            if (fOffset == fLength) {
-                int length = fLength - offset;
-                System.arraycopy(fBuffer, offset, fBuffer, 0, length);
+            if (fCharOffset == fCharLength) {
+                int length = fCharLength - offset;
+                System.arraycopy(fCharBuffer, offset, fCharBuffer, 0, length);
                 load(length);
                 offset = 0;
             }
@@ -256,8 +280,8 @@ public class HTMLScanner
                 break;
             }
         }
-        int length = fOffset - offset;
-        String name = length > 0 ? new String(fBuffer, offset, length) : null;
+        int length = fCharOffset - offset;
+        String name = length > 0 ? new String(fCharBuffer, offset, length) : null;
         if (DEBUG_BUFFER) {
             System.out.print(")scanName: ");
             printBuffer();
@@ -277,13 +301,13 @@ public class HTMLScanner
         }
         int depth = 1;
         OUTER: while (true) {
-            if (fOffset == fLength) {
+            if (fCharOffset == fCharLength) {
                 if (load(0) == -1) {
                     break OUTER;
                 }
             }
-            while (fOffset < fLength) {
-                char c = fBuffer[fOffset++];
+            while (fCharOffset < fCharLength) {
+                char c = fCharBuffer[fCharOffset++];
                 if (c == '<') {
                     depth++;
                 }
@@ -310,16 +334,16 @@ public class HTMLScanner
     private void printBuffer() {
         if (DEBUG_BUFFER) {
             System.out.print('[');
-            System.out.print(fLength);
+            System.out.print(fCharLength);
             System.out.print(' ');
-            System.out.print(fOffset);
-            if (fLength > 0) {
+            System.out.print(fCharOffset);
+            if (fCharLength > 0) {
                 System.out.print(" \"");
-                for (int i = 0; i < fLength; i++) {
-                    if (i == fOffset) {
+                for (int i = 0; i < fCharLength; i++) {
+                    if (i == fCharOffset) {
                         System.out.print('^');
                     }
-                    char c = fBuffer[i];
+                    char c = fCharBuffer[i];
                     switch (c) {
                         case '\r': {
                             System.out.print("\\r");
@@ -342,7 +366,7 @@ public class HTMLScanner
                         }
                     }
                 }
-                if (fOffset == fLength) {
+                if (fCharOffset == fCharLength) {
                     System.out.print('^');
                 }
                 System.out.print('"');
@@ -424,9 +448,12 @@ public class HTMLScanner
                             }
                             else if (c == '&') {
                                 char ce = scanEntityRef();
-                                if (fDocumentHandler != null) {
+                                if (fDocumentHandler != null && fElementCount >= fElementDepth) {
                                     fStringBuffer.clear();
                                     fStringBuffer.append(ce);
+                                    if (DEBUG_CALLBACKS) {
+                                        System.out.println("characters("+fStringBuffer+')');
+                                    }
                                     fDocumentHandler.characters(fStringBuffer, null);
                                 }
                             }
@@ -435,7 +462,7 @@ public class HTMLScanner
                                 next = true;
                             }
                             else {
-                                fOffset--;
+                                fCharOffset--;
                                 scanCharacters();
                             }
                             break;
@@ -461,7 +488,8 @@ public class HTMLScanner
                                 continue;
                             }
                             else {
-                                fOffset--;
+                                fCharOffset--;
+                                fElementCount++;
                                 String ename = scanStartElement();
                                 if (ename != null && (ename.equals("SCRIPT") || ename.equals("COMMENT"))) {
                                     setScanner(fSpecialScanner.setElementName(ename));
@@ -473,14 +501,20 @@ public class HTMLScanner
                             break;
                         }
                         case STATE_START_DOCUMENT: {
-                            if (fDocumentHandler != null) {
+                            if (fDocumentHandler != null && fElementCount >= fElementDepth) {
+                                if (DEBUG_CALLBACKS) {
+                                    System.out.println("startDocument()");
+                                }
                                 fDocumentHandler.startDocument(null, null, null);
                             }
                             setScannerState(STATE_CONTENT);
                             break;
                         }
                         case STATE_END_DOCUMENT: {
-                            if (fDocumentHandler != null) {
+                            if (fDocumentHandler != null && fElementCount >= fElementDepth) {
+                                if (DEBUG_CALLBACKS) {
+                                    System.out.println("endDocument()");
+                                }
                                 fDocumentHandler.endDocument(null);
                             }
                             return false;
@@ -508,7 +542,7 @@ public class HTMLScanner
             while (true) {
                 int c = read();
                 if (c == '<' || c == '&' || c == '>' || Character.isSpace((char)c)) {
-                    fOffset--;
+                    fCharOffset--;
                     break;
                 }
                 if (c == ';') {
@@ -552,7 +586,7 @@ public class HTMLScanner
                 printBuffer();
                 System.out.println();
             }
-            if (fOffset == fLength) {
+            if (fCharOffset == fCharLength) {
                 if (load(0) == -1) {
                     if (DEBUG_BUFFER) {
                         System.out.print(")scanCharacters: ");
@@ -562,23 +596,23 @@ public class HTMLScanner
                     return;
                 }
             }
-            char c = fBuffer[fOffset];
+            char c = fCharBuffer[fCharOffset];
             int newlines = 0;
-            int offset = fOffset;
+            int offset = fCharOffset;
             if (c == '\n' || c == '\r') {
                 do {
-                    c = fBuffer[fOffset++];
+                    c = fCharBuffer[fCharOffset++];
                     if (c == '\r') {
                         newlines++;
-                        if (fOffset == fLength) {
+                        if (fCharOffset == fCharLength) {
                             offset = 0;
-                            fOffset = newlines;
+                            fCharOffset = newlines;
                             if (load(newlines) == -1) {
                                 break;
                             }
                         }
-                        if (fBuffer[fOffset] == '\n') {
-                            fOffset++;
+                        if (fCharBuffer[fCharOffset] == '\n') {
+                            fCharOffset++;
                             offset++;
                         }
                         else {
@@ -587,32 +621,36 @@ public class HTMLScanner
                     }
                     else if (c == '\n') {
                         newlines++;
-                        if (fOffset == fLength) {
+                        if (fCharOffset == fCharLength) {
                             offset = 0;
-                            fOffset = newlines;
+                            fCharOffset = newlines;
                             if (load(newlines) == -1) {
                                 break;
                             }
                         }
                     }
                     else {
-                        fOffset--;
+                        fCharOffset--;
                         break;
                     }
-                } while (fOffset < fLength - 1);
-                for (int i = offset; i < fOffset; i++) {
-                    fBuffer[i] = '\n';
+                } while (fCharOffset < fCharLength - 1);
+                for (int i = offset; i < fCharOffset; i++) {
+                    fCharBuffer[i] = '\n';
                 }
             }
-            while (fOffset < fLength) {
-                c = fBuffer[fOffset];
+            while (fCharOffset < fCharLength) {
+                c = fCharBuffer[fCharOffset];
                 if (c == '<' || c == '&' || c == '\n' || c == '\r') {
                     break;
                 }
-                fOffset++;
+                fCharOffset++;
             }
-            if (fOffset > offset && fDocumentHandler != null) {
-                fString.setValues(fBuffer, offset, fOffset - offset);
+            if (fCharOffset > offset && 
+                fDocumentHandler != null && fElementCount >= fElementDepth) {
+                fString.setValues(fCharBuffer, offset, fCharOffset - offset);
+                if (DEBUG_CALLBACKS) {
+                    System.out.println("characters("+fString+")");
+                }
                 fDocumentHandler.characters(fString, null);
             }
             if (DEBUG_BUFFER) {
@@ -644,14 +682,14 @@ public class HTMLScanner
                     }
                     if (count < 2) {
                         fStringBuffer.append('-');
-                        fOffset--;
+                        fCharOffset--;
                         continue;
                     }
                     if (c != '>') {
                         for (int i = 0; i < count; i++) {
                             fStringBuffer.append('-');
                         }
-                        fOffset--;
+                        fCharOffset--;
                         continue;
                     }
                     for (int i = 0; i < count - 2; i++) {
@@ -664,7 +702,10 @@ public class HTMLScanner
                 }
                 fStringBuffer.append((char)c);
             }
-            if (fDocumentHandler != null) {
+            if (fDocumentHandler != null && fElementCount >= fElementDepth) {
+                if (DEBUG_CALLBACKS) {
+                    System.out.println("comment("+fStringBuffer+")");
+                }
                 fDocumentHandler.comment(fStringBuffer, null);
             }
             if (DEBUG_BUFFER) {
@@ -702,19 +743,55 @@ public class HTMLScanner
             while (scanAttribute(fAttributes)) {
                 // do nothing
             }
-            /***
-            // REVISIT: implement the ability to change encoding
-            if (ename.equals("META")) {
-                String httpEquiv = fAttributes.getValue("http-equiv");
-                if (httpEquiv != null && httpEquiv.equalsIgnoreCase("content-type")) {
-                    String content = fAttributes.getValue("content");
-                    System.out.println(">>> http-equiv: '"+httpEquiv+"'");
-                    System.out.println(">>> content: '"+content+"'");
+            if (fByteStream != null && fElementDepth == -1) {
+                if (ename.equals("META")) {
+                    String httpEquiv = fAttributes.getValue("http-equiv");
+                    if (httpEquiv != null && httpEquiv.equalsIgnoreCase("content-type")) {
+                        String content = fAttributes.getValue("content");
+                        //System.err.println(">>> http-equiv: '"+httpEquiv+"'");
+                        //System.err.println(">>> content: '"+content+"'");
+                        int index1 = content.indexOf("charset=");
+                        if (index1 != -1) {
+                            int index2 = content.indexOf(';', index1);
+                            String charset = index2 != -1 ? content.substring(index1+8, index2) : content.substring(index1+8);
+                            //System.err.println(">>> charset: '"+charset+"'");
+                            try {
+                                fCharStream = new InputStreamReader(fByteStream, charset);
+                                fByteStream.playback();
+                                fElementDepth = fElementCount;
+                                fElementCount = 0;
+                                fCharOffset = fCharLength = 0;
+                            }
+                            catch (UnsupportedEncodingException e) {
+                                System.err.println("!!! UNSUPPORTED ENCODING !!!");
+                                // NOTE: If the encoding change doesn't work, 
+                                //       then there's no point in continuing to 
+                                //       buffer the input stream.
+                                fByteStream.clear();
+                            }
+                        }
+                    }
+                }
+                else if (ename.equals("BODY")) {
+                    fByteStream.clear();
+                }
+                else {
+                     HTMLElements.Element element = HTMLElements.getElement(ename);
+                     if (element.parent != null) {
+                         String name = element.parent instanceof String
+                                     ? (String)element.parent
+                                     : ((String[])element.parent)[0];
+                         if (name.equals("BODY")) {
+                             fByteStream.clear();
+                         }
+                     }
                 }
             }
-            /***/
-            if (fDocumentHandler != null) {
+            if (fDocumentHandler != null && fElementCount >= fElementDepth) {
                 fQName.setValues(null, null, ename, null);
+                if (DEBUG_CALLBACKS) {
+                    System.out.println("startElement("+fQName+','+fAttributes+")");
+                }
                 fDocumentHandler.startElement(fQName, fAttributes, null);
             }
             return ename;
@@ -732,7 +809,7 @@ public class HTMLScanner
             if (c == '>') {
                 return false;
             }
-            fOffset--;
+            fCharOffset--;
             String aname = scanName();
             if (aname == null) {
                 skip();
@@ -797,7 +874,7 @@ public class HTMLScanner
                                 }
                             }
                             else {
-                                fOffset--;
+                                fCharOffset--;
                                 break;
                             }
                         }
@@ -831,7 +908,7 @@ public class HTMLScanner
             else {
                 fQName.setValues(null, null, aname, null);
                 attributes.addAttribute(fQName, "CDATA", "");
-                fOffset--;
+                fCharOffset--;
             }
             return true;
         } // scanAttribute(XMLAttributesImpl):boolean
@@ -842,8 +919,11 @@ public class HTMLScanner
             skip();
             if (ename != null) {
                 ename = ename.toUpperCase();
-                if (fDocumentHandler != null) {
+                if (fDocumentHandler != null && fElementCount >= fElementDepth) {
                     fQName.setValues(null, null, ename, null);
+                    if (DEBUG_CALLBACKS) {
+                        System.out.println("endElement("+fQName+")");
+                    }
                     fDocumentHandler.endElement(fQName, null);
                 }
             }
@@ -907,6 +987,9 @@ public class HTMLScanner
                                         if (ename.equalsIgnoreCase(fElementName)) {
                                             skip();
                                             fQName.setValues(null, null, ename.toUpperCase(), null);
+                                            if (DEBUG_CALLBACKS) {
+                                                System.out.println("endElement("+fQName+")");
+                                            }
                                             fDocumentHandler.endElement(fQName, null);
                                             setScanner(fContentScanner);
                                             setScannerState(STATE_CONTENT);
@@ -959,17 +1042,254 @@ public class HTMLScanner
                 int c = read();
                 if (c == -1 || c == '<') {
                     if (c == '<') {
-                        fOffset--;
+                        fCharOffset--;
                     }
                     break;
                 }
-                buffer.append((char)c);
+                if (c == '\r') {
+                    buffer.append('\n');
+                    c = read();
+                    if (c != '\n') {
+                        if (c == -1 || c == '<') {
+                            fCharOffset--;
+                            break;
+                        }
+                        buffer.append((char)c);
+                    }
+                }
+                else {
+                    buffer.append((char)c);
+                }
             }
             if (buffer.length > 0) {
+                if (DEBUG_CALLBACKS) {
+                    System.out.println("characters("+buffer+")");
+                }
                 fDocumentHandler.characters(buffer, null);
             }
         } // scanCharacters(StringBuffer)
 
     } // class SpecialScanner
+
+    /**
+     * A playback input stream. This class has the ability to save the bytes
+     * read from the underlying input stream and play the bytes back later.
+     * This class is used by the HTML scanner to switch encodings when a 
+     * &lt;meta&gt; tag is detected that specifies a different encoding. 
+     * <p>
+     * If the encoding is changed, then the scanner calls the 
+     * <code>playback</code> method and re-scans the beginning of the HTML
+     * document again. This should not be too much of a performance problem
+     * because the &lt;meta&gt; tag appears at the beginning of the document.
+     * <p>
+     * If the &lt;body&gt; tag is reached without playing back the bytes,
+     * then the buffer can be cleared by calling the <code>clear</code>
+     * method. This stops the buffering of bytes and allows the memory used
+     * by the buffer to be reclaimed. 
+     * <p>
+     * <strong>Note:</strong> 
+     * If the buffer is never played back or cleared, this input stream
+     * will continue to buffer the entire stream. Therefore, it is very
+     * important to use this stream correctly.
+     *
+     * @author Andy Clark
+     */
+    public static class PlaybackInputStream
+        extends FilterInputStream {
+
+        //
+        // Constants
+        //
+
+        /** Set to true to debug playback. */
+        private static final boolean DEBUG_PLAYBACK = false;
+
+        //
+        // Data
+        //
+
+        // state
+
+        /** Playback mode. */
+        protected boolean fPlayback = false;
+
+        /** Buffer cleared. */
+        protected boolean fCleared = false;
+
+        /** Encoding detected. */
+        protected boolean fDetected = false;
+
+        // buffer info
+
+        /** Byte buffer. */
+        protected byte[] fByteBuffer = new byte[1024];
+
+        /** Offset into byte buffer during playback. */
+        protected int fByteOffset = 0;
+
+        /** Length of bytes read into byte buffer. */
+        protected int fByteLength = 0;
+
+        /** Pushback offset. */
+        public int fPushbackOffset = 0;
+
+        /** Pushback length. */
+        public int fPushbackLength = 0;
+
+        //
+        // Constructors
+        //
+
+        /** Constructor. */
+        public PlaybackInputStream(InputStream in) {
+            super(in);
+        } // <init>(InputStream)
+
+        //
+        // Public methods
+        //
+
+        /** Detect encoding. */
+        public String detectEncoding() throws IOException {
+            if (fDetected) {
+                throw new IOException("should not detect encoding twice");
+            }
+            fDetected = true;
+            int b1 = read();
+            int b2 = read();
+            // UTF-8 BOM: 0xEFBBBF
+            if (b1 == 0xEF && b2 == 0xBB) {
+                int b3 = read();
+                if (b3 == 0xBF) {
+                    fPushbackOffset = 3;
+                    return "UTF8";
+                }
+                fPushbackLength = 3;
+            }
+            // UTF-16 LE BOM: 0xFFFE
+            if (b1 == 0xFF && b2 == 0xFE) {
+                return "UnicodeLittleUnmarked";
+            }
+            // UTF-16 BE BOM: 0xFEFF
+            if (b1 == 0xFE && b2 == 0xFF) {
+                return "UnicodeBigUnmarked";
+            }
+            // unknown
+            fPushbackLength = 2;
+            return null;
+        } // detectEncoding()
+
+        /** Playback buffer contents. */
+        public void playback() {
+            fPlayback = true;
+        } // playback()
+
+        /** 
+         * Clears the buffer.
+         * <p>
+         * <strong>Note:</strong>
+         * The buffer cannot be cleared during playback. Therefore, calling
+         * this method during playback will not do anything. However, the
+         * buffer will be cleared automatically at the end of playback.
+         */
+        public void clear() {
+            if (!fPlayback) {
+                fCleared = true;
+                fByteBuffer = null;
+            }
+        } // clear()
+
+        //
+        // InputStream methods
+        //
+
+        /** Read a byte. */
+        public int read() throws IOException {
+            if (DEBUG_PLAYBACK) {
+                System.out.println("(read");
+            }
+            if (fPushbackOffset < fPushbackLength) {
+                return fByteBuffer[fPushbackOffset++];
+            }
+            if (fCleared) {
+                return in.read();
+            }
+            if (fPlayback) {
+                int c = fByteBuffer[fByteOffset++];
+                if (fByteOffset == fByteLength) {
+                    fCleared = true;
+                    fByteBuffer = null;
+                }
+                if (DEBUG_PLAYBACK) {
+                    System.out.println(")read -> "+(char)c);
+                }
+                return c;
+            }
+            int c = in.read();
+            if (c != -1) {
+                if (fByteLength == fByteBuffer.length) {
+                    byte[] newarray = new byte[fByteLength + 1024];
+                    System.arraycopy(fByteBuffer, 0, newarray, 0, fByteLength);
+                    fByteBuffer = newarray;
+                }
+                fByteBuffer[fByteLength++] = (byte)c;
+            }
+            if (DEBUG_PLAYBACK) {
+                System.out.println(")read -> "+(char)c);
+            }
+            return c;
+        } // read():int
+
+        /** Read an array of bytes. */
+        public int read(byte[] array) throws IOException {
+            return read(array, 0, array.length);
+        } // read(byte[]):int
+
+        /** Read an array of bytes. */
+        public int read(byte[] array, int offset, int length) throws IOException {
+            if (DEBUG_PLAYBACK) {
+                System.out.println(")read("+offset+','+length+')');
+            }
+            if (fPushbackOffset < fPushbackLength) {
+                int count = fPushbackLength - fPushbackOffset;
+                if (count > length) {
+                    count = length;
+                }
+                System.arraycopy(fByteBuffer, fPushbackOffset, array, offset, count);
+                fPushbackOffset += count;
+                return count;
+            }
+            if (fCleared) {
+                return in.read(array, offset, length);
+            }
+            if (fPlayback) {
+                if (fByteOffset + length > fByteLength) {
+                    length = fByteLength - fByteOffset;
+                }
+                System.arraycopy(fByteBuffer, fByteOffset, array, offset, length);
+                fByteOffset += length;
+                if (fByteOffset == fByteLength) {
+                    fCleared = true;
+                    fByteBuffer = null;
+                }
+                return length;
+            }
+            int count = in.read(array, offset, length);
+            if (count != -1) {
+                if (fByteLength + count > fByteBuffer.length) {
+                    byte[] newarray = new byte[fByteLength + count + 512];
+                    System.arraycopy(fByteBuffer, 0, newarray, 0, fByteLength);
+                    fByteBuffer = newarray;
+                }
+                System.arraycopy(array, offset, fByteBuffer, fByteLength, count);
+                fByteLength += count;
+            }
+            if (DEBUG_PLAYBACK) {
+                System.out.println(")read("+offset+','+length+") -> "+count);
+            }
+            return count;
+        } // read(byte[]):int
+
+    } // class PlaybackInputStream
 
 } // class HTMLScanner
