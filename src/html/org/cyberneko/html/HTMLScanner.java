@@ -1,5 +1,5 @@
 /* 
- * (C) Copyright 2002, Andy Clark.  All rights reserved.
+ * (C) Copyright 2002-2003, Andy Clark.  All rights reserved.
  *
  * This file is distributed under an Apache style license. Please
  * refer to the LICENSE file for specific details.
@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.io.PushbackReader;
 import java.io.Reader;
 import java.io.UnsupportedEncodingException;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.util.Stack;
@@ -1097,7 +1098,29 @@ public class HTMLScanner
             fLocationItem.setValues(fBeginLineNumber, fBeginColumnNumber, 
                                     fEndLineNumber, fEndColumnNumber);
             augs = fInfosetAugs;
-            augs.clear();
+            Class cls = augs.getClass();
+            Method method = null;
+            try {
+                method = cls.getMethod("clear", null);
+            }
+            catch (NoSuchMethodException e) {
+                try {
+                    method = cls.getMethod("removeAllItems", null);
+                }
+                catch (NoSuchMethodException e2) {
+                    // NOTE: This should not happen! -Ac
+                    augs = new AugmentationsImpl();
+                }
+            }
+            if (method != null) {
+                try {
+                    method.invoke(augs, null);
+                }
+                catch (Exception e) {
+                    // NOTE: This should not happen! -Ac
+                    augs = new AugmentationsImpl();
+                }
+            }
             augs.putItem(AUGMENTATIONS, fLocationItem);
         }
         return augs;

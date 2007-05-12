@@ -1,5 +1,5 @@
 /* 
- * (C) Copyright 2002, Andy Clark.  All rights reserved.
+ * (C) Copyright 2002-2003, Andy Clark.  All rights reserved.
  *
  * This file is distributed under an Apache style license. Please
  * refer to the LICENSE file for specific details.
@@ -7,6 +7,7 @@
 
 package org.cyberneko.html;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 import org.apache.xerces.util.AugmentationsImpl;
@@ -368,12 +369,6 @@ public class HTMLTagBalancer
 
     // old methods
 
-    /** Start document. */
-    public void startDocument(XMLLocator locator, String encoding, Augmentations augs) 
-        throws XNIException {
-        startDocument(locator, encoding, null, augs);
-    } // startDocument(XMLLocator,String,Augmentations)
-
     /** XML declaration. */
     public void xmlDecl(String version, String encoding, String standalone,
                         Augmentations augs) throws XNIException {
@@ -438,22 +433,6 @@ public class HTMLTagBalancer
             fDocumentHandler.processingInstruction(target, data, augs);
         }
     } // processingInstruction(String,XMLString,Augmentations)
-
-    /** Start prefix mapping. */
-    public void startPrefixMapping(String prefix, String uri, Augmentations augs)
-        throws XNIException {
-        
-        // check for end of document
-        if (fSeenRootElementEnd) {
-            return;
-        }
-
-        // call handler
-        if (fDocumentHandler != null) {
-            fDocumentHandler.startPrefixMapping(prefix, uri, augs);
-        }
-
-    } // startPrefixMapping(String,String,Augmentations)
 
     /** Start element. */
     public void startElement(QName elem, XMLAttributes attrs, Augmentations augs)
@@ -804,22 +783,6 @@ public class HTMLTagBalancer
 
     } // endElement(QName,Augmentations)
 
-    /** End prefix mapping. */
-    public void endPrefixMapping(String prefix, Augmentations augs)
-        throws XNIException {
-        
-        // check for end of document
-        if (fSeenRootElementEnd) {
-            return;
-        }
-
-        // call handler
-        if (fDocumentHandler != null) {
-            fDocumentHandler.endPrefixMapping(prefix, augs);
-        }
-
-    } // endPrefixMapping(String,Augmentations)
-
     // @since Xerces 2.1.0
 
     /** Sets the document source. */
@@ -831,6 +794,76 @@ public class HTMLTagBalancer
     public XMLDocumentSource getDocumentSource() {
         return fDocumentSource;
     } // getDocumentSource():XMLDocumentSource
+
+    // removed since Xerces-J 2.3.0
+
+    /** Start document. */
+    public void startDocument(XMLLocator locator, String encoding, Augmentations augs) 
+        throws XNIException {
+        startDocument(locator, encoding, null, augs);
+    } // startDocument(XMLLocator,String,Augmentations)
+
+    /** Start prefix mapping. */
+    public void startPrefixMapping(String prefix, String uri, Augmentations augs)
+        throws XNIException {
+        
+        // check for end of document
+        if (fSeenRootElementEnd) {
+            return;
+        }
+
+        // call handler
+        if (fDocumentHandler != null) {
+            Class cls = fDocumentHandler.getClass();
+            Class[] types = { String.class, String.class, Augmentations.class };
+            try {
+                Method method = cls.getMethod("startPrefixMapping", types);
+                Object[] args = { prefix, uri, augs };
+                method.invoke(fDocumentHandler, args);
+            }
+            catch (NoSuchMethodException e) {
+                // ignore
+            }
+            catch (IllegalAccessException e) {
+                // ignore
+            }
+            catch (InvocationTargetException e) {
+                // ignore
+            }
+        }
+    
+    } // startPrefixMapping(String,String,Augmentations)
+
+    /** End prefix mapping. */
+    public void endPrefixMapping(String prefix, Augmentations augs)
+        throws XNIException {
+        
+        // check for end of document
+        if (fSeenRootElementEnd) {
+            return;
+        }
+
+        // call handler
+        if (fDocumentHandler != null) {
+            Class cls = fDocumentHandler.getClass();
+            Class[] types = { String.class, Augmentations.class };
+            try {
+                Method method = cls.getMethod("endPrefixMapping", types);
+                Object[] args = { prefix, augs };
+                method.invoke(fDocumentHandler, args);
+            }
+            catch (NoSuchMethodException e) {
+                // ignore
+            }
+            catch (IllegalAccessException e) {
+                // ignore
+            }
+            catch (InvocationTargetException e) {
+                // ignore
+            }
+        }
+    
+    } // endPrefixMapping(String,Augmentations)
 
     //
     // Protected methods
@@ -887,7 +920,29 @@ public class HTMLTagBalancer
         Augmentations augs = null;
         if (fAugmentations) {
             augs = fInfosetAugs;
-            augs.clear();
+            Class cls = augs.getClass();
+            Method method = null;
+            try {
+                method = cls.getMethod("clear", null);
+            }
+            catch (NoSuchMethodException e) {
+                try {
+                    method = cls.getMethod("removeAllItems", null);
+                }
+                catch (NoSuchMethodException e2) {
+                    // NOTE: This should not happen! -Ac
+                    augs = new AugmentationsImpl();
+                }
+            }
+            if (method != null) {
+                try {
+                    method.invoke(augs, null);
+                }
+                catch (Exception e) {
+                    // NOTE: This should not happen! -Ac
+                    augs = new AugmentationsImpl();
+                }
+            }
             augs.putItem(AUGMENTATIONS, SYNTHESIZED_ITEM);
         }
         return augs;

@@ -1,5 +1,5 @@
 /* 
- * (C) Copyright 2002, Andy Clark.  All rights reserved.
+ * (C) Copyright 2002-2003, Andy Clark.  All rights reserved.
  *
  * This file is distributed under an Apache style license. Please
  * refer to the LICENSE file for specific details.
@@ -7,6 +7,7 @@
 
 package org.cyberneko.html.filters;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 import org.apache.xerces.xni.Augmentations;
@@ -127,12 +128,6 @@ public class DefaultFilter
 
     // old methods
 
-    /** Start document. */
-    public void startDocument(XMLLocator locator, String encoding, Augmentations augs) 
-        throws XNIException {
-        startDocument(locator, encoding, null, augs);
-    } // startDocument(XMLLocator,String,Augmentations)
-
     /** XML declaration. */
     public void xmlDecl(String version, String encoding, String standalone, Augmentations augs)
         throws XNIException {
@@ -164,14 +159,6 @@ public class DefaultFilter
             fDocumentHandler.processingInstruction(target, data, augs);
         }
     } // processingInstruction(String,XMLString,Augmentations)
-
-    /** Start prefix mapping. */
-    public void startPrefixMapping(String prefix, String uri, Augmentations augs)
-        throws XNIException {
-        if (fDocumentHandler != null) {
-            fDocumentHandler.startPrefixMapping(prefix, uri, augs);
-        }
-    } // startPrefixMapping(String,String,Augmentations)
 
     /** Start element. */
     public void startElement(QName element, XMLAttributes attributes, Augmentations augs)
@@ -251,19 +238,65 @@ public class DefaultFilter
         }
     } // endElement(QName,Augmentations)
 
-    /** End prefix mapping. */
-    public void endPrefixMapping(String prefix, Augmentations augs)
-        throws XNIException {
-        if (fDocumentHandler != null) {
-            fDocumentHandler.endPrefixMapping(prefix, augs);
-        }
-    } // endPrefixMapping(String,Augmentations)
-
     /** End document. */
     public void endDocument(Augmentations augs) throws XNIException {
         if (fDocumentHandler != null) {
             fDocumentHandler.endDocument(augs);
         }
     } // endDocument(Augmentations)
+
+    // removed since Xerces-J 2.3.0
+
+    /** Start document. */
+    public void startDocument(XMLLocator locator, String encoding, Augmentations augs) 
+        throws XNIException {
+        startDocument(locator, encoding, null, augs);
+    } // startDocument(XMLLocator,String,Augmentations)
+
+    /** Start prefix mapping. */
+    public void startPrefixMapping(String prefix, String uri, Augmentations augs)
+        throws XNIException {
+        if (fDocumentHandler != null) {
+            Class cls = fDocumentHandler.getClass();
+            Class[] types = { String.class, String.class, Augmentations.class };
+            try {
+                Method method = cls.getMethod("startPrefixMapping", types);
+                Object[] args = { prefix, uri, augs };
+                method.invoke(fDocumentHandler, args);
+            }
+            catch (NoSuchMethodException e) {
+                // ignore
+            }
+            catch (IllegalAccessException e) {
+                // ignore
+            }
+            catch (InvocationTargetException e) {
+                // ignore
+            }
+        }
+    } // startPrefixMapping(String,String,Augmentations)
+
+    /** End prefix mapping. */
+    public void endPrefixMapping(String prefix, Augmentations augs)
+        throws XNIException {
+        if (fDocumentHandler != null) {
+            Class cls = fDocumentHandler.getClass();
+            Class[] types = { String.class, Augmentations.class };
+            try {
+                Method method = cls.getMethod("endPrefixMapping", types);
+                Object[] args = { prefix, augs };
+                method.invoke(fDocumentHandler, args);
+            }
+            catch (NoSuchMethodException e) {
+                // ignore
+            }
+            catch (IllegalAccessException e) {
+                // ignore
+            }
+            catch (InvocationTargetException e) {
+                // ignore
+            }
+        }
+    } // endPrefixMapping(String,Augmentations)
 
 } // class DefaultFilter
