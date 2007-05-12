@@ -8,6 +8,7 @@
 package org.cyberneko.html;
 
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.text.MessageFormat;
 import java.util.Locale;
 import java.util.MissingResourceException;
@@ -106,6 +107,11 @@ public class HTMLConfiguration
 
     /** Error domain. */
     protected static final String ERROR_DOMAIN = "http://cyberneko.org/html";
+
+    // private
+
+    /** Document source class array. */
+    private static final Class[] DOCSOURCE = { XMLDocumentSource.class };
 
     //
     // Data
@@ -512,12 +518,23 @@ public class HTMLConfiguration
         XMLDocumentSource lastSource = fDocumentScanner;
         if (getFeature(BALANCE_TAGS)) {
             fDocumentScanner.setDocumentHandler(fTagBalancer);
+            fTagBalancer.setDocumentSource(fDocumentScanner);
             lastSource = fTagBalancer;
         }
         XMLDocumentFilter[] filters = (XMLDocumentFilter[])getProperty(FILTERS);
         if (filters != null) {
             for (int i = 0; i < filters.length; i++) {
                 XMLDocumentFilter filter = filters[i];
+                Class filterClass = filter.getClass();
+                try {
+                    Method filterMethod = filterClass.getMethod("setDocumentSource", DOCSOURCE);
+                    if (filterMethod != null) {
+                        filterMethod.invoke(filter, new Object[] { lastSource });
+                    }
+                }
+                catch (Exception e) {
+                    // ignore
+                }
                 lastSource.setDocumentHandler(filter);
                 lastSource = filter;
             }

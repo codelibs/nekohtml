@@ -16,6 +16,7 @@ import org.apache.xerces.xni.XMLResourceIdentifier;
 import org.apache.xerces.xni.XMLString;
 import org.apache.xerces.xni.XNIException;
 import org.apache.xerces.xni.parser.XMLDocumentFilter;
+import org.apache.xerces.xni.parser.XMLDocumentSource;
 
 /**
  * This class implements a filter that simply passes document
@@ -36,6 +37,9 @@ public class DefaultFilter
     /** Document handler. */
     protected XMLDocumentHandler fDocumentHandler;
 
+    /** Document source. */
+    protected XMLDocumentSource fDocumentSource;
+
     //
     // XMLDocumentSource methods
     //
@@ -45,14 +49,22 @@ public class DefaultFilter
         fDocumentHandler = handler;
     } // setDocumentHandler(XMLDocumentHandler)
 
-    //
-    // Public methods
-    //
+    // @since Xerces 2.1.0
 
     /** Returns the document handler. */
     public XMLDocumentHandler getDocumentHandler() {
         return fDocumentHandler;
     } // getDocumentHandler():XMLDocumentHandler
+
+    /** Sets the document source. */
+    public void setDocumentSource(XMLDocumentSource source) {
+        fDocumentSource = source;
+    } // setDocumentSource(XMLDocumentSource)
+
+    /** Returns the document source. */
+    public XMLDocumentSource getDocumentSource() {
+        return fDocumentSource;
+    } // getDocumentSource():XMLDocumentSource
 
     //
     // XMLDocumentHandler methods
