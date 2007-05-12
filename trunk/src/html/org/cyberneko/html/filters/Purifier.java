@@ -36,9 +36,10 @@ import org.apache.xerces.xni.parser.XMLConfigurationException;
  *  <li>document text;
  *  </ul>
  * <li>ensuring the string "--" does not appear in the content of
- *     a comment; and
+ *     a comment;
  * <li>ensuring the string "]]>" does not appear in the content of
- *     a CDATA section.
+ *     a CDATA section; and
+ * <li>synthesized missing namespace bindings.
  * </ul>
  * <p>
  * Illegal characters in XML names are converted to the character 
@@ -51,6 +52,10 @@ import org.apache.xerces.xni.parser.XMLConfigurationException;
  * sequence "- " to prevent "--" from ever appearing in the comment
  * content. For CDATA sections, the character ']' is replaced by
  * the character sequence "] " to prevent "]]" from appearing.
+ * <p>
+ * The URI used for synthesized namespace bindings is
+ * "http://cyberneko.org/html/ns/synthesized/<i>number</i>" where
+ * <i>number</i> is generated to ensure uniqueness.
  * 
  * @author Andy Clark
  * 
@@ -62,6 +67,10 @@ public class Purifier
     //
     // Constants
     //
+
+    /** Synthesized namespace binding prefix. */
+    public static final String SYNTHESIZED_NAMESPACE_PREFX =
+        "http://cyberneko.org/html/ns/synthesized/";
 
     /** Namespaces. */
     protected static final String NAMESPACES = "http://xml.org/sax/features/namespaces";
@@ -118,6 +127,14 @@ public class Purifier
     /** System identifier of doctype declaration. */
     protected String fSystemId;
 
+    // namespace info
+
+    /** Namespace information. */
+    protected NamespaceContext fNamespaceContext;
+
+    /** Synthesized namespace binding count. */
+    protected int fSynthesizedNamespaceCount;
+
     // temp vars
 
     /** Qualified name. */
@@ -152,6 +169,9 @@ public class Purifier
     /** Start document. */
     public void startDocument(XMLLocator locator, String encoding,
                               Augmentations augs) throws XNIException {
+        fNamespaceContext = fNamespaces 
+                          ? new NamespaceBinder.NamespaceSupport() : null;
+        fSynthesizedNamespaceCount = 0;
         handleStartDocument();
         super.startDocument(locator, encoding, augs);
     } // startDocument(XMLLocator,String,Augmentations)
@@ -160,6 +180,8 @@ public class Purifier
     public void startDocument(XMLLocator locator, String encoding,
                               NamespaceContext nscontext, Augmentations augs)
         throws XNIException {
+        fNamespaceContext = nscontext;
+        fSynthesizedNamespaceCount = 0;
         handleStartDocument();
         super.startDocument(locator, encoding, nscontext, augs);
     } // startDocument(XMLLocator,NamespaceContext,String,Augmentations)
@@ -257,6 +279,11 @@ public class Purifier
     public void endElement(QName element, Augmentations augs)
         throws XNIException {
         element = purifyQName(element);
+        if (fNamespaces) {
+            if (element.prefix != null && element.uri == null) {
+                element.uri = fNamespaceContext.getURI(element.prefix);
+            }
+        }
         super.endElement(element, augs);
     } // endElement(QName,Augmentations)
 
@@ -276,9 +303,31 @@ public class Purifier
         // handle element and attributes
         element = purifyQName(element);
         int attrCount = attrs != null ? attrs.getLength() : 0;
-        for (int i = 0; i < attrCount; i++) {
+        for (int i = attrCount-1; i >= 0; i--) {
+            // purify attribute name
             attrs.getName(i, fQName);
             attrs.setName(i, purifyQName(fQName));
+
+            // synthesize namespace bindings
+            if (fNamespaces) {
+                if (!fQName.rawname.equals("xmlns") &&
+                    !fQName.rawname.startsWith("xmlns:")) {
+                    // NOTE: Must get attribute name again because the
+                    //       purifyQName method does not guarantee that
+                    //       the same QName object is returned. -Ac
+                    attrs.getName(i, fQName);
+                    if (fQName.prefix != null && fQName.uri == null) {
+                        synthesizeBinding(attrs, fQName.prefix);
+                    }
+                }
+            }
+        }
+
+        // synthesize namespace bindings
+        if (fNamespaces) {
+            if (element.prefix != null && element.uri == null) {
+                synthesizeBinding(attrs, element.prefix);
+            }
         }
 
         // synthesize doctype declaration
@@ -291,6 +340,24 @@ public class Purifier
         fSeenRootElement = true;
 
     } // handleStartElement(QName,XMLAttributes)
+
+    /** Synthesize namespace binding. */
+    protected void synthesizeBinding(XMLAttributes attrs, String ns) {
+        String prefix = "xmlns";
+        String localpart = ns;
+        String qname = prefix+':'+localpart;
+        String uri = NamespaceBinder.NAMESPACES_URI;
+        String atype = "CDATA";
+        String avalue = SYNTHESIZED_NAMESPACE_PREFX+fSynthesizedNamespaceCount++;
+        
+        // add attribute
+        fQName.setValues(prefix, localpart, qname, uri);
+        attrs.addAttribute(fQName, atype, avalue);
+
+        // bind namespace
+        fNamespaceContext.declarePrefix(ns, avalue);
+
+    } // synthesizeBinding(XMLAttributes,String)
 
     /** Returns an augmentations object with a synthesized item added. */
     protected final Augmentations synthesizedAugs() {

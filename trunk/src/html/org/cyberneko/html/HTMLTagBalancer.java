@@ -664,6 +664,33 @@ public class HTMLTagBalancer
             return;
         }
 
+        // insert body, if needed
+        if (!fDocumentFragment) {
+            boolean insertBody = !fSeenRootElement;
+            if (!insertBody) {
+                Info info = fElementStack.peek();
+                if (info.element.code == HTMLElements.HEAD ||
+                    info.element.code == HTMLElements.HTML) {
+                    String hname = modifyName("head", fNamesElems);
+                    String bname = modifyName("body", fNamesElems);
+                    if (fReportErrors) {
+                        fErrorReporter.reportWarning("HTML2009", new Object[]{hname,bname});
+                    }
+                    fQName.setValues(null, hname, hname, null);
+                    endElement(fQName, synthesizedAugs());
+                    insertBody = true;
+                }
+            }
+            if (insertBody) {
+                String ename = modifyName("body", fNamesElems);
+                fQName.setValues(null, ename, ename, null);
+                if (fReportErrors) {
+                    fErrorReporter.reportWarning("HTML2006", new Object[]{ename});
+                }
+                startElement(fQName, null, synthesizedAugs());
+            }
+        }
+        
         // call handler
         if (fDocumentHandler != null) {
             fDocumentHandler.startGeneralEntity(name, id, encoding, augs);
@@ -749,35 +776,38 @@ public class HTMLTagBalancer
             }
         }
 
-        // handle bare characters
-        if (!fSeenRootElement && !fDocumentFragment) {
-            if (whitespace) {
-                return;
-            }
-            String ename = modifyName("body", fNamesElems);
-            fQName.setValues(null, ename, ename, null);
-            if (fReportErrors) {
-                fErrorReporter.reportWarning("HTML2006", new Object[]{ename});
-            }
-            startElement(fQName, null, synthesizedAugs());
-        }
-
-        // handle character content in head
-        // NOTE: This fequently happens when the document looks like:
-        //       <title>Title</title>
-        //       And here's some text.
-        else if (!whitespace && !fDocumentFragment) {
-            Info info = fElementStack.peek();
-            if (info.element.code == HTMLElements.HEAD) {
-                String hname = modifyName("head", fNamesElems);
-                String bname = modifyName("body", fNamesElems);
-                if (fReportErrors) {
-                    fErrorReporter.reportWarning("HTML2009", new Object[]{hname,bname});
+        if (!fDocumentFragment) {
+            // handle bare characters
+            if (!fSeenRootElement) {
+                if (whitespace) {
+                    return;
                 }
-                fQName.setValues(null, hname, hname, null);
-                endElement(fQName, synthesizedAugs());
-                fQName.setValues(null, bname, bname, null);
+                String ename = modifyName("body", fNamesElems);
+                fQName.setValues(null, ename, ename, null);
+                if (fReportErrors) {
+                    fErrorReporter.reportWarning("HTML2006", new Object[]{ename});
+                }
                 startElement(fQName, null, synthesizedAugs());
+            }
+
+            // handle character content in head
+            // NOTE: This fequently happens when the document looks like:
+            //       <title>Title</title>
+            //       And here's some text.
+            else if (!whitespace) {
+                Info info = fElementStack.peek();
+                if (info.element.code == HTMLElements.HEAD ||
+                    info.element.code == HTMLElements.HTML) {
+                    String hname = modifyName("head", fNamesElems);
+                    String bname = modifyName("body", fNamesElems);
+                    if (fReportErrors) {
+                        fErrorReporter.reportWarning("HTML2009", new Object[]{hname,bname});
+                    }
+                    fQName.setValues(null, hname, hname, null);
+                    endElement(fQName, synthesizedAugs());
+                    fQName.setValues(null, bname, bname, null);
+                    startElement(fQName, null, synthesizedAugs());
+                }
             }
         }
 

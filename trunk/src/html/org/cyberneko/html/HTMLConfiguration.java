@@ -7,6 +7,11 @@
 
 package org.cyberneko.html;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.lang.reflect.InvocationTargetException;
@@ -20,7 +25,6 @@ import java.util.Vector;
 import org.cyberneko.html.filters.NamespaceBinder;
 
 import org.apache.xerces.util.DefaultErrorHandler;
-import org.apache.xerces.util.ObjectFactory;
 import org.apache.xerces.util.ParserConfigurationSettings;
 import org.apache.xerces.xni.XMLDocumentHandler;
 import org.apache.xerces.xni.XMLDTDHandler;
