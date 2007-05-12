@@ -110,7 +110,7 @@ public class HTMLElements {
         // FONT
         ELEMENTS.addElement(new Element("FONT", Element.INLINE, "BODY", null));
         // FORM - - (%block;|SCRIPT)+ -(FORM)
-        ELEMENTS.addElement(new Element("FORM", 0, "BODY", null));
+        ELEMENTS.addElement(new Element("FORM", 0, new String[]{"BODY","TD"}, null));
         // FRAME - O EMPTY
         ELEMENTS.addElement(new Element("FRAME", Element.EMPTY, "FRAMESET", null));
         // FRAMESET - - ((FRAMESET|FRAME)+ & NOFRAMES?)
