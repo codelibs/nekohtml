@@ -3,7 +3,7 @@
 <project default='all' basedir='.'>
 
  <!-- PROPERTIES -->
- <property name='version'   value='0.6.4'/>
+ <property name='version'   value='0.6.5'/>
  <property name='name'      value='nekohtml'/>
  <property name='Name'      value='NekoHTML ${version}'/>
  <property name='copyright' value='(C) Copyright 2002, Andy Clark. All rights reserved.'/>
@@ -15,7 +15,7 @@
  <property name='tarfile' value='${name}-${version}.tar'/>
  <property name='tgzfile' value='${name}-${version}.tar.gz'/>
 
- <property name='contents.misc'   value='LICENSE,README_html,TODO_html,build.bat,build-html.xml'/>
+ <property name='contents.misc'   value='LICENSE,LICENSE_apache,README_html,TODO_html,build.bat,build-html.xml'/>
  <property name='contents.jars'   value='${jarfile},${jarfileXni},${jarfileSamples}'/>
  <property name='contents.source' value='src/html/META-INF/**,src/html/**/*.java,src/html/**/*.properties'/>
  <property name='contents.docs'   value='doc/style.css,doc/html/**,data/html/test*.html'/>
