@@ -7,7 +7,10 @@
 
 package org.cyberneko.html.filters;
 
+import java.lang.reflect.Method;
+
 import org.apache.xerces.xni.Augmentations;
+import org.apache.xerces.xni.NamespaceContext;
 import org.apache.xerces.xni.QName;
 import org.apache.xerces.xni.XMLAttributes;
 import org.apache.xerces.xni.XMLDocumentHandler;
@@ -70,12 +73,64 @@ public class DefaultFilter
     // XMLDocumentHandler methods
     //
 
+    // since Xerces-J 2.2.0
+
+    /** Start document. */
+    public void startDocument(XMLLocator locator, String encoding, 
+                              NamespaceContext nscontext, Augmentations augs) 
+        throws XNIException {
+        if (fDocumentHandler != null) {
+            try {
+                // NOTE: Hack to allow the default filter to work with
+                //       old and new versions of the XNI document handler
+                //       interface. -Ac
+                Class cls = fDocumentHandler.getClass();
+                Class[] types = {
+                    XMLLocator.class, String.class,
+                    NamespaceContext.class, Augmentations.class
+                };
+                Method method = cls.getMethod("startDocument", types);
+                Object[] params = {
+                    locator, encoding, 
+                    nscontext, augs
+                };
+                method.invoke(fDocumentHandler, params);
+            }
+            catch (XNIException e) {
+                throw e;
+            }
+            catch (Exception e) {
+                try {
+                    // NOTE: Hack to allow the default filter to work with
+                    //       old and new versions of the XNI document handler
+                    //       interface. -Ac
+                    Class cls = fDocumentHandler.getClass();
+                    Class[] types = {
+                        XMLLocator.class, String.class, Augmentations.class
+                    };
+                    Method method = cls.getMethod("startDocument", types);
+                    Object[] params = {
+                        locator, encoding, augs
+                    };
+                    method.invoke(fDocumentHandler, params);
+                }
+                catch (XNIException ex) {
+                    throw ex;
+                }
+                catch (Exception ex) {
+                    // NOTE: Should never reach here!
+                    throw new XNIException(ex);
+                }
+            }
+        }
+    } // startDocument(XMLLocator,String,Augmentations)
+
+    // old methods
+
     /** Start document. */
     public void startDocument(XMLLocator locator, String encoding, Augmentations augs) 
         throws XNIException {
-        if (fDocumentHandler != null) {
-            fDocumentHandler.startDocument(locator, encoding, augs);
-        }
+        startDocument(locator, encoding, null, augs);
     } // startDocument(XMLLocator,String,Augmentations)
 
     /** XML declaration. */

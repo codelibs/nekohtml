@@ -16,6 +16,7 @@ import java.io.UnsupportedEncodingException;
 
 import org.apache.xerces.util.XMLStringBuffer;
 import org.apache.xerces.xni.Augmentations;
+import org.apache.xerces.xni.NamespaceContext;
 import org.apache.xerces.xni.QName;
 import org.apache.xerces.xni.XMLAttributes;
 import org.apache.xerces.xni.XMLLocator;
@@ -82,10 +83,31 @@ public class Writer
     // XMLDocumentHandler methods
     //
 
+    // since Xerces-J 2.2.0
+
+    /** Start document. */
+    public void startDocument(XMLLocator locator, String encoding, 
+                              NamespaceContext nscontext, Augmentations augs) throws XNIException {
+        fStringBuffer.clear();
+    } // startDocument(XMLLocator,String,NamespaceContext,Augmentations)
+
+    // old methods
+
     /** Start document. */
     public void startDocument(XMLLocator locator, String encoding, Augmentations augs) throws XNIException {
-        fStringBuffer.clear();
+        startDocument(locator, encoding, null, augs);
     } // startDocument(XMLLocator,String,Augmentations)
+
+    /** Processing instruction. */
+    public void processingInstruction(String target, XMLString data, Augmentations augs) throws XNIException {
+        chars();
+        out.print('?');
+        out.print(target);
+        out.print(' ');
+        print(data.toString());
+        out.println();
+        out.flush();
+    } // processingInstruction(String,XMLString,Augmentations)
 
     /** Comment. */
     public void comment(XMLString text, Augmentations augs) throws XNIException {

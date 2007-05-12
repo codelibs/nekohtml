@@ -23,12 +23,27 @@ Changes
 
 <h2>Releases</h2>
 <dl>
+ <dt>Version 0.6.8 (30 Sep 2002)
+     [<a href='http://www.apache.org/~andyc/neko/nekohtml-0.6.8.zip'>zip</a>]
+     [<a href='http://www.apache.org/~andyc/neko/nekohtml-0.6.8.tar.gz'>tgz</a>]
+ <dd>Implemented scanning of processing instructions;
+     improved performance of HTMLElements#getElement method inspired 
+       by Sam Cheung;
+     changed tag balancer algorithm as requested by Mike Bowler so 
+       that it does not close the &lt;body&gt; element to insert a
+       proper parent element;
+     fixed &lt;isindex&gt; proper parent bug and &lt;script&gt; empty 
+       element tag bug reported by Mike Bowler;
+     fixed bug reported by YingLCS that a &lt;form&gt; tag
+       would prematurely close a &lt;p&gt; tag;
+     and
+     updated implementation for XNI changes introduced in Xerces-J 2.2.0.
  <dt>Version 0.6.7 (06 Sep 2002)
      [<a href='http://www.apache.org/~andyc/neko/nekohtml-0.6.7.zip'>zip</a>]
      [<a href='http://www.apache.org/~andyc/neko/nekohtml-0.6.7.tar.gz'>tgz</a>]
  <dd>Added a FAQ section;
      and
-     updated implementation for XNI changes introduced in Xerces 2.1.0.
+     updated implementation for XNI changes introduced in Xerces-J 2.1.0.
  <dt>Version 0.6.6 (25 Aug 2002)
      [<a href='http://www.apache.org/~andyc/neko/nekohtml-0.6.6.zip'>zip</a>]
      [<a href='http://www.apache.org/~andyc/neko/nekohtml-0.6.6.tar.gz'>tgz</a>]
@@ -125,7 +140,7 @@ Changes
      [<a href='http://www.apache.org/~andyc/neko/nekohtml-0.4.1.tar.gz'>tgz</a>]
  <dd>Fixed some unquoted attribute value scanning bugs reported
        by Xiaowei Jiang;
-     fixed hack for Xerces 2.0.1 reported by Ron Cemer;
+     fixed hack for Xerces-J 2.0.1 reported by Ron Cemer;
      now passing locator object to <code>startDocument</code>
        method;
      and
@@ -184,7 +199,7 @@ Changes
  <dt>Version 0.2.1 (16 Feb 2002)
      [<a href='http://www.apache.org/~andyc/neko/nekohtml-0.2.1.zip'>zip</a>]
      [<a href='http://www.apache.org/~andyc/neko/nekohtml-0.2.1.tar.gz'>tgz</a>]
- <dd>Minor bug fix to work around problem in Xerces 2.0.0 SAX 
+ <dd>Minor bug fix to work around problem in Xerces-J 2.0.0 SAX 
      parser that drops attributes when parser configuration 
      doesn't have a symbol table.
  <dt>Version 0.2 (14 Feb 2002)

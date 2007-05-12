@@ -10,6 +10,7 @@ package org.cyberneko.html.filters;
 import java.util.Hashtable;
 
 import org.apache.xerces.xni.Augmentations;
+import org.apache.xerces.xni.NamespaceContext;
 import org.apache.xerces.xni.QName;
 import org.apache.xerces.xni.XMLAttributes;
 import org.apache.xerces.xni.XMLLocator;
@@ -156,12 +157,23 @@ public class ElementRemover
     // XMLDocumentHandler methods
     //
 
+    // since Xerces-J 2.2.0
+
     /** Start document. */
-    public void startDocument(XMLLocator locator, String encoding, Augmentations augs)
+    public void startDocument(XMLLocator locator, String encoding, 
+                              NamespaceContext nscontext, Augmentations augs) 
         throws XNIException {
         fElementDepth = 0;
         fRemovalElementDepth = Integer.MAX_VALUE;
-        super.startDocument(locator, encoding, augs);
+        super.startDocument(locator, encoding, nscontext, augs);
+    } // startDocument(XMLLocator,String,NamespaceContext,Augmentations)
+
+    // old methods
+
+    /** Start document. */
+    public void startDocument(XMLLocator locator, String encoding, Augmentations augs)
+        throws XNIException {
+        startDocument(locator, encoding, null, augs);
     } // startDocument(XMLLocator,String,Augmentations)
 
     /** Start prefix mapping. */
