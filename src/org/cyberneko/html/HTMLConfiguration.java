@@ -71,6 +71,7 @@ public class HTMLConfiguration
             //       next release of Xerces.
             NAMESPACES,
             "http://xml.org/sax/features/validation",
+            "http://apache.org/xml/features/scanner/notify-char-refs",
             "http://apache.org/xml/features/scanner/notify-builtin-refs",
             "http://apache.org/xml/features/validation/schema/normalized-value",
         };

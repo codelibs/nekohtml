@@ -222,19 +222,19 @@ public class HTMLElements {
         // SUP - - (%inline;)*
         ELEMENTS.addElement(new Element("SUP", Element.INLINE, "BODY", null));
         // TABLE - - (CAPTION?, (COL*|COLGROUP*), THEAD?, TFOOT?, TBODY+)
-        ELEMENTS.addElement(new Element("TABLE", Element.BLOCK, "BODY", null));
+        ELEMENTS.addElement(new Element("TABLE", Element.BLOCK|Element.CONTAINER, "BODY", null));
         // TBODY O O (TR)+
-        ELEMENTS.addElement(new Element("TBODY", Element.BLOCK, "TABLE", new String[]{"TD","THEAD","TR"}));
+        ELEMENTS.addElement(new Element("TBODY", 0, "TABLE", new String[]{"TD","THEAD","TR"}));
         // TEXTAREA - - (#PCDATA)
         ELEMENTS.addElement(new Element("TEXTAREA", 0, "FORM", null));
         // TD - O (%flow;)*
-        ELEMENTS.addElement(new Element("TD", Element.BLOCK, "TABLE", new String[]{"TD","TH"}));
+        ELEMENTS.addElement(new Element("TD", 0, "TABLE", new String[]{"TD","TH"}));
         // TFOOT - O (TR)+
-        ELEMENTS.addElement(new Element("TFOOT", Element.BLOCK, "TABLE", new String[]{"THEAD","TBODY","TD","TR"}));
+        ELEMENTS.addElement(new Element("TFOOT", 0, "TABLE", new String[]{"THEAD","TBODY","TD","TR"}));
         // TH - O (%flow;)*
-        ELEMENTS.addElement(new Element("TH", Element.BLOCK, "TR", null));
+        ELEMENTS.addElement(new Element("TH", 0, "TR", null));
         // THEAD - O (TR)+
-        ELEMENTS.addElement(new Element("THEAD", Element.BLOCK, "TABLE", null));
+        ELEMENTS.addElement(new Element("THEAD", 0, "TABLE", null));
         // TITLE - - (#PCDATA) -(%head.misc;)
         ELEMENTS.addElement(new Element("TITLE", 0, "HEAD", null));
         // TR - O (TH|TD)+
@@ -304,6 +304,9 @@ public class HTMLElements {
         /** Empty element. */
         public static final int EMPTY = 0x04;
 
+        /** Container element. */
+        public static final int CONTAINER = 0x08;
+
         /** Empty string array. */
         private static final String[] EMPTY_CLOSES = {};
 
@@ -360,6 +363,11 @@ public class HTMLElements {
         public boolean isEmpty() {
             return (flags & EMPTY) != 0;
         } // isEmpty():boolean
+
+        /** Returns true if this element is a container element. */
+        public boolean isContainer() {
+            return (flags & CONTAINER) != 0;
+        } // isContainer():boolean
 
         /**
          * Returns true if this element can close the specified Element.

@@ -153,10 +153,6 @@ public class HTMLTagBalancer
         
         // get element information
         HTMLElements.Element element = HTMLElements.getElement(elem.rawname);
-        if (element == null) {
-            System.out.println("!!! NOT IMPLEMENTED: <"+elem.rawname+"> !!!");
-            System.exit(1);
-        }
 
         // check proper parent
         if (element.parent != null) {
@@ -372,7 +368,7 @@ public class HTMLTagBalancer
                 if (info.element.rawname.equals(string)) {
                     return length - i;
                 }
-                if (blocked && element != null) {
+                if (blocked && element != null && !element.isContainer()) {
                     HTMLElements.Element tag = HTMLElements.getElement(info.element.rawname);
                     if (tag != null && tag.isBlock() && 
                         !element.closes(info.element.rawname)) {
@@ -390,7 +386,7 @@ public class HTMLTagBalancer
                         return length - i;
                     }
                 }
-                if (blocked && element != null) {
+                if (blocked && element != null && !element.isContainer()) {
                     HTMLElements.Element tag = HTMLElements.getElement(info.element.rawname);
                     if (tag != null && tag.isBlock() && 
                         !element.closes(info.element.rawname)) {

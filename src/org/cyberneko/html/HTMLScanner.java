@@ -58,8 +58,11 @@ public class HTMLScanner
     /** Default buffer size. */
     protected static final int DEFAULT_BUFFER_SIZE = 2048;
 
-    /** Default encoding. */
-    protected static final String DEFAULT_ENCODING = "Cp1252";
+    /** Default IANA encoding. */
+    protected static final String DEFAULT_IANA_ENCODING = "WINDOWS-1252";
+
+    /** Default Java encoding. */
+    protected static final String DEFAULT_JAVA_ENCODING = "Cp1252";
 
     // debugging
 
@@ -95,6 +98,9 @@ public class HTMLScanner
 
     /** The document handler. */
     protected XMLDocumentHandler fDocumentHandler;
+
+    /** Auto-detected IANA encoding. */
+    protected String fIANAEncoding;
 
     /** Element count. */
     protected int fElementCount;
@@ -142,23 +148,25 @@ public class HTMLScanner
         fElementCount = 0;
         fElementDepth = -1;
         fByteStream = null;
+        fIANAEncoding = DEFAULT_IANA_ENCODING;
         Reader reader = source.getCharacterStream();
         if (reader == null) {
             InputStream inputStream = source.getByteStream();
             if (inputStream == null) {
                 String systemId = source.getSystemId();
-                //inputStream = new FileInputStream(systemId);
                 String baseSystemId = source.getBaseSystemId();
                 String expandedSystemId = expandSystemId(systemId, baseSystemId);
                 URL url = new URL(expandedSystemId);
                 inputStream = url.openStream();
             }
             fByteStream = new PlaybackInputStream(inputStream);
-            String encoding = fByteStream.detectEncoding();
-            if (encoding == null) {
-                encoding = DEFAULT_ENCODING;
+            String[] encodings = new String[2];
+            fByteStream.detectEncoding(encodings);
+            fIANAEncoding = encodings[0] != null ? encodings[0] : DEFAULT_IANA_ENCODING;
+            if (encodings[1] == null) {
+                encodings[1] = DEFAULT_JAVA_ENCODING;
             }
-            reader = new InputStreamReader(fByteStream, encoding);
+            reader = new InputStreamReader(fByteStream, encodings[1]);
         }
         fCharStream = reader;
         setScanner(fContentScanner);
@@ -639,7 +647,7 @@ public class HTMLScanner
                                 if (DEBUG_CALLBACKS) {
                                     System.out.println("startDocument()");
                                 }
-                                fDocumentHandler.startDocument(null, null, null);
+                                fDocumentHandler.startDocument(null, fIANAEncoding, null);
                             }
                             setScannerState(STATE_CONTENT);
                             break;
@@ -1285,7 +1293,7 @@ public class HTMLScanner
         //
 
         /** Detect encoding. */
-        public String detectEncoding() throws IOException {
+        public void detectEncoding(String[] encodings) throws IOException {
             if (fDetected) {
                 throw new IOException("should not detect encoding twice");
             }
@@ -1297,21 +1305,26 @@ public class HTMLScanner
                 int b3 = read();
                 if (b3 == 0xBF) {
                     fPushbackOffset = 3;
-                    return "UTF8";
+                    encodings[0] = "UTF-8";
+                    encodings[1] = "UTF8";
+                    return;
                 }
                 fPushbackLength = 3;
             }
             // UTF-16 LE BOM: 0xFFFE
             if (b1 == 0xFF && b2 == 0xFE) {
-                return "UnicodeLittleUnmarked";
+                encodings[0] = "UTF-16";
+                encodings[1] = "UnicodeLittleUnmarked";
+                return;
             }
             // UTF-16 BE BOM: 0xFEFF
             if (b1 == 0xFE && b2 == 0xFF) {
-                return "UnicodeBigUnmarked";
+                encodings[0] = "UTF-16";
+                encodings[1] = "UnicodeBigUnmarked";
+                return;
             }
             // unknown
             fPushbackLength = 2;
-            return null;
         } // detectEncoding()
 
         /** Playback buffer contents. */
