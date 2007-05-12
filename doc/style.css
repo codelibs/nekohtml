@@ -1,0 +1,25 @@
+BODY { margin: 0; padding: 10; background: #EEEEEE }
+H1 { margin: -10; padding: 5; text-align: center; background: #DDDDFF;
+             border-top: solid black 1; border-bottom: solid black 1 }
+H2 H3 H4 H5 H6 { }
+P { margin: 15; text-align: justify }
+DL { margin: 15 }
+DT { font: bold }
+DD { font: italic }
+OL UL { margin: 15 }
+HR { margin: -10; color: black; height: 1 }
+
+PRE.cmdline { margin: 15; margin-left: 30; margin-right: 30;
+              padding: 5; border: solid white 1;
+              background: black; color: silver }
+.cmdline-prompt { color: magenta }
+.cmdline-cmd { color: yellow }
+PRE.code { margin: 15; margin-left: 30; margin-right: 30;
+           padding: 5; border: solid black 1; 
+           background: darkblue; color: #00FF00}
+.code-keyword { color: yellow }
+.code-punct { color: white }
+
+.copyright { margin: -10; margin-top: 10;
+             text-align: center; background: #DDDDFF;
+             border-top: solid black 1; border-bottom: solid black 1 }

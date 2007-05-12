@@ -1,0 +1,110 @@
+<title>NekoHTML</title>
+<link rel=stylesheet type=text/css href=style.css>
+<h1>NekoHTML 0.1</h1>
+<h2>About</h2>
+<p>
+NekoHTML is a simple <a href='http://www.w3.org/TR/html4/'>HTML</a>
+scanner and tag balancer that enables application programmers to 
+parse HTML documents and access the information using standard XML 
+interfaces. The parser can scan HTML files and "fix up" many common 
+mistakes that human (and computer) authors make in writing HTML 
+documents. NekoHTML adds missing parent elements; automatically 
+closes elements with optional end tags; and can handle mismatched 
+inline element tags.
+<p>
+NekoHTML is written using the 
+<a href='http://xml.apache.org/xerces2-j/xni.html'>Xerces 
+Native Interface</a> (XNI) that is the foundation of the 
+<a href='http://xml.apache.org/xerces2-j/'>Xerces2</a> 
+implementation. This enables you to use the NekoHTML parser
+with existing XNI tools without modification or rewriting code.
+<h2>Usage Instructions</h2>
+<p>
+NekoHTML is designed to be as lightweight and simple to use as
+possible. Using the Xerces 2.0.0 parser as a foundation, NekoHTML 
+is transparent for applications that instantiate parser objects 
+with the <a href='http://java.sun.com/xml/jaxp/index.html'>Java 
+API for XML Processing</a> (JAXP). Just put the NekoHTML jar file 
+in the classpath <em>before</em> the Xerces jar files. For example 
+(on Windows):
+<pre class='cmdline'>
+<span class='cmdline-prompt'>&gt;</span> <span class='cmdline-cmd'>java -cp nekohtml.jar;xmlParserAPIs.jar;xercesImpl.jar;xercesSamples.jar 
+       sax.Counter doc/index.html</span>
+doc/index.html: 10 ms (69 elems, 35 attrs, 0 spaces, 3512 chars)
+</pre>
+<p>
+Alternatively, you can construct any XNI-based parser class
+using the <code>org.cyberneko.html.HTMLConfiguration</code>
+parser configuration class. For example:
+<pre class='code'>
+<span class='code-keyword'>import</span> org.apache.xerces.parsers.AbstractSAXParser<span class='code-punct'>;</span>
+<span class='code-keyword'>import</span> org.cyberneko.html.HTMLConfiguration<span class='code-punct'>;</span>
+
+<span class='code-keyword'>public class</span> MySAXParser <span class='code-keyword'>extends</span> AbstractSAXParser <span class='code-punct'>{</span>
+
+    <span class='code-keyword'>public</span> MySAXParser<span class='code-punct'>() {</span>
+        <span class='code-keyword'>super</span><span class='code-punct'>(</span><span class='code-keyword'>new</span> HTMLConfiguration<span class='code-punct'>());</span>
+    <span class='code-punct'>}</span>
+
+<span class='code-punct'>}</span>
+</pre>
+<p>
+The above example shows how to write a SAX parser using Xerces2
+and the <code>HTMLConfiguration</code> class. The same can be 
+used to create a custom NekoHTML DOM parser. However, when doing 
+so, it would be a good idea to set the implementation used by the 
+DOM parser to construct the DOM tree so that an HTML DOM document 
+is constructed. Using Xerces2, you can set the 
+"http://apache.org/xml/properties/dom/document-class-name"
+property to the value "org.apache.html.dom.HTMLDocumentImpl".
+Refer to the Xerces documentation for 
+<a href='http://xml.apache.org/xerces2-j/properties.html'>setting 
+parser properties</a>.
+<h2>License Agreement</h2>
+<p>
+NekoHTML is available with complete source code but is 
+<strong>not</strong> "free" or "open source". It is being 
+released with full source code to allow users to experiment but 
+gives <strong>no</strong> right to the user to incorporate this 
+code into a product of any kind, commercial or otherwise.
+Please refer to the official <a href='../LICENSE'>License 
+Agreement</a> for complete information.
+<p>
+It is my intention, depending on the level of interest in this
+code, to either donate the code to the Xerces-J project at the 
+<a href='http://xml.apache.org/'>Apache XML Project</a> <i>or</i> 
+create a separate open source project hosted elsewhere (possibly 
+<a href='http://sourceforge.net'>SourceForge</a>). If you find 
+this code useful and are interested in its further development, 
+please contact me at
+<a href='mailto:andyc@mailto.com'>andyc@apache.org</a>.
+<h2>Requirements and Limitations</h2>
+<p>
+This version of NekoHTML requires the following:
+<ul>
+<li><a href='http://java.sun.com/products/'>Java 1.1</a> (or 
+    higher)
+<li><a href='http://xml.apache.org/dist/xerces-j/'>Xerces 2.0.0</a>
+</ul>
+<p>
+This version has the following limitations:
+<ul>
+<li>Can only read files with one encoding (Windows Cp1252) --
+    need to implement ability to change encoding based on the
+    <tt>&lt;meta http-equiv='content-type' content='...'&gt;</tt>
+    tag.
+</ul>
+<p>
+For a more complete list of items to be done, please refer to
+the <a href='../TODO'>Todo Items</a>.
+<h2>Release History</h2>
+<dl>
+ <dt>Version 0.1 (04 Feb 2002)
+ <dd>Initial writing.
+</dl>
+<h2>Contact Information</h2>
+<p>
+Andy Clark &lt;<a href='mailto:andyc@apache.org'>andyc@apache.org</a>&gt;
+<div class='copyright'>
+(C) Copyright 2002, Andy Clark. All rights reserved.
+</div>
