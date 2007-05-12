@@ -27,6 +27,7 @@ FAQ
 
 <ul>
 <li><a href='#uppercase'>Why are the DOM element names always uppercase?</a>
+<li><a href='#prefilter'>How do I add filters <em>before</em> the tag balancer?</a>
 <li><a href='#fragments'>How do I parse HTML document fragments?</a>
 <li><a href='#xerces2'>Do I have to use all of Xerces2?</a>
 </ul>
@@ -73,6 +74,35 @@ parser using the NekoHTML parser configuration:
 // import org.cyberneko.html.HTMLConfiguration;</span>
 
 DOMParser parser <span class='code-punct'>=</span> <span class='code-keyword'>new</span> DOMParser<span class='code-punct'>(</span><span class='code-keyword'>new</span> HTMLConfiguration<span class='code-punct'>());</span>
+</pre>
+
+<a name='prefilter'></a>
+<h3>How do I add filters <em>before</em> the tag balancer?</h3>
+
+<p>
+The NekoHTML parser has a property that allows you to append 
+custom filter components at the end of the parser pipeline as 
+detailed in the <a href='filters.html'>Pipeline Filters</a> 
+documentation. But this means that processing occurs 
+<em>after</em> the tag-balancer does its job. However, the same 
+property can also be used to insert custom components before 
+the tag-balancer as well.
+<p>
+The secret is to <em>disable</em> the tag-balancing feature and 
+then add another instance of the <code>HTMLTagBalancer</code> 
+component at the end of your custom filter pipeline. The following
+example shows how to add a custom filter before the tag-balancer
+in the DOM parser. (This also works on all other types of parsers
+that use the <code>HTMLConfiguration</code>.)
+<pre class='code'>
+<span class='code-comment'>// import org.cyberneko.html.HTMLConfiguration;
+// import org.cyberneko.html.parsers.DOMParser;
+// import org.apache.xerces.xni.parser.XMLDocumentFilter;</span>
+
+DOMParser parser <span class='code-punct'>=</span> <span class='code-keyword'>new</span> DOMParser<span class='code-punct'>();</span>
+parser<span class='code-punct'>.</span>setFeature<span class='code-punct'>(</span><span class='code-string'>"http://cyberneko.org/html/features/balance-tags"</span><span class='code-punct'>,</span> <span class='code-keyword'>false</span><span class='code-punct'>);</span>
+XMLDocumentFilter<span class='code-punct'>[]</span> filters <span class='code-punct'>= {</span> <span class='code-keyword'>new</span> MyFilter<span class='code-punct'>(),</span> <span class='code-keyword'>new</span> HTMLTagBalancer<span class='code-punct'>() };</span>
+parser<span class='code-punct'>.</span>setProperty<span class='code-punct'>(</span><span class='code-string'>"http://cyberneko.org/html/properties/filters"</span><span class='code-punct'>,</span> filters<span class='code-punct'>);</span>
 </pre>
 
 <a name='fragments'></a>

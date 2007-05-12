@@ -3,7 +3,7 @@
 <project default='all' basedir='.'>
 
  <!-- PROPERTIES -->
- <property name='version'   value='0.7.3'/>
+ <property name='version'   value='0.7.4'/>
  <property name='name'      value='nekohtml'/>
  <property name='fullname'  value='${name}-${version}'/>
  <property name='Name'      value='NekoHTML ${version}'/>
@@ -91,7 +91,6 @@
            windowtitle="${Name} Implementation"
            doctitle="${Name}"
            bottom="${copyright}" 
-           locale='en_US'
            />
   <property name='docs.done' value='true'/>
  </target>

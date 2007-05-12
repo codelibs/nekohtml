@@ -96,11 +96,14 @@ public class DefaultFilter
                     nscontext, augs
                 };
                 method.invoke(fDocumentHandler, params);
-            }
-            catch (XNIException e) {
-                throw e;
-            }
-            catch (Exception e) {
+            } 
+            catch (IllegalAccessException e) {
+                throw new XNIException(e);
+            } 
+            catch (InvocationTargetException e) {
+                throw new XNIException(e);                
+            } 
+            catch (NoSuchMethodException e) {
                 try {
                     // NOTE: Hack to allow the default filter to work with
                     //       old and new versions of the XNI document handler
@@ -114,13 +117,18 @@ public class DefaultFilter
                         locator, encoding, augs
                     };
                     method.invoke(fDocumentHandler, params);
-                }
-                catch (XNIException ex) {
-                    throw ex;
-                }
-                catch (Exception ex) {
-                    // NOTE: Should never reach here!
-                    throw new XNIException(ex);
+                } 
+                catch (NoSuchMethodException ex) {
+                    // NOTE: Should not happen!
+                    throw new XNIException(ex);                
+                } 
+                catch (IllegalAccessException ex) {
+                    // NOTE: Should not happen!
+                    throw new XNIException(ex);                
+                } 
+                catch (InvocationTargetException ex) {
+                    // NOTE: Should not happen!
+                    throw new XNIException(ex);                
                 }
             }
         }

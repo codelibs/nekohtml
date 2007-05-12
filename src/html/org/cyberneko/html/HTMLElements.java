@@ -220,7 +220,7 @@ public class HTMLElements {
             // CAPTION - - (%inline;)*
             new Element(CAPTION, "CAPTION", Element.INLINE, TABLE, null),
             // CENTER, 
-            new Element(CENTER, "CENTER", Element.INLINE, BODY, null),
+            new Element(CENTER, "CENTER", 0, BODY, null),
             // CITE - - (%inline;)*
             new Element(CITE, "CITE", Element.INLINE, BODY, null),
             // CODE - - (%inline;)*
@@ -258,9 +258,9 @@ public class HTMLElements {
             // FIELDSET - - (#PCDATA,LEGEND,(%flow;)*)
             new Element(FIELDSET, "FIELDSET", 0, BODY, null),
             // FONT
-            new Element(FONT, "FONT", Element.INLINE, BODY, null),
+            new Element(FONT, "FONT", 0, BODY, null),
             // FORM - - (%block;|SCRIPT)+ -(FORM)
-            new Element(FORM, "FORM", 0, new short[]{BODY,TD,P,DIV}, new short[]{FORM,BUTTON}),
+            new Element(FORM, "FORM", Element.CONTAINER, new short[]{BODY,TD,P,DIV}, new short[]{FORM,BUTTON}),
             // FRAME - O EMPTY
             new Element(FRAME, "FRAME", Element.EMPTY, FRAMESET, null),
             // FRAMESET - - ((FRAMESET|FRAME)+ & NOFRAMES?)
