@@ -1,5 +1,5 @@
 /* 
- * (C) Copyright 2002-2003, Andy Clark.  All rights reserved.
+ * (C) Copyright 2002-2004, Andy Clark.  All rights reserved.
  *
  * This file is distributed under an Apache style license. Please
  * refer to the LICENSE file for specific details.
@@ -10,6 +10,8 @@ package org.cyberneko.html.filters;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
+import org.cyberneko.html.HTMLComponent;
+
 import org.apache.xerces.xni.Augmentations;
 import org.apache.xerces.xni.NamespaceContext;
 import org.apache.xerces.xni.QName;
@@ -19,6 +21,8 @@ import org.apache.xerces.xni.XMLLocator;
 import org.apache.xerces.xni.XMLResourceIdentifier;
 import org.apache.xerces.xni.XMLString;
 import org.apache.xerces.xni.XNIException;
+import org.apache.xerces.xni.parser.XMLComponentManager;
+import org.apache.xerces.xni.parser.XMLConfigurationException;
 import org.apache.xerces.xni.parser.XMLDocumentFilter;
 import org.apache.xerces.xni.parser.XMLDocumentSource;
 
@@ -32,7 +36,7 @@ import org.apache.xerces.xni.parser.XMLDocumentSource;
  * @version $Id$
  */
 public class DefaultFilter 
-    implements XMLDocumentFilter {
+    implements XMLDocumentFilter, HTMLComponent {
 
     //
     // Data
@@ -306,5 +310,128 @@ public class DefaultFilter
             }
         }
     } // endPrefixMapping(String,Augmentations)
+
+    //
+    // HTMLComponent methods
+    //
+
+    /**
+     * Returns a list of feature identifiers that are recognized by
+     * this component. This method may return null if no features
+     * are recognized by this component.
+     */
+    public String[] getRecognizedFeatures() {
+        return null;
+    } // getRecognizedFeatures():String[]
+
+    /**
+     * Returns the default state for a feature, or null if this
+     * component does not want to report a default value for this
+     * feature.
+     */
+    public Boolean getFeatureDefault(String featureId) {
+        return null;
+    } // getFeatureDefault(String):Boolean
+
+    /**
+     * Returns a list of property identifiers that are recognized by
+     * this component. This method may return null if no properties
+     * are recognized by this component.
+     */
+    public String[] getRecognizedProperties() {
+        return null;
+    } // getRecognizedProperties():String[]
+
+    /**
+     * Returns the default state for a property, or null if this
+     * component does not want to report a default value for this
+     * property.
+     */
+    public Object getPropertyDefault(String propertyId) {
+        return null;
+    } // getPropertyDefault(String):Object
+
+    /**
+     * Resets the component. The component can query the component manager
+     * about any features and properties that affect the operation of the
+     * component.
+     *
+     * @param componentManager The component manager.
+     *
+     * @throws XNIException Thrown by component on initialization error.
+     */
+    public void reset(XMLComponentManager componentManager) 
+        throws XMLConfigurationException {
+    } // reset(XMLComponentManager)
+
+    /**
+     * Sets the state of a feature. This method is called by the component
+     * manager any time after reset when a feature changes state.
+     * <p>
+     * <strong>Note:</strong> Components should silently ignore features
+     * that do not affect the operation of the component.
+     *
+     * @param featureId The feature identifier.
+     * @param state     The state of the feature.
+     *
+     * @throws XMLConfigurationException Thrown for configuration error.
+     *                                   In general, components should
+     *                                   only throw this exception if
+     *                                   it is <strong>really</strong>
+     *                                   a critical error.
+     */
+    public void setFeature(String featureId, boolean state) 
+        throws XMLConfigurationException {
+    } // setFeature(String,boolean)
+
+    /**
+     * Sets the value of a property. This method is called by the component
+     * manager any time after reset when a property changes value.
+     * <p>
+     * <strong>Note:</strong> Components should silently ignore properties
+     * that do not affect the operation of the component.
+     *
+     * @param propertyId The property identifier.
+     * @param value      The value of the property.
+     *
+     * @throws XMLConfigurationException Thrown for configuration error.
+     *                                   In general, components should
+     *                                   only throw this exception if
+     *                                   it is <strong>really</strong>
+     *                                   a critical error.
+     */
+    public void setProperty(String propertyId, Object value) 
+        throws XMLConfigurationException {
+    } // setProperty(String,Object)
+
+    //
+    // Protected static methods
+    //
+
+    /** 
+     * Utility method for merging string arrays for recognized features
+     * and recognized properties.
+     */
+    protected static String[] merge(String[] array1, String[] array2) {
+
+        // shortcut merge
+        if (array1 == array2) {
+            return array1;
+        }
+        if (array1 == null) {
+            return array2;
+        }
+        if (array2 == null) {
+            return array1;
+        }
+
+        // full merge
+        String[] array3 = new String[array1.length + array2.length];
+        System.arraycopy(array1, 0, array3, 0, array1.length);
+        System.arraycopy(array2, 0, array3, array1.length, array2.length);
+
+        return array3;
+
+    } // merge(String[],String[]):String[]
 
 } // class DefaultFilter

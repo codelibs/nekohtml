@@ -1,5 +1,11 @@
 <title>NekoHTML | Parser Settings</title>
 <link rel=stylesheet type=text/css href=../style.css>
+<style type='text/css'>
+.see {
+ margin: 0; margin-top: 0.25em;
+ font-size: 0.8em; 
+}
+</style>
 
 <h1>Parser Settings</h1>
 <div class='navbar'>
@@ -51,6 +57,18 @@ The NekoHTML parser supports the following features:
  <tr><th>Feature Id / Description<th>Default
  <tr>
   <td>
+   <a name='namespaces'></a>
+   <span class='id'>http://xml.org/sax/features/namespaces</span>
+   <br>
+   Specifies if the NekoHTML parser should perform namespace
+   processing. If enabled, namespace binding attributes are
+   processed and elements and attributes are bound to the defined
+   namespaces.
+   <p class='see'>
+   See:&nbsp;<a href='#override-namespaces'>http://cyberneko.org/html/features/override-namespaces</a>
+  <td align='center'>true
+ <tr>
+  <td>
    <a name='balance-tags'></a>
    <span class='id'>http://cyberneko.org/html/features/balance-tags</span>
    <br>
@@ -64,6 +82,57 @@ The NekoHTML parser supports the following features:
    care about the appearance of specific elements, attributes, and/or
    content regardless of the document's ill-formed structure.
   <td align='center'>true
+ <tr>
+  <td>
+   <a name='override-doctype'></a>
+   <span class='id'>http://cyberneko.org/html/features/override-doctype</span>
+   <br>
+   Specifies whether the NekoHTML parser should override the public
+   and system identifier values specified in the document type declaration.
+   <p class='see'>
+   See:&nbsp;<a href='#doctype-pubid'>http://cyberneko.org/html/properties/doctype/pubid</a>
+   <br>
+   See:&nbsp;<a href='#doctype-sysid'>http://cyberneko.org/html/properties/doctype/sysid</a>
+  <td align='center'>false
+  <tr>
+   <td>
+    <a name='insert-doctype'></a>
+    <span class='id'>http://cyberneko.org/html/features/insert-doctype</span>
+    <br>
+    Specifies whether the NekoHTML parser should insert a document type
+    declaration into the document handler callbacks. The values for the
+    public and system identifiers are taken from the sysid and pubid
+    properties. Therefore, those properties should be set if this
+    feature is turned on. Also, setting this feature to <code>true</code> 
+    will cause the parser to ignore any document type declaration that 
+    appears in the document.
+    <p class='see'>
+    See:&nbsp;<a href='#doctype-pubid'>http://cyberneko.org/html/properties/doctype/pubid</a>
+    <br>
+    See:&nbsp;<a href='#doctype-sysid'>http://cyberneko.org/html/properties/doctype/sysid</a>
+   <td align='center'>false
+ <tr>
+  <td>
+   <a name='override-namespaces'></a>
+   <span class='id'>http://cyberneko.org/html/features/override-namespaces</span>
+   <br>
+   Specifies whether the NekoHTML parser should override the namespace 
+   URI bound to HTML elements and attributes.
+   <p class='see'>
+   See:&nbsp;<a href='#namespaces-uri'>http://cyberneko.org/html/properties/namespaces-uri</a>
+  <td align='center'>false
+  <tr>
+   <td>
+    <a name='insert-namespaces'></a>
+    <span class='id'>http://cyberneko.org/html/features/insert-namespaces</span>
+    <br>
+    Specifies whether the NekoHTML parser should insert namespace URI 
+    bindings to HTML elements and attributes. The value for the
+    namespace URI is taken from the namespaces property. Therefore, 
+    that property should be set if this feature is turned on. 
+    <p class='see'>
+    See:&nbsp;<a href='#namespaces-uri'>http://cyberneko.org/html/properties/namespaces-uri</a>
+   <td align='center'>false
  <tr>
   <td>
    <a name='ignore-outside-content'></a>
@@ -89,6 +158,17 @@ The NekoHTML parser supports the following features:
    <strong>not</strong> be used when using the <code>DOMParser</code>
    class. In order to parse a DOM <code>DocumentFragment</code>, use the
    <code>DOMFragmentParser</code> class.
+  <td align='center'>false
+ <tr>
+  <td>
+   <a name='cdata-sections'></a>
+   <span class='id'>http://cyberneko.org/html/features/scanner/cdata-sections</span>
+   <br>
+   Specifies whether CDATA sections are reported as character content.
+   If set to <code>false</code>, CDATA sections are reported as comments. 
+   When reported as comments, the comment text is prefixed with "[CDATA[" 
+   and end with "]]". This prefix and suffix is <em>not</em>
+   included when reported as character content.
   <td align='center'>false
  <tr>
   <td>
@@ -135,6 +215,8 @@ The NekoHTML parser supports the following features:
    tag. By default, NekoHTML checks this tag for a charset and changes the 
    character encoding of the scanning reader object. Setting this feature 
    to <code>true</code> allows the application to override this behavior.
+   <p class='see'>
+   <a href='#default-encoding'>http://cyberneko.org/html/properties/default-encoding</a>
   <td align='center'>false
  <tr>
   <td>
@@ -211,6 +293,8 @@ The NekoHTML parser supports the following properties:
    <code>http-equiv</code> directive in the source document,
    this setting is important because the parser does not
    have any support to <i>auto-detect</i> the encoding.
+   <p class='see'>
+   See:&nbsp;<a href='#ignore-specified-charset'>http://cyberneko.org/html/features/scanner/ignore-specified-charset</a>
   <td align='center'>
    <a href='http://www.iana.org/assignments/character-sets'>IANA</a> 
    encoding names
@@ -236,11 +320,52 @@ The NekoHTML parser supports the following properties:
    Specifies how the NekoHTML components should modify attribute names
    of recognized elements. Names can be converted to upper-case, 
    converted to lower-case, or left as-is.
-   <br>
   <td align='center'>"upper"<br>"lower"<br><nobr>"no-change"</nobr>
   <td align='center'>"lower"
+ <tr>
+  <td>
+   <a name='doctype-pubid'></a>
+   <span class='id'>http://cyberneko.org/html/properties/doctype/pubid</span>
+   <br>
+   Specifies the document type declaration public identifier if the
+   <code>http://cyberneko.org/html/features/override-doctype</code>
+   feature is set to <code>true</code>. The default value is the HTML
+   4.01 transitional public identifier, "-//W3C//DTD HTML 4.01 Transitional//EN".
+   <p class='see'>
+   See:&nbsp;<a href='#overrid-doctype'>http://cyberneko.org/html/features/override-doctype</a>
+  <td align='center'>String
+  <td align='center'>HTML 4.01 transitional public identifier
+ <tr>
+  <td>
+   <a name='doctype-sysid'></a>
+   <span class='id'>http://cyberneko.org/html/properties/doctype/sysid</span>
+   <br>
+   Specifies the document type declaration system identifier if the
+   <code>http://cyberneko.org/html/features/override-doctype</code>
+   feature is set to <code>true</code>. The default value is the HTML
+   4.01 transitional system identifier, "http://www.w3.org/TR/html4/loose.dtd".
+   <p class='see'>
+   See:&nbsp;<a href='#overrid-doctype'>http://cyberneko.org/html/features/override-doctype</a>
+  <td align='center'>String
+  <td align='center'>HTML 4.01 transitional system identifier
+ <tr>
+  <td>
+   <a name='namespaces-uri'></a>
+   <span class='id'>http://cyberneko.org/html/properties/namespaces-uri</span>
+   <br>
+   Specifies the namespace binding URI if the
+   <code>http://cyberneko.org/html/features/override-namespaces</code>
+   feature is set to <code>true</code>. The default value is the XHTML
+   1.0 namespace, "http://www.w3.org/1999/xhtml". This property does
+   <em>not</em> affect the case of element and attributes names and
+   does <em>not</em> ensure that the output of the NekoHTML parser is
+   valid according to the XHTML specification.
+   <p class='see'>
+   See:&nbsp;<a href='#override-namespaces'>http://cyberneko.org/html/features/override-namespaces</a>
+  <td align='center'>String
+  <td align='center'>XHTML 1.0 namespaces URI
 </table>
 
 <div class='copyright'>
-(C) Copyright 2002-2003, Andy Clark. All rights reserved.
+(C) Copyright 2002-2004, Andy Clark. All rights reserved.
 </div>

@@ -1,5 +1,5 @@
 /* 
- * (C) Copyright 2002-2003, Andy Clark.  All rights reserved.
+ * (C) Copyright 2002-2004, Andy Clark.  All rights reserved.
  *
  * This file is distributed under an Apache style license. Please
  * refer to the LICENSE file for specific details.
@@ -58,6 +58,12 @@ import org.apache.xerces.xni.parser.XMLInputSource;
  * <li>http://apache.org/xml/features/scanner/notify-char-refs
  * <li>http://apache.org/xml/features/scanner/notify-builtin-refs
  * <li>http://cyberneko.org/html/features/scanner/notify-builtin-refs
+ * <li>http://cyberneko.org/html/features/scanner/script/strip-comment-delims
+ * <li>http://cyberneko.org/html/features/scanner/style/strip-comment-delims
+ * <li>http://cyberneko.org/html/features/scanner/ignore-specified-charset
+ * <li>http://cyberneko.org/html/features/scanner/cdata-sections
+ * <li>http://cyberneko.org/html/features/override-doctype
+ * <li>http://cyberneko.org/html/features/insert-doctype
  * </ul>
  * <p>
  * This component recognizes the following properties:
@@ -66,6 +72,8 @@ import org.apache.xerces.xni.parser.XMLInputSource;
  * <li>http://cyberneko.org/html/properties/names/attrs
  * <li>http://cyberneko.org/html/properties/default-encoding
  * <li>http://cyberneko.org/html/properties/error-reporter
+ * <li>http://cyberneko.org/html/properties/doctype/pubid
+ * <li>http://cyberneko.org/html/properties/doctype/sysid
  * </ul>
  *
  * @see HTMLElements
@@ -81,6 +89,30 @@ public class HTMLScanner
     //
     // Constants
     //
+
+    // doctype info: HTML 4.01 strict
+
+    /** HTML 4.01 strict public identifier ("-//W3C//DTD HTML 4.01//EN"). */
+    public static final String HTML_4_01_STRICT_PUBID = "-//W3C//DTD HTML 4.01//EN";
+
+    /** HTML 4.01 strict system identifier ("http://www.w3.org/TR/html4/strict.dtd"). */
+    public static final String HTML_4_01_STRICT_SYSID = "http://www.w3.org/TR/html4/strict.dtd";
+
+    // doctype info: HTML 4.01 loose
+
+    /** HTML 4.01 transitional public identifier ("-//W3C//DTD HTML 4.01 Transitional//EN"). */
+    public static final String HTML_4_01_TRANSITIONAL_PUBID = "-//W3C//DTD HTML 4.01 Transitional//EN";
+
+    /** HTML 4.01 transitional system identifier ("http://www.w3.org/TR/html4/loose.dtd"). */
+    public static final String HTML_4_01_TRANSITIONAL_SYSID = "http://www.w3.org/TR/html4/loose.dtd";
+
+    // doctype info: HTML 4.01 frameset
+
+    /** HTML 4.01 frameset public identifier ("-//W3C//DTD HTML 4.01 Frameset//EN"). */
+    public static final String HTML_4_01_FRAMESET_PUBID = "-//W3C//DTD HTML 4.01 Frameset//EN";
+
+    /** HTML 4.01 frameset system identifier ("http://www.w3.org/TR/html4/frameset.dtd"). */
+    public static final String HTML_4_01_FRAMESET_SYSID = "http://www.w3.org/TR/html4/frameset.dtd";
 
     // features
 
@@ -135,6 +167,15 @@ public class HTMLScanner
      */
     public static final String IGNORE_SPECIFIED_CHARSET = "http://cyberneko.org/html/features/scanner/ignore-specified-charset";
 
+    /** Scan CDATA sections. */
+    public static final String CDATA_SECTIONS = "http://cyberneko.org/html/features/scanner/cdata-sections";
+
+    /** Override doctype declaration public and system identifiers. */
+    public static final String OVERRIDE_DOCTYPE = "http://cyberneko.org/html/features/override-doctype";
+
+    /** Insert document type declaration. */
+    public static final String INSERT_DOCTYPE = "http://cyberneko.org/html/features/insert-doctype";
+
     /** Recognized features. */
     private static final String[] RECOGNIZED_FEATURES = {
         AUGMENTATIONS,
@@ -145,12 +186,18 @@ public class HTMLScanner
         SCRIPT_STRIP_COMMENT_DELIMS,
         STYLE_STRIP_COMMENT_DELIMS,
         IGNORE_SPECIFIED_CHARSET,
+        CDATA_SECTIONS,
+        OVERRIDE_DOCTYPE,
+        INSERT_DOCTYPE,
     };
 
     /** Recognized features defaults. */
     private static final Boolean[] RECOGNIZED_FEATURES_DEFAULTS = {
         null,
         null,
+        Boolean.FALSE,
+        Boolean.FALSE,
+        Boolean.FALSE,
         Boolean.FALSE,
         Boolean.FALSE,
         Boolean.FALSE,
@@ -173,12 +220,20 @@ public class HTMLScanner
     /** Error reporter. */
     protected static final String ERROR_REPORTER = "http://cyberneko.org/html/properties/error-reporter";
 
+    /** Doctype declaration public identifier. */
+    protected static final String DOCTYPE_PUBID = "http://cyberneko.org/html/properties/doctype/pubid";
+
+    /** Doctype declaration system identifier. */
+    protected static final String DOCTYPE_SYSID = "http://cyberneko.org/html/properties/doctype/sysid";
+
     /** Recognized properties. */
     private static final String[] RECOGNIZED_PROPERTIES = {
         NAMES_ELEMS,
         NAMES_ATTRS,
         DEFAULT_ENCODING,
         ERROR_REPORTER,
+        DOCTYPE_PUBID,
+        DOCTYPE_SYSID,
     };
 
     /** Recognized properties defaults. */
@@ -187,6 +242,8 @@ public class HTMLScanner
         null,
         "Windows-1252",
         null,
+        HTML_4_01_TRANSITIONAL_PUBID,
+        HTML_4_01_TRANSITIONAL_SYSID,
     };
 
     // states
@@ -207,9 +264,6 @@ public class HTMLScanner
 
     /** Don't modify HTML names. */
     protected static final short NAMES_NO_CHANGE = 0;
-
-    /** Match HTML element names. */
-    protected static final short NAMES_MATCH = 0;
 
     /** Uppercase HTML names. */
     protected static final short NAMES_UPPERCASE = 1;
@@ -238,6 +292,12 @@ public class HTMLScanner
 
     /** Set to true to debug callbacks. */
     protected static final boolean DEBUG_CALLBACKS = false;
+
+    // static vars
+
+    /** Synthesized event info item. */
+    protected static final HTMLEventInfo SYNTHESIZED_ITEM = 
+        new HTMLEventInfo.SynthesizedItem();
 
     //
     // Data
@@ -269,6 +329,15 @@ public class HTMLScanner
     /** Ignore specified character set. */
     protected boolean fIgnoreSpecifiedCharset;
 
+    /** CDATA sections. */
+    protected boolean fCDATASections;
+
+    /** Override doctype declaration public and system identifiers. */
+    protected boolean fOverrideDoctype;
+
+    /** Insert document type declaration. */
+    protected boolean fInsertDoctype;
+
     // properties
 
     /** Modify HTML element names. */
@@ -282,6 +351,12 @@ public class HTMLScanner
 
     /** Error reporter. */
     protected HTMLErrorReporter fErrorReporter;
+
+    /** Doctype declaration public identifier. */
+    protected String fDoctypePubid;
+
+    /** Doctype declaration system identifier. */
+    protected String fDoctypeSysid;
 
     // boundary locator information
 
@@ -535,12 +610,17 @@ public class HTMLScanner
         fScriptStripCommentDelims = manager.getFeature(SCRIPT_STRIP_COMMENT_DELIMS);
         fStyleStripCommentDelims = manager.getFeature(STYLE_STRIP_COMMENT_DELIMS);
         fIgnoreSpecifiedCharset = manager.getFeature(IGNORE_SPECIFIED_CHARSET);
+        fCDATASections = manager.getFeature(CDATA_SECTIONS);
+        fOverrideDoctype = manager.getFeature(OVERRIDE_DOCTYPE);
+        fInsertDoctype = manager.getFeature(INSERT_DOCTYPE);
 
         // get properties
         fNamesElems = getNamesValue(String.valueOf(manager.getProperty(NAMES_ELEMS)));
         fNamesAttrs = getNamesValue(String.valueOf(manager.getProperty(NAMES_ATTRS)));
         fDefaultIANAEncoding = String.valueOf(manager.getProperty(DEFAULT_ENCODING));
         fErrorReporter = (HTMLErrorReporter)manager.getProperty(ERROR_REPORTER);
+        fDoctypePubid = String.valueOf(manager.getProperty(DOCTYPE_PUBID));
+        fDoctypeSysid = String.valueOf(manager.getProperty(DOCTYPE_SYSID));
     
     } // reset(XMLComponentManager)
 
@@ -872,6 +952,9 @@ public class HTMLScanner
         }
         if (fCurrentEntity.offset == fCurrentEntity.length) {
             if (load(0) == -1) {
+                if (DEBUG_BUFFER) { 
+                    System.out.println(")read: -> -1");
+                }
                 return -1;
             }
         }
@@ -899,12 +982,22 @@ public class HTMLScanner
             printBuffer();
             System.out.println();
         }
+        // resize buffer, if needed
+        if (offset == fCurrentEntity.buffer.length) {
+            int adjust = fCurrentEntity.buffer.length / 4;
+            char[] array = new char[fCurrentEntity.buffer.length + adjust];
+            System.arraycopy(fCurrentEntity.buffer, 0, array, 0, fCurrentEntity.length);
+            fCurrentEntity.buffer = array;
+        }
+        // read a block of characters
         int count = fCurrentEntity.stream.read(fCurrentEntity.buffer, offset, fCurrentEntity.buffer.length - offset);
         fCurrentEntity.length = count != -1 ? count + offset : offset;
         fCurrentEntity.offset = offset;
         if (DEBUG_BUFFER) { 
             System.out.print(")load: ");
             printBuffer();
+            System.out.print(" -> ");
+            System.out.print(count);
             System.out.println();
         }
         return count;
@@ -986,7 +1079,13 @@ public class HTMLScanner
         }
 
         if (fDocumentHandler != null) {
-            fDocumentHandler.doctypeDecl(root, pubid, sysid, null);
+            if (fOverrideDoctype) {
+                pubid = fDoctypePubid;
+                sysid = fDoctypeSysid;
+            }
+            fEndLineNumber = fCurrentEntity.lineNumber;
+            fEndColumnNumber = fCurrentEntity.columnNumber;
+            fDocumentHandler.doctypeDecl(root, pubid, sysid, locationAugs());
         }
 
     } // scanDoctype()
@@ -1434,6 +1533,43 @@ public class HTMLScanner
         return augs;
     } // locationAugs():Augmentations
 
+    /** Returns an augmentations object with a synthesized item added. */
+    protected final Augmentations synthesizedAugs() {
+        Augmentations augs = null;
+        if (fAugmentations) {
+            augs = fInfosetAugs;
+            Class cls = augs.getClass();
+            Method method = null;
+            try {
+                method = cls.getMethod("clear", null);
+            }
+            catch (NoSuchMethodException e) {
+                try {
+                    method = cls.getMethod("removeAllItems", null);
+                }
+                catch (NoSuchMethodException e2) {
+                    // NOTE: This should not happen! -Ac
+                    augs = new AugmentationsImpl();
+                }
+            }
+            if (method != null) {
+                try {
+                    method.invoke(augs, null);
+                }
+                catch (IllegalAccessException e) {
+                    // NOTE: This should not happen! -Ac
+                    augs = new AugmentationsImpl();
+                } 
+                catch (InvocationTargetException e) {
+                    // NOTE: This should not happen! -Ac
+                    augs = new AugmentationsImpl();
+                } 
+            }
+            augs.putItem(AUGMENTATIONS, SYNTHESIZED_ITEM);
+        }
+        return augs;
+    } // synthesizedAugs():Augmentations
+
     /** Returns an empty resource identifier. */
     protected final XMLResourceIdentifier resourceId() {
         /***/
@@ -1659,11 +1795,14 @@ public class HTMLScanner
                         case STATE_MARKUP_BRACKET: {
                             int c = read();
                             if (c == '!') {
-                                if (skip("DOCTYPE", false)) {
-                                    scanDoctype();
-                                }
-                                else if (read() == '-' && read() == '-') {
+                                if (skip("--", false)) {
                                     scanComment();
+                                }
+                                else if (skip("[CDATA[", false)) {
+                                    scanCDATA();
+                                }
+                                else if (skip("DOCTYPE", false)) {
+                                    scanDoctype();
                                 }
                                 else {
                                     if (fReportErrors) {
@@ -1712,7 +1851,6 @@ public class HTMLScanner
                                 }
                                 XMLLocator locator = HTMLScanner.this;
                                 String encoding = fIANAEncoding;
-                                NamespaceContext nscontext = new NamespaceSupport();
                                 Augmentations augs = locationAugs();
                                 try {
                                     // NOTE: Hack to allow the default filter to work with
@@ -1724,6 +1862,7 @@ public class HTMLScanner
                                         NamespaceContext.class, Augmentations.class
                                     };
                                     Method method = cls.getMethod("startDocument", types);
+                                    NamespaceContext nscontext = new NamespaceSupport();
                                     Object[] params = {
                                         locator, encoding, 
                                         nscontext, augs
@@ -1764,6 +1903,14 @@ public class HTMLScanner
                                         throw new XNIException(ex);
                                     }
                                 }
+                            }
+                            if (fInsertDoctype && fDocumentHandler != null) {
+                                String root = HTMLElements.getElement(HTMLElements.HTML).name;
+                                root = modifyName(root, fNamesElems);
+                                String pubid = fDoctypePubid;
+                                String sysid = fDoctypeSysid;
+                                fDocumentHandler.doctypeDecl(root, pubid, sysid,
+                                                             synthesizedAugs());
                             }
                             setScannerState(STATE_CONTENT);
                             break;
@@ -1847,6 +1994,61 @@ public class HTMLScanner
             }
         } // scanCharacters()
 
+        /** Scans a CDATA section. */
+        protected void scanCDATA() throws IOException {
+            if (DEBUG_BUFFER) {
+                System.out.print("(scanCDATA: ");
+                printBuffer();
+                System.out.println();
+            }
+            fStringBuffer.clear();
+            if (fCDATASections) {
+                if (fDocumentHandler != null && fElementCount >= fElementDepth) {
+                    fEndLineNumber = fCurrentEntity.lineNumber;
+                    fEndColumnNumber = fCurrentEntity.columnNumber;
+                    if (DEBUG_CALLBACKS) {
+                        System.out.println("startCDATA()");
+                    }
+                    fDocumentHandler.startCDATA(locationAugs());
+                }
+            }
+            else {
+                fStringBuffer.append("[CDATA[");
+            }
+            boolean eof = scanMarkupContent(fStringBuffer, ']');
+            if (!fCDATASections) {
+                fStringBuffer.append("]]");
+            }
+            if (fDocumentHandler != null && fElementCount >= fElementDepth) {
+                fEndLineNumber = fCurrentEntity.lineNumber;
+                fEndColumnNumber = fCurrentEntity.columnNumber;
+                if (fCDATASections) {
+                    if (DEBUG_CALLBACKS) {
+                        System.out.println("characters("+fStringBuffer+")");
+                    }
+                    fDocumentHandler.characters(fStringBuffer, locationAugs());
+                    if (DEBUG_CALLBACKS) {
+                        System.out.println("endCDATA()");
+                    }
+                    fDocumentHandler.endCDATA(locationAugs());
+                }
+                else {
+                    if (DEBUG_CALLBACKS) {
+                        System.out.println("comment("+fStringBuffer+")");
+                    }
+                    fDocumentHandler.comment(fStringBuffer, locationAugs());
+                }
+            }
+            if (DEBUG_BUFFER) {
+                System.out.print(")scanCDATA: ");
+                printBuffer();
+                System.out.println();
+            }
+            if (eof) {
+                throw new EOFException();
+            }
+        } // scanCDATA()
+        
         /** Scans a comment. */
         protected void scanComment() throws IOException {
             if (DEBUG_BUFFER) {
@@ -1855,48 +2057,7 @@ public class HTMLScanner
                 System.out.println();
             }
             fStringBuffer.clear();
-            while (true) {
-                int c = read();
-                if (c == '-') {
-                    int count = 1;
-                    while (true) {
-                        c = read();
-                        if (c == '-') {
-                            count++;
-                            continue;
-                        }
-                        break;
-                    }
-                    if (count < 2) {
-                        fStringBuffer.append('-');
-                        fCurrentEntity.offset--;
-                        fCurrentEntity.columnNumber--;
-                        continue;
-                    }
-                    if (c != '>') {
-                        for (int i = 0; i < count; i++) {
-                            fStringBuffer.append('-');
-                        }
-                        fCurrentEntity.offset--;
-                        fCurrentEntity.columnNumber--;
-                        continue;
-                    }
-                    for (int i = 0; i < count - 2; i++) {
-                        fStringBuffer.append('-');
-                    }
-                    break;
-                }
-                else if (c == '\n' || c == '\r') {
-                    skipNewlines();
-                }
-                else if (c == -1) {
-                    if (fReportErrors) {
-                        fErrorReporter.reportError("HTML1007", null);
-                    }
-                    throw new EOFException();
-                }
-                fStringBuffer.append((char)c);
-            }
+            boolean eof = scanMarkupContent(fStringBuffer, '-');
             if (fDocumentHandler != null && fElementCount >= fElementDepth) {
                 if (DEBUG_CALLBACKS) {
                     System.out.println("comment("+fStringBuffer+")");
@@ -1910,7 +2071,73 @@ public class HTMLScanner
                 printBuffer();
                 System.out.println();
             }
+            if (eof) {
+                throw new EOFException();
+            }
         } // scanComment()
+
+        /** Scans markup content. */
+        protected boolean scanMarkupContent(XMLStringBuffer buffer, 
+                                            char cend) throws IOException {
+            int c = -1;
+            OUTER: while (true) {
+                c = read();
+                if (c == cend) {
+                    int count = 1;
+                    while (true) {
+                        c = read();
+                        if (c == cend) {
+                            count++;
+                            continue;
+                        }
+                        break;
+                    }
+                    if (c == -1) {
+                        if (fReportErrors) {
+                            fErrorReporter.reportError("HTML1007", null);
+                        }
+                        break OUTER;
+                    }
+                    if (count < 2) {
+                        buffer.append(cend);
+                        //if (c != -1) {
+                        fCurrentEntity.offset--;
+                        fCurrentEntity.columnNumber--;
+                        //}
+                        continue;
+                    }
+                    if (c != '>') {
+                        for (int i = 0; i < count; i++) {
+                            buffer.append(cend);
+                        }
+                        fCurrentEntity.offset--;
+                        fCurrentEntity.columnNumber--;
+                        continue;
+                    }
+                    for (int i = 0; i < count - 2; i++) {
+                        buffer.append(cend);
+                    }
+                    break;
+                }
+                else if (c == '\n' || c == '\r') {
+                    fCurrentEntity.offset--;
+                    fCurrentEntity.columnNumber--;
+                    int newlines = skipNewlines();
+                    for (int i = 0; i < newlines; i++) {
+                        buffer.append('\n');
+                    }
+                    continue;
+                }
+                else if (c == -1) {
+                    if (fReportErrors) {
+                        fErrorReporter.reportError("HTML1007", null);
+                    }
+                    break;
+                }
+                buffer.append((char)c);
+            }
+            return c == -1;
+        } // scanMarkupContent(XMLStringBuffer,char):boolean
 
         /** Scans a processing instruction. */
         protected void scanPI() throws IOException {
@@ -2274,13 +2501,14 @@ public class HTMLScanner
                         fCurrentEntity.lineNumber++;
                         fCurrentEntity.columnNumber = 0;
                         if (c == '\r') {
-                            c = read();
-                            if (c != '\n') {
+                            int c2 = read();
+                            if (c2 != '\n') {
                                 fCurrentEntity.offset--;
                                 fCurrentEntity.columnNumber--;
                             }
                             else {
                                 fNonNormAttr.append('\r');
+                                c = c2;
                             }
                         }
                         fStringBuffer.append(' ');
@@ -2531,21 +2759,13 @@ public class HTMLScanner
                     }
                     break;
                 }
-                if (c == '\r') {
-                    fCurrentEntity.columnNumber = 1;
-                    fCurrentEntity.lineNumber++;
-                    buffer.append('\n');
-                    c = read();
-                    if (c != '\n') {
-                        if (c == -1 || (!comment && c == '<') || c == '-') {
-                            fCurrentEntity.offset--;
-                            fCurrentEntity.columnNumber--;
-                            if (comment && c == '-') {
-                                continue;
-                            }
-                            break;
-                        }
-                        buffer.append((char)c);
+                // Patch supplied by Jonathan Baxter
+                else if (c == '\r' || c == '\n') {
+                    fCurrentEntity.offset--;
+                    fCurrentEntity.columnNumber--;
+                    int newlines = skipNewlines();
+                    for (int i = 0; i < newlines; i++) {
+                        buffer.append('\n');
                     }
                 }
                 else if (comment && c == '-') {

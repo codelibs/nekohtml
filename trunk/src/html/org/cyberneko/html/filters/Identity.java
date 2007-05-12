@@ -1,5 +1,5 @@
 /* 
- * (C) Copyright 2002-2003, Andy Clark.  All rights reserved.
+ * (C) Copyright 2002-2004, Andy Clark.  All rights reserved.
  *
  * This file is distributed under an Apache style license. Please
  * refer to the LICENSE file for specific details.
