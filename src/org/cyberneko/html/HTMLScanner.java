@@ -1234,6 +1234,11 @@ public class HTMLScanner
                                 if (fReportErrors) {
                                     fErrorReporter.reportError("HTML1003", null);
                                 }
+                                if (fDocumentHandler != null && fElementCount >= fElementDepth) {
+                                    fStringBuffer.clear();
+                                    fStringBuffer.append('<');
+                                    fDocumentHandler.characters(fStringBuffer, null);
+                                }
                                 throw new EOFException();
                             }
                             else {
@@ -1310,7 +1315,7 @@ public class HTMLScanner
                     }
                     fCurrentEntity.offset--;
                     fCurrentEntity.columnNumber--;
-                    if (content && fDocumentHandler != null) {
+                    if (content && fDocumentHandler != null && fElementCount >= fElementDepth) {
                         fEndLineNumber = fCurrentEntity.lineNumber;
                         fEndColumnNumber = fCurrentEntity.columnNumber;
                         fDocumentHandler.characters(str, locationAugs());
@@ -1321,7 +1326,7 @@ public class HTMLScanner
                     if (fReportErrors) {
                         fErrorReporter.reportWarning("HTML1004", null);
                     }
-                    if (content && fDocumentHandler != null) {
+                    if (content && fDocumentHandler != null && fElementCount >= fElementDepth) {
                         fEndLineNumber = fCurrentEntity.lineNumber;
                         fEndColumnNumber = fCurrentEntity.columnNumber;
                         fDocumentHandler.characters(str, locationAugs());
@@ -1331,7 +1336,7 @@ public class HTMLScanner
                 str.append((char)c);
             }
             if (str.length == 1) {
-                if (content && fDocumentHandler != null) {
+                if (content && fDocumentHandler != null && fElementCount >= fElementDepth) {
                     fEndLineNumber = fCurrentEntity.lineNumber;
                     fEndColumnNumber = fCurrentEntity.columnNumber;
                     fDocumentHandler.characters(str, locationAugs());
@@ -1349,7 +1354,7 @@ public class HTMLScanner
                     else {
                         value = Integer.parseInt(name.substring(1));
                     }
-                    if (content && fDocumentHandler != null) {
+                    if (content && fDocumentHandler != null && fElementCount >= fElementDepth) {
                         fEndLineNumber = fCurrentEntity.lineNumber;
                         fEndColumnNumber = fCurrentEntity.columnNumber;
                         if (fNotifyCharRefs) {
@@ -1369,7 +1374,7 @@ public class HTMLScanner
                     if (fReportErrors) {
                         fErrorReporter.reportError("HTML1005", new Object[]{name});
                     }
-                    if (content && fDocumentHandler != null) {
+                    if (content && fDocumentHandler != null && fElementCount >= fElementDepth) {
                         fEndLineNumber = fCurrentEntity.lineNumber;
                         fEndColumnNumber = fCurrentEntity.columnNumber;
                         fDocumentHandler.characters(str, locationAugs());
@@ -1383,14 +1388,14 @@ public class HTMLScanner
                 if (fReportErrors) {
                     fErrorReporter.reportWarning("HTML1006", new Object[]{name});
                 }
-                if (content && fDocumentHandler != null) {
+                if (content && fDocumentHandler != null && fElementCount >= fElementDepth) {
                     fEndLineNumber = fCurrentEntity.lineNumber;
                     fEndColumnNumber = fCurrentEntity.columnNumber;
                     fDocumentHandler.characters(str, locationAugs());
                 }
                 return -1;
             }
-            if (content && fDocumentHandler != null) {
+            if (content && fDocumentHandler != null && fElementCount >= fElementDepth) {
                 fEndLineNumber = fCurrentEntity.lineNumber;
                 fEndColumnNumber = fCurrentEntity.columnNumber;
                 boolean notify = fNotifyHtmlBuiltinRefs || (fNotifyXmlBuiltinRefs && builtinXmlRef(name));
@@ -1537,11 +1542,20 @@ public class HTMLScanner
         /** Scans a start element. */
         protected String scanStartElement() throws IOException {
             String ename = scanName();
-            if (ename == null) {
+            int length = ename != null ? ename.length() : 0;
+            int c = length > 0 ? ename.charAt(0) : -1;
+            if (length == 0 || !((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'))) {
                 if (fReportErrors) {
                     fErrorReporter.reportError("HTML1009", null);
                 }
-                skipMarkup();
+                if (fDocumentHandler != null && fElementCount >= fElementDepth) {
+                    fStringBuffer.clear();
+                    fStringBuffer.append('<');
+                    if (length > 0) {
+                        fStringBuffer.append(ename);
+                    }
+                    fDocumentHandler.characters(fStringBuffer, null);
+                }
                 return null;
             }
             ename = modifyName(ename, fNamesElems);
@@ -1863,13 +1877,15 @@ public class HTMLScanner
                                         if (ename.equalsIgnoreCase(fElementName)) {
                                             ename = modifyName(ename, fNamesElems);
                                             skipMarkup();
-                                            fQName.setValues(null, ename, ename, null);
-                                            if (DEBUG_CALLBACKS) {
-                                                System.out.println("endElement("+fQName+")");
+                                            if (fDocumentHandler != null && fElementCount >= fElementDepth) {
+                                                fQName.setValues(null, ename, ename, null);
+                                                if (DEBUG_CALLBACKS) {
+                                                    System.out.println("endElement("+fQName+")");
+                                                }
+                                                fEndLineNumber = fCurrentEntity.lineNumber;
+                                                fEndColumnNumber = fCurrentEntity.columnNumber;
+                                                fDocumentHandler.endElement(fQName, locationAugs());
                                             }
-                                            fEndLineNumber = fCurrentEntity.lineNumber;
-                                            fEndColumnNumber = fCurrentEntity.columnNumber;
-                                            fDocumentHandler.endElement(fQName, locationAugs());
                                             setScanner(fContentScanner);
                                             setScannerState(STATE_CONTENT);
                                             return true;
@@ -1951,7 +1967,7 @@ public class HTMLScanner
                     buffer.append((char)c);
                 }
             }
-            if (buffer.length > 0) {
+            if (buffer.length > 0 && fDocumentHandler != null && fElementCount >= fElementDepth) {
                 if (DEBUG_CALLBACKS) {
                     System.out.println("characters("+buffer+")");
                 }

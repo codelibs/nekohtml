@@ -20,10 +20,16 @@ Changes
 
 <h2>Releases</h2>
 <dl>
+ <dt>Version 0.6.2 (26 May 2002)
+ <dd>Changed scanner behavior as requested by Alexey Shananin to 
+       report malformed start elements (e.g. &lt;...&gt;) as 
+       characters 
+     and
+     fixed tag balancing bug introduced in previous version. Oops!
  <dt>Version 0.6.1 (23 May 2002)
  <dd>Changed tag balancer behavior to swallow events after the close 
-     of the &lt;html&gt; tag to ensure that the document stream 
-     remains well-formed;
+       of the &lt;html&gt; tag to ensure that the document stream 
+       remains well-formed;
      added additional Ruby elements;
      and
      improved tag balancer performance.
