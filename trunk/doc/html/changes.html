@@ -23,6 +23,27 @@ Changes
 
 <h2>Releases</h2>
 <dl>
+ <dt>Version 0.7 (27 Nov 2002)
+     [<a href='http://www.apache.org/~andyc/neko/nekohtml-0.7.zip'>zip</a>]
+     [<a href='http://www.apache.org/~andyc/neko/nekohtml-0.7.tar.gz'>tgz</a>]
+ <dd>Changed behavior of tag balancer for unbalanced elements
+       as requested by Troy Waldrep to make output match that
+       produced by browsers such as Mozilla;
+     fixed other tag balancing problems identified by a bug
+       reported by Laurens Fridael;
+     added <font color='red'>experimental</font> HTML fragment 
+       parsing feature and DOM fragment parser class;
+     fixed buffer boundary bug in skipMarkup method reported
+       by Mike Bowler;
+     added constructor to the Writer filter that accepts a
+       Java writer object parameter as requested by Alain
+       Gilbert;
+     fixed HTMLScanner class so that it can compile with JDK 1.1
+       as reported by Mikko Honkala;
+     and
+     fixed bug reported by Russell Gold that would ignore
+       the &lt;param&gt; element within an &lt;applet&gt;
+       element.
  <dt>Version 0.6.8 (30 Sep 2002)
      [<a href='http://www.apache.org/~andyc/neko/nekohtml-0.6.8.zip'>zip</a>]
      [<a href='http://www.apache.org/~andyc/neko/nekohtml-0.6.8.tar.gz'>tgz</a>]

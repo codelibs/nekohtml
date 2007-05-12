@@ -129,9 +129,26 @@ public class Writer
      */
     public Writer(OutputStream outputStream, String encoding) 
         throws UnsupportedEncodingException {
-        fEncoding = encoding;
-        fPrinter = new PrintWriter(new OutputStreamWriter(outputStream, fEncoding));
+        this(new OutputStreamWriter(outputStream, encoding), encoding);
     } // <init>(OutputStream,String)
+
+    /**
+     * Constructs a writer filter using the specified Java writer and
+     * encoding.
+     *
+     * @param writer The Java writer to write to.
+     * @param encoding The encoding to be used for the output. The encoding name
+     *                 should be an official IANA encoding name.
+     */
+    public Writer(java.io.Writer writer, String encoding) {
+        fEncoding = encoding;
+        if (writer instanceof PrintWriter) {
+            fPrinter = (PrintWriter)writer;
+        }
+        else {
+            fPrinter = new PrintWriter(writer);
+        }
+    } // <init>(java.io.Writer,String)
 
     //
     // XMLDocumentHandler methods
