@@ -547,7 +547,7 @@ public class HTMLScanner
         fElementCount = 0;
         fElementDepth = -1;
         fByteStream = null;
-        fCurrentEntityStack.clear();
+        fCurrentEntityStack.removeAllElements();
 
         fBeginLineNumber = 1;
         fBeginColumnNumber = 1;
@@ -957,6 +957,11 @@ public class HTMLScanner
                     }
                 }
                 else if (c == '/') {
+                    if (fCurrentEntity.offset == fCurrentEntity.length) {
+                        if (load(0) == -1) {
+                            break OUTER;
+                        }
+                    }
                     c = fCurrentEntity.buffer[fCurrentEntity.offset++];
                     fCurrentEntity.columnNumber++;
                     if (c == '>') {

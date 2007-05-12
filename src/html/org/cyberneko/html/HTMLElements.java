@@ -311,7 +311,7 @@ public class HTMLElements {
             // LEGEND - - (%inline;)*
             new Element(LEGEND, "LEGEND", Element.INLINE, FIELDSET, null),
             // LI - O (%flow;)*
-            new Element(LI, "LI", 0, BODY, new short[]{LI}),
+            new Element(LI, "LI", 0, new short[]{BODY,UL,OL}, new short[]{LI}),
             // LINK - O EMPTY
             new Element(LINK, "LINK", Element.EMPTY, HEAD, null),
             // LISTING
@@ -357,7 +357,7 @@ public class HTMLElements {
             // P - O (%inline;)*
             new Element(P, "P", 0, BODY, new short[]{P}),
             // PARAM - O EMPTY
-            new Element(PARAM, "PARAM", Element.EMPTY, OBJECT, null),
+            new Element(PARAM, "PARAM", Element.EMPTY, new short[]{OBJECT,APPLET}, null),
             // PLAINTEXT
             new Element(PLAINTEXT, "PLAINTEXT", Element.SPECIAL, BODY, null),
             // PRE - - (%inline;)* -(%pre.exclusion;)

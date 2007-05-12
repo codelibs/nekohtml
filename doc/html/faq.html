@@ -21,6 +21,17 @@ FAQ
 ]
 </div>
 
+<h2>Table of Contents</h2>
+
+<ul>
+<li><a href='#uppercase'>Why are the DOM element names always uppercase?</a>
+<li><a href='#fragments'>How do I parse HTML document fragments?</a>
+<li><a href='#xerces2'>Do I have to use all of Xerces2?</a>
+</ul>
+
+<hr>
+
+<a name='uppercase'></a>
 <h3>Why are the DOM element names always uppercase?</h3>
 
 <p>
@@ -61,6 +72,73 @@ parser using the NekoHTML parser configuration:
 
 DOMParser parser <span class='code-punct'>=</span> <span class='code-keyword'>new</span> DOMParser<span class='code-punct'>(</span><span class='code-keyword'>new</span> HTMLConfiguration<span class='code-punct'>());</span>
 </pre>
+
+<a name='fragments'></a>
+<h3>How do I parse HTML document fragments?</h3>
+
+<p>
+Frequently, HTML is used within applications and online forms
+to allow users to enter rich-text. In these situations, it is
+useful to be able to parse the entered text as a document
+<i>fragment</i>. In other words, the entered text represents
+content within the HTML &lt;body&gt; element &mdash; it is
+<em>not</em> a full HTML document.
+<p>
+Starting with version 0.7.0, NekoHTML has added an 
+<font color=red>experimental</font> feature that allows the 
+application to parse HTML document fragments. Setting the 
+"<code>http://cyberneko.org/features/document-fragment</code>" 
+feature to <code>true</code> instructs the tag-balancer to 
+balance only tags found within the HTML &lt;body&gt; element. 
+The surrounding &lt;body&gt; and &lt;html&gt; elements are not
+inserted.
+<p>
+<strong>Note:</strong>
+The document-fragment feature should <strong>not</strong> be
+used on the <code>DOMParser</code> class since it relies on
+balanced elements in order to correctly construct the DOM
+tree. However, a new parser class has been added to NekoHTML
+to allow you parser DOM document fragments. Please refer to
+the <a href='usage.html#convenience'>Usage Instructions</a>
+for more information.
+
+<a name='xerces2'></a>
+<h3>Do I have to use all of Xerces2?</h3>
+
+<p>
+While NekoHTML is a rather small library, many users complain
+about the size of the Xerces2 library. However, the full
+Xerces2 library is <em>not</em> required in order to use the
+NekoHTML parser. Because the CyberNeko HTML parser is written 
+using the Xerces Native Interface (XNI) framework that forms 
+the foundation of the Xerces2 implementation, only that part
+is required to write applications using NekoHTML.
+<p>
+For convenience, a small Jar file containing only the necessary 
+parts of the framework and utility classes from Xerces2 is
+distributed with the NekoHTML package. The Jar file, called
+<code>xercesMinimal.jar</code>, can be found in the
+<code>lib/</code> directory of the distribution. Simply add
+this file to your classpath along with <code>nekohtml.jar</code>.
+<p>
+However, there are a few restrictions if you choose to use
+the <code>xercesMinimal.jar</code> file instead of the full
+Xerces2 package. First, you cannot use the DOM and SAX parsers
+included with NekoHTML because they use the Xerces2 base
+classes. Second, because you cannot use the convenience
+parser classes, your application must be written using the
+XNI framework. However, using the XNI framework is not 
+difficult for programmers familiar with SAX. [Note: future 
+versions of NekoHTML may include custom implementations of
+the DOM and SAX parsers to avoid this dependence on the 
+Xerces2 library.]
+<p>
+Most users of the CyberNeko HTML parser will not have a
+problem including the full Xerces2 package because the
+application is likely to need an XML parser implementation.
+However, for those users that are concerned about Jar file
+size, then using the <code>xercesMinimal.jar</code> file
+may be a useful alternative.
 
 <div class='copyright'>
 (C) Copyright 2002, Andy Clark. All rights reserved.

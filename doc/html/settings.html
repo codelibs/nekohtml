@@ -64,6 +64,21 @@ The NekoHTML parser supports the following features:
   <td align='center'>true
  <tr>
   <td>
+   <a name='document-fragment'></a>
+   <span class='id'>http://cyberneko.org/html/features/document-fragment</span>
+   <br>
+   Specifies if the tag balancer should operate as if a fragment
+   of HTML is being parsed. With this feature set, the tag balancer
+   will not attempt to insert a missing body elements around content
+   and markup. However, proper parents for elements contained within
+   the &lt;body&gt; element will still be inserted. This feature should 
+   <strong>not</strong> be used when using the <code>DOMParser</code>
+   class. In order to parse a DOM <code>DocumentFragment</code>, use the
+   <font color='red'>experimental</font> <code>DOMFragmentParser</code>
+   class.
+  <td align='center'>false
+ <tr>
+  <td>
    <a name='notify-char-refs'></a>
    <span class='id'>http://apache.org/xml/features/scanner/notify-char-refs</span>
    <br>

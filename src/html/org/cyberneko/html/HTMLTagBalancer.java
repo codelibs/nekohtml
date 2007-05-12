@@ -69,16 +69,21 @@ public class HTMLTagBalancer
     /** Report errors. */
     protected static final String REPORT_ERRORS = "http://cyberneko.org/html/features/report-errors";
 
+    /** Document fragment balancing only. */
+    protected static final String DOCUMENT_FRAGMENT = "http://cyberneko.org/html/features/document-fragment";
+
     /** Recognized features. */
     private static final String[] RECOGNIZED_FEATURES = {
         AUGMENTATIONS,
         REPORT_ERRORS,
+        DOCUMENT_FRAGMENT,
     };
 
     /** Recognized features defaults. */
     private static final Boolean[] RECOGNIZED_FEATURES_DEFAULTS = {
         null,
         null,
+        Boolean.FALSE,
     };
 
     // properties
@@ -136,6 +141,9 @@ public class HTMLTagBalancer
     
     /** Report errors. */
     protected boolean fReportErrors;
+
+    /** Document fragment balancing only. */
+    protected boolean fDocumentFragment;
 
     // properties
 
@@ -237,6 +245,7 @@ public class HTMLTagBalancer
         // get features
         fAugmentations = manager.getFeature(AUGMENTATIONS);
         fReportErrors = manager.getFeature(REPORT_ERRORS);
+        fDocumentFragment = manager.getFeature(DOCUMENT_FRAGMENT);
 
         // get properties
         fNamesElems = getNamesValue(String.valueOf(manager.getProperty(NAMES_ELEMS)));
@@ -385,7 +394,7 @@ public class HTMLTagBalancer
     public void endDocument(Augmentations augs) throws XNIException {
 
         // handle empty document
-        if (!fSeenRootElement) {
+        if (!fSeenRootElement && !fDocumentFragment) {
             if (fReportErrors) {
                 fErrorReporter.reportError("HTML2000", null);
             }
@@ -461,7 +470,7 @@ public class HTMLTagBalancer
 
         // check proper parent
         if (element.parent != null) {
-            if (!fSeenRootElement) {
+            if (!fSeenRootElement && !fDocumentFragment) {
                 String pname = element.parent[0].name;
                 pname = modifyName(pname, fNamesElems);
                 if (fReportErrors) {
@@ -473,7 +482,7 @@ public class HTMLTagBalancer
             }
             else {
                 HTMLElements.Element pelement = element.parent[0];
-                if (pelement.code != HTMLElements.HEAD || !fSeenBodyElement) {
+                if (pelement.code != HTMLElements.HEAD || (!fSeenBodyElement && !fDocumentFragment)) {
                     int depth = getParentDepth(element.parent);
                     if (depth == -1) {
                         String pname = pelement.name;
@@ -503,11 +512,29 @@ public class HTMLTagBalancer
             }
         }
 
+        // if block element, save immediate parent inline elements
+        int depth = 0;
+        if (element.flags == 0) {
+            int length = fElementStack.top;
+            fInlineStack.top = 0;
+            for (int i = length - 1; i >= 0; i--) {
+                Info info = fElementStack.data[i];
+                if (!info.element.isInline()) {
+                    break;
+                }
+                fInlineStack.push(info);
+                endElement(info.qname, synthesizedAugs());
+            }
+            depth = fInlineStack.top;
+        }
+
         // close previous elements
         if (element.closes != null) {
             int length = fElementStack.top;
             for (int i = length - 1; i >= 0; i--) {
-                Info info = fElementStack.peek();
+                Info info = fElementStack.data[i];
+
+                // does it close the element we're looking at?
                 if (element.closes(info.element.code)) {
                     if (fReportErrors) {
                         String ename = elem.rawname;
@@ -522,6 +549,18 @@ public class HTMLTagBalancer
                     }
                     length = i;
                     continue;
+                }
+                
+                // should we stop searching?
+                boolean container = info.element.isContainer();
+                boolean parent = false;
+                if (!container) {
+                    for (int j = 0; j < element.parent.length; j++) {
+                        parent = parent || info.element.code == element.parent[j].code;
+                    }
+                }
+                if (container || parent) {
+                    break;
                 }
             }
         }
@@ -539,6 +578,12 @@ public class HTMLTagBalancer
             if (fDocumentHandler != null) {
                 fDocumentHandler.startElement(elem, attrs, augs);
             }
+        }
+
+        // re-open inline elements
+        for (int i = 0; i < depth; i++) {
+            Info info = fInlineStack.pop();
+            startElement(info.qname, info.attributes, synthesizedAugs());
         }
 
     } // startElement(QName,XMLAttributes,Augmentations)
@@ -647,7 +692,7 @@ public class HTMLTagBalancer
         }
 
         // handle bare characters
-        if (!fSeenRootElement) {
+        if (!fSeenRootElement && !fDocumentFragment) {
             if (whitespace) {
                 return;
             }
@@ -663,7 +708,7 @@ public class HTMLTagBalancer
         // NOTE: This fequently happens when the document looks like:
         //       <title>Title</title>
         //       And here's some text.
-        else if (!whitespace) {
+        else if (!whitespace && !fDocumentFragment) {
             Info info = fElementStack.peek();
             if (info.element.code == HTMLElements.HEAD) {
                 String hname = modifyName("head", fNamesElems);
@@ -796,16 +841,18 @@ public class HTMLTagBalancer
      */
     protected final int getElementDepth(HTMLElements.Element element) {
         final boolean container = element.isContainer();
+        int depth = -1;
         for (int i = fElementStack.top - 1; i >= 0; i--) {
             Info info = fElementStack.data[i];
             if (info.element.code == element.code) {
-                return fElementStack.top - i;
+                depth = fElementStack.top - i;
+                break;
             }
             if (!container && info.element.isBlock()) {
                 break;
             }
         }
-        return -1;
+        return depth;
     } // getElementDepth(HTMLElements.Element)
 
     /**

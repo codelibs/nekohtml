@@ -21,6 +21,7 @@ Usage
 ]
 </div>
 
+<a name='transparent'></a>
 <h2>Transparent Parser Construction</h2>
 <p>
 NekoHTML is designed to be as lightweight and simple to use as
@@ -56,6 +57,7 @@ you parse and access the document contents using standard XML
 APIs. The following sections describe this method in more
 detail.
 
+<a name='convenience'></a>
 <h2>Convenience Parser Classes</h2>
 <p>
 If you don't want to override the default Xerces2 parser 
@@ -108,7 +110,65 @@ org.apache.html.dom.HTMLDocumentImpl
 </pre>
 <p>
 This source code is included in the <code>src/html/sample/</code> directory.
+<p>
+In addition to the provided DOM and SAX parser classes, NekoHTML
+also provides a (currently <font color=red>experimental</font>)
+DOM fragment parser class. The <code>DOMFragmentParser</code>
+class, found in the <code>org.cyberneko.html.parsers</code>
+package, in can be used to parse fragments of HTML documents 
+into their corresponding DOM nodes. The following example shows 
+how to use the NekoHTML <code>DOMFragmentParser</code> directly:
+<pre class='code'>
+<span class='code-keyword'>package</span> sample<span class='code-punct'>;</span>
 
+<span class='code-keyword'>import</span> org.cyberneko.html.parsers.DOMFragmentParser<span class='code-punct'>;</span>
+<span class='code-keyword'>import</span> org.apache.html.dom.HTMLDocumentImpl<span class='code-punct'>;</span>
+<span class='code-keyword'>import</span> org.w3c.dom.Document<span class='code-punct'>;</span>
+<span class='code-keyword'>import</span> org.w3c.dom.DocumentFragment<span class='code-punct'>;</span>
+<span class='code-keyword'>import</span> org.w3c.dom.Node<span class='code-punct'>;</span>
+<span class='code-keyword'>import</span> org.w3c.dom.html.HTMLDocument<span class='code-punct'>;</span>
+
+<span class='code-keyword'>public class</span> TestHTMLDOMFragment <span class='code-punct'>{</span>
+    <span class='code-keyword'>public static void</span> main<span class='code-punct'>(</span>String<span class='code-punct'>[]</span> argv<span class='code-punct'>)</span> <span class='code-keyword'>throws</span> Exception <span class='code-punct'>{</span>
+        DOMFragmentParser parser <span class='code-punct'>=</span> <span class='code-keyword'>new</span> DOMFragmentParser<span class='code-punct'>();</span>
+        HTMLDocument document <span class='code-punct'>=</span> <span class='code-keyword'>new</span> HTMLDocumentImpl<span class='code-punct'>();</span>
+        <span class='code-keyword'>for</span> <span class='code-punct'>(</span><span class='code-keyword'>int</span> i <span class='code-punct'>=</span> 0<span class='code-punct'>;</span> i <span class='code-punct'><</span> argv<span class='code-punct'>.</span>length<span class='code-punct'>;</span> i<span class='code-punct'>++) {</span>
+            DocumentFragment fragment <span class='code-punct'>=</span> document.createDocumentFragment<span class='code-punct'>();</span>
+            parser<span class='code-punct'>.</span>parse<span class='code-punct'>(</span>argv<span class='code-punct'>[</span>i<span class='code-punct'>],</span> fragment<span class='code-punct'>);</span>
+            print<span class='code-punct'>(</span>fragment<span class='code-punct'>,</span> <span class='code-string'>""</span><span class='code-punct'>);</span>
+        <span class='code-punct'>}</span>
+    <span class='code-punct'>}</span>
+    <span class='code-keyword'>public static void</span> print<span class='code-punct'>(</span>Node node<span class='code-punct'>,</span> String indent<span class='code-punct'>) {</span>
+        System<span class='code-punct'>.</span>out<span class='code-punct'>.</span>println<span class='code-punct'>(</span>indent<span class='code-punct'>+</span>node<span class='code-punct'>.</span>getClass<span class='code-punct'>().</span>getName<span class='code-punct'>());</span>
+        Node child <span class='code-punct'>=</span> node<span class='code-punct'>.</span>getFirstChild<span class='code-punct'>();</span>
+        <span class='code-keyword'>while</span> <span class='code-punct'>(</span>child <span class='code-punct'>!=</span> <span class='code-keyword'>null</span><span class='code-punct'>) {</span>
+            print<span class='code-punct'>(</span>child<span class='code-punct'>,</span> indent<span class='code-punct'>+</span><span class='code-string'>" "</span><span class='code-punct'>);</span>
+            child <span class='code-punct'>=</span> child<span class='code-punct'>.</span>getNextSibling<span class='code-punct'>();</span>
+        <span class='code-punct'>}
+    }</span>
+<span class='code-punct'>}</span>
+</pre>
+<p>
+This source code is included in the <code>src/html/sample/</code> 
+directory.
+<p>
+Notice that the application parses a document fragment a little
+bit differently than parsing a complete document. Instead of 
+initiating a parse by passing in a system identifier (or an
+input source), parsing an HTML document fragment requires the
+application to pass a DOM <code>DocumentFragment</code> object
+to the <code>parse</code> method. The DOM fragment parser will
+use the owner document of the <code>DocumentFragment</code> as 
+the factory for parsed nodes. These nodes are then appended in
+document order to the document fragment object.
+<p>
+<strong>Note:</strong>
+The document fragment object passed to the <code>parse</code>
+method <strong>must</strong> be created from a DOM document
+object of type <code>org.w3c.dom.html.HTMLDocument</code>. If
+not, a class cast exception will be thrown.
+
+<a name='custom'></a>
 <h2>Custom Parser Classes</h2>
 <p>
 Alternatively, you can construct any XNI-based parser class
