@@ -804,8 +804,15 @@ public class HTMLTagBalancer
             fSeenRootElementEnd = true;
         }
 
-        // find unbalanced inline elements
+        // empty element
         int depth = getElementDepth(elem);
+        if (depth == -1 && elem.code == HTMLElements.P) {
+            startElement(element, emptyAttributes(), synthesizedAugs());
+            endElement(element, augs);
+            return;
+        }
+
+        // find unbalanced inline elements
         if (depth > 1 && elem.isInline()) {
             int size = fElementStack.top;
             fInlineStack.top = 0;
