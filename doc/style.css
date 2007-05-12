@@ -19,6 +19,8 @@ PRE.code { margin: 15; margin-left: 30; margin-right: 30;
            background: darkblue; color: #00FF00}
 .code-keyword { color: yellow }
 .code-punct { color: white }
+.code-number { color: silver }
+.code-string { color: cyan }
 
 .copyright { margin: -10; margin-top: 10;
              text-align: center; background: #DDDDFF;

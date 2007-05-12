@@ -4,15 +4,16 @@
 
  <!-- PROPERTIES -->
  <property name='name'      value='NekoHTML'/>
- <property name='version'   value='0.3.2'/>
+ <property name='version'   value='0.3.3'/>
  <property name='copyright' value='(C) Copyright 2002, Andy Clark. All rights reserved.'/>
   
  <property name='jarfile' value='nekohtml.jar'/>
+ <property name='jarfileXni' value='nekohtmlXni.jar'/>
  <property name='zipfile' value='nekohtml-${version}.zip'/>
  <property name='tarfile' value='nekohtml-${version}.tar'/>
  <property name='tgzfile' value='nekohtml-${version}.tar.gz'/>
 
- <property name='contents' value='TODO,LICENSE,${jarfile},build.*,src/org/**,src/META-INF/**,doc/**,data/test*.html'/>
+ <property name='contents' value='TODO,LICENSE,${jarfile},${jarfileXni},build.*,src/org/**,src/META-INF/**,doc/**,data/test*.html'/>
 
  <!-- TARGETS --> 
  <target name='all' depends='full,zip,tgz'/>
@@ -34,7 +35,10 @@
    <fileset dir='src' includes='**/*.properties'/>
   </copy>
   <jar jarfile='${jarfile}' basedir='bin' 
-       includes='META-INF/services/**,org/**/*.class,**/*.properties'/>
+       includes='org/**/*.class,**/*.properties'
+       excludes='META-INF/services/**'/>
+  <jar jarfile='${jarfileXni}' basedir='bin'
+       includes='META-INF/services/**'/>
  </target> 
  
  <target name='zip' depends='jar,doc'>
@@ -50,7 +54,7 @@
  <target name='doc'>
   <delete dir='doc/javadoc'/>
   <mkdir dir='doc/javadoc'/>
-  <javadoc packagenames='org.cyberneko.html'
+  <javadoc packagenames='org.cyberneko.html,org.cyberneko.html.parsers'
            sourcepath='src' destdir='doc/javadoc'
            author='true' version='true' use='true'
            windowtitle="${name} Implementation"
