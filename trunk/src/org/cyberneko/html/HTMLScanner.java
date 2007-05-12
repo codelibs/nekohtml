@@ -1607,11 +1607,8 @@ public class HTMLScanner
                 }
                 else {
                      HTMLElements.Element element = HTMLElements.getElement(ename);
-                     if (element.parent != null) {
-                         String name = element.parent instanceof String
-                                     ? (String)element.parent
-                                     : ((String[])element.parent)[0];
-                         if (name.equalsIgnoreCase("BODY")) {
+                     if (element.parent != null && element.parent.length > 0) {
+                         if (element.parent[0].code == HTMLElements.BODY) {
                              fByteStream.clear();
                          }
                      }
