@@ -41,9 +41,9 @@ public class HTMLEntities {
     //
 
     /** Returns the character associated to the given entity name. */
-    public static char get(String name) {
+    public static int get(String name) {
         String value = (String)ENTITIES.get(name);
-        return value != null ? value.charAt(0) : (char)-1;
+        return value != null ? value.charAt(0) : -1;
     } // get(String):char
 
     //
