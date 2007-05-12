@@ -27,12 +27,27 @@ import org.apache.xerces.xni.parser.XMLDocumentFilter;
 /**
  * Balances tags in an HTML document. This component receives document events
  * and tries to correct many common mistakes that human (and computer) HTML
- * document authors make. The tag balancer can:
+ * document authors make. This tag balancer can:
  * <ul>
  * <li>add missing parent elements;
  * <li>automatically close elements with optional end tags; and
  * <li>handle mis-matched inline element tags.
  * </ul>
+ * <p>
+ * This component recognizes the following features:
+ * <ul>
+ * <li>http://cyberneko.org/html/features/augmentations
+ * <li>http://cyberneko.org/html/features/report-errors
+ * </ul>
+ * <p>
+ * This component recognizes the following properties:
+ * <ul>
+ * <li>http://cyberneko.org/html/properties/names/elems
+ * <li>http://cyberneko.org/html/properties/names/attrs
+ * <li>http://cyberneko.org/html/properties/error-reporter
+ * </ul>
+ *
+ * @see HTMLElements
  *
  * @author Andy Clark
  *
@@ -502,15 +517,17 @@ public class HTMLTagBalancer
     /** Characters. */
     public void characters(XMLString text, Augmentations augs) throws XNIException {
 
+        // check whitespace
+        boolean whitespace = true;
+        for (int i = 0; i < text.length; i++) {
+            if (!Character.isWhitespace(text.ch[text.offset + i])) {
+                whitespace = false;
+                break;
+            }
+        }
+
         // handle bare characters
         if (!fSeenRootElement) {
-            boolean whitespace = true;
-            for (int i = 0; i < text.length; i++) {
-                if (!Character.isWhitespace(text.ch[text.offset + i])) {
-                    whitespace = false;
-                    break;
-                }
-            }
             if (whitespace) {
                 return;
             }
@@ -520,6 +537,25 @@ public class HTMLTagBalancer
                 fErrorReporter.reportWarning("HTML2006", new Object[]{ename});
             }
             startElement(fQName, emptyAttributes(), synthesizedAugs());
+        }
+
+        // handle character content in head
+        // NOTE: This fequently happens when the document looks like:
+        //       <title>Title</title>
+        //       And here's some text.
+        else if (!whitespace) {
+            Info info = (Info)fElementStack.peek();
+            if (info.element.rawname.equalsIgnoreCase("head")) {
+                String hname = modifyName("head", fNamesElems);
+                String bname = modifyName("body", fNamesElems);
+                if (fReportErrors) {
+                    fErrorReporter.reportWarning("HTML2009", new Object[]{hname,bname});
+                }
+                fQName.setValues(null, hname, hname, null);
+                endElement(fQName, synthesizedAugs());
+                fQName.setValues(null, bname, bname, null);
+                startElement(fQName, emptyAttributes(), synthesizedAugs());
+            }
         }
 
         // call handler

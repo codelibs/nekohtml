@@ -22,6 +22,8 @@ import org.apache.xerces.xni.XMLDTDHandler;
 import org.apache.xerces.xni.XMLDTDContentModelHandler;
 import org.apache.xerces.xni.XNIException;
 import org.apache.xerces.xni.parser.XMLConfigurationException;
+import org.apache.xerces.xni.parser.XMLDocumentFilter;
+import org.apache.xerces.xni.parser.XMLDocumentSource;
 import org.apache.xerces.xni.parser.XMLEntityResolver;
 import org.apache.xerces.xni.parser.XMLErrorHandler;
 import org.apache.xerces.xni.parser.XMLInputSource;
@@ -29,7 +31,36 @@ import org.apache.xerces.xni.parser.XMLParseException;
 import org.apache.xerces.xni.parser.XMLParserConfiguration;
                                       
 /**
- * An XNI-based parser configuration that can be used to parse HTML documents.
+ * An XNI-based parser configuration that can be used to parse HTML 
+ * documents. This configuration can be used directly in order to
+ * parser HTML documents or can be used in conjunction with any XNI
+ * based tools, such as the Xerces2 implementation.
+ * <p>
+ * This configuration recognizes the following features:
+ * <ul>
+ * <li>http://cyberneko.org/html/features/augmentations
+ * <li>http://cyberneko.org/html/features/report-errors
+ * <li>http://cyberneko.org/html/features/report-errors/simple
+ * <li>http://cyberneko.org/html/features/balance-tags
+ * <li><i>and</i>
+ * <li>the features supported by the scanner and tag balancer components.
+ * </ul>
+ * <p>
+ * This configuration recognizes the following properties:
+ * <ul>
+ * <li>http://cyberneko.org/html/properties/names/elems
+ * <li>http://cyberneko.org/html/properties/names/attrs
+ * <li>http://cyberneko.org/html/properties/filters
+ * <li>http://cyberneko.org/html/properties/error-reporter
+ * <li><i>and</i>
+ * <li>the properties supported by the scanner and tag balancer.
+ * </ul>
+ * <p>
+ * For complete usage information, refer to the documentation components.
+ *
+ * @see HTMLScanner
+ * @see HTMLTagBalancer
+ * @see HTMLErrorReporter
  *
  * @author Andy Clark
  *
@@ -58,6 +89,15 @@ public class HTMLConfiguration
     protected static final String BALANCE_TAGS = "http://cyberneko.org/html/features/balance-tags";
 
     // properties
+
+    /** Modify HTML element names: { "upper", "lower", "default" }. */
+    protected static final String NAMES_ELEMS = "http://cyberneko.org/html/properties/names/elems";
+
+    /** Modify HTML attribute names: { "upper", "lower", "default" }. */
+    protected static final String NAMES_ATTRS = "http://cyberneko.org/html/properties/names/attrs";
+    
+    /** Pipeline filters. */
+    protected static final String FILTERS = "http://cyberneko.org/html/properties/filters";
 
     /** Error reporter. */
     protected static final String ERROR_REPORTER = "http://cyberneko.org/html/properties/error-reporter";
@@ -200,9 +240,14 @@ public class HTMLConfiguration
 
         // recognized properties
         String[] recognizedProperties = {
+            NAMES_ELEMS,
+            NAMES_ATTRS,
+            FILTERS,
             ERROR_REPORTER,
         };
         addRecognizedProperties(recognizedProperties);
+        setProperty(NAMES_ELEMS, "upper");
+        setProperty(NAMES_ATTRS, "lower");
         setProperty(ERROR_REPORTER, fErrorReporter);
         
         // HACK: Xerces 2.0.0
@@ -217,14 +262,35 @@ public class HTMLConfiguration
                 SYMBOL_TABLE,
             };
             addRecognizedProperties(recognizedProperties);
-            org.apache.xerces.util.SymbolTable symbolTable = 
-                new org.apache.xerces.util.SymbolTable();
+            Object symbolTable = ObjectFactory.createObject("org.apache.xerces.util.SymbolTable",
+                                                            "org.apache.xerces.util.SymbolTable");
             setProperty(SYMBOL_TABLE, symbolTable);
         }
 
     } // <init>()
 
     //
+    //
+    // Public methods
+    //
+
+    /** 
+     * Pushes an input source onto the current entity stack. This 
+     * enables the scanner to transparently scan new content (e.g. 
+     * the output written by an embedded script). At the end of the
+     * current entity, the scanner returns where it left off at the
+     * time this entity source was pushed.
+     * <p>
+     * <strong>Note:</strong>
+     * This functionality is experimental at this time and is
+     * subject to change in future releases of NekoHTML.
+     *
+     * @param inputSource The new input source to start scanning.
+     */
+    public void pushInputSource(XMLInputSource inputSource) {
+        fDocumentScanner.pushInputSource(inputSource);
+    } // pushInputSource(XMLInputSource)
+
     // XMLParserConfiguration methods
     //
 
@@ -365,14 +431,20 @@ public class HTMLConfiguration
         }
 
         // configure pipeline
-        boolean balance = getFeature(BALANCE_TAGS);
-        if (balance) {
+        XMLDocumentSource lastSource = fDocumentScanner;
+        if (getFeature(BALANCE_TAGS)) {
             fDocumentScanner.setDocumentHandler(fTagBalancer);
-            fTagBalancer.setDocumentHandler(fDocumentHandler);
+            lastSource = fTagBalancer;
         }
-        else {
-            fDocumentScanner.setDocumentHandler(fDocumentHandler);
+        XMLDocumentFilter[] filters = (XMLDocumentFilter[])getProperty(FILTERS);
+        if (filters != null) {
+            for (int i = 0; i < filters.length; i++) {
+                XMLDocumentFilter filter = filters[i];
+                lastSource.setDocumentHandler(filter);
+                lastSource = filter;
+            }
         }
+        lastSource.setDocumentHandler(fDocumentHandler);
 
     } // reset()
 

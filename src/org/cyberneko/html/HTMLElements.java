@@ -246,7 +246,7 @@ public class HTMLElements {
         // THEAD - O (TR)+
         ELEMENTS.addElement(new Element("THEAD", 0, "TABLE", null));
         // TITLE - - (#PCDATA) -(%head.misc;)
-        ELEMENTS.addElement(new Element("TITLE", 0, "HEAD", null));
+        ELEMENTS.addElement(new Element("TITLE", 0, new String[]{"HEAD","BODY"}, null));
         // TR - O (TH|TD)+
         ELEMENTS.addElement(new Element("TR", Element.BLOCK, "TABLE", new String[]{"TD","TR"}));
         // TT - - (%inline;)*
