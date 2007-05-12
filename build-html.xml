@@ -3,7 +3,7 @@
 <project default='all' basedir='.'>
 
  <!-- PROPERTIES -->
- <property name='version'   value='0.7.7'/>
+ <property name='version'   value='0.8'/>
  <property name='name'      value='nekohtml'/>
  <property name='fullname'  value='${name}-${version}'/>
  <property name='Name'      value='NekoHTML ${version}'/>
@@ -44,17 +44,16 @@
 
  <target name='jar' depends='compile'>
   <copy todir='bin/html'>
+   <fileset dir='.' includes='LICENSE'/>
    <fileset dir='src/html' includes='META-INF/services/**'/>
-  </copy>
-  <copy todir='bin/html'>
    <fileset dir='src/html' includes='**/*.properties'/>
   </copy>
   <jar jarfile='${jarfile}' basedir='bin/html' 
-       includes='org/**/*.class,org/**/*.properties'/>
+       includes='LICENSE,org/**/*.class,org/**/*.properties'/>
   <jar jarfile='${jarfileXni}' basedir='bin/html'
-       includes='META-INF/services/**'/>
+       includes='LICENSE,META-INF/services/**'/>
   <jar jarfile='${jarfileSamples}' basedir='bin/html'
-       includes='sample/**'/>
+       includes='LICENSE,sample/**'/>
  </target> 
 
  <target name='package' depends='jar,doc'>

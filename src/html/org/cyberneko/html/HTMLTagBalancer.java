@@ -182,6 +182,9 @@ public class HTMLTagBalancer
     protected final InfoStack fInlineStack = new InfoStack();
 
     /** True if root element has been seen. */
+    protected boolean fSeenDoctype;
+
+    /** True if root element has been seen. */
     protected boolean fSeenRootElement;
 
     /** 
@@ -326,6 +329,7 @@ public class HTMLTagBalancer
 
         // reset state
         fElementStack.top = 0;
+        fSeenDoctype = false;
         fSeenRootElement = false;
         fSeenRootElementEnd = false;
         fSeenHeadElement = false;
@@ -400,8 +404,19 @@ public class HTMLTagBalancer
     /** Doctype declaration. */
     public void doctypeDecl(String rootElementName, String publicId, String systemId,
                             Augmentations augs) throws XNIException {
-        if (fDocumentHandler != null) {
-            fDocumentHandler.doctypeDecl(rootElementName, publicId, systemId, augs);
+        if (fReportErrors) {
+            if (fSeenRootElement) {
+                fErrorReporter.reportError("HTML2010", null);
+            }
+            else if (fSeenDoctype) {
+                fErrorReporter.reportError("HTML2011", null);
+            }
+        }
+        if (!fSeenRootElement && !fSeenDoctype) {
+            fSeenDoctype = true;
+            if (fDocumentHandler != null) {
+                fDocumentHandler.doctypeDecl(rootElementName, publicId, systemId, augs);
+            }
         }
     } // doctypeDecl(String,String,String,Augmentations)
 

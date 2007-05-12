@@ -98,13 +98,36 @@ public class Writer
         startDocument(locator, encoding, null, augs);
     } // startDocument(XMLLocator,String,Augmentations)
 
+    /** Doctype declaration. */
+    public void doctypeDecl(String root, String pubid, String sysid, Augmentations augs) throws XNIException {
+        chars();
+        out.print('!');
+        if (root != null) {
+            out.print(root);
+        }
+        out.println();
+        if (pubid != null) {
+            out.print('p');
+            out.print(pubid);
+            out.println();
+        }
+        if (sysid != null) {
+            out.print('s');
+            out.print(sysid);
+            out.println();
+        }
+        out.flush();
+    } // doctypeDecl(String,String,String,Augmentations)
+
     /** Processing instruction. */
     public void processingInstruction(String target, XMLString data, Augmentations augs) throws XNIException {
         chars();
         out.print('?');
         out.print(target);
-        out.print(' ');
-        print(data.toString());
+        if (data != null && data.length > 0) {
+            out.print(' ');
+            print(data.toString());
+        }
         out.println();
         out.flush();
     } // processingInstruction(String,XMLString,Augmentations)
