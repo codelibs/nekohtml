@@ -171,10 +171,16 @@ public class HTMLScanner
             }
             fByteStream = new PlaybackInputStream(inputStream);
             String[] encodings = new String[2];
-            fByteStream.detectEncoding(encodings);
-            fIANAEncoding = encodings[0] != null ? encodings[0] : DEFAULT_IANA_ENCODING;
-            if (encodings[1] == null) {
-                encodings[1] = DEFAULT_JAVA_ENCODING;
+            String encoding = source.getEncoding();
+            if (encoding == null) {
+                fByteStream.detectEncoding(encodings);
+                fIANAEncoding = encodings[0] != null ? encodings[0] : DEFAULT_IANA_ENCODING;
+                if (encodings[1] == null) {
+                    encodings[1] = DEFAULT_JAVA_ENCODING;
+                }
+            }
+            else {
+                encodings[1] = encoding;
             }
             reader = new InputStreamReader(fByteStream, encodings[1]);
         }

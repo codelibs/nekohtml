@@ -1,6 +1,8 @@
 <title>NekoHTML</title>
 <link rel=stylesheet type=text/css href=style.css>
-<h1>NekoHTML 0.3.2</h1>
+
+<h1>NekoHTML 0.3.3</h1>
+
 <h2>About</h2>
 <p>
 NekoHTML is a simple <a href='http://www.w3.org/TR/html4/'>HTML</a>
@@ -18,19 +20,55 @@ Native Interface</a> (XNI) that is the foundation of the
 <a href='http://xml.apache.org/xerces2-j/'>Xerces2</a> 
 implementation. This enables you to use the NekoHTML parser
 with existing XNI tools without modification or rewriting code.
+
 <h2>Usage Instructions</h2>
 <p>
 NekoHTML is designed to be as lightweight and simple to use as
 possible. Using the Xerces 2.0.0 parser as a foundation, NekoHTML 
-is transparent for applications that instantiate parser objects 
+can be transparent for applications that instantiate parser objects 
 with the <a href='http://java.sun.com/xml/jaxp/index.html'>Java 
-API for XML Processing</a> (JAXP). Just put the NekoHTML jar file 
-in the classpath <em>before</em> the Xerces jar files. For example 
-(on Windows):
+API for XML Processing</a> (JAXP). Just put the appropriate NekoHTML 
+jar files in the classpath <em>before</em> the Xerces jar files. For 
+example (on Windows): [NOTE: The classpath should be contiguous. It
+is split among separate lines in this example to make it easier to
+read.]
 <pre class='cmdline'>
-<span class='cmdline-prompt'>&gt;</span> <span class='cmdline-cmd'>java -cp nekohtml.jar;xmlParserAPIs.jar;xercesImpl.jar;xercesSamples.jar 
+<span class='cmdline-prompt'>&gt;</span> <span class='cmdline-cmd'>java -cp nekohtml.jar;nekohtmlXni.jar;
+           xmlParserAPIs.jar;xercesImpl.jar;xercesSamples.jar 
        sax.Counter doc/index.html</span>
 doc/index.html: 10 ms (69 elems, 35 attrs, 0 spaces, 3512 chars)
+</pre>
+<p>
+However, separate DOM and SAX parser classes are included in the
+<code>org.cyberneko.html.parsers</code> package for convenience. 
+Both parsers use the <code>HTMLConfiguration</code> class to be 
+able to parse HTML documents but the DOM parser also uses the 
+Xerces HTML DOM implementation. Therefore, when parsing documents 
+using the NekoHTML <code>DOMParser</code> class, the documents 
+returned will be of type <code>org.w3c.dom.html.HTMLDocument</code>. 
+The following example shows how to use the NekoHTML 
+<code>DOMParser</code> directly:
+<pre class='code'>
+<span class='code-keyword'>import</span> org.cyberneko.html.parsers.DOMParser<span class='code-punct'>;</span>
+<span class='code-keyword'>import</span> org.w3c.dom.html.HTMLDocument<span class='code-punct'>;</span>
+
+<span class='code-keyword'>public class</span> TestHTMLDOM <span class='code-punct'>{</span>
+    <span class='code-keyword'>public static void</span> main<span class='code-punct'>(</span>String<span class='code-punct'>[]</span> argv<span class='code-punct'>)</span> <span class='code-keyword'>throws</span> Exception <span class='code-punct'>{</span>
+        DOMParser parser <span class='code-punct'>=</span> <span class='code-keyword'>new</span> DOMParser<span class='code-punct'>();</span>
+        parser<span class='code-punct'>.</span>parse<span class='code-punct'>(</span>argv<span class='code-punct'>[</span><span class='code-number'>0</span><span class='code-punct'>]);</span>
+        HTMLDocument doc <span class='code-punct'>= (</span>HTMLDocument<span class='code-punct'>)</span>parser<span class='code-punct'>.</span>getDocument<span class='code-punct'>();</span>
+        System<span class='code-punct'>.</span>out<span class='code-punct'>.</span>println<span class='code-punct'>(</span><span class='code-string'>"document-class-name: "</span><span class='code-punct'>+</span>doc<span class='code-punct'>.</span>getClass<span class='code-punct'>().</span>getName<span class='code-punct'>());</span>
+        System<span class='code-punct'>.</span>out<span class='code-punct'>.</span>println<span class='code-punct'>(</span><span class='code-string'>"paragraphs: "</span><span class='code-punct'>+</span>doc<span class='code-punct'>.</span>getElementsByTagName<span class='code-punct'>(</span><span class='code-string'>"P"</span><span class='code-punct'>).</span>getLength<span class='code-punct'>());</span>
+    <span class='code-punct'>}</span>
+<span class='code-punct'>}</span>
+</pre>
+<p>
+Running this program produces the following output:
+<pre class='cmdline'>
+<span class='cmdline-prompt'>&gt;</span> <span class='cmdline-cmd'>java -cp nekohtml.jar;xmlParserAPIs.jar;xercesImpl.jar;xercesSamples.jar 
+       TestHTMLDOM doc/index.html</span>
+document-class-name: org.apache.html.dom.HTMLDocumentImpl
+paragraphs: 12
 </pre>
 <p>
 Alternatively, you can construct any XNI-based parser class
@@ -48,18 +86,7 @@ found in the <code>org.cyberneko.html</code> package. For example:
 
 <span class='code-punct'>}</span>
 </pre>
-<p>
-The above example shows how to write a SAX parser using Xerces2
-and the <code>HTMLConfiguration</code> class. The same can be 
-used to create a custom NekoHTML DOM parser. However, when doing 
-so, it would be a good idea to set the implementation used by the 
-DOM parser to construct the DOM tree so that an HTML DOM document 
-is constructed. Using Xerces2, you can set the 
-"http://apache.org/xml/properties/dom/document-class-name"
-property to the value "org.apache.html.dom.HTMLDocumentImpl".
-Refer to the Xerces documentation for 
-<a href='http://xml.apache.org/xerces2-j/properties.html'>setting 
-parser properties</a>.
+
 <h2>License Agreement</h2>
 <p>
 NekoHTML is distributed under an Apache style license. Please
@@ -74,6 +101,7 @@ create a separate open source project hosted elsewhere (possibly
 this code useful and are interested in its further development, 
 please contact me at
 <a href='mailto:andyc@apache.org'>andyc@apache.org</a>.
+
 <h2>Requirements and Limitations</h2>
 <p>
 This version of NekoHTML requires the following:
@@ -81,19 +109,26 @@ This version of NekoHTML requires the following:
 <li><a href='http://java.sun.com/products/'>Java 1.1</a> (or 
     higher)
 <li><a href='http://xml.apache.org/dist/xerces-j/'>Xerces 2.0.0</a>
+    (or higher)
 </ul>
 <p>
 This version has the following limitations:
 <ul>
-<li>There are no major limitations with this release. However,
-    additional work can always be done to improve performance,
-    fix bugs, and add functionality.
+<li>There are no known major limitations with this release. 
+    However, additional work can always be done to improve 
+    performance, fix bugs, and add functionality.
 </ul>
 <p>
 For a more complete list of items to be done, please refer to
 the <a href='../TODO'>Todo Items</a>.
 <h2>Release History</h2>
 <dl>
+ <dt>Version 0.3.3 (02 Apr 2002)
+ <dd>Separated <tt>META-INF/services/*</tt> files to separate Jar
+     so that HTML parser configuration selection can be controlled 
+     more explicitly; added DOM and SAX parser classes for 
+     convenience; and fixed bug so that parser now obeys the
+     encoding specified in the input source.
  <dt>Version 0.3.2 (15 Mar 2002)
  <dd>Fixed problem with bare form input elements appearing outside
      of body tag.
