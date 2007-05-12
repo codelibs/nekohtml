@@ -107,7 +107,7 @@ public class HTMLTagBalancer
 
         // handle empty document
         if (!fSeenRootElement) {
-            fQName.setValues(null, null, "HTML", null);
+            fQName.setValues(null, "HTML", "HTML", null);
             startElement(fQName, EMPTY_ATTRS, null);
             endElement(fQName, null);
         }
@@ -161,7 +161,8 @@ public class HTMLTagBalancer
         // check proper parent
         if (element.parent != null) {
             if (!fSeenRootElement) {
-                QName qname = new QName(null, null, element.parent instanceof String ? (String)element.parent : ((String[])element.parent)[0], null);
+                String ENAME = element.parent instanceof String ? (String)element.parent : ((String[])element.parent)[0];
+                QName qname = new QName(null, ENAME, ENAME, null);
                 startElement(qname, EMPTY_ATTRS, null);
             }
             else {
@@ -178,7 +179,8 @@ public class HTMLTagBalancer
                                 Info info = (Info)fElementStack.peek();
                                 endElement(info.element, null);
                             }
-                            QName qname = new QName(null, null, element.parent instanceof String ? (String)element.parent : ((String[])element.parent)[0], null);
+                            String ENAME = element.parent instanceof String ? (String)element.parent : ((String[])element.parent)[0];
+                            QName qname = new QName(null, ENAME, ENAME, null);
                             startElement(qname, EMPTY_ATTRS, null);
                         }
                     }
@@ -280,7 +282,7 @@ public class HTMLTagBalancer
             if (whitespace) {
                 return;
             }
-            fQName.setValues(null, null, "BODY", null);
+            fQName.setValues(null, "BODY", "BODY", null);
             startElement(fQName, EMPTY_ATTRS, null);
         }
 

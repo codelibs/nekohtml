@@ -882,13 +882,10 @@ public class HTMLScanner
                     String httpEquiv = fAttributes.getValue("http-equiv");
                     if (httpEquiv != null && httpEquiv.equalsIgnoreCase("content-type")) {
                         String content = fAttributes.getValue("content");
-                        //System.err.println(">>> http-equiv: '"+httpEquiv+"'");
-                        //System.err.println(">>> content: '"+content+"'");
                         int index1 = content.indexOf("charset=");
                         if (index1 != -1) {
                             int index2 = content.indexOf(';', index1);
                             String charset = index2 != -1 ? content.substring(index1+8, index2) : content.substring(index1+8);
-                            //System.err.println(">>> charset: '"+charset+"'");
                             try {
                                 fCharStream = new InputStreamReader(fByteStream, charset);
                                 fByteStream.playback();
@@ -897,6 +894,7 @@ public class HTMLScanner
                                 fCharOffset = fCharLength = 0;
                             }
                             catch (UnsupportedEncodingException e) {
+                                // REVISIT: report error
                                 System.err.println("!!! UNSUPPORTED ENCODING !!!");
                                 // NOTE: If the encoding change doesn't work, 
                                 //       then there's no point in continuing to 
@@ -922,7 +920,7 @@ public class HTMLScanner
                 }
             }
             if (fDocumentHandler != null && fElementCount >= fElementDepth) {
-                fQName.setValues(null, null, ename, null);
+                fQName.setValues(null, ename, ename, null);
                 if (DEBUG_CALLBACKS) {
                     System.out.println("startElement("+fQName+','+fAttributes+")");
                 }
@@ -952,7 +950,7 @@ public class HTMLScanner
             aname = aname.toLowerCase();
             c = read();
             if (c == '/' || c == '>') {
-                fQName.setValues(null, null, aname, null);
+                fQName.setValues(null, aname, aname, null);
                 attributes.addAttribute(fQName, "CDATA", "");
                 if (c == '/') {
                     skip();
@@ -972,7 +970,7 @@ public class HTMLScanner
                 if (c == '/') {
                     skip();
                 }
-                fQName.setValues(null, null, aname, null);
+                fQName.setValues(null, aname, aname, null);
                 attributes.addAttribute(fQName, "CDATA", "");
                 return false;
             }
@@ -988,7 +986,7 @@ public class HTMLScanner
                     while (Character.isSpace((char)c));
                 }
                 if (c == '/' || c == '>') {
-                    fQName.setValues(null, null, aname, null);
+                    fQName.setValues(null, aname, aname, null);
                     attributes.addAttribute(fQName, "CDATA", "");
                     if (c == '/') {
                         skip();
@@ -1017,7 +1015,7 @@ public class HTMLScanner
                         }
                         fStringBuffer.append((char)c);
                     }
-                    fQName.setValues(null, null, aname, null);
+                    fQName.setValues(null, aname, aname, null);
                     String avalue = fStringBuffer.toString();
                     attributes.addAttribute(fQName, "CDATA", avalue);
                     return true;
@@ -1037,12 +1035,12 @@ public class HTMLScanner
                         fStringBuffer.append((char)c);
                     }
                 } while (c != quote);
-                fQName.setValues(null, null, aname, null);
+                fQName.setValues(null, aname, aname, null);
                 String avalue = fStringBuffer.toString();
                 attributes.addAttribute(fQName, "CDATA", avalue);
             }
             else {
-                fQName.setValues(null, null, aname, null);
+                fQName.setValues(null, aname, aname, null);
                 attributes.addAttribute(fQName, "CDATA", "");
                 fCharOffset--;
             }
@@ -1056,7 +1054,7 @@ public class HTMLScanner
             if (ename != null) {
                 ename = ename.toUpperCase();
                 if (fDocumentHandler != null && fElementCount >= fElementDepth) {
-                    fQName.setValues(null, null, ename, null);
+                    fQName.setValues(null, ename, ename, null);
                     if (DEBUG_CALLBACKS) {
                         System.out.println("endElement("+fQName+")");
                     }
@@ -1122,7 +1120,8 @@ public class HTMLScanner
                                     if (ename != null) {
                                         if (ename.equalsIgnoreCase(fElementName)) {
                                             skip();
-                                            fQName.setValues(null, null, ename.toUpperCase(), null);
+                                            String ENAME = ename.toUpperCase();
+                                            fQName.setValues(null, ENAME, ENAME, null);
                                             if (DEBUG_CALLBACKS) {
                                                 System.out.println("endElement("+fQName+")");
                                             }
