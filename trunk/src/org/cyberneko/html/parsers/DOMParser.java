@@ -13,6 +13,8 @@ import org.cyberneko.html.HTMLConfiguration;
  * A DOM parser for HTML documents.
  *
  * @author Andy Clark
+ *
+ * @version $Id$
  */
 public class DOMParser
     /***/

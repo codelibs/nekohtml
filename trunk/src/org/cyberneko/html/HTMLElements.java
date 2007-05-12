@@ -25,6 +25,9 @@ public class HTMLElements {
     /** Element information. */
     protected static final Vector ELEMENTS = new Vector();
 
+    /** No such element. */
+    public static final Element NO_SUCH_ELEMENT = new Element("", 0, "BODY", null);
+
     //
     // Static initializer
     //
@@ -86,7 +89,7 @@ public class HTMLElements {
         // COLGROUP - O (COL)*
         ELEMENTS.addElement(new Element("COLGROUP", 0, "TABLE", new String[]{"COLGROUP"}));
         // COMMENT
-        ELEMENTS.addElement(new Element("COMMENT", 0, "HTML", null));
+        ELEMENTS.addElement(new Element("COMMENT", Element.SPECIAL, "HTML", null));
         // DEL - - (%flow;)*
         ELEMENTS.addElement(new Element("DEL", 0, "BODY", null));
         // DFN - - (%inline;)*
@@ -193,7 +196,7 @@ public class HTMLElements {
         // PARAM - O EMPTY
         ELEMENTS.addElement(new Element("PARAM", Element.EMPTY, "OBJECT", null));
         // PLAINTEXT
-        ELEMENTS.addElement(new Element("PLAINTEXT", 0, "BODY", null));
+        ELEMENTS.addElement(new Element("PLAINTEXT", Element.SPECIAL, "BODY", null));
         // PRE - - (%inline;)* -(%pre.exclusion;)
         ELEMENTS.addElement(new Element("PRE", 0, "BODY", null));
         // Q - - (%inline;)*
@@ -207,7 +210,7 @@ public class HTMLElements {
         // SAMP - - (%inline;)*
         ELEMENTS.addElement(new Element("SAMP", Element.INLINE, "BODY", null));
         // SCRIPT - - %Script;
-        ELEMENTS.addElement(new Element("SCRIPT", 0, new String[]{"HEAD","BODY"}, null));
+        ELEMENTS.addElement(new Element("SCRIPT", Element.SPECIAL, new String[]{"HEAD","BODY"}, null));
         // SELECT - - (OPTGROUP|OPTION)+
         ELEMENTS.addElement(new Element("SELECT", 0, "FORM", new String[]{"SELECT"}));
         // SMALL - - (%inline;)*
@@ -233,7 +236,7 @@ public class HTMLElements {
         // TBODY O O (TR)+
         ELEMENTS.addElement(new Element("TBODY", 0, "TABLE", new String[]{"TD","THEAD","TR"}));
         // TEXTAREA - - (#PCDATA)
-        ELEMENTS.addElement(new Element("TEXTAREA", 0, "FORM", null));
+        ELEMENTS.addElement(new Element("TEXTAREA", Element.SPECIAL, "FORM", null));
         // TD - O (%flow;)*
         ELEMENTS.addElement(new Element("TD", 0, "TABLE", new String[]{"TD","TH"}));
         // TFOOT - O (TR)+
@@ -259,10 +262,7 @@ public class HTMLElements {
         // XML
         ELEMENTS.addElement(new Element("XML", 0, "BODY", null));
         // XMP
-        ELEMENTS.addElement(new Element("XMP", 0, "BODY", null));
-        
-        // ...unknown element name...
-        ELEMENTS.addElement(new Element("", 0, "BODY", null));
+        ELEMENTS.addElement(new Element("XMP", Element.SPECIAL, "BODY", null));
     } // <clinit>()
 
     //
@@ -274,16 +274,26 @@ public class HTMLElements {
      *
      * @param ename The element name.
      */
-    public static Element getElement(String ename) {
+    public static final Element getElement(String ename) {
+        return getElement(ename, NO_SUCH_ELEMENT);
+    } // getElement(String):Element
+
+    /**
+     * Returns the element information for the specified element name.
+     *
+     * @param ename The element name.
+     * @param element The default element to return if not found.
+     */
+    public static final Element getElement(String ename, Element element) {
 
         int length = ELEMENTS.size();
         for (int i = 0; i < length; i++) {
-            Element element = (Element)ELEMENTS.elementAt(i);
-            if (element.name.equals(ename)) {
-                return element;
+            Element elem = (Element)ELEMENTS.elementAt(i);
+            if (elem.name.equalsIgnoreCase(ename)) {
+                return elem;
             }
         }
-        return (Element)ELEMENTS.lastElement();
+        return element;
 
     } // getElement(String):Element
 
@@ -313,6 +323,9 @@ public class HTMLElements {
 
         /** Container element. */
         public static final int CONTAINER = 0x08;
+
+        /** Special element. */
+        public static final int SPECIAL = 0x10;
 
         /** Empty string array. */
         private static final String[] EMPTY_CLOSES = {};
@@ -376,6 +389,14 @@ public class HTMLElements {
             return (flags & CONTAINER) != 0;
         } // isContainer():boolean
 
+        /** 
+         * Returns true if this element is special -- if its content
+         * should be parsed ignoring markup.
+         */
+        public boolean isSpecial() {
+            return (flags & SPECIAL) != 0;
+        } // isSpecial():boolean
+
         /**
          * Returns true if this element can close the specified Element.
          *
@@ -384,7 +405,7 @@ public class HTMLElements {
         public boolean closes(String tag) {
 
             for (int i = 0; i < closes.length; i++) {
-                if (closes[i].equals(tag)) {
+                if (closes[i].equalsIgnoreCase(tag)) {
                     return true;
                 }
             }

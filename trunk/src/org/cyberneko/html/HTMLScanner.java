@@ -18,6 +18,7 @@ import java.io.Reader;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
 
+import org.apache.xerces.util.EncodingMap;
 import org.apache.xerces.util.URI;
 import org.apache.xerces.util.XMLAttributesImpl;
 import org.apache.xerces.util.XMLStringBuffer;
@@ -25,8 +26,11 @@ import org.apache.xerces.xni.Augmentations;
 import org.apache.xerces.xni.QName;
 import org.apache.xerces.xni.XMLAttributes;
 import org.apache.xerces.xni.XMLDocumentHandler;
+import org.apache.xerces.xni.XMLLocator;
 import org.apache.xerces.xni.XMLString;
 import org.apache.xerces.xni.XNIException;
+import org.apache.xerces.xni.parser.XMLComponentManager;
+import org.apache.xerces.xni.parser.XMLConfigurationException;
 import org.apache.xerces.xni.parser.XMLDocumentScanner;
 import org.apache.xerces.xni.parser.XMLInputSource;
 
@@ -40,11 +44,46 @@ import org.apache.xerces.xni.parser.XMLInputSource;
  * @version $Id$
  */
 public class HTMLScanner 
-    implements XMLDocumentScanner {
+    implements XMLDocumentScanner, XMLLocator, HTMLComponent {
 
     //
     // Constants
     //
+
+    // features
+
+    /** Report errors. */
+    protected static final String REPORT_ERRORS = "http://cyberneko.org/html/features/report-errors";
+
+    /** Recognized features. */
+    private static final String[] RECOGNIZED_FEATURES = {
+        REPORT_ERRORS,
+    };
+
+    /** Recognized features defaults. */
+    private static final Boolean[] RECOGNIZED_FEATURES_DEFAULTS = {
+        null,
+    };
+
+    // properties
+
+    /** Default encoding. */
+    protected static final String DEFAULT_ENCODING = "http://cyberneko.org/html/properties/default-encoding";
+    
+    /** Error reporter. */
+    protected static final String ERROR_REPORTER = "http://cyberneko.org/html/properties/error-reporter";
+
+    /** Recognized properties. */
+    private static final String[] RECOGNIZED_PROPERTIES = {
+        DEFAULT_ENCODING,
+        ERROR_REPORTER,
+    };
+
+    /** Recognized properties defaults. */
+    private static final Object[] RECOGNIZED_PROPERTIES_DEFAULTS = {
+        "Windows-1252",
+        null,
+    };
 
     // states
 
@@ -65,12 +104,6 @@ public class HTMLScanner
     /** Default buffer size. */
     protected static final int DEFAULT_BUFFER_SIZE = 2048;
 
-    /** Default IANA encoding. */
-    protected static final String DEFAULT_IANA_ENCODING = "WINDOWS-1252";
-
-    /** Default Java encoding. */
-    protected static final String DEFAULT_JAVA_ENCODING = "Cp1252";
-
     // debugging
 
     /** Set to true to debug changes in the scanner. */
@@ -88,6 +121,39 @@ public class HTMLScanner
     //
     // Data
     //
+
+    // features
+
+    /** Report errors. */
+    protected boolean fReportErrors;
+
+    // properties
+
+    /** Default encoding. */
+    protected String fDefaultIANAEncoding;
+
+    /** Error reporter. */
+    protected HTMLErrorReporter fErrorReporter;
+
+    // locator information
+
+    /** Public identifier. */
+    protected String fPublicId;
+
+    /** Base system identifier. */
+    protected String fBaseSystemId;
+
+    /** Literal system identifier. */
+    protected String fLiteralSystemId;
+
+    /** Expanded system identifier. */
+    protected String fExpandedSystemId;
+
+    /** Line number. */
+    protected int fLineNumber;
+
+    /** Column number. */
+    protected int fColumnNumber;
 
     // state
 
@@ -108,6 +174,9 @@ public class HTMLScanner
 
     /** Auto-detected IANA encoding. */
     protected String fIANAEncoding;
+
+    /** Auto-detected Java encoding. */
+    protected String fJavaEncoding;
 
     /** Element count. */
     protected int fElementCount;
@@ -150,23 +219,141 @@ public class HTMLScanner
     private final XMLStringBuffer fStringBuffer2 = new XMLStringBuffer(1024);
 
     //
+    // XMLLocator methods
+    //
+
+    /** Returns the public identifier. */
+    public String getPublicId() { 
+        return fPublicId; 
+    } // getPublicId():String
+
+    /** Returns the base system identifier. */
+    public String getBaseSystemId() { 
+        return fBaseSystemId; 
+    } // getBaseSystemId():String
+
+    /** Returns the literal system identifier. */
+    public String getLiteralSystemId() { 
+        return fLiteralSystemId; 
+    } // getLiteralSystemId():String
+
+    /** Returns the expanded system identifier. */
+    public String getExpandedSystemId() { 
+        return fExpandedSystemId; 
+    } // getExpandedSystemId():String
+
+    /** Returns the current line number. */
+    public int getLineNumber() { 
+        return fLineNumber; 
+    } // getLineNumber():int
+
+    /** Returns the current column number. */
+    public int getColumnNumber() { 
+        return fColumnNumber; 
+    } // getColumnNumber():int
+
+    //
+    // HTMLComponent methods
+    //
+
+    /** Returns the default state for a feature. */
+    public Boolean getFeatureDefault(String featureId) {
+        int length = RECOGNIZED_FEATURES != null ? RECOGNIZED_FEATURES.length : 0;
+        for (int i = 0; i < length; i++) {
+            if (RECOGNIZED_FEATURES[i].equals(featureId)) {
+                return RECOGNIZED_FEATURES_DEFAULTS[i];
+            }
+        }
+        return null;
+    } // getFeatureDefault(String):Boolean
+
+    /** Returns the default state for a property. */
+    public Object getPropertyDefault(String propertyId) {
+        int length = RECOGNIZED_PROPERTIES != null ? RECOGNIZED_PROPERTIES.length : 0;
+        for (int i = 0; i < length; i++) {
+            if (RECOGNIZED_PROPERTIES[i].equals(propertyId)) {
+                return RECOGNIZED_PROPERTIES_DEFAULTS[i];
+            }
+        }
+        return null;
+    } // getPropertyDefault(String):Object
+
+    //
+    // XMLComponent methods
+    //
+
+    /** Returns recognized features. */
+    public String[] getRecognizedFeatures() {
+        return RECOGNIZED_FEATURES;
+    } // getRecognizedFeatures():String[]
+
+    /** Returns recognized properties. */
+    public String[] getRecognizedProperties() {
+        return RECOGNIZED_PROPERTIES;
+    } // getRecognizedProperties():String[]
+
+    /** Resets the component. */
+    public void reset(XMLComponentManager manager)
+        throws XMLConfigurationException {
+
+        // get features
+        fReportErrors = manager.getFeature(REPORT_ERRORS);
+
+        // get properties
+        fDefaultIANAEncoding = String.valueOf(manager.getProperty(DEFAULT_ENCODING));
+        fErrorReporter = (HTMLErrorReporter)manager.getProperty(ERROR_REPORTER);
+    
+    } // reset(XMLComponentManager)
+
+    /** Sets a feature. */
+    public void setFeature(String featureId, boolean state)
+        throws XMLConfigurationException {
+    } // setFeature(String,boolean)
+
+    /** Sets a property. */
+    public void setProperty(String propertyId, Object value)
+        throws XMLConfigurationException {
+    
+        if (propertyId.equals(DEFAULT_ENCODING)) {
+            fDefaultIANAEncoding = String.valueOf(value);
+            return;
+        }
+
+    } // setProperty(String,Object)
+
+    //
     // XMLDocumentScanner methods
     //
 
     /** Sets the input source. */
     public void setInputSource(XMLInputSource source) throws IOException {
+
+        // reset state
         fElementCount = 0;
         fElementDepth = -1;
         fByteStream = null;
-        fIANAEncoding = DEFAULT_IANA_ENCODING;
+
+        fCharOffset = 0;
+        fCharLength = 0;
+
+        fPublicId = source.getPublicId();
+        fBaseSystemId = source.getBaseSystemId();
+        fLiteralSystemId = source.getSystemId();
+        fExpandedSystemId = expandSystemId(fLiteralSystemId, fBaseSystemId);
+
+        fLineNumber = 1;
+        fColumnNumber = 1;
+
+        // reset encoding information
+        fIANAEncoding = fDefaultIANAEncoding;
+        fJavaEncoding = fIANAEncoding;
+
+        // open stream
         Reader reader = source.getCharacterStream();
         if (reader == null) {
             InputStream inputStream = source.getByteStream();
             if (inputStream == null) {
-                String systemId = source.getSystemId();
-                String baseSystemId = source.getBaseSystemId();
-                String expandedSystemId = expandSystemId(systemId, baseSystemId);
-                URL url = new URL(expandedSystemId);
+                URL url = new URL(fExpandedSystemId);
                 inputStream = url.openStream();
             }
             fByteStream = new PlaybackInputStream(inputStream);
@@ -174,21 +361,35 @@ public class HTMLScanner
             String encoding = source.getEncoding();
             if (encoding == null) {
                 fByteStream.detectEncoding(encodings);
-                fIANAEncoding = encodings[0] != null ? encodings[0] : DEFAULT_IANA_ENCODING;
-                if (encodings[1] == null) {
-                    encodings[1] = DEFAULT_JAVA_ENCODING;
-                }
             }
             else {
-                encodings[1] = encoding;
+                encodings[0] = encoding;
             }
-            reader = new InputStreamReader(fByteStream, encodings[1]);
+            if (encodings[0] == null) {
+                encodings[0] = fDefaultIANAEncoding;
+                if (fReportErrors) {
+                    fErrorReporter.reportWarning("HTML1000", null);
+                }
+            }
+            if (encodings[1] == null) {
+                encodings[1] = EncodingMap.getIANA2JavaMapping(encodings[0].toUpperCase());
+                if (encodings[1] == null) {
+                    encodings[1] = encodings[0];
+                    if (fReportErrors) {
+                        fErrorReporter.reportWarning("HTML1001", new Object[]{encodings[0]});
+                    }
+                }
+            }
+            fIANAEncoding = encodings[0];
+            fJavaEncoding = encodings[1];
+            reader = new InputStreamReader(fByteStream, fJavaEncoding);
         }
         fCharStream = reader;
+
+        // set scanner and state
         setScanner(fContentScanner);
         setScannerState(STATE_START_DOCUMENT);
-        fCharOffset = 0;
-        fCharLength = 0;
+
     } // setInputSource(XMLInputSource)
 
     /** Scans the document. */
@@ -201,6 +402,7 @@ public class HTMLScanner
         return true;
     } // scanDocument(boolean):boolean
 
+    /** Sets the document handler. */
     public void setDocumentHandler(XMLDocumentHandler handler) {
         fDocumentHandler = handler;
     } // setDocumentHandler(XMLDocumentHandler)
@@ -208,6 +410,17 @@ public class HTMLScanner
     //
     // Protected static methods
     //
+
+    /** Returns the value of the specified attribute, ignoring case. */
+    protected static String getValue(XMLAttributes attrs, String aname) {
+        int length = attrs != null ? attrs.getLength() : 0;
+        for (int i = 0; i < length; i++) {
+            if (attrs.getQName(i).equalsIgnoreCase(aname)) {
+                return attrs.getValue(i);
+            }
+        }
+        return null;
+    } // getValue(XMLAttributes,String):String
 
     /**
      * Expands a system id and returns the system id as a URI, if
@@ -341,12 +554,26 @@ public class HTMLScanner
 
     /** Reads a single character. */
     protected int read() throws IOException {
+        if (DEBUG_BUFFER) { 
+            System.out.print("(read: ");
+            printBuffer();
+            System.out.println();
+        }
         if (fCharOffset == fCharLength) {
             if (load(0) == -1) {
                 return -1;
             }
         }
-        return fCharBuffer[fCharOffset++];
+        int c = fCharBuffer[fCharOffset++];
+        fColumnNumber++;
+        if (DEBUG_BUFFER) { 
+            System.out.print(")read: ");
+            printBuffer();
+            System.out.print(" -> ");
+            System.out.print(c);
+            System.out.println();
+        }
+        return c;
     } // read():int
 
     /** 
@@ -427,6 +654,7 @@ public class HTMLScanner
                     break;
                 }
                 fCharOffset++;
+                fColumnNumber++;
             }
             if (fCharOffset == fCharLength) {
                 int length = fCharLength - offset;
@@ -451,9 +679,9 @@ public class HTMLScanner
     } // scanName():String
 
     /** Skips markup. */
-    protected void skip() throws IOException {
+    protected void skipMarkup() throws IOException {
         if (DEBUG_BUFFER) {
-            System.out.print("(skip: ");
+            System.out.print("(skipMarkup: ");
             printBuffer();
             System.out.println();
         }
@@ -466,6 +694,7 @@ public class HTMLScanner
             }
             while (fCharOffset < fCharLength) {
                 char c = fCharBuffer[fCharOffset++];
+                fColumnNumber++;
                 if (c == '<') {
                     depth++;
                 }
@@ -475,14 +704,104 @@ public class HTMLScanner
                         break OUTER;
                     }
                 }
+                else if (c == '\r' || c == '\n') {
+                    skipNewlines();
+                }
             }
         }
         if (DEBUG_BUFFER) {
-            System.out.print(")skip: ");
+            System.out.print(")skipMarkup: ");
             printBuffer();
             System.out.println();
         }
-    } // skip()
+    } // skipMarkup()
+
+    /** Skips whitespace. */
+    protected void skipSpaces() throws IOException {
+        if (DEBUG_BUFFER) {
+            System.out.print("(skipMarkup: ");
+            printBuffer();
+            System.out.println();
+        }
+        while (true) {
+            if (fCharOffset == fCharLength) {
+                if (load(0) == -1) {
+                    break;
+                }
+            }
+            if (!Character.isSpace(fCharBuffer[fCharOffset])) {
+                break;
+            }
+            fCharOffset++;
+            fColumnNumber++;
+        }
+        if (DEBUG_BUFFER) {
+            System.out.print(")skipSpaces: ");
+            printBuffer();
+            System.out.println();
+        }
+    } // skipSpaces()
+
+    /** Skips newlines and returns the number of newlines skipped. */
+    protected int skipNewlines() throws IOException {
+        if (DEBUG_BUFFER) {
+            System.out.print("(skipNewlines: ");
+            printBuffer();
+            System.out.println();
+        }
+        if (fCharOffset == fCharLength) {
+            if (load(0) == -1) {
+                if (DEBUG_BUFFER) {
+                    System.out.print(")skipNewlines: ");
+                    printBuffer();
+                    System.out.println();
+                }
+                return 0;
+            }
+        }
+        char c = fCharBuffer[fCharOffset];
+        int newlines = 0;
+        int offset = fCharOffset;
+        if (c == '\n' || c == '\r') {
+            do {
+                c = fCharBuffer[fCharOffset++];
+                if (c == '\r') {
+                    newlines++;
+                    if (fCharOffset == fCharLength) {
+                        offset = 0;
+                        fCharOffset = newlines;
+                        if (load(newlines) == -1) {
+                            break;
+                        }
+                    }
+                    if (fCharBuffer[fCharOffset] == '\n') {
+                        fCharOffset++;
+                        offset++;
+                    }
+                    else {
+                        newlines++;
+                    }
+                }
+                else if (c == '\n') {
+                    newlines++;
+                    if (fCharOffset == fCharLength) {
+                        offset = 0;
+                        fCharOffset = newlines;
+                        if (load(newlines) == -1) {
+                            break;
+                        }
+                    }
+                }
+                else {
+                    fCharOffset--;
+                    break;
+                }
+            } while (fCharOffset < fCharLength - 1);
+            fLineNumber += newlines;
+            fColumnNumber = 1;
+        }
+        return newlines;
+    } // skipNewlines():int
 
     //
     // Private methods
@@ -629,6 +948,7 @@ public class HTMLScanner
                             }
                             else {
                                 fCharOffset--;
+                                fColumnNumber--;
                                 scanCharacters();
                             }
                             break;
@@ -640,7 +960,10 @@ public class HTMLScanner
                                     scanComment();
                                 }
                                 else {
-                                    skip();
+                                    if (fReportErrors) {
+                                        fErrorReporter.reportError("HTML1002", null);
+                                    }
+                                    skipMarkup();
                                 }
                             }
                             else if (c == '?') {
@@ -650,14 +973,18 @@ public class HTMLScanner
                                 scanEndElement();
                             }
                             else if (c == -1) {
+                                if (fReportErrors) {
+                                    fErrorReporter.reportError("HTML1003", null);
+                                }
                                 setScannerState(STATE_END_DOCUMENT);
                                 continue;
                             }
                             else {
                                 fCharOffset--;
+                                fColumnNumber--;
                                 fElementCount++;
                                 String ename = scanStartElement();
-                                if (ename != null && (ename.equals("SCRIPT") || ename.equals("COMMENT"))) {
+                                if (ename != null && HTMLElements.getElement(ename).isSpecial()) {
                                     setScanner(fSpecialScanner.setElementName(ename));
                                     setScannerState(STATE_CONTENT);
                                     return true;
@@ -710,17 +1037,24 @@ public class HTMLScanner
                 if (c == ';') {
                     break;
                 }
-                //if (c == '<' || c == '&' || c == '>' || Character.isSpace((char)c)) {
                 if (!Character.isLetterOrDigit((char)c) && c != '#') {
+                    if (fReportErrors) {
+                        fErrorReporter.reportWarning("HTML1004", null);
+                    }
                     fCharOffset--;
+                    fColumnNumber--;
                     return -1;
                 }
                 if (c == -1) {
+                    if (fReportErrors) {
+                        fErrorReporter.reportWarning("HTML1004", null);
+                    }
                     return -1;
                 }
                 str.append((char)c);
             }
             if (str.length == 0) {
+                // REVISIT: What should this really return? -Ac
                 return '&';
             }
 
@@ -737,12 +1071,21 @@ public class HTMLScanner
                 }
                 catch (NumberFormatException e) {
                     // REVISIT: What should be done with this?
+                    if (fReportErrors) {
+                        fErrorReporter.reportError("HTML1005", new Object[]{name});
+                    }
+                }
+                if (value == -1) {
+                    str.append(';');
                 }
                 return value;
             }
 
             int c = HTMLEntities.get(name);
             if (c == -1) {
+                if (fReportErrors) {
+                    fErrorReporter.reportWarning("HTML1006", new Object[]{name});
+                }
                 str.append(';');
             }
             return c;
@@ -756,57 +1099,14 @@ public class HTMLScanner
                 printBuffer();
                 System.out.println();
             }
-            if (fCharOffset == fCharLength) {
-                if (load(0) == -1) {
-                    if (DEBUG_BUFFER) {
-                        System.out.print(")scanCharacters: ");
-                        printBuffer();
-                        System.out.println();
-                    }
-                    return;
-                }
+            int newlines = skipNewlines();
+            if (newlines == 0 && fCharOffset == fCharLength) {
+                return;
             }
-            char c = fCharBuffer[fCharOffset];
-            int newlines = 0;
-            int offset = fCharOffset;
-            if (c == '\n' || c == '\r') {
-                do {
-                    c = fCharBuffer[fCharOffset++];
-                    if (c == '\r') {
-                        newlines++;
-                        if (fCharOffset == fCharLength) {
-                            offset = 0;
-                            fCharOffset = newlines;
-                            if (load(newlines) == -1) {
-                                break;
-                            }
-                        }
-                        if (fCharBuffer[fCharOffset] == '\n') {
-                            fCharOffset++;
-                            offset++;
-                        }
-                        else {
-                            newlines++;
-                        }
-                    }
-                    else if (c == '\n') {
-                        newlines++;
-                        if (fCharOffset == fCharLength) {
-                            offset = 0;
-                            fCharOffset = newlines;
-                            if (load(newlines) == -1) {
-                                break;
-                            }
-                        }
-                    }
-                    else {
-                        fCharOffset--;
-                        break;
-                    }
-                } while (fCharOffset < fCharLength - 1);
-                for (int i = offset; i < fCharOffset; i++) {
-                    fCharBuffer[i] = '\n';
-                }
+            char c;
+            int offset = fCharOffset - newlines;
+            for (int i = offset; i < fCharOffset; i++) {
+                fCharBuffer[i] = '\n';
             }
             while (fCharOffset < fCharLength) {
                 c = fCharBuffer[fCharOffset];
@@ -814,6 +1114,7 @@ public class HTMLScanner
                     break;
                 }
                 fCharOffset++;
+                fColumnNumber++;
             }
             if (fCharOffset > offset && 
                 fDocumentHandler != null && fElementCount >= fElementDepth) {
@@ -853,6 +1154,7 @@ public class HTMLScanner
                     if (count < 2) {
                         fStringBuffer.append('-');
                         fCharOffset--;
+                        fColumnNumber--;
                         continue;
                     }
                     if (c != '>') {
@@ -860,6 +1162,7 @@ public class HTMLScanner
                             fStringBuffer.append('-');
                         }
                         fCharOffset--;
+                        fColumnNumber--;
                         continue;
                     }
                     for (int i = 0; i < count - 2; i++) {
@@ -867,7 +1170,13 @@ public class HTMLScanner
                     }
                     break;
                 }
+                else if (c == '\n' || c == '\r') {
+                    skipNewlines();
+                }
                 else if (c == -1) {
+                    if (fReportErrors) {
+                        fErrorReporter.reportError("HTML1007", null);
+                    }
                     throw new EOFException();
                 }
                 fStringBuffer.append((char)c);
@@ -892,7 +1201,10 @@ public class HTMLScanner
                 printBuffer();
                 System.out.println();
             }
-            skip();
+            if (fReportErrors) {
+                fErrorReporter.reportWarning("HTML1008", null);
+            }
+            skipMarkup();
             if (DEBUG_BUFFER) {
                 System.out.print(")scanPI: ");
                 printBuffer();
@@ -904,34 +1216,45 @@ public class HTMLScanner
         protected String scanStartElement() throws IOException {
             String ename = scanName();
             if (ename == null) {
-                skip();
+                if (fReportErrors) {
+                    fErrorReporter.reportError("HTML1009", null);
+                }
+                skipMarkup();
                 return null;
             }
-            ename = ename.toUpperCase();
             fAttributes.removeAllAttributes();
             boolean print = false;
             while (scanAttribute(fAttributes)) {
                 // do nothing
             }
             if (fByteStream != null && fElementDepth == -1) {
-                if (ename.equals("META")) {
-                    String httpEquiv = fAttributes.getValue("http-equiv");
+                if (ename.equalsIgnoreCase("META")) {
+                    String httpEquiv = getValue(fAttributes, "http-equiv");
                     if (httpEquiv != null && httpEquiv.equalsIgnoreCase("content-type")) {
-                        String content = fAttributes.getValue("content");
-                        int index1 = content.indexOf("charset=");
+                        String content = getValue(fAttributes, "content");
+                        int index1 = content != null ? content.indexOf("charset=") : -1;
                         if (index1 != -1) {
                             int index2 = content.indexOf(';', index1);
                             String charset = index2 != -1 ? content.substring(index1+8, index2) : content.substring(index1+8);
                             try {
-                                fCharStream = new InputStreamReader(fByteStream, charset);
+                                String ianaEncoding = charset;
+                                String javaEncoding = EncodingMap.getIANA2JavaMapping(ianaEncoding);
+                                if (javaEncoding == null) {
+                                    javaEncoding = ianaEncoding;
+                                    if (fReportErrors) {
+                                        fErrorReporter.reportError("HTML1001", new Object[]{ianaEncoding});
+                                    }
+                                }
+                                fCharStream = new InputStreamReader(fByteStream, javaEncoding);
                                 fByteStream.playback();
                                 fElementDepth = fElementCount;
                                 fElementCount = 0;
                                 fCharOffset = fCharLength = 0;
                             }
                             catch (UnsupportedEncodingException e) {
-                                // REVISIT: report error
-                                System.err.println("!!! UNSUPPORTED ENCODING !!!");
+                                if (fReportErrors) {
+                                    fErrorReporter.reportError("HTML1010", new Object[]{charset});
+                                }
                                 // NOTE: If the encoding change doesn't work, 
                                 //       then there's no point in continuing to 
                                 //       buffer the input stream.
@@ -940,7 +1263,7 @@ public class HTMLScanner
                         }
                     }
                 }
-                else if (ename.equals("BODY")) {
+                else if (ename.equalsIgnoreCase("BODY")) {
                     fByteStream.clear();
                 }
                 else {
@@ -949,7 +1272,7 @@ public class HTMLScanner
                          String name = element.parent instanceof String
                                      ? (String)element.parent
                                      : ((String[])element.parent)[0];
-                         if (name.equals("BODY")) {
+                         if (name.equalsIgnoreCase("BODY")) {
                              fByteStream.clear();
                          }
                      }
@@ -966,66 +1289,67 @@ public class HTMLScanner
         } // scanStartElement():ename
 
         /** Scans an attribute. */
-        protected boolean scanAttribute(XMLAttributesImpl attributes) throws IOException {
+        protected boolean scanAttribute(XMLAttributesImpl attributes)
+            throws IOException {
+            skipSpaces();
             int c = read();
-            while (Character.isSpace((char)c)) {
-                c = read();
-            }
             if (c == -1) {
+                if (fReportErrors) {
+                    fErrorReporter.reportError("HTML1007", null);
+                }
                 throw new EOFException();
             }
             if (c == '>') {
                 return false;
             }
             fCharOffset--;
+            fColumnNumber--;
             String aname = scanName();
             if (aname == null) {
-                skip();
+                if (fReportErrors) {
+                    fErrorReporter.reportError("HTML1011", null);
+                }
+                skipMarkup();
                 return false;
             }
-            aname = aname.toLowerCase();
+            skipSpaces();
             c = read();
+            if (c == -1) {
+                if (fReportErrors) {
+                    fErrorReporter.reportError("HTML1007", null);
+                }
+                throw new EOFException();
+            }
             if (c == '/' || c == '>') {
                 fQName.setValues(null, aname, aname, null);
                 attributes.addAttribute(fQName, "CDATA", "");
                 if (c == '/') {
-                    skip();
+                    skipMarkup();
                 }
                 return false;
             }
-            if (Character.isSpace((char)c)) {
-                do {
-                    c = read();
-                    if (c == -1) {
-                        throw new EOFException();
-                    }
-                }
-                while (Character.isSpace((char)c));
-            }
             if (c == '/' || c == '>') {
                 if (c == '/') {
-                    skip();
+                    skipMarkup();
                 }
                 fQName.setValues(null, aname, aname, null);
                 attributes.addAttribute(fQName, "CDATA", "");
                 return false;
             }
             if (c == '=') {
+                skipSpaces();
                 c = read();
-                if (Character.isSpace((char)c)) {
-                    do {
-                        c = read();
-                        if (c == -1) {
-                            throw new EOFException();
-                        }
+                if (c == -1) {
+                    if (fReportErrors) {
+                        fErrorReporter.reportError("HTML1007", null);
                     }
-                    while (Character.isSpace((char)c));
+                    throw new EOFException();
                 }
                 if (c == '/' || c == '>') {
                     fQName.setValues(null, aname, aname, null);
                     attributes.addAttribute(fQName, "CDATA", "");
                     if (c == '/') {
-                        skip();
+                        skipMarkup();
                     }
                     return false;
                 }
@@ -1043,10 +1367,14 @@ public class HTMLScanner
                             }
                             else {
                                 fCharOffset--;
+                                fColumnNumber--;
                                 break;
                             }
                         }
                         if (c == -1) {
+                            if (fReportErrors) {
+                                fErrorReporter.reportError("HTML1007", null);
+                            }
                             throw new EOFException();
                         }
                         fStringBuffer.append((char)c);
@@ -1061,6 +1389,9 @@ public class HTMLScanner
                 do {
                     c = read();
                     if (c == -1) {
+                        if (fReportErrors) {
+                            fErrorReporter.reportError("HTML1007", null);
+                        }
                         throw new EOFException();
                     }
                     if (c == '&') {
@@ -1085,6 +1416,7 @@ public class HTMLScanner
                 fQName.setValues(null, aname, aname, null);
                 attributes.addAttribute(fQName, "CDATA", "");
                 fCharOffset--;
+                fColumnNumber--;
             }
             return true;
         } // scanAttribute(XMLAttributesImpl):boolean
@@ -1092,9 +1424,11 @@ public class HTMLScanner
         /** Scans an end element. */
         protected void scanEndElement() throws IOException {
             String ename = scanName();
-            skip();
+            if (fReportErrors && ename == null) {
+                fErrorReporter.reportError("HTML1012", null);
+            }
+            skipMarkup();
             if (ename != null) {
-                ename = ename.toUpperCase();
                 if (fDocumentHandler != null && fElementCount >= fElementDepth) {
                     fQName.setValues(null, ename, ename, null);
                     if (DEBUG_CALLBACKS) {
@@ -1161,9 +1495,8 @@ public class HTMLScanner
                                     String ename = scanName();
                                     if (ename != null) {
                                         if (ename.equalsIgnoreCase(fElementName)) {
-                                            skip();
-                                            String ENAME = ename.toUpperCase();
-                                            fQName.setValues(null, ENAME, ENAME, null);
+                                            skipMarkup();
+                                            fQName.setValues(null, ename, ename, null);
                                             if (DEBUG_CALLBACKS) {
                                                 System.out.println("endElement("+fQName+")");
                                             }
@@ -1188,6 +1521,9 @@ public class HTMLScanner
                                 }
                             }
                             else if (c == -1) {
+                                if (fReportErrors) {
+                                    fErrorReporter.reportError("HTML1007", null);
+                                }
                                 throw new EOFException();
                             }
                             else {
@@ -1220,6 +1556,7 @@ public class HTMLScanner
                 if (c == -1 || c == '<') {
                     if (c == '<') {
                         fCharOffset--;
+                        fColumnNumber--;
                     }
                     break;
                 }
@@ -1229,6 +1566,7 @@ public class HTMLScanner
                     if (c != '\n') {
                         if (c == -1 || c == '<') {
                             fCharOffset--;
+                            fColumnNumber--;
                             break;
                         }
                         buffer.append((char)c);
@@ -1329,11 +1667,18 @@ public class HTMLScanner
         /** Detect encoding. */
         public void detectEncoding(String[] encodings) throws IOException {
             if (fDetected) {
-                throw new IOException("should not detect encoding twice");
+                throw new IOException("Should not detect encoding twice.");
             }
             fDetected = true;
             int b1 = read();
+            if (b1 == -1) {
+                return;
+            }
             int b2 = read();
+            if (b2 == -1) {
+                fPushbackLength = 1;
+                return;
+            }
             // UTF-8 BOM: 0xEFBBBF
             if (b1 == 0xEF && b2 == 0xBB) {
                 int b3 = read();
@@ -1352,7 +1697,7 @@ public class HTMLScanner
                 return;
             }
             // UTF-16 BE BOM: 0xFEFF
-            if (b1 == 0xFE && b2 == 0xFF) {
+            else if (b1 == 0xFE && b2 == 0xFF) {
                 encodings[0] = "UTF-16";
                 encodings[1] = "UnicodeBigUnmarked";
                 return;

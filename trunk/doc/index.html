@@ -1,7 +1,7 @@
 <title>NekoHTML</title>
 <link rel=stylesheet type=text/css href=style.css>
 
-<h1>NekoHTML 0.3.3</h1>
+<h1>NekoHTML 0.4</h1>
 
 <h2>About</h2>
 <p>
@@ -87,6 +87,97 @@ found in the <code>org.cyberneko.html</code> package. For example:
 <span class='code-punct'>}</span>
 </pre>
 
+<h2>Parser Settings</h2>
+<p>
+The application can set a variety of NekoHTML settings to more
+precisely control the behavior of the parser. These settings
+can be set directly on the <code>HTMLConfiguration</code> class
+or on the supplied parser classes by calling the
+<code>setFeature</code> and <code>setProperty</code> methods.
+For example:
+<pre class='code'>
+<span class='code-comment'>// settings on HTMLConfiguration</span>
+org<span class='code-punct'>.</span>apache<span class='code-punct'>.</span>xerces<span class='code-punct'>.</span>xni<span class='code-punct'>.</span>parser<span class='code-punct'>.</span>XMLParserConfiguration config <span class='code-punct'>=</span>
+  <span class='code-keyword'>new</span> org<span class='code-punct'>.</span>cyberneko<span class='code-punct'>.</span>html<span class='code-punct'>.</span>HTMLConfiguration<span class='code-punct'>();</span>
+config<span class='code-punct'>.</span>setFeature<span class='code-punct'>(</span><span class='code-string'>"http://cyberneko.org/html/features/augmentations"</span><span class='code-punct'>,</span> <span class='code-keyword'>true</span><span class='code-punct'>);</span>
+config<span class='code-punct'>.</span>setProperty<span class='code-punct'>(</span><span class='code-string'>"http://cyberneko.org/html/properties/names/elems"</span><span class='code-punct'>,</span> <span class='code-string'>"lower"</span><span class='code-punct'>);</span>
+
+<span class='code-comment'>// settings on DOMParser</span>
+org<span class='code-punct'>.</span>cyberneko<span class='code-punct'>.</span>html<span class='code-punct'>.</span>parser<span class='code-punct'>.</span>DOMParser parser <span class='code-punct'>=</span> 
+  <span class='code-keyword'>new</span> org<span class='code-punct'>.</span>cyberneko<span class='code-punct'>.</span>html<span class='code-punct'>.</span>parser<span class='code-punct'>.</span>DOMParser<span class='code-punct'>();</span>
+parser<span class='code-punct'>.</span>setFeature<span class='code-punct'>(</span><span class='code-string'>"http://cyberneko.org/html/features/augmentations"</span><span class='code-punct'>,</span> <span class='code-keyword'>true</span><span class='code-punct'>);</span>
+parser<span class='code-punct'>.</span>setProperty<span class='code-punct'>(</span><span class='code-string'>"http://cyberneko.org/html/properties/names/elems"</span><span class='code-punct'>,</span> <span class='code-string'>"lower"</span><span class='code-punct'>);</span>
+</pre>
+<h2>Features</h2>
+The NekoHTML parser supports the following features:
+<table cellpadding='4' cellspacing='0'>
+ <tr><th>Feature Id / Description<th>Default
+ <tr>
+  <td>
+   <span class='id'>http://cyberneko.org/html/features/augmentations</span>
+   <br>
+   Determines whether infoset items that correspond to the
+   HTML events are included in the parsing pipeline. If
+   included, the augmented item will implement the
+   <code>HTMLEventInfo</code> interface found in the
+   <code>org.cyberneko.html</code> package. The augmentations 
+   can be queried in XNI by calling the <code>getItem</code> 
+   method with the key 
+   "http://cyberneko.org/html/features/augmentations".
+  <td align='center'>false
+ <tr>
+  <td>
+   <span class='id'>http://cyberneko.org/html/features/report-errors</span>
+   <br>
+   Specifies if errors should be reported to the registered error
+   handler. Since HTML applications are supposed to permit the
+   liberal use (and abuse) of HTML documents, errors should
+   normally be handled silently. However, if the application wants
+   to know about errors in the parsed HTML document, this feature
+   can be set to <code>true</code>.
+  <td align='center'>false
+</table>
+<h2>Properties</h2>
+The NekoHTML parser supports the following properties:
+<table cellpadding='4' cellspacing='0'>
+ <tr><th>Property Id / Description<th>Values<th>Default
+ <tr>
+  <td>
+   <span class='id'>http://cyberneko.org/html/properties/default-encoding</span>
+   <br>
+   Sets the default encoding the NekoHTML scanner should use
+   when parsing documents. In the absence of an
+   <code>http-equiv</code> directive in the source document,
+   this setting is important because the parser does not
+   have any support to <i>auto-detect</i> the encoding.
+  <td>
+   <a href='http://www.iana.org/assignments/character-sets'>IANA</a> 
+   encoding names
+  <td align='center'><nobr>"Windows-1252"</nobr>
+ <tr>
+  <td>
+   <span class='id'>http://cyberneko.org/html/properties/names/elems</span>
+   <br>
+   Specifies how the NekoHTML tag balancer should modify recognized
+   element names. Names can be converted to upper-case, converted
+   to lower-case, or left as-is. The value of "match" specifies
+   that element names are to be left as-is but the end tag name will
+   be modified to match the start tag name. This is required to
+   ensure that the parser generates a well-formed XML document.
+  <td>"upper"<br>"lower"<br>"match"
+  <td align='center'>"upper"
+ <tr>
+  <td>
+   <span class='id'>http://cyberneko.org/html/properties/names/attrs</span>
+   <br>
+   Specifies how the NekoHTML tag balancer should modify attribute names
+   of recognized elements. Names can be converted to upper-case, 
+   converted to lower-case, or left as-is.
+   <br>
+  <td>"upper"<br>"lower"<br><nobr>"no-change"</nobr>
+  <td align='center'>"lower"
+</table>
+
 <h2>License Agreement</h2>
 <p>
 NekoHTML is distributed under an Apache style license. Please
@@ -114,7 +205,12 @@ This version of NekoHTML requires the following:
 <p>
 This version has the following limitations:
 <ul>
-<li>There are no known major limitations with this release. 
+<li>There are HTML documents for which NekoHTML cannot properly 
+    generate a well-formed XML document event stream. For example,
+    documents with multiple &lt;html&gt; tags are inherently 
+    ill-formed because XML documents may only have a single root
+    element.
+<li>There are no other known major limitations with this release. 
     However, additional work can always be done to improve 
     performance, fix bugs, and add functionality.
 </ul>
@@ -123,6 +219,20 @@ For a more complete list of items to be done, please refer to
 the <a href='../TODO'>Todo Items</a>.
 <h2>Release History</h2>
 <dl>
+ <dt>Version 0.4 (14 Apr 2002)
+ <dd>Added properties to control case of element and attribute names;
+     changed behavior of parser so that only known HTML elements
+       have their names modified according to the properties &mdash; all
+       unknown tags are left as-is;
+     added property to set default encoding;
+     added feature to augment infoset to report "synthesized" events;
+     added feature to be able to report errors and localized the error
+       messages;
+     implemented the locator so that location information can be
+     reported;
+     and
+     fixed element information so that more elements are properly
+     scanned as "special".
  <dt>Version 0.3.3 (02 Apr 2002)
  <dd>Separated <tt>META-INF/services/*</tt> files to separate Jar
      so that HTML parser configuration selection can be controlled 
@@ -130,8 +240,8 @@ the <a href='../TODO'>Todo Items</a>.
      convenience; and fixed bug so that parser now obeys the
      encoding specified in the input source.
  <dt>Version 0.3.2 (15 Mar 2002)
- <dd>Fixed problem with bare form input elements appearing outside
-     of body tag.
+ <dd>Fixed problem with bare &lt;input&gt; elements appearing outside
+     of &lt;form&gt; tag.
  <dt>Version 0.3.1 (07 Mar 2002)
  <dd>Fixed handling of bare ampersands in content and attribute
      values.
