@@ -809,7 +809,6 @@ public class HTMLScanner
             printBuffer();
             System.out.println();
         }
-        //if (fCharOffset == fCharLength) {
         if (fCurrentEntity.offset == fCurrentEntity.length) {
             if (load(0) == -1) {
                 return -1;
@@ -910,8 +909,11 @@ public class HTMLScanner
             if (fCurrentEntity.offset == fCurrentEntity.length) {
                 int length = fCurrentEntity.length - offset;
                 System.arraycopy(fCurrentEntity.buffer, offset, fCurrentEntity.buffer, 0, length);
-                load(length);
+                int count = load(length);
                 offset = 0;
+                if (count == -1) {
+                    break;
+                }
             }
             else {
                 break;
