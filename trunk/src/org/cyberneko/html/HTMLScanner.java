@@ -3,6 +3,9 @@
  *
  * This file is distributed under an Apache style license. Please
  * refer to the LICENSE file for specific details.
+ *
+ * NOTE: The URI fixing code in this source was taken from the Apache
+ *       Xerces parser which is distributed under the Apache 
  */
 
 package org.cyberneko.html;
@@ -18,6 +21,7 @@ import java.io.Reader;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
 
+import org.apache.xerces.util.AugmentationsImpl;
 import org.apache.xerces.util.EncodingMap;
 import org.apache.xerces.util.URI;
 import org.apache.xerces.util.XMLAttributesImpl;
@@ -27,6 +31,7 @@ import org.apache.xerces.xni.QName;
 import org.apache.xerces.xni.XMLAttributes;
 import org.apache.xerces.xni.XMLDocumentHandler;
 import org.apache.xerces.xni.XMLLocator;
+import org.apache.xerces.xni.XMLResourceIdentifier;
 import org.apache.xerces.xni.XMLString;
 import org.apache.xerces.xni.XNIException;
 import org.apache.xerces.xni.parser.XMLComponentManager;
@@ -52,21 +57,65 @@ public class HTMLScanner
 
     // features
 
+    /** Include infoset augmentations. */
+    protected static final String AUGMENTATIONS = "http://cyberneko.org/html/features/augmentations";
+
     /** Report errors. */
     protected static final String REPORT_ERRORS = "http://cyberneko.org/html/features/report-errors";
 
+    /** Notify character entity references (e.g. &amp;#32;, &amp;#x20;, etc). */
+    public static final String NOTIFY_CHAR_REFS = "http://apache.org/xml/features/scanner/notify-char-refs";
+
+    /** 
+     * Notify handler of built-in entity references (e.g. &amp;amp;, 
+     * &amp;lt;, etc).
+     * <p>
+     * <strong>Note:</strong>
+     * This only applies to the five pre-defined XML general entities.
+     * Specifically, "amp", "lt", "gt", "quot", and "apos". This is done 
+     * for compatibility with the Xerces feature.
+     * <p>
+     * To be notified of the built-in entity references in HTML, set the 
+     * <code>http://cyberneko.org/html/features/scanner/notify-builtin-refs</code> 
+     * feature to <code>true</code>.
+     */
+    public static final String NOTIFY_XML_BUILTIN_REFS = "http://apache.org/xml/features/scanner/notify-builtin-refs";
+
+    /** 
+     * Notify handler of built-in entity references (e.g. &amp;nobr;, 
+     * &amp;copy;, etc).
+     * <p>
+     * <strong>Note:</strong>
+     * This <em>includes</em> the five pre-defined XML general entities.
+     */
+    public static final String NOTIFY_HTML_BUILTIN_REFS = "http://cyberneko.org/html/features/scanner/notify-builtin-refs";
+
     /** Recognized features. */
     private static final String[] RECOGNIZED_FEATURES = {
+        AUGMENTATIONS,
         REPORT_ERRORS,
+        NOTIFY_CHAR_REFS,
+        NOTIFY_XML_BUILTIN_REFS,
+        NOTIFY_HTML_BUILTIN_REFS,
     };
 
     /** Recognized features defaults. */
     private static final Boolean[] RECOGNIZED_FEATURES_DEFAULTS = {
         null,
+        null,
+        Boolean.FALSE,
+        Boolean.FALSE,
+        Boolean.FALSE,
     };
 
     // properties
 
+    /** Modify HTML element names: { "upper", "lower", "default" }. */
+    protected static final String NAMES_ELEMS = "http://cyberneko.org/html/properties/names/elems";
+
+    /** Modify HTML attribute names: { "upper", "lower", "default" }. */
+    protected static final String NAMES_ATTRS = "http://cyberneko.org/html/properties/names/attrs";
+    
     /** Default encoding. */
     protected static final String DEFAULT_ENCODING = "http://cyberneko.org/html/properties/default-encoding";
     
@@ -75,12 +124,16 @@ public class HTMLScanner
 
     /** Recognized properties. */
     private static final String[] RECOGNIZED_PROPERTIES = {
+        NAMES_ELEMS,
+        NAMES_ATTRS,
         DEFAULT_ENCODING,
         ERROR_REPORTER,
     };
 
     /** Recognized properties defaults. */
     private static final Object[] RECOGNIZED_PROPERTIES_DEFAULTS = {
+        "upper",
+        "lower",
         "Windows-1252",
         null,
     };
@@ -99,6 +152,20 @@ public class HTMLScanner
     /** State: end document. */
     protected static final short STATE_END_DOCUMENT = 11;
 
+    // modify HTML names
+
+    /** Don't modify HTML names. */
+    protected static final short NAMES_NO_CHANGE = 0;
+
+    /** Match HTML element names. */
+    protected static final short NAMES_MATCH = 0;
+
+    /** Uppercase HTML names. */
+    protected static final short NAMES_UPPERCASE = 1;
+
+    /** Lowercase HTML names. */
+    protected static final short NAMES_LOWERCASE = 2;
+
     // defaults
 
     /** Default buffer size. */
@@ -115,6 +182,9 @@ public class HTMLScanner
     /** Set to true to debug the buffer. */
     private static final boolean DEBUG_BUFFER = false;
 
+    /** Set to true to debug character encoding handling. */
+    private static final boolean DEBUG_CHARSET = false;
+
     /** Set to true to debug callbacks. */
     protected static final boolean DEBUG_CALLBACKS = false;
 
@@ -124,10 +194,28 @@ public class HTMLScanner
 
     // features
 
+    /** Augmentations. */
+    protected boolean fAugmentations;
+
     /** Report errors. */
     protected boolean fReportErrors;
 
+    /** Notify character entity references. */
+    protected boolean fNotifyCharRefs;
+
+    /** Notify XML built-in general entity references. */
+    protected boolean fNotifyXmlBuiltinRefs;
+
+    /** Notify HTML built-in general entity references. */
+    protected boolean fNotifyHtmlBuiltinRefs;
+
     // properties
+
+    /** Modify HTML element names. */
+    protected short fNamesElems;
+
+    /** Modify HTML attribute names. */
+    protected short fNamesAttrs;
 
     /** Default encoding. */
     protected String fDefaultIANAEncoding;
@@ -136,6 +224,18 @@ public class HTMLScanner
     protected HTMLErrorReporter fErrorReporter;
 
     // locator information
+
+    /** Beginning line number. */
+    protected int fBeginLineNumber;
+
+    /** Beginning column number. */
+    protected int fBeginColumnNumber;
+
+    /** Ending line number. */
+    protected int fEndLineNumber;
+
+    /** Ending column number. */
+    protected int fEndColumnNumber;
 
     /** Public identifier. */
     protected String fPublicId;
@@ -218,6 +318,12 @@ public class HTMLScanner
     /** String buffer. */
     private final XMLStringBuffer fStringBuffer2 = new XMLStringBuffer(1024);
 
+    /** Augmentations. */
+    private final Augmentations fInfosetAugs = new AugmentationsImpl();
+
+    /** Location infoset item. */
+    private final LocationItem fLocationItem = new LocationItem();
+
     //
     // XMLLocator methods
     //
@@ -297,9 +403,15 @@ public class HTMLScanner
         throws XMLConfigurationException {
 
         // get features
+        fAugmentations = manager.getFeature(AUGMENTATIONS);
         fReportErrors = manager.getFeature(REPORT_ERRORS);
+        fNotifyCharRefs = manager.getFeature(NOTIFY_CHAR_REFS);
+        fNotifyXmlBuiltinRefs = manager.getFeature(NOTIFY_XML_BUILTIN_REFS);
+        fNotifyHtmlBuiltinRefs = manager.getFeature(NOTIFY_HTML_BUILTIN_REFS);
 
         // get properties
+        fNamesElems = getNamesValue(String.valueOf(manager.getProperty(NAMES_ELEMS)));
+        fNamesAttrs = getNamesValue(String.valueOf(manager.getProperty(NAMES_ATTRS)));
         fDefaultIANAEncoding = String.valueOf(manager.getProperty(DEFAULT_ENCODING));
         fErrorReporter = (HTMLErrorReporter)manager.getProperty(ERROR_REPORTER);
     
@@ -308,12 +420,28 @@ public class HTMLScanner
     /** Sets a feature. */
     public void setFeature(String featureId, boolean state)
         throws XMLConfigurationException {
+
+        if (featureId.equals(AUGMENTATIONS)) {
+            fAugmentations = state;
+            return;
+        }
+
     } // setFeature(String,boolean)
 
     /** Sets a property. */
     public void setProperty(String propertyId, Object value)
         throws XMLConfigurationException {
     
+        if (propertyId.equals(NAMES_ELEMS)) {
+            fNamesElems = getNamesValue(String.valueOf(value));
+            return;
+        }
+
+        if (propertyId.equals(NAMES_ATTRS)) {
+            fNamesAttrs = getNamesValue(String.valueOf(value));
+            return;
+        }
+
         if (propertyId.equals(DEFAULT_ENCODING)) {
             fDefaultIANAEncoding = String.valueOf(value);
             return;
@@ -343,6 +471,11 @@ public class HTMLScanner
 
         fLineNumber = 1;
         fColumnNumber = 1;
+
+        fBeginLineNumber = fLineNumber;
+        fBeginColumnNumber = fColumnNumber;
+        fEndLineNumber = fBeginLineNumber;
+        fEndColumnNumber = fBeginColumnNumber;
 
         // reset encoding information
         fIANAEncoding = fDefaultIANAEncoding;
@@ -546,6 +679,32 @@ public class HTMLScanner
 
     } // fixURI(String):String
 
+    /** Modifies the given name based on the specified mode. */
+    protected static final String modifyName(String name, short mode) {
+        switch (mode) {
+            case NAMES_UPPERCASE: return name.toUpperCase();
+            case NAMES_LOWERCASE: return name.toLowerCase();
+        }
+        return name;
+    } // modifyName(String,short):String
+
+    /**
+     * Converts HTML names string value to constant value. 
+     *
+     * @see #NAMES_NO_CHANGE
+     * @see #NAMES_LOWERCASE
+     * @see #NAMES_UPPERCASE
+     */
+    protected static final short getNamesValue(String value) {
+        if (value.equals("lower")) {
+            return NAMES_LOWERCASE;
+        }
+        if (value.equals("upper")) {
+            return NAMES_UPPERCASE;
+        }
+        return NAMES_NO_CHANGE;
+    } // getNamesValue(String):short
+
     //
     // Protected methods
     //
@@ -729,8 +888,13 @@ public class HTMLScanner
                     break;
                 }
             }
-            if (!Character.isSpace(fCharBuffer[fCharOffset])) {
+            char c = fCharBuffer[fCharOffset];
+            if (!Character.isSpace(c)) {
                 break;
+            }
+            if (c == '\r' || c == '\n') {
+                skipNewlines();
+                continue;
             }
             fCharOffset++;
             fColumnNumber++;
@@ -802,6 +966,31 @@ public class HTMLScanner
         }
         return newlines;
     } // skipNewlines():int
+
+    // infoset utility methods
+
+    /** Returns an augmentations object with a location item added. */
+    protected final Augmentations locationAugs() {
+        Augmentations augs = null;
+        if (fAugmentations) {
+            fLocationItem.setValues(fBeginLineNumber, fBeginColumnNumber, 
+                                    fEndLineNumber, fEndColumnNumber);
+            augs = fInfosetAugs;
+            augs.clear();
+            augs.putItem(AUGMENTATIONS, fLocationItem);
+        }
+        return augs;
+    } // locationAugs():Augmentations
+
+    //
+    // Protected static methods
+    //
+
+    /** Returns true if the name is a built-in XML general entity reference. */
+    protected static boolean builtinXmlRef(String name) {
+        return name.equals("amp") || name.equals("lt") || name.equals("gt") ||
+               name.equals("quot") || name.equals("apos");
+    } // builtinXmlRef(String):boolean
 
     //
     // Private methods
@@ -918,29 +1107,15 @@ public class HTMLScanner
                     next = false;
                     switch (fScannerState) {
                         case STATE_CONTENT: {
+                            fBeginLineNumber = fLineNumber;
+                            fBeginColumnNumber = fColumnNumber;
                             int c = read();
                             if (c == '<') {
                                 setScannerState(STATE_MARKUP_BRACKET);
                                 next = true;
                             }
                             else if (c == '&') {
-                                int ce = scanEntityRef(fStringBuffer);
-                                if (fDocumentHandler != null && fElementCount >= fElementDepth) {
-                                    if (ce == -1) {
-                                        String text = fStringBuffer.toString();
-                                        fStringBuffer.clear();
-                                        fStringBuffer.append('&');
-                                        fStringBuffer.append(text);
-                                    }
-                                    else {
-                                        fStringBuffer.clear();
-                                        fStringBuffer.append((char)ce);
-                                    }
-                                    if (DEBUG_CALLBACKS) {
-                                        System.out.println("characters("+fStringBuffer+')');
-                                    }
-                                    fDocumentHandler.characters(fStringBuffer, null);
-                                }
+                                scanEntityRef(fStringBuffer, true);
                             }
                             else if (c == -1) {
                                 setScannerState(STATE_END_DOCUMENT);
@@ -998,7 +1173,7 @@ public class HTMLScanner
                                 if (DEBUG_CALLBACKS) {
                                     System.out.println("startDocument()");
                                 }
-                                fDocumentHandler.startDocument(HTMLScanner.this, fIANAEncoding, null);
+                                fDocumentHandler.startDocument(HTMLScanner.this, fIANAEncoding, locationAugs());
                             }
                             setScannerState(STATE_CONTENT);
                             break;
@@ -1008,7 +1183,9 @@ public class HTMLScanner
                                 if (DEBUG_CALLBACKS) {
                                     System.out.println("endDocument()");
                                 }
-                                fDocumentHandler.endDocument(null);
+                                fEndLineNumber = fLineNumber;
+                                fEndColumnNumber = fColumnNumber;
+                                fDocumentHandler.endDocument(locationAugs());
                             }
                             return false;
                         }
@@ -1030,11 +1207,14 @@ public class HTMLScanner
         //
 
         /** Scans an entity reference. */
-        protected int scanEntityRef(XMLStringBuffer str) throws IOException {
+        protected int scanEntityRef(XMLStringBuffer str, boolean content) 
+            throws IOException {
             str.clear();
+            str.append('&');
             while (true) {
                 int c = read();
                 if (c == ';') {
+                    str.append(';');
                     break;
                 }
                 if (!Character.isLetterOrDigit((char)c) && c != '#') {
@@ -1043,22 +1223,36 @@ public class HTMLScanner
                     }
                     fCharOffset--;
                     fColumnNumber--;
+                    if (content && fDocumentHandler != null) {
+                        fEndLineNumber = fLineNumber;
+                        fEndColumnNumber = fColumnNumber;
+                        fDocumentHandler.characters(str, locationAugs());
+                    }
                     return -1;
                 }
                 if (c == -1) {
                     if (fReportErrors) {
                         fErrorReporter.reportWarning("HTML1004", null);
                     }
+                    if (content && fDocumentHandler != null) {
+                        fEndLineNumber = fLineNumber;
+                        fEndColumnNumber = fColumnNumber;
+                        fDocumentHandler.characters(str, locationAugs());
+                    }
                     return -1;
                 }
                 str.append((char)c);
             }
-            if (str.length == 0) {
-                // REVISIT: What should this really return? -Ac
-                return '&';
+            if (str.length == 1) {
+                if (content && fDocumentHandler != null) {
+                    fEndLineNumber = fLineNumber;
+                    fEndColumnNumber = fColumnNumber;
+                    fDocumentHandler.characters(str, locationAugs());
+                }
+                return -1;
             }
 
-            String name = fStringBuffer.toString();
+            String name = str.toString().substring(1, str.length-1);
             if (name.startsWith("#")) {
                 int value = -1;
                 try {
@@ -1068,15 +1262,31 @@ public class HTMLScanner
                     else {
                         value = Integer.parseInt(name.substring(1));
                     }
+                    if (content && fDocumentHandler != null) {
+                        fEndLineNumber = fLineNumber;
+                        fEndColumnNumber = fColumnNumber;
+                        if (fNotifyCharRefs) {
+                            XMLResourceIdentifier id = null;
+                            String encoding = null;
+                            fDocumentHandler.startGeneralEntity(name, id, encoding, locationAugs());
+                        }
+                        str.clear();
+                        str.append((char)value);
+                        fDocumentHandler.characters(str, locationAugs());
+                        if (fNotifyCharRefs) {
+                            fDocumentHandler.endGeneralEntity(name, locationAugs());
+                        }
+                    }
                 }
                 catch (NumberFormatException e) {
-                    // REVISIT: What should be done with this?
                     if (fReportErrors) {
                         fErrorReporter.reportError("HTML1005", new Object[]{name});
                     }
-                }
-                if (value == -1) {
-                    str.append(';');
+                    if (content && fDocumentHandler != null) {
+                        fEndLineNumber = fLineNumber;
+                        fEndColumnNumber = fColumnNumber;
+                        fDocumentHandler.characters(str, locationAugs());
+                    }
                 }
                 return value;
             }
@@ -1086,11 +1296,32 @@ public class HTMLScanner
                 if (fReportErrors) {
                     fErrorReporter.reportWarning("HTML1006", new Object[]{name});
                 }
-                str.append(';');
+                if (content && fDocumentHandler != null) {
+                    fEndLineNumber = fLineNumber;
+                    fEndColumnNumber = fColumnNumber;
+                    fDocumentHandler.characters(str, locationAugs());
+                }
+                return -1;
+            }
+            if (content && fDocumentHandler != null) {
+                fEndLineNumber = fLineNumber;
+                fEndColumnNumber = fColumnNumber;
+                boolean notify = fNotifyHtmlBuiltinRefs || (fNotifyXmlBuiltinRefs && builtinXmlRef(name));
+                if (notify) {
+                    XMLResourceIdentifier id = null;
+                    String encoding = null;
+                    fDocumentHandler.startGeneralEntity(name, id, encoding, locationAugs());
+                }
+                str.clear();
+                str.append((char)c);
+                fDocumentHandler.characters(str, locationAugs());
+                if (notify) {
+                    fDocumentHandler.endGeneralEntity(name, locationAugs());
+                }
             }
             return c;
         
-        } // scanEntityRef():int
+        } // scanEntityRef(XMLStringBuffer,boolean):int
 
         /** Scans characters. */
         protected void scanCharacters() throws IOException {
@@ -1122,7 +1353,9 @@ public class HTMLScanner
                 if (DEBUG_CALLBACKS) {
                     System.out.println("characters("+fString+")");
                 }
-                fDocumentHandler.characters(fString, null);
+                fEndLineNumber = fLineNumber;
+                fEndColumnNumber = fColumnNumber;
+                fDocumentHandler.characters(fString, locationAugs());
             }
             if (DEBUG_BUFFER) {
                 System.out.print(")scanCharacters: ");
@@ -1185,7 +1418,9 @@ public class HTMLScanner
                 if (DEBUG_CALLBACKS) {
                     System.out.println("comment("+fStringBuffer+")");
                 }
-                fDocumentHandler.comment(fStringBuffer, null);
+                fEndLineNumber = fLineNumber;
+                fEndColumnNumber = fColumnNumber;
+                fDocumentHandler.comment(fStringBuffer, locationAugs());
             }
             if (DEBUG_BUFFER) {
                 System.out.print(")scanComment: ");
@@ -1222,15 +1457,26 @@ public class HTMLScanner
                 skipMarkup();
                 return null;
             }
+            ename = modifyName(ename, fNamesElems);
             fAttributes.removeAllAttributes();
             boolean print = false;
+            int beginLineNumber = fBeginLineNumber;
+            int beginColumnNumber = fBeginColumnNumber;
             while (scanAttribute(fAttributes)) {
                 // do nothing
             }
+            fBeginLineNumber = beginLineNumber;
+            fBeginColumnNumber = beginColumnNumber;
             if (fByteStream != null && fElementDepth == -1) {
                 if (ename.equalsIgnoreCase("META")) {
+                    if (DEBUG_CHARSET) {
+                        System.out.println("+++ <META>");
+                    }
                     String httpEquiv = getValue(fAttributes, "http-equiv");
                     if (httpEquiv != null && httpEquiv.equalsIgnoreCase("content-type")) {
+                        if (DEBUG_CHARSET) {
+                            System.out.println("+++ @content-type: \""+httpEquiv+'"');
+                        }
                         String content = getValue(fAttributes, "content");
                         int index1 = content != null ? content.indexOf("charset=") : -1;
                         if (index1 != -1) {
@@ -1239,6 +1485,10 @@ public class HTMLScanner
                             try {
                                 String ianaEncoding = charset;
                                 String javaEncoding = EncodingMap.getIANA2JavaMapping(ianaEncoding);
+                                if (DEBUG_CHARSET) {
+                                    System.out.println("+++ ianaEncoding: "+ianaEncoding);
+                                    System.out.println("+++ javaEncoding: "+javaEncoding);
+                                }
                                 if (javaEncoding == null) {
                                     javaEncoding = ianaEncoding;
                                     if (fReportErrors) {
@@ -1250,6 +1500,8 @@ public class HTMLScanner
                                 fElementDepth = fElementCount;
                                 fElementCount = 0;
                                 fCharOffset = fCharLength = 0;
+                                fLineNumber = 1;
+                                fColumnNumber = 1;
                             }
                             catch (UnsupportedEncodingException e) {
                                 if (fReportErrors) {
@@ -1283,7 +1535,9 @@ public class HTMLScanner
                 if (DEBUG_CALLBACKS) {
                     System.out.println("startElement("+fQName+','+fAttributes+")");
                 }
-                fDocumentHandler.startElement(fQName, fAttributes, null);
+                fEndLineNumber = fLineNumber;
+                fEndColumnNumber = fColumnNumber;
+                fDocumentHandler.startElement(fQName, fAttributes, locationAugs());
             }
             return ename;
         } // scanStartElement():ename
@@ -1292,6 +1546,8 @@ public class HTMLScanner
         protected boolean scanAttribute(XMLAttributesImpl attributes)
             throws IOException {
             skipSpaces();
+            fBeginLineNumber = fLineNumber;
+            fBeginColumnNumber = fColumnNumber;
             int c = read();
             if (c == -1) {
                 if (fReportErrors) {
@@ -1312,6 +1568,7 @@ public class HTMLScanner
                 skipMarkup();
                 return false;
             }
+            aname = modifyName(aname, fNamesAttrs);
             skipSpaces();
             c = read();
             if (c == -1) {
@@ -1323,6 +1580,9 @@ public class HTMLScanner
             if (c == '/' || c == '>') {
                 fQName.setValues(null, aname, aname, null);
                 attributes.addAttribute(fQName, "CDATA", "");
+                if (fAugmentations) {
+                    addLocationItem(attributes, attributes.getLength() - 1);
+                }
                 if (c == '/') {
                     skipMarkup();
                 }
@@ -1334,6 +1594,9 @@ public class HTMLScanner
                 }
                 fQName.setValues(null, aname, aname, null);
                 attributes.addAttribute(fQName, "CDATA", "");
+                if (fAugmentations) {
+                    addLocationItem(attributes, attributes.getLength() - 1);
+                }
                 return false;
             }
             if (c == '=') {
@@ -1349,6 +1612,9 @@ public class HTMLScanner
                 if (c == '>') {
                     fQName.setValues(null, aname, aname, null);
                     attributes.addAttribute(fQName, "CDATA", "");
+                    if (fAugmentations) {
+                        addLocationItem(attributes, attributes.getLength() - 1);
+                    }
                     return false;
                 }
                 if (c != '\'' && c != '"') {
@@ -1373,6 +1639,9 @@ public class HTMLScanner
                     fQName.setValues(null, aname, aname, null);
                     String avalue = fStringBuffer.toString();
                     attributes.addAttribute(fQName, "CDATA", avalue);
+                    if (fAugmentations) {
+                        addLocationItem(attributes, attributes.getLength() - 1);
+                    }
                     return true;
                 }
                 char quote = (char)c;
@@ -1386,12 +1655,11 @@ public class HTMLScanner
                         throw new EOFException();
                     }
                     if (c == '&') {
-                        int ce = scanEntityRef(fStringBuffer2);
+                        int ce = scanEntityRef(fStringBuffer2, false);
                         if (ce != -1) {
                             fStringBuffer.append((char)ce);
                         }
                         else {
-                            fStringBuffer.append('&');
                             fStringBuffer.append(fStringBuffer2);
                         }
                     }
@@ -1402,15 +1670,32 @@ public class HTMLScanner
                 fQName.setValues(null, aname, aname, null);
                 String avalue = fStringBuffer.toString();
                 attributes.addAttribute(fQName, "CDATA", avalue);
+                if (fAugmentations) {
+                    addLocationItem(attributes, attributes.getLength() - 1);
+                }
             }
             else {
                 fQName.setValues(null, aname, aname, null);
                 attributes.addAttribute(fQName, "CDATA", "");
                 fCharOffset--;
                 fColumnNumber--;
+                if (fAugmentations) {
+                    addLocationItem(attributes, attributes.getLength() - 1);
+                }
             }
             return true;
         } // scanAttribute(XMLAttributesImpl):boolean
+
+        /** Adds location augmentations to the specified attribute. */
+        protected void addLocationItem(XMLAttributes attributes, int index) {
+            fEndLineNumber = fLineNumber;
+            fEndColumnNumber = fColumnNumber;
+            LocationItem locationItem = new LocationItem();
+            locationItem.setValues(fBeginLineNumber, fBeginColumnNumber,
+                                   fEndLineNumber, fEndColumnNumber);
+            Augmentations augs = attributes.getAugmentations(index);
+            augs.putItem(AUGMENTATIONS, locationItem);
+        } // addLocationItem(XMLAttributes,int)
 
         /** Scans an end element. */
         protected void scanEndElement() throws IOException {
@@ -1420,12 +1705,15 @@ public class HTMLScanner
             }
             skipMarkup();
             if (ename != null) {
+                ename = modifyName(ename, fNamesElems);
                 if (fDocumentHandler != null && fElementCount >= fElementDepth) {
                     fQName.setValues(null, ename, ename, null);
                     if (DEBUG_CALLBACKS) {
                         System.out.println("endElement("+fQName+")");
                     }
-                    fDocumentHandler.endElement(fQName, null);
+                    fEndLineNumber = fLineNumber;
+                    fEndColumnNumber = fColumnNumber;
+                    fDocumentHandler.endElement(fQName, locationAugs());
                 }
             }
         } // scanEndElement()
@@ -1479,6 +1767,8 @@ public class HTMLScanner
                     next = false;
                     switch (fScannerState) {
                         case STATE_CONTENT: {
+                            fBeginLineNumber = fLineNumber;
+                            fBeginColumnNumber = fColumnNumber;
                             int c = read();
                             if (c == '<') {
                                 c = read();
@@ -1486,12 +1776,15 @@ public class HTMLScanner
                                     String ename = scanName();
                                     if (ename != null) {
                                         if (ename.equalsIgnoreCase(fElementName)) {
+                                            ename = modifyName(ename, fNamesElems);
                                             skipMarkup();
                                             fQName.setValues(null, ename, ename, null);
                                             if (DEBUG_CALLBACKS) {
                                                 System.out.println("endElement("+fQName+")");
                                             }
-                                            fDocumentHandler.endElement(fQName, null);
+                                            fEndLineNumber = fLineNumber;
+                                            fEndColumnNumber = fColumnNumber;
+                                            fDocumentHandler.endElement(fQName, locationAugs());
                                             setScanner(fContentScanner);
                                             setScannerState(STATE_CONTENT);
                                             return true;
@@ -1571,7 +1864,9 @@ public class HTMLScanner
                 if (DEBUG_CALLBACKS) {
                     System.out.println("characters("+buffer+")");
                 }
-                fDocumentHandler.characters(buffer, null);
+                fEndLineNumber = fLineNumber;
+                fEndColumnNumber = fColumnNumber;
+                fDocumentHandler.characters(buffer, locationAugs());
             }
         } // scanCharacters(StringBuffer)
 
@@ -1809,5 +2104,94 @@ public class HTMLScanner
         } // read(byte[]):int
 
     } // class PlaybackInputStream
+
+    /**
+     * Location infoset item. 
+     *
+     * @author Andy Clark
+     */
+    protected static class LocationItem 
+        implements HTMLEventInfo {
+
+        //
+        // Data
+        //
+
+        /** Beginning line number. */
+        protected int fBeginLineNumber;
+
+        /** Beginning column number. */
+        protected int fBeginColumnNumber;
+
+        /** Ending line number. */
+        protected int fEndLineNumber;
+
+        /** Ending column number. */
+        protected int fEndColumnNumber;
+
+        //
+        // Public methods
+        //
+
+        /** Sets the values of this item. */
+        public void setValues(int beginLine, int beginColumn,
+                              int endLine, int endColumn) {
+            fBeginLineNumber = beginLine;
+            fBeginColumnNumber = beginColumn;
+            fEndLineNumber = endLine;
+            fEndColumnNumber = endColumn;
+        } // setValues(int,int,int,int)
+
+        //
+        // HTMLEventInfo methods
+        //
+
+        // location information
+
+        /** Returns the line number of the beginning of this event.*/
+        public int getBeginLineNumber() {
+            return fBeginLineNumber;
+        } // getBeginLineNumber():int
+
+        /** Returns the column number of the beginning of this event.*/
+        public int getBeginColumnNumber() { 
+            return fBeginColumnNumber;
+        } // getBeginColumnNumber():int
+
+        /** Returns the line number of the end of this event.*/
+        public int getEndLineNumber() {
+            return fEndLineNumber;
+        } // getEndLineNumber():int
+
+        /** Returns the column number of the end of this event.*/
+        public int getEndColumnNumber() {
+            return fEndColumnNumber;
+        } // getEndColumnNumber():int
+
+        // other information
+
+        /** Returns true if this corresponding event was synthesized. */
+        public boolean isSynthesized() {
+            return false;
+        } // isSynthesize():boolean
+
+        //
+        // Object methods
+        //
+
+        /** Returns a string representation of this object. */
+        public String toString() {
+            StringBuffer str = new StringBuffer();
+            str.append(fBeginLineNumber);
+            str.append(':');
+            str.append(fBeginColumnNumber);
+            str.append(':');
+            str.append(fEndLineNumber);
+            str.append(':');
+            str.append(fEndColumnNumber);
+            return str.toString();
+        } // toString():String
+
+    } // class LocationItem
 
 } // class HTMLScanner

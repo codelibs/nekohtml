@@ -34,6 +34,7 @@ public class HTMLEntities {
         load0("res/HTMLlat1.properties");
         load0("res/HTMLspecial.properties");
         load0("res/HTMLsymbol.properties");
+        load0("res/XMLbuiltin.properties");
     }
 
     //

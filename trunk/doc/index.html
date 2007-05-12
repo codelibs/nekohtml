@@ -1,7 +1,7 @@
 <title>NekoHTML</title>
 <link rel=stylesheet type=text/css href=style.css>
 
-<h1>NekoHTML 0.4.1</h1>
+<h1>NekoHTML 0.5</h1>
 
 <h2>About</h2>
 <p>
@@ -114,9 +114,55 @@ The NekoHTML parser supports the following features:
  <tr><th>Feature Id / Description<th>Default
  <tr>
   <td>
+   <span class='id'>http://cyberneko.org/html/features/balance-tags</span>
+   <br>
+   Specifies if the NekoHTML parser should attempt to balance
+   the tags in the parsed document. Balancing the tags fixes up many
+   common mistakes by adding missing parent elements, automatically
+   closing elements with optional end tags, and correcting unbalanced
+   inline element tags. In order to process HTML documents as XML, this
+   feature should <strong>not</strong> be turned off. This feature is
+   provided as a performance enhancement for applications that only
+   care about the appearance of specific elements, attributes, and/or
+   content regardless of the document's ill-formed structure.
+  <td align='center'>true
+ <tr>
+  <td>
+   <span class='id'>http://apache.org/xml/features/scanner/notify-char-refs</span>
+   <br>
+   Specifies whether character entity references (e.g. &amp;#32;, &amp;#x20;, 
+   etc) should be reported to the registered document handler. The name of 
+   the entity reported will contain the leading pound sign and optional 'x' 
+   character. For example, the name of the character entity reference
+   <code>&amp;#x20;</code> will be reported as "#x20".
+  <td align='center'>false
+ <tr>
+  <td>
+   <span class='id'>http://apache.org/xml/features/scanner/notify-builtin-refs</span>
+   <br>
+   Specifies whether the XML built-in entity references (e.g. &amp;amp;, 
+   &amp;lt;, etc) should be reported to the registered document handler.
+   This only applies to the five pre-defined XML general entities --
+   specifically, "amp", "lt", "gt", "quot", and "apos". This is done for
+   compatibility with the Xerces feature.
+   To be notified of the built-in entity references in HTML, set the 
+   <code>http://cyberneko.org/html/features/scanner/notify-builtin-refs</code> 
+   feature to <code>true</code>.
+  <td align='center'>false
+ <tr>
+  <td>
+   <span class='id'>http://cyberneko.org/html/features/scanner/notify-builtin-refs</span>
+   <br>
+   Specifies whether the HTML built-in entity references (e.g. &amp;nobr;, 
+   &amp;copy;, etc) should be reported to the registered document
+   handler. This <em>includes</em> the five pre-defined XML general 
+   entities.
+  <td align='center'>false
+ <tr>
+  <td>
    <span class='id'>http://cyberneko.org/html/features/augmentations</span>
    <br>
-   Determines whether infoset items that correspond to the
+   Specifies whether infoset items that correspond to the
    HTML events are included in the parsing pipeline. If
    included, the augmented item will implement the
    <code>HTMLEventInfo</code> interface found in the
@@ -124,12 +170,14 @@ The NekoHTML parser supports the following features:
    can be queried in XNI by calling the <code>getItem</code> 
    method with the key 
    "http://cyberneko.org/html/features/augmentations".
+   Currently, the HTML event info augmentation can report event
+   character boundaries and whether the event is synthesized.
   <td align='center'>false
  <tr>
   <td>
    <span class='id'>http://cyberneko.org/html/features/report-errors</span>
    <br>
-   Specifies if errors should be reported to the registered error
+   Specifies whether errors should be reported to the registered error
    handler. Since HTML applications are supposed to permit the
    liberal use (and abuse) of HTML documents, errors should
    normally be handled silently. However, if the application wants
@@ -158,7 +206,7 @@ The NekoHTML parser supports the following properties:
   <td>
    <span class='id'>http://cyberneko.org/html/properties/names/elems</span>
    <br>
-   Specifies how the NekoHTML tag balancer should modify recognized
+   Specifies how the NekoHTML components should modify recognized
    element names. Names can be converted to upper-case, converted
    to lower-case, or left as-is. The value of "match" specifies
    that element names are to be left as-is but the end tag name will
@@ -170,7 +218,7 @@ The NekoHTML parser supports the following properties:
   <td>
    <span class='id'>http://cyberneko.org/html/properties/names/attrs</span>
    <br>
-   Specifies how the NekoHTML tag balancer should modify attribute names
+   Specifies how the NekoHTML components should modify attribute names
    of recognized elements. Names can be converted to upper-case, 
    converted to lower-case, or left as-is.
    <br>
@@ -226,6 +274,14 @@ For a more complete list of items to be done, please refer to
 the <a href='../TODO'>Todo Items</a>.
 <h2>Release History</h2>
 <dl>
+ <dt>Version 0.5 (07 May 2002)
+ <dd>Fixed some location reporting information bugs and added 
+       feature to report character boundaries of events via the
+       associated augmentations object;
+     added feature to disable tag balancing;
+     and
+     added features to notify handlers of start and end of character
+       and built-in XML and HTML entity references.
  <dt>Version 0.4.1 (03 May 2002)
  <dd>Fixed some unquoted attribute value scanning bugs reported
        by Xiaowei Jiang;
