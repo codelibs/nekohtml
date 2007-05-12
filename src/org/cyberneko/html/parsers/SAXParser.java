@@ -14,6 +14,8 @@ import org.cyberneko.html.HTMLConfiguration;
  * A SAX parser for HTML documents.
  *
  * @author Andy Clark
+ *
+ * @version $Id$
  */
 public class SAXParser
     extends AbstractSAXParser {

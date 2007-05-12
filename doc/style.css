@@ -3,11 +3,22 @@ H1 { margin: -10; padding: 5; text-align: center; background: #DDDDFF;
              border-top: solid black 1; border-bottom: solid black 1 }
 H2 H3 H4 H5 H6 { }
 P { margin: 15; text-align: justify }
+UL { margin-right: 15 }
+OL { margin-right: 15 }
 DL { margin: 15 }
 DT { font: bold }
 DD { font: italic }
 OL UL { margin: 15 }
 HR { margin: -10; color: black; height: 1 }
+
+TABLE { border: solid black 2; 
+        border-right: solid black 1; border-bottom: solid black 1;
+        margin: 15; margin-left: 30; margin-right: 30;
+        padding: 5 }
+TR { background: white; vertical-align: top }
+TH { border-bottom: solid black 2; border-right: solid black 1;
+     background: #DDDDFF }
+TD { border-right: solid black 1; border-bottom: solid black 1 }
 
 PRE.cmdline { margin: 15; margin-left: 30; margin-right: 30;
               padding: 5; border: solid white 1;
@@ -21,6 +32,10 @@ PRE.code { margin: 15; margin-left: 30; margin-right: 30;
 .code-punct { color: white }
 .code-number { color: silver }
 .code-string { color: cyan }
+.code-comment { color: silver }
+
+.id { font-family: sans-serif; text-decoration: underline;
+      white-space: nowrap }
 
 .copyright { margin: -10; margin-top: 10;
              text-align: center; background: #DDDDFF;
