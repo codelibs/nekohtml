@@ -3,7 +3,7 @@
 <project default='all' basedir='.'>
 
  <!-- PROPERTIES -->
- <property name='version'   value='0.8.2'/>
+ <property name='version'   value='0.8.3'/>
  <property name='name'      value='nekohtml'/>
  <property name='fullname'  value='${name}-${version}'/>
  <property name='Name'      value='NekoHTML ${version}'/>
