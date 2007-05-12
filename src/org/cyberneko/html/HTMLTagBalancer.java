@@ -7,9 +7,6 @@
 
 package org.cyberneko.html;
 
-import java.util.Hashtable;
-import java.util.Stack;
-                                          
 import org.apache.xerces.util.AugmentationsImpl;
 import org.apache.xerces.util.XMLAttributesImpl;
 import org.apache.xerces.xni.Augmentations;
@@ -155,13 +152,22 @@ public class HTMLTagBalancer
     // state
 
     /** The element stack. */
-    protected final Stack fElementStack = new Stack();
+    protected final InfoStack fElementStack = new InfoStack();
 
     /** The inline stack. */
-    protected final Stack fInlineStack = new Stack();
+    protected final InfoStack fInlineStack = new InfoStack();
 
     /** True if root element has been seen. */
     protected boolean fSeenRootElement;
+
+    /** 
+     * True if seen the end of the document element. In other words, 
+     * this variable is set to false <em>until</em> the end &lt;/HTML&gt; 
+     * tag is seen (or synthesized). This is used to ensure that 
+     * extraneous events after the end of the document element do not 
+     * make the document stream ill-formed.
+     */
+    protected boolean fSeenRootElementEnd;
 
     // temp vars
 
@@ -277,8 +283,9 @@ public class HTMLTagBalancer
     public void startDocument(XMLLocator locator, String encoding, Augmentations augs) 
         throws XNIException {
         
-        fElementStack.removeAllElements();
+        fElementStack.top = 0;
         fSeenRootElement = false;
+        fSeenRootElementEnd = false;
         if (fDocumentHandler != null) {
             fDocumentHandler.startDocument(locator, encoding, augs);
         }
@@ -317,15 +324,14 @@ public class HTMLTagBalancer
 
         // pop all remaining elements
         else {
-            int length = fElementStack.size();
+            int length = fElementStack.top;
             for (int i = 0; i < length; i++) {
-                Info info = (Info)fElementStack.peek();
+                Info info = fElementStack.peek();
                 if (fReportErrors) {
-                    //String ename = modifyName(info.element.rawname, fNamesElems);
-                    String ename = info.element.rawname;
+                    String ename = info.qname.rawname;
                     fErrorReporter.reportWarning("HTML2001", new Object[]{ename});
                 }
-                endElement(info.element, synthesizedAugs());
+                endElement(info.qname, synthesizedAugs());
             }
         }
 
@@ -354,102 +360,95 @@ public class HTMLTagBalancer
     /** Start prefix mapping. */
     public void startPrefixMapping(String prefix, String uri, Augmentations augs)
         throws XNIException {
+        
+        // check for end of document
+        if (fSeenRootElementEnd) {
+            return;
+        }
+
+        // call handler
         if (fDocumentHandler != null) {
             fDocumentHandler.startPrefixMapping(prefix, uri, augs);
         }
+
     } // startPrefixMapping(String,String,Augmentations)
 
     /** Start element. */
     public void startElement(QName elem, XMLAttributes attrs, Augmentations augs)
         throws XNIException {
         
+        // check for end of document
+        if (fSeenRootElementEnd) {
+            return;
+        }
+
         // get element information
         HTMLElements.Element element = HTMLElements.getElement(elem.rawname);
-        //String ename = modifyName(elem.rawname, fNamesElems);
-        String ename = elem.rawname;
 
         // check proper parent
         if (element.parent != null) {
             if (!fSeenRootElement) {
-                String pname = element.parent instanceof String ? (String)element.parent : ((String[])element.parent)[0];
+                String pname = element.parent[0].name;
                 pname = modifyName(pname, fNamesElems);
                 if (fReportErrors) {
+                    String ename = elem.rawname;
                     fErrorReporter.reportWarning("HTML2002", new Object[]{ename,pname});
                 }
                 QName qname = new QName(null, pname, pname, null);
                 startElement(qname, emptyAttributes(), synthesizedAugs());
             }
             else {
-                int depth = getDepth(element.parent, false);
+                HTMLElements.Element pelement = element.parent[0];
+                int depth = getParentDepth(element.parent);
                 if (depth == -1) {
-                    String pname = element.parent instanceof String
-                                 ? (String)element.parent 
-                                 : ((String[])element.parent)[0];
+                    String pname = pelement.name;
                     pname = modifyName(pname, fNamesElems);
-                    HTMLElements.Element pelement = HTMLElements.getElement(pname);
-                    if (pelement != null) {
-                        int pdepth = getDepth(pelement.parent, false);
-                        if (pdepth != -1) {
-                            for (int i = 1; i < pdepth; i++) {
-                                Info info = (Info)fElementStack.peek();
-                                if (fReportErrors) {
-                                    String iname = modifyName(info.element.rawname, fNamesElems);
-                                    String ppname = pelement.parent instanceof String
-                                                  ? (String)pelement.parent
-                                                  : ((String[])pelement.parent)[0];
-                                    ppname = modifyName(ppname, fNamesElems);
-                                    fErrorReporter.reportWarning("HTML2003", new Object[]{iname,ename,pname,ppname});
-                                }
-                                endElement(info.element, synthesizedAugs());
-                            }
-                            QName qname = new QName(null, pname, pname, null);
+                    int pdepth = getParentDepth(pelement.parent);
+                    if (pdepth != -1) {
+                        for (int i = 1; i < pdepth; i++) {
+                            Info info = fElementStack.peek();
                             if (fReportErrors) {
-                                pname = modifyName(pname, fNamesElems);
-                                fErrorReporter.reportWarning("HTML2004", new Object[]{ename,pname});
+                                String iname = modifyName(info.qname.rawname, fNamesElems);
+                                String ename = elem.rawname;
+                                String ppname = pelement.parent[0].name;
+                                ppname = modifyName(ppname, fNamesElems);
+                                fErrorReporter.reportWarning("HTML2003", new Object[]{iname,ename,pname,ppname});
                             }
-                            startElement(qname, emptyAttributes(), synthesizedAugs());
+                            endElement(info.qname, synthesizedAugs());
                         }
+                        QName qname = new QName(null, pname, pname, null);
+                        if (fReportErrors) {
+                            String ename = elem.rawname;
+                            fErrorReporter.reportWarning("HTML2004", new Object[]{ename,pname});
+                        }
+                        startElement(qname, emptyAttributes(), synthesizedAugs());
                     }
                 }
             }
         }
 
         // close previous elements
-        int length = fElementStack.size();
-        for (int i = length - 1; i >= 0; i--) {
-            Info info = (Info)fElementStack.peek();
-            if (element.closes(info.element.rawname)) {
-                if (fReportErrors) {
-                    //String iname = modifyName(info.element.rawname, fNamesElems);
-                    String iname = info.element.rawname;
-                    fErrorReporter.reportWarning("HTML2005", new Object[]{ename,iname});
-                }
-                for (int j = length - 1; j >= i; j--) {
-                    info = (Info)fElementStack.pop();
-                    if (fDocumentHandler != null) {
-                        fDocumentHandler.endElement(info.element, null);
+        if (element.closes != null) {
+            int length = fElementStack.top;
+            for (int i = length - 1; i >= 0; i--) {
+                Info info = fElementStack.peek();
+                if (element.closes(info.element.code)) {
+                    if (fReportErrors) {
+                        String ename = elem.rawname;
+                        String iname = info.qname.rawname;
+                        fErrorReporter.reportWarning("HTML2005", new Object[]{ename,iname});
                     }
+                    for (int j = length - 1; j >= i; j--) {
+                        info = fElementStack.pop();
+                        if (fDocumentHandler != null) {
+                            fDocumentHandler.endElement(info.qname, null);
+                        }
+                    }
+                    length = i;
+                    continue;
                 }
-                length = i;
-                continue;
             }
         }
-
-        /***
-        // modify element and attribute names
-        if (HTMLElements.getElement(elem.rawname, null) != null) {
-            QName qname = elem;
-            qname.setValues(null, ename, ename, null);
-            int attrCount = attrs != null ? attrs.getLength() : 0;
-            qname = fQName;
-            for (int i = 0; i < attrCount; i++) {
-                attrs.getName(i, qname);
-                String aname = modifyName(qname.rawname, fNamesAttrs);
-                qname.setValues(null, aname, aname, null);
-                attrs.setName(i, qname);
-            }
-        }
-        /***/
 
         // call handler
         fSeenRootElement = true;
@@ -460,7 +459,7 @@ public class HTMLTagBalancer
         }
         else {
             boolean inline = element != null && element.isInline();
-            fElementStack.push(new Info(elem, inline ? attrs : null));
+            fElementStack.push(new Info(element, elem, inline ? attrs : null));
             if (fDocumentHandler != null) {
                 fDocumentHandler.startElement(elem, attrs, augs);
             }
@@ -480,54 +479,97 @@ public class HTMLTagBalancer
                                    XMLResourceIdentifier id,
                                    String encoding,
                                    Augmentations augs) throws XNIException {
+
+        // check for end of document
+        if (fSeenRootElementEnd) {
+            return;
+        }
+
+        // call handler
         if (fDocumentHandler != null) {
             fDocumentHandler.startGeneralEntity(name, id, encoding, augs);
         }
+
     } // startGeneralEntity(String,XMLResourceIdentifier,String,Augmentations)
 
     /** Text declaration. */
     public void textDecl(String version, String encoding, Augmentations augs)
         throws XNIException {
+        
+        // check for end of document
+        if (fSeenRootElementEnd) {
+            return;
+        }
+
+        // call handler
         if (fDocumentHandler != null) {
             fDocumentHandler.textDecl(version, encoding, augs);
         }
+
     } // textDecl(String,String,Augmentations)
 
     /** End entity. */
     public void endGeneralEntity(String name, Augmentations augs) throws XNIException {
+        
+        // check for end of document
+        if (fSeenRootElementEnd) {
+            return;
+        }
+
+        // call handler
         if (fDocumentHandler != null) {
             fDocumentHandler.endGeneralEntity(name, augs);
         }
+
     } // endGeneralEntity(String,Augmentations)
 
     /** Start CDATA section. */
     public void startCDATA(Augmentations augs) throws XNIException {
+        
+        // check for end of document
+        if (fSeenRootElementEnd) {
+            return;
+        }
+
+        // call handler
         if (fDocumentHandler != null) {
             fDocumentHandler.startCDATA(augs);
         }
+
     } // startCDATA(Augmentations)
 
     /** End CDATA section. */
     public void endCDATA(Augmentations augs) throws XNIException {
+
+        // check for end of document
+        if (fSeenRootElementEnd) {
+            return;
+        }
+
+        // call handler
         if (fDocumentHandler != null) {
             fDocumentHandler.endCDATA(augs);
         }
+
     } // endCDATA(Augmentations)
 
     /** Characters. */
     public void characters(XMLString text, Augmentations augs) throws XNIException {
 
-        // check whitespace
-        boolean whitespace = true;
-        for (int i = 0; i < text.length; i++) {
-            if (!Character.isWhitespace(text.ch[text.offset + i])) {
-                whitespace = false;
-                break;
-            }
+        // check for end of document
+        if (fSeenRootElementEnd) {
+            return;
         }
 
         // handle bare characters
         if (!fSeenRootElement) {
+            boolean whitespace = true;
+            for (int i = 0; i < text.length; i++) {
+                if (!Character.isWhitespace(text.ch[text.offset + i])) {
+                    whitespace = false;
+                    break;
+                }
+            }
             if (whitespace) {
                 return;
             }
@@ -543,9 +585,9 @@ public class HTMLTagBalancer
         // NOTE: This fequently happens when the document looks like:
         //       <title>Title</title>
         //       And here's some text.
-        else if (!whitespace) {
-            Info info = (Info)fElementStack.peek();
-            if (info.element.rawname.equalsIgnoreCase("head")) {
+        else {
+            Info info = fElementStack.peek();
+            if (info.element.code == HTMLElements.HEAD) {
                 String hname = modifyName("head", fNamesElems);
                 String bname = modifyName("body", fNamesElems);
                 if (fReportErrors) {
@@ -574,20 +616,27 @@ public class HTMLTagBalancer
     /** End element. */
     public void endElement(QName element, Augmentations augs) throws XNIException {
         
+        // is there anything to do?
+        if (fSeenRootElementEnd) {
+            return;
+        }
+        
         // get element information
-        HTMLElements.Element elem = null;
-        if (fReportErrors) {
-            elem = HTMLElements.getElement(element.rawname);
+        HTMLElements.Element elem = HTMLElements.getElement(element.rawname);
+
+        // check for end of document
+        if (elem.code == HTMLElements.HTML) {
+            fSeenRootElementEnd = true;
         }
 
         // find unbalanced inline elements
-        int depth = getDepth(element.rawname, true);
-        if (depth > 1 && HTMLElements.getElement(element.rawname).isInline()) {
-            int size = fElementStack.size();
-            fInlineStack.removeAllElements();
+        int depth = getElementDepth(elem);
+        if (depth > 1 && elem.isInline()) {
+            int size = fElementStack.top;
+            fInlineStack.top = 0;
             for (int i = 0; i < depth - 1; i++) {
-                Info info = (Info)fElementStack.elementAt(size - i - 1);
-                HTMLElements.Element pelem = HTMLElements.getElement(info.element.rawname);
+                Info info = fElementStack.data[size - i - 1];
+                HTMLElements.Element pelem = info.element;
                 if (pelem.isInline()) {
                     // NOTE: I don't have to make a copy of the info because
                     //       it will just be popped off of the element stack
@@ -599,21 +648,20 @@ public class HTMLTagBalancer
 
         // close children up to appropriate element
         for (int i = 0; i < depth; i++) {
-            Info info = (Info)fElementStack.pop();
+            Info info = fElementStack.pop();
             if (fReportErrors && i < depth - 1) {
                 String ename = modifyName(element.rawname, fNamesElems);
-                //String iname = modifyName(info.element.rawname, fNamesElems);
-                String iname = info.element.rawname;
+                String iname = info.qname.rawname;
                 fErrorReporter.reportWarning("HTML2007", new Object[]{ename,iname});
             }
             if (fDocumentHandler != null) {
-                fDocumentHandler.endElement(info.element, augs);
+                fDocumentHandler.endElement(info.qname, augs);
             }
         }
 
         // re-open inline elements
         if (depth > 1) {
-            int size = fInlineStack.size();
+            int size = fInlineStack.top;
             for (int i = 0; i < size; i++) {
                 Info info = (Info)fInlineStack.pop();
                 XMLAttributes attributes = info.attributes;
@@ -621,11 +669,10 @@ public class HTMLTagBalancer
                     attributes = emptyAttributes();
                 }
                 if (fReportErrors) {
-                    //String iname = modifyName(info.element.rawname, fNamesElems);
-                    String iname = info.element.rawname;
+                    String iname = info.qname.rawname;
                     fErrorReporter.reportWarning("HTML2008", new Object[]{iname});
                 }
-                startElement(info.element, attributes, synthesizedAugs());
+                startElement(info.qname, attributes, synthesizedAugs());
             }
         }
 
@@ -634,9 +681,17 @@ public class HTMLTagBalancer
     /** End prefix mapping. */
     public void endPrefixMapping(String prefix, Augmentations augs)
         throws XNIException {
+        
+        // check for end of document
+        if (fSeenRootElementEnd) {
+            return;
+        }
+
+        // call handler
         if (fDocumentHandler != null) {
             fDocumentHandler.endPrefixMapping(prefix, augs);
         }
+
     } // endPrefixMapping(String,Augmentations)
 
     //
@@ -645,56 +700,40 @@ public class HTMLTagBalancer
 
     /**
      * Returns the depth of the open tag associated with the specified
-     * element name or -1 if no matching element is found. The "blocked"
-     * parameter can be used to specify whether the depth checking is
-     * limited to the nearest block element.
+     * element name or -1 if no matching element is found.
      *
-     * @param ename The element name.
-     * @param blocked True if the depth checking should stop at nearest block.
+     * @param element The element.
      */
-    protected int getDepth(Object ename, boolean blocked) {
-
-        int length = fElementStack.size();
-        String name = ename instanceof String
-                    ? (String)ename : ((String[])ename)[0];
-        HTMLElements.Element element = HTMLElements.getElement(name);
-        if (ename instanceof String) {
-            String string = (String)ename;
-            for (int i = length - 1; i >= 0; i--) {
-                Info info = (Info)fElementStack.elementAt(i);
-                if (info.element.rawname.equalsIgnoreCase(string)) {
-                    return length - i;
-                }
-                if (blocked && element != null && !element.isContainer()) {
-                    HTMLElements.Element tag = HTMLElements.getElement(info.element.rawname);
-                    if (tag != null && tag.isBlock() && 
-                        !element.closes(info.element.rawname)) {
-                        break;
-                    }
-                }
+    protected final int getElementDepth(HTMLElements.Element element) {
+        for (int i = fElementStack.top - 1; i >= 0; i--) {
+            Info info = fElementStack.data[i];
+            if (info.element.code == element.code) {
+                return fElementStack.top - i;
+            }
+            if (info.element.isBlock()) {
+                break;
             }
         }
-        else {
-            String[] array = (String[])ename;
-            for (int i = length - 1; i >= 0; i--) {
-                Info info = (Info)fElementStack.elementAt(i);
-                for (int j = 0; j < array.length; j++) {
-                    if (info.element.rawname.equalsIgnoreCase(array[j])) {
-                        return length - i;
-                    }
-                }
-                if (blocked && element != null && !element.isContainer()) {
-                    HTMLElements.Element tag = HTMLElements.getElement(info.element.rawname);
-                    if (tag != null && tag.isBlock() && 
-                        !element.closes(info.element.rawname)) {
-                        break;
-                    }
+        return -1;
+    } // getElementDepth(HTMLElements.Element)
+
+    /**
+     * Returns the depth of the open tag associated with the specified
+     * element parent names or -1 if no matching element is found.
+     *
+     * @param parents The parent elements.
+     */
+    protected int getParentDepth(HTMLElements.Element[] parents) {
+        for (int i = fElementStack.top - 1; i >= 0; i--) {
+            Info info = fElementStack.data[i];
+            for (int j = 0; j < parents.length; j++) {
+                if (info.element.code == parents[j].code) {
+                    return fElementStack.top - i;
                 }
             }
         }
         return -1;
-
-    } // getDepth(String,boolean):int
+    } // getParentDepth(HTMLElements.Element[]):int
 
     /** Returns a set of empty attributes. */
     protected final XMLAttributes emptyAttributes() {
@@ -768,8 +807,11 @@ public class HTMLTagBalancer
         // Data
         //
 
+        /** The element. */
+        public HTMLElements.Element element;
+
         /** The element qualified name. */
-        public QName element;
+        public QName qname;
 
         /** The element attributes. */
         public XMLAttributes attributes;
@@ -786,9 +828,9 @@ public class HTMLTagBalancer
          *
          * @param element The element qualified name.
          */
-        public Info(QName element) {
-            this(element, null);
-        } // <init>(QName)
+        public Info(HTMLElements.Element element, QName qname) {
+            this(element, qname, null);
+        } // <init>(HTMLElements.Element,QName)
 
         /**
          * Creates an element information object.
@@ -799,29 +841,29 @@ public class HTMLTagBalancer
          * @param element The element qualified name.
          * @param attributes The element attributes.
          */
-        public Info(QName element, XMLAttributes attributes) {
-            if (element != null) {
-                this.element = new QName(element);
-            }
+        public Info(HTMLElements.Element element,
+                    QName qname, XMLAttributes attributes) {
+            this.element = element;
+            this.qname = new QName(qname);
             if (attributes != null) {
                 int length = attributes.getLength();
                 if (length > 0) {
-                    QName qname = new QName();
+                    QName aqname = new QName();
                     XMLAttributes newattrs = new XMLAttributesImpl();
                     for (int i = 0; i < length; i++) {
-                        attributes.getName(i, qname);
+                        attributes.getName(i, aqname);
                         String type = attributes.getType(i);
                         String value = attributes.getValue(i);
                         String nonNormalizedValue = attributes.getNonNormalizedValue(i);
                         boolean specified = attributes.isSpecified(i);
-                        newattrs.addAttribute(qname, type, value);
+                        newattrs.addAttribute(aqname, type, value);
                         newattrs.setNonNormalizedValue(i, nonNormalizedValue);
                         newattrs.setSpecified(i, specified);
                     }
                     this.attributes = newattrs;
                 }
             }
-        } // <init>(QName,XMLAttributes)
+        } // <init>(HTMLElements.Element,QName,XMLAttributes)
 
     } // class Info
 
@@ -876,5 +918,44 @@ public class HTMLTagBalancer
         } // toString():String
 
     } // class SynthesizedItem
+
+    /** Unsynchronized stack of element information. */
+    public static class InfoStack {
+
+        //
+        // Data
+        //
+
+        /** The top of the stack. */
+        public int top;
+
+        /** The stack data. */
+        public Info[] data = new Info[10];
+
+        //
+        // Public methods
+        //
+
+        /** Pushes element information onto the stack. */
+        public void push(Info info) {
+            if (top == data.length) {
+                Info[] newarray = new Info[top + 10];
+                System.arraycopy(data, 0, newarray, 0, top);
+                data = newarray;
+            }
+            data[top++] = info;
+        } // push(Info)
+
+        /** Peeks at the top of the stack. */
+        public Info peek() {
+            return data[top-1];
+        } // peek():Info
+
+        /** Pops the top item off of the stack. */
+        public Info pop() {
+            return data[--top];
+        } // pop():Info
+
+    } // class InfoStack
 
 } // class HTMLTagBalancer
