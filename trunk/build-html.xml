@@ -1,16 +1,16 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<!-- $Id: build-html.xml,v 1.20 2004/11/18 04:54:01 andyc Exp $ -->
+<!-- $Id: build-html.xml,v 1.22 2005/05/27 04:03:31 andyc Exp $ -->
 <project default='all' basedir='.'>
 
  <!-- PROPERTIES -->
- <property name='version'   value='0.9.4'/>
+ <property name='version'   value='0.9.5'/>
  <property name='name'      value='nekohtml'/>
  <property name='fullname'  value='${name}-${version}'/>
  <property name='Title'     value='NekoHTML'/>
  <property name='FullTitle' value='CyberNeko HTML Parser'/>
  <property name='Name'      value='${Title} ${version}'/>
  <property name='author'    value='Andy Clark'/>
- <property name='copyright' value='(C) Copyright 2002-2004, ${author}. All rights reserved.'/>
+ <property name='copyright' value='(C) Copyright 2002-2005, ${author}. All rights reserved.'/>
  <property name='URL'       value='http://www.apache.org/~andyc/neko/doc/html/index.html'/>
   
  <property name='jarfile'        value='${name}.jar'/>
@@ -55,17 +55,24 @@
  <target name='jar' depends='compile'>
   <copy todir='bin/html'>
    <fileset dir='.' includes='LICENSE'/>
-   <fileset dir='src/html' includes='META-INF/services/**'/>
    <fileset dir='src/html' includes='**/*.properties'/>
   </copy>
   <jar jarfile='${jarfile}' basedir='bin/html' 
        manifest='${version.manifest}'
        includes='LICENSE,org/**/*.class,org/**/*.properties'/>
-  <jar jarfile='${jarfileXni}' basedir='bin/html'
-       includes='LICENSE,META-INF/services/**'/>
   <jar jarfile='${jarfileSamples}' basedir='bin/html'
        includes='LICENSE,sample/**'/>
  </target> 
+
+ <target name='jar-xni'>
+  <mkdir dir="bin/html"/>
+  <copy todir='bin/html'>
+   <fileset dir='.' includes='LICENSE'/>
+   <fileset dir='src/html' includes='META-INF/services/**'/>
+  </copy>
+  <jar jarfile='${jarfileXni}' basedir='bin/html'
+       includes='LICENSE,META-INF/services/**'/>
+ </target>
 
  <target name='package' depends='jar,doc'>
   <mkdir dir='bin/package/${fullname}'/>

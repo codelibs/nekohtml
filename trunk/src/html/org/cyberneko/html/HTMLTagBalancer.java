@@ -1,5 +1,5 @@
 /* 
- * (C) Copyright 2002-2004, Andy Clark.  All rights reserved.
+ * (C) Copyright 2002-2005, Andy Clark.  All rights reserved.
  *
  * This file is distributed under an Apache style license. Please
  * refer to the LICENSE file for specific details.
@@ -54,7 +54,7 @@ import org.apache.xerces.xni.parser.XMLDocumentSource;
  *
  * @author Andy Clark
  *
- * @version $Id: HTMLTagBalancer.java,v 1.19 2004/11/18 04:32:17 andyc Exp $
+ * @version $Id: HTMLTagBalancer.java,v 1.20 2005/02/14 04:06:22 andyc Exp $
  */
 public class HTMLTagBalancer
     implements XMLDocumentFilter, HTMLComponent {
@@ -1068,7 +1068,7 @@ public class HTMLTagBalancer
 
     /** Returns an augmentations object with a synthesized item added. */
     protected final Augmentations synthesizedAugs() {
-        Augmentations augs = null;
+        HTMLAugmentations augs = null;
         if (fAugmentations) {
             augs = fInfosetAugs;
             augs.removeAllItems();

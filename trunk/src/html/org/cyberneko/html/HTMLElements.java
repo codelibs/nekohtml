@@ -1,5 +1,5 @@
 /* 
- * (C) Copyright 2002-2004, Andy Clark.  All rights reserved.
+ * (C) Copyright 2002-2005, Andy Clark.  All rights reserved.
  *
  * This file is distributed under an Apache style license. Please
  * refer to the LICENSE file for specific details.
@@ -12,7 +12,7 @@ package org.cyberneko.html;
  *
  * @author Andy Clark
  *
- * @version $Id: HTMLElements.java,v 1.10 2004/06/30 19:00:28 andyc Exp $
+ * @version $Id: HTMLElements.java,v 1.12 2005/02/14 07:16:59 andyc Exp $
  */
 public class HTMLElements {
 
@@ -143,6 +143,7 @@ public class HTMLElements {
     public static final short WBR = VAR+1;
     public static final short XML = WBR+1;
     public static final short XMP = XML+1;
+    public static final short UNKNOWN = XMP+1;
 
     // information
 
@@ -153,7 +154,7 @@ public class HTMLElements {
     protected static final ElementList ELEMENTS = new ElementList();
 
     /** No such element. */
-    public static final Element NO_SUCH_ELEMENT = new Element((short)-1, "", 0, BODY, null);
+    public static final Element NO_SUCH_ELEMENT = new Element(UNKNOWN, "", 0, new short[]{HEAD,BODY}/*HTML*/, null);
 
     //
     // Static initializer
@@ -208,7 +209,7 @@ public class HTMLElements {
             // BLINK
             new Element(BLINK, "BLINK", Element.INLINE, BODY, null),
             // BLOCKQUOTE - - (%block;|SCRIPT)+
-            new Element(BLOCKQUOTE, "BLOCKQUOTE", Element.BLOCK, BODY, null),
+            new Element(BLOCKQUOTE, "BLOCKQUOTE", Element.BLOCK, BODY, new short[]{P}),
             // BODY O O (%block;|SCRIPT)+ +(INS|DEL)
             new Element(BODY, "BODY", 0, HTML, new short[]{HEAD}),
             // BR - O EMPTY
@@ -268,12 +269,12 @@ public class HTMLElements {
         };
         ELEMENTS_ARRAY['H'-'A'] = new Element[] {
             // (H1|H2|H3|H4|H5|H6) - - (%inline;)*
-            new Element(H1, "H1", Element.BLOCK, BODY, new short[]{H1,H2,H3,H4,H5,H6,P}),
-            new Element(H2, "H2", Element.BLOCK, BODY, new short[]{H1,H2,H3,H4,H5,H6,P}),
-            new Element(H3, "H3", Element.BLOCK, BODY, new short[]{H1,H2,H3,H4,H5,H6,P}),
-            new Element(H4, "H4", Element.BLOCK, BODY, new short[]{H1,H2,H3,H4,H5,H6,P}),
-            new Element(H5, "H5", Element.BLOCK, BODY, new short[]{H1,H2,H3,H4,H5,H6,P}),
-            new Element(H6, "H6", Element.BLOCK, BODY, new short[]{H1,H2,H3,H4,H5,H6,P}),
+            new Element(H1, "H1", Element.BLOCK, new short[]{BODY,A}, new short[]{H1,H2,H3,H4,H5,H6,P}),
+            new Element(H2, "H2", Element.BLOCK, new short[]{BODY,A}, new short[]{H1,H2,H3,H4,H5,H6,P}),
+            new Element(H3, "H3", Element.BLOCK, new short[]{BODY,A}, new short[]{H1,H2,H3,H4,H5,H6,P}),
+            new Element(H4, "H4", Element.BLOCK, new short[]{BODY,A}, new short[]{H1,H2,H3,H4,H5,H6,P}),
+            new Element(H5, "H5", Element.BLOCK, new short[]{BODY,A}, new short[]{H1,H2,H3,H4,H5,H6,P}),
+            new Element(H6, "H6", Element.BLOCK, new short[]{BODY,A}, new short[]{H1,H2,H3,H4,H5,H6,P}),
             // HEAD O O (%head.content;) +(%head.misc;)
             new Element(HEAD, "HEAD", 0, HTML, null),
             // HR - O EMPTY

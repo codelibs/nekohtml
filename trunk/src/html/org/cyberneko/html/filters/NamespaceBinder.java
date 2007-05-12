@@ -1,5 +1,5 @@
 /* 
- * (C) Copyright 2004, Andy Clark.  All rights reserved.
+ * (C) Copyright 2004-2005, Andy Clark.  All rights reserved.
  *
  * This file is distributed under an Apache style license. Please
  * refer to the LICENSE file for specific details.
@@ -35,7 +35,7 @@ import org.apache.xerces.xni.parser.XMLConfigurationException;
  * 
  * @author Andy Clark
  * 
- * @version $Id: NamespaceBinder.java,v 1.5 2004/11/03 06:15:19 andyc Exp $
+ * @version $Id: NamespaceBinder.java,v 1.8 2005/05/30 00:19:28 andyc Exp $
  */
 public class NamespaceBinder
     extends DefaultFilter {
@@ -44,10 +44,16 @@ public class NamespaceBinder
     // Constants
     //
 
-    // namespace uri: XHTML 1.0
+    // namespace uris
 
     /** XHTML 1.0 namespace URI (http://www.w3.org/1999/xhtml). */
     public static final String XHTML_1_0_URI = "http://www.w3.org/1999/xhtml";
+
+    /** XML namespace URI (http://www.w3.org/XML/1998/namespace). */
+    public static final String XML_URI = "http://www.w3.org/XML/1998/namespace";
+
+    /** XMLNS namespace URI (http://www.w3.org/2000/xmlns/). */
+    public static final String XMLNS_URI = "http://www.w3.org/2000/xmlns/";
 
     // features
 
@@ -507,7 +513,15 @@ public class NamespaceBinder
             splitQName(fQName);
             prefix = !fQName.rawname.equals("xmlns")
                    ? (fQName.prefix != null ? fQName.prefix : "") : "xmlns";
-            fQName.uri = fNamespaceContext.getURI(prefix);
+            // PATCH: Joseph Walton
+            if (!prefix.equals("")) {
+                fQName.uri = prefix.equals("xml") ? XML_URI : fNamespaceContext.getURI(prefix);
+            }
+            // NOTE: You would think the xmlns namespace would be handled
+            //       by NamespaceSupport but it's not. -Ac 
+            if (prefix.equals("xmlns") && fQName.uri == null) {
+                fQName.uri = XMLNS_URI;
+            }
             attrs.setName(i, fQName);
         }
 
