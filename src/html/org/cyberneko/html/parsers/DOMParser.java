@@ -1,5 +1,5 @@
 /* 
- * (C) Copyright 2002-2004, Andy Clark.  All rights reserved.
+ * (C) Copyright 2002-2005, Andy Clark.  All rights reserved.
  *
  * This file is distributed under an Apache style license. Please
  * refer to the LICENSE file for specific details.
@@ -19,7 +19,7 @@ import org.w3c.dom.DOMException;
  *
  * @author Andy Clark
  *
- * @version $Id: DOMParser.java,v 1.4 2004/02/19 20:00:17 andyc Exp $
+ * @version $Id: DOMParser.java,v 1.5 2005/02/14 03:56:54 andyc Exp $
  */
 public class DOMParser
     /***/

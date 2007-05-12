@@ -1,5 +1,5 @@
 /* 
- * (C) Copyright 2002-2004, Andy Clark.  All rights reserved.
+ * (C) Copyright 2002-2005, Andy Clark.  All rights reserved.
  *
  * This file is distributed under an Apache style license. Please
  * refer to the LICENSE file for specific details.
@@ -73,7 +73,7 @@ import org.apache.xerces.xni.parser.XMLPullParserConfiguration;
  *
  * @author Andy Clark
  *
- * @version $Id: HTMLConfiguration.java,v 1.8 2004/06/30 19:00:28 andyc Exp $
+ * @version $Id: HTMLConfiguration.java,v 1.9 2005/02/14 03:56:54 andyc Exp $
  */
 public class HTMLConfiguration 
     extends ParserConfigurationSettings

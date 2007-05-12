@@ -1,5 +1,5 @@
 /* 
- * (C) Copyright 2004, Andy Clark.  All rights reserved.
+ * (C) Copyright 2004-2005, Andy Clark.  All rights reserved.
  *
  * This file is distributed under an Apache style license. Please
  * refer to the LICENSE file for specific details.
@@ -62,7 +62,7 @@ import org.apache.xerces.xni.parser.XMLConfigurationException;
  * 
  * @author Andy Clark
  * 
- * @version $Id: Purifier.java,v 1.4 2004/11/16 08:43:03 andyc Exp $
+ * @version $Id: Purifier.java,v 1.5 2005/02/14 03:56:54 andyc Exp $
  */
 public class Purifier
     extends DefaultFilter {
@@ -385,7 +385,7 @@ public class Purifier
 
     /** Returns an augmentations object with a synthesized item added. */
     protected final Augmentations synthesizedAugs() {
-        Augmentations augs = null;
+        HTMLAugmentations augs = null;
         if (fAugmentations) {
             augs = fInfosetAugs;
             augs.removeAllItems();

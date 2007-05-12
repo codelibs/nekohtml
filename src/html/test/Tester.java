@@ -1,5 +1,5 @@
 /* 
- * (C) Copyright 2002-2004, Andy Clark.  All rights reserved.
+ * (C) Copyright 2002-2005, Andy Clark.  All rights reserved.
  *
  * This file is distributed under an Apache style license. Please
  * refer to the LICENSE file for specific details.
@@ -202,7 +202,7 @@ public class Tester
 
     /** Compares two files. */
     protected boolean compare(File f1, File f2) throws IOException {
-        BufferedReader i1 = new BufferedReader(new InputStreamReader(new FileInputStream(f1), "UTF8"));
+        BufferedReader i1 = new BufferedReader(new InputStreamReader(new UTF8BOMSkipper(new FileInputStream(f1)), "UTF8"));
         BufferedReader i2 = new BufferedReader(new InputStreamReader(new FileInputStream(f2), "UTF8"));
         String l1;
         String l2;

@@ -25,6 +25,28 @@ Changes
 
 <h2>Releases</h2>
 <dl>
+ <dt>Version 0.9.5 (18 Jun 2005)
+     [<a href='http://www.apache.org/~andyc/neko/nekohtml-0.9.5.zip'>zip</a>]
+     [<a href='http://www.apache.org/~andyc/neko/nekohtml-0.9.5.tar.gz'>tgz</a>]
+ <dd>Added feature submitted by Asgeir Asgeirsson to allow scanner to fix 
+       character entity references for Microsoft Windows&reg; characters;
+     stopped building nekohtmlXni.jar file by default;
+     fixed handling of &lt;blockquote> reported by Joseph Walton
+       to better match browser behavior;
+     fixed tag-balancing bug for unknown elements reported by Marc
+       Guillemot and Vadim Tashlikovich;
+     fixed mapping of encoding name in <code>&lt;meta&gt;</code> element
+       reported by Marc Guillemot;
+     changed tag-balancing to allow headers inside of links suggested
+       by Laurens Fridael;
+     applied attribute namespace patch from Joseph Walton;
+     fixed namespace bug for "xml" prefixes reported by Asgeir
+       Asgeirsson;
+     fixed namespace bug for "xmlns" prefixes reported by
+       Johannes Koch;
+     and
+     fixed no-such-method exception bug when using augmentations feature
+       with older versions of Xerces2 reported by Hans Donner.
  <dt>Version 0.9.4 (17 Nov 2004)
      [<a href='http://www.apache.org/~andyc/neko/nekohtml-0.9.4.zip'>zip</a>]
      [<a href='http://www.apache.org/~andyc/neko/nekohtml-0.9.4.tar.gz'>tgz</a>]
@@ -413,5 +435,5 @@ Changes
 </dl>
 
 <div class='copyright'>
-(C) Copyright 2002-2004, Andy Clark. All rights reserved.
+(C) Copyright 2002-2005, Andy Clark. All rights reserved.
 </div>

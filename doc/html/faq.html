@@ -30,6 +30,7 @@ FAQ
 <li><a href='#hierarchy'>Why do I get a hierarchy request error using DOM?</a>
 <li><a href='#prefilter'>How do I add filters <em>before</em> the tag balancer?</a>
 <li><a href='#fragments'>How do I parse HTML document fragments?</a>
+<li><a href='#offsets'>How can I get the location of document information?</a>
 <li><a href='#xerces2'>Do I have to use all of Xerces2?</a>
 <li><a href='#version'>What version of NekoHTML am I using?</a>
 </ul>
@@ -183,6 +184,95 @@ to allow you parser DOM document fragments. Please refer to
 the <a href='usage.html#convenience'>Usage Instructions</a>
 for more information.
 
+<a name='offsets'></a>
+<h3>How can I get the location of document information?</h3>
+
+<p>
+Many applications are interested in knowing where elements,
+attributes, and character data appear within the source
+document. To aid these applications, NekoHTML has a feature
+that reports the starting and ending character offsets of
+each piece of information in the document.
+<p>
+In order to tell NekoHTML to report the character offsets
+for document information, the 
+<a href='settings.html#augmentations'>augmentations</a>
+feature needs to be turned on. For example:
+<p>
+<pre class='code'>
+<span class='code-comment'>// import org.cyberneko.html.parsers.SAXParser;</span>
+
+String AUGMENTATIONS <span class='code-punct'>=</span> <span class='code-string'>"http://cyberneko.org/html/features/augmentations"</span><span class='code-punct'>;</span>
+
+SAXParser parser <span class='code-punct'>=</span> <span class='code-keyword'>new</span> <span class='code-func'>SAXParser</span><span class='code-punct'>();</span>
+parser<span class='code-punct'>.</span><span class='code-func'>setFeature</span><span class='code-punct'>(</span>AUGMENTATIONS<span class='code-punct'>,</span> <span class='code-keyword'>true</span><span class='code-punct'>);</span>
+</pre>
+<p>
+Once the feature is enabled, the location information can be
+obtained by querying the 
+<code><a href='javadoc/org/cyberneko/html/HTMLEventInfo.html'>HTMLEventInfo</a></code> 
+object in the <code>Augmentations</code> parameter passed to
+all XNI callbacks. This dependency is required because DOM
+and SAX lack the ability to communicate this detailed 
+information to the application.
+<p>
+The XNI dependence does not restrict applications to only
+using the Xerces Native Interface, however. The best way to
+use this information is by extending one of the parsers in the
+<code>org.cyberneko.html.parsers</code> package and overriding
+the methods of interest. The following example extends the
+<code>SAXParser</code> class to retrieve the event information
+for start elements:
+<p>
+<pre class='code'>
+<span class='code-keyword'>public class</span> MySAXParser <span class='code-keyword'>extends</span> SAXParser <span class='code-punct'>{</span>
+
+    <span class='code-keyword'>static final</span> String AUGMENTATIONS <span class='code-punct'>=</span>
+        <span class='code-string'>"http://cyberneko.org/html/features/augmentations"</span><span class='code-punct'>;</span>
+
+    <span class='code-keyword'>public</span> <span class='code-func'>MySAXParser</span><span class='code-punct'>() {</span>
+        <span class='code-func'>setFeature</span><span class='code-punct'>(</span>AUGMENTATIONS<span class='code-punct'>,</span> <span class='code-keyword'>true</span><span class='code-punct'>);
+    }</span>
+
+    <span class='code-keyword'>public void</span> <span class='code-func'>startElement</span><span class='code-punct'>(</span>QName element<span class='code-punct'>,</span> XMLAttributes attrs<span class='code-punct'>,</span>
+                             Augmentations augs<span class='code-punct'>)</span> <span class='code-keyword'>throws</span> XNIException <span class='code-punct'>{</span>
+
+        <span class='code-comment'>// get offset information</span>
+        HTMLEventInfo info <span class='code-punct'>=
+           (</span>HTMLEventInfo<span class='code-punct'>)</span>augs<span class='code-punct'>.</span><span class='code-func'>getItem</span><span class='code-punct'>(</span>AUGMENTATIONS<span class='code-punct'>);</span>
+
+        <span class='code-keyword'>boolean</span> synthesized <span class='code-punct'>=</span> info<span class='code-punct'>.</span><span class='code-func'>isSynthesized</span><span class='code-punct'>();</span>
+        <span class='code-keyword'>int</span> beginRow <span class='code-punct'>=</span> info<span class='code-punct'>.</span><span class='code-func'>getBeginLineNumber</span><span class='code-punct'>();</span>
+        <span class='code-keyword'>int</span> beginCol <span class='code-punct'>=</span> info<span class='code-punct'>.</span><span class='code-func'>getBeginColumnNumber</span><span class='code-punct'>();</span>
+        <span class='code-keyword'>int</span> endRow <span class='code-punct'>=</span> info<span class='code-punct'>.</span><span class='code-func'>getEndLineNumber</span><span class='code-punct'>();</span>
+        <span class='code-keyword'>int</span> endCol <span class='code-punct'>=</span> info<span class='code-punct'>.</span><span class='code-func'>getEndColumnNumber</span><span class='code-punct'>();</span>
+
+        <span class='code-comment'>// perform default processing</span>
+        <span class='code-keyword'>super</span><span class='code-punct'>.</span><span class='code-func'>startElement</span><span class='code-punct'>(</span>element<span class='code-punct'>,</span> attrs<span class='code-punct'>,</span> augs<span class='code-punct'>);
+    }
+
+}</span>
+</pre>
+<p>
+<strong>Note:</strong>
+The NekoHTML parser reports character offsets and is unable 
+to report the byte offsets that map to the resulting characters.
+The parser takes advantage of the character decoders present in
+the JVM which do not report byte offsets. And because these
+decoders buffer blocks of bytes internally for performance
+reasons, it is not possible to write a custom input stream to
+perform this mapping between byte and character offsets. If you
+control the source documents and can restrict them to a single
+character encoding, then writing a custom reader to perform 
+this mapping is more feasible.
+<p>
+<strong>Note:</strong>
+Currently, only the start and end row and column information
+can be queried. In the future, NekoHTML will be able
+to report character offsets from the beginning of the file.
+This does not, however, mean that byte offsets will also be
+supported at a future date.
+
 <a name='xerces2'></a>
 <h3>Do I have to use all of Xerces2?</h3>
 
@@ -258,5 +348,5 @@ String implVersion <span class='code-punct'>=</span> pkg<span class='code-punct'
 </pre>
 
 <div class='copyright'>
-(C) Copyright 2002-2004, Andy Clark. All rights reserved.
+(C) Copyright 2002-2005, Andy Clark. All rights reserved.
 </div>

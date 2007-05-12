@@ -1,5 +1,5 @@
 /* 
- * (C) Copyright 2002-2004, Andy Clark.  All rights reserved.
+ * (C) Copyright 2002-2005, Andy Clark.  All rights reserved.
  *
  * This file is distributed under an Apache style license. Please
  * refer to the LICENSE file for specific details.
@@ -58,6 +58,7 @@ import org.apache.xerces.xni.parser.XMLInputSource;
  * <li>http://apache.org/xml/features/scanner/notify-char-refs
  * <li>http://apache.org/xml/features/scanner/notify-builtin-refs
  * <li>http://cyberneko.org/html/features/scanner/notify-builtin-refs
+ * <li>http://cyberneko.org/html/features/scanner/fix-mswindows-refs
  * <li>http://cyberneko.org/html/features/scanner/script/strip-cdata-delims
  * <li>http://cyberneko.org/html/features/scanner/script/strip-comment-delims
  * <li>http://cyberneko.org/html/features/scanner/style/strip-cdata-delims
@@ -83,7 +84,7 @@ import org.apache.xerces.xni.parser.XMLInputSource;
  *
  * @author Andy Clark
  *
- * @version $Id: HTMLScanner.java,v 1.16 2004/11/17 06:02:56 andyc Exp $
+ * @version $Id: HTMLScanner.java,v 1.19 2005/06/14 05:52:37 andyc Exp $
  */
 public class HTMLScanner 
     implements XMLDocumentScanner, XMLLocator, HTMLComponent {
@@ -151,6 +152,9 @@ public class HTMLScanner
      */
     public static final String NOTIFY_HTML_BUILTIN_REFS = "http://cyberneko.org/html/features/scanner/notify-builtin-refs";
 
+    /** Fix Microsoft Windows&reg; character entity references. */
+    public static final String FIX_MSWINDOWS_REFS = "http://cyberneko.org/html/features/scanner/fix-mswindows-refs";
+
     /** 
      * Strip HTML comment delimiters ("&lt;!&minus;&minus;" and 
      * "&minus;&minus;&gt;") from SCRIPT tag contents.
@@ -197,6 +201,7 @@ public class HTMLScanner
         NOTIFY_CHAR_REFS,
         NOTIFY_XML_BUILTIN_REFS,
         NOTIFY_HTML_BUILTIN_REFS,
+        FIX_MSWINDOWS_REFS,
         SCRIPT_STRIP_CDATA_DELIMS,
         SCRIPT_STRIP_COMMENT_DELIMS,
         STYLE_STRIP_CDATA_DELIMS,
@@ -211,6 +216,7 @@ public class HTMLScanner
     private static final Boolean[] RECOGNIZED_FEATURES_DEFAULTS = {
         null,
         null,
+        Boolean.FALSE,
         Boolean.FALSE,
         Boolean.FALSE,
         Boolean.FALSE,
@@ -338,6 +344,9 @@ public class HTMLScanner
     /** Notify HTML built-in general entity references. */
     protected boolean fNotifyHtmlBuiltinRefs;
 
+    /** Fix Microsoft Windows&reg; character entity references. */
+    protected boolean fFixWindowsCharRefs;
+
     /** Strip CDATA delimiters from SCRIPT tags. */
     protected boolean fScriptStripCDATADelims;
 
@@ -421,6 +430,9 @@ public class HTMLScanner
 
     /** Auto-detected Java encoding. */
     protected String fJavaEncoding;
+
+    /** True if the encoding matches "ISO-8859-*". */
+    protected boolean fIso8859Encoding;
 
     /** Element count. */
     protected int fElementCount;
@@ -631,6 +643,7 @@ public class HTMLScanner
         fNotifyCharRefs = manager.getFeature(NOTIFY_CHAR_REFS);
         fNotifyXmlBuiltinRefs = manager.getFeature(NOTIFY_XML_BUILTIN_REFS);
         fNotifyHtmlBuiltinRefs = manager.getFeature(NOTIFY_HTML_BUILTIN_REFS);
+        fFixWindowsCharRefs = manager.getFeature(FIX_MSWINDOWS_REFS);
         fScriptStripCDATADelims = manager.getFeature(SCRIPT_STRIP_CDATA_DELIMS);
         fScriptStripCommentDelims = manager.getFeature(SCRIPT_STRIP_COMMENT_DELIMS);
         fStyleStripCDATADelims = manager.getFeature(STYLE_STRIP_CDATA_DELIMS);
@@ -668,6 +681,9 @@ public class HTMLScanner
         }
         else if (featureId.equals(NOTIFY_HTML_BUILTIN_REFS)) { 
             fNotifyHtmlBuiltinRefs = state; 
+        }
+        else if (featureId.equals(FIX_MSWINDOWS_REFS)) { 
+            fFixWindowsCharRefs = state; 
         }
         else if (featureId.equals(SCRIPT_STRIP_CDATA_DELIMS)) { 
             fScriptStripCDATADelims = state; 
@@ -770,6 +786,10 @@ public class HTMLScanner
             }
             fIANAEncoding = encodings[0];
             fJavaEncoding = encodings[1];
+            /* PATCH: Asgeir Asgeirsson */
+            fIso8859Encoding = fIANAEncoding == null 
+                            || fIANAEncoding.toUpperCase().startsWith("ISO-8859")
+                            || fIANAEncoding.equalsIgnoreCase(fDefaultIANAEncoding);
             encoding = fIANAEncoding;
             reader = new InputStreamReader(fByteStream, fJavaEncoding);
         }
@@ -968,6 +988,43 @@ public class HTMLScanner
         }
         return NAMES_NO_CHANGE;
     } // getNamesValue(String):short
+
+    /**
+     * Fixes Microsoft Windows&reg; specific characters.
+     * <p>
+     * Details about this common problem can be found at 
+     * <a href='http://www.cs.tut.fi/~jkorpela/www/windows-chars.html'>http://www.cs.tut.fi/~jkorpela/www/windows-chars.html</a>
+     */
+    protected int fixWindowsCharacter(int origChar) {
+        /* PATCH: Asgeir Asgeirsson */
+        switch(origChar) {
+            case 130: return 8218;
+            case 131: return 402;
+            case 132: return 8222;
+            case 133: return 8230;
+            case 134: return 8224;
+            case 135: return 8225;
+            case 136: return 710;
+            case 137: return 8240;
+            case 138: return 352;
+            case 139: return 8249;
+            case 140: return 338;
+            case 145: return 8216;
+            case 146: return 8217;
+            case 147: return 8220;
+            case 148: return 8221;
+            case 149: return 8226;
+            case 150: return 8211;
+            case 151: return 8212;
+            case 152: return 732;
+            case 153: return 8482;
+            case 154: return 353;
+            case 155: return 8250;
+            case 156: return 339;
+            case 159: return 376;
+        }
+        return origChar;
+    } // fixWindowsCharacter(int):int
 
     //
     // Protected methods
@@ -1273,6 +1330,10 @@ public class HTMLScanner
                 else {
                     value = Integer.parseInt(name.substring(1));
                 }
+                /* PATCH: Asgeir Asgeirsson */
+                if (fFixWindowsCharRefs && fIso8859Encoding) {
+                    value = fixWindowsCharacter(value);
+                }
                 if (content && fDocumentHandler != null && fElementCount >= fElementDepth) {
                     fEndLineNumber = fCurrentEntity.lineNumber;
                     fEndColumnNumber = fCurrentEntity.columnNumber;
@@ -1532,7 +1593,7 @@ public class HTMLScanner
 
     /** Returns an augmentations object with a location item added. */
     protected final Augmentations locationAugs() {
-        Augmentations augs = null;
+        HTMLAugmentations augs = null;
         if (fAugmentations) {
             fLocationItem.setValues(fBeginLineNumber, fBeginColumnNumber, 
                                     fEndLineNumber, fEndColumnNumber);
@@ -1545,7 +1606,7 @@ public class HTMLScanner
 
     /** Returns an augmentations object with a synthesized item added. */
     protected final Augmentations synthesizedAugs() {
-        Augmentations augs = null;
+        HTMLAugmentations augs = null;
         if (fAugmentations) {
             augs = fInfosetAugs;
             augs.removeAllItems();
@@ -2286,7 +2347,7 @@ public class HTMLScanner
                             String charset = index2 != -1 ? content.substring(index1+8, index2) : content.substring(index1+8);
                             try {
                                 String ianaEncoding = charset;
-                                String javaEncoding = EncodingMap.getIANA2JavaMapping(ianaEncoding);
+                                String javaEncoding = EncodingMap.getIANA2JavaMapping(ianaEncoding.toUpperCase());
                                 if (DEBUG_CHARSET) {
                                     System.out.println("+++ ianaEncoding: "+ianaEncoding);
                                     System.out.println("+++ javaEncoding: "+javaEncoding);
@@ -2297,6 +2358,9 @@ public class HTMLScanner
                                         fErrorReporter.reportError("HTML1001", new Object[]{ianaEncoding});
                                     }
                                 }
+                                fIso8859Encoding = ianaEncoding == null 
+                                                || ianaEncoding.toUpperCase().startsWith("ISO-8859")
+                                                || ianaEncoding.equalsIgnoreCase(fDefaultIANAEncoding);
                                 fCurrentEntity.stream = new InputStreamReader(fByteStream, javaEncoding);
                                 fByteStream.playback();
                                 fElementDepth = fElementCount;

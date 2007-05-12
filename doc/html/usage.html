@@ -1,5 +1,13 @@
 <title>NekoHTML | Usage Instructions</title>
 <link rel=stylesheet type=text/css href=../style.css>
+<style type='text/css'>
+.note {
+  margin-left: 2em; margin-right: 2em;
+  padding: .25em;
+  border: 1px solid black;
+  background-color: #fdd;
+}
+</style>
 
 <h1>Usage Instructions</h1>
 <div class='navbar'>
@@ -58,6 +66,13 @@ you should create the NekoHTML parser explicitly even though
 you parse and access the document contents using standard XML 
 APIs. The following sections describe this method in more
 detail.
+<p class='note'>
+<strong>Note:</strong>
+The nekohtmlXni.jar file is no longer built by default. This
+change was made to alleviate confusion about which Jar files
+to add to the JVM classpath. If you still want to use this
+Jar file, you must build it using the "jar-xni" Ant task.
+</p>
 
 <a name='convenience'></a>
 <h2>Convenience Parser Classes</h2>
@@ -193,5 +208,5 @@ configuration to the base class in the constructor.
 This source code is included in the <code>src/html/sample/</code> directory.
 
 <div class='copyright'>
-(C) Copyright 2002-2004, Andy Clark. All rights reserved.
+(C) Copyright 2002-2005, Andy Clark. All rights reserved.
 </div>

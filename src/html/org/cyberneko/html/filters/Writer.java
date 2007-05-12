@@ -1,5 +1,5 @@
 /* 
- * (C) Copyright 2002-2004, Andy Clark.  All rights reserved.
+ * (C) Copyright 2002-2005, Andy Clark.  All rights reserved.
  *
  * This file is distributed under an Apache style license. Please
  * refer to the LICENSE file for specific details.
@@ -51,7 +51,7 @@ import org.apache.xerces.xni.parser.XMLParserConfiguration;
  *
  * @author Andy Clark
  *
- * @version $Id: Writer.java,v 1.6 2004/11/16 08:43:29 andyc Exp $
+ * @version $Id: Writer.java,v 1.7 2005/02/14 04:01:33 andyc Exp $
  */
 public class Writer 
     extends DefaultFilter {
@@ -411,13 +411,18 @@ public class Writer
         XMLParserConfiguration parser = new HTMLConfiguration();
         parser.setFeature(NOTIFY_CHAR_REFS, true);
         parser.setFeature(NOTIFY_HTML_BUILTIN_REFS, true);
-        String encoding = "Windows-1252";
+        String iencoding = null;
+        String oencoding = "Windows-1252";
         boolean identity = false;
         boolean purify = false;
         for (int i = 0; i < argv.length; i++) {
             String arg = argv[i];
-            if (arg.equals("-e")) {
-                encoding = argv[++i];
+            if (arg.equals("-ie")) {
+                iencoding = argv[++i];
+                continue;
+            }
+            if (arg.equals("-e") || arg.equals("-oe")) {
+                oencoding = argv[++i];
                 continue;
             }
             if (arg.equals("-i")) {
@@ -439,12 +444,14 @@ public class Writer
             else if (purify) {
                 filtersVector.addElement(new Purifier());
             }
-            filtersVector.addElement(new Writer(System.out, encoding));
+            filtersVector.addElement(new Writer(System.out, oencoding));
             XMLDocumentFilter[] filters = 
                 new XMLDocumentFilter[filtersVector.size()];
             filtersVector.copyInto(filters);
             parser.setProperty(FILTERS, filters);
-            parser.parse(new XMLInputSource(null, arg, null));
+            XMLInputSource source = new XMLInputSource(null, arg, null);
+            source.setEncoding(iencoding);
+            parser.parse(source);
         }
     } // main(String[])
 
@@ -453,13 +460,15 @@ public class Writer
         System.err.println("usage: java "+Writer.class.getName()+" (options) file ...");
         System.err.println();
         System.err.println("options:");
-        System.err.println("  -e name  Specify IANA name of output encoding.");
-        System.err.println("  -i       Perform identity transform.");
-        System.err.println("  -p       Purify output to ensure XML well-formedness.");
-        System.err.println("  -h       Display help screen.");
+        System.err.println("  -ie name  Specify IANA name of input encoding.");
+        System.err.println("  -oe name  Specify IANA name of output encoding.");
+        System.err.println("  -i        Perform identity transform.");
+        System.err.println("  -p        Purify output to ensure XML well-formedness.");
+        System.err.println("  -h        Display help screen.");
         System.err.println();
         System.err.println("notes:");
         System.err.println("  The -i and -p options are mutually exclusive.");
+        System.err.println("  The -e option has been replaced with -oe.");
     } // printUsage()
 
 } // class Writer

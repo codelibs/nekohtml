@@ -1,5 +1,5 @@
 /* 
- * (C) Copyright 2002-2004, Andy Clark.  All rights reserved.
+ * (C) Copyright 2002-2005, Andy Clark.  All rights reserved.
  *
  * This file is distributed under an Apache style license. Please
  * refer to the LICENSE file for specific details.
@@ -167,12 +167,18 @@ public class Writer
         int acount = attrs != null ? attrs.getLength() : 0;
         if (acount > 0) {
             String[] anames = new String[acount];
-            sortAttrNames(attrs, anames);
+            String[] auris = new String[acount];
+            sortAttrNames(attrs, anames, auris);
             for (int i = 0; i < acount; i++) {
                 String aname = anames[i];
                 out.println();
                 out.flush();
                 out.print('A');
+                if (auris[i] != null) {
+                    out.print('{');
+                    out.print(auris[i]);
+                    out.print('}');
+                }
                 out.print(aname);
                 out.print(' ');
                 print(attrs.getValue(aname));
@@ -257,9 +263,11 @@ public class Writer
     //
 
     /** Sorts the attribute names. */
-    protected static void sortAttrNames(XMLAttributes attrs, String[] anames) {
+    protected static void sortAttrNames(XMLAttributes attrs, 
+                                        String[] anames, String[] auris) {
         for (int i = 0; i < anames.length; i++) {
             anames[i] = attrs.getQName(i);
+            auris[i] = attrs.getURI(i);
         }
         // NOTE: This is super inefficient but it doesn't really matter. -Ac
         for (int i = 0; i < anames.length - 1; i++) {
@@ -270,9 +278,12 @@ public class Writer
                 }
             }
             if (index != i) {
-                String t = anames[i];
+                String tn = anames[i];
                 anames[i] = anames[index];
-                anames[index] = t;
+                anames[index] = tn;
+                String tu = auris[i];
+                auris[i] = auris[index];
+                auris[index] = tu;
             }
         }
     } // sortAttrNames(XMLAttributes,String[])
