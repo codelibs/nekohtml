@@ -33,7 +33,7 @@ import org.apache.xerces.xni.parser.XMLParserConfiguration;
 /**
  * An XNI-based parser configuration that can be used to parse HTML 
  * documents. This configuration can be used directly in order to
- * parser HTML documents or can be used in conjunction with any XNI
+ * parse HTML documents or can be used in conjunction with any XNI
  * based tools, such as the Xerces2 implementation.
  * <p>
  * This configuration recognizes the following features:
@@ -56,7 +56,7 @@ import org.apache.xerces.xni.parser.XMLParserConfiguration;
  * <li>the properties supported by the scanner and tag balancer.
  * </ul>
  * <p>
- * For complete usage information, refer to the documentation components.
+ * For complete usage information, refer to the documentation.
  *
  * @see HTMLScanner
  * @see HTMLTagBalancer

@@ -707,12 +707,13 @@ public class HTMLTagBalancer
      * @param element The element.
      */
     protected final int getElementDepth(HTMLElements.Element element) {
+        final boolean container = element.isContainer();
         for (int i = fElementStack.top - 1; i >= 0; i--) {
             Info info = fElementStack.data[i];
             if (info.element.code == element.code) {
                 return fElementStack.top - i;
             }
-            if (info.element.isBlock()) {
+            if (!container && info.element.isBlock()) {
                 break;
             }
         }

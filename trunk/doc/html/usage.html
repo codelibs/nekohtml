@@ -1,10 +1,11 @@
 <title>NekoHTML | Usage Instructions</title>
-<link rel=stylesheet type=text/css href=style.css>
+<link rel=stylesheet type=text/css href=../style.css>
 
 <h1>Usage Instructions</h1>
 <div class='navbar'>
+[<a href='../index.html'>Home</a>]
 [
-<a href='index.html'>Home</a>
+<a href='index.html'>Top</a>
 |
 Usage
 |
@@ -32,8 +33,8 @@ it easier to read.]
 <pre class='cmdline'>
 <span class='cmdline-prompt'>&gt;</span> <span class='cmdline-cmd'>java -cp nekohtml.jar;nekohtmlXni.jar;
            xmlParserAPIs.jar;xercesImpl.jar;xercesSamples.jar 
-       sax.Counter doc/index.html</span>
-doc/index.html: 10 ms (69 elems, 35 attrs, 0 spaces, 3512 chars)
+       sax.Counter doc/html/index.html</span>
+doc/html/index.html: 10 ms (49 elems, 21 attrs, 0 spaces, 2652 chars)
 </pre>
 <p>
 The Xerces2 implementation dynamically instantiates the default
@@ -50,7 +51,7 @@ constructed (using standard APIs) in the same JVM to use the
 HTML parser configuration. If this is not what you want to do,
 you should create the NekoHTML parser explicitly even though 
 you parse and access the document contents using standard XML 
-APIs. The following sections describe this in method in more
+APIs. The following sections describe this method in more
 detail.
 
 <h2>Convenience Parser Classes</h2>
@@ -91,9 +92,13 @@ shows how to use the NekoHTML <code>DOMParser</code> directly:
 </pre>
 <p>
 Running this program produces the following output:
+[<strong>Note:</strong> The classpath should be 
+contiguous. It is split among separate lines in this example to make 
+it easier to read.]
 <pre class='cmdline'>
-<span class='cmdline-prompt'>&gt;</span> <span class='cmdline-cmd'>java -cp nekohtml.jar;nekohtmlSamples.jar;xmlParserAPIs.jar;xercesImpl.jar
-       sample.TestHTMLDOM data/test01.html</span>
+<span class='cmdline-prompt'>&gt;</span> <span class='cmdline-cmd'>java -cp nekohtml.jar;nekohtmlSamples.jar;
+           xmlParserAPIs.jar;xercesImpl.jar
+       sample.TestHTMLDOM data/html/test01.html</span>
 org.apache.html.dom.HTMLDocumentImpl
  org.apache.html.dom.HTMLHtmlElementImpl
   org.apache.html.dom.HTMLBodyElementImpl

@@ -34,9 +34,19 @@ PRE.code { margin: 15; margin-left: 30; margin-right: 30;
 .code-string { color: cyan }
 .code-comment { color: silver }
 
-PRE.document { margin: 15; margin-left: 30; margin-right: 30;
+PRE.document,PRE.xml { 
+               margin: 15; margin-left: 30; margin-right: 30;
                padding: 5; border: solid black 1;
                background: white; color: black }
+
+.xml-markup { color: blue }
+.xml-comment { color: silver }
+.xml-ename { color: maroon }
+.xml-aname { color: maroon }
+.xml-avalue { font-weight: bold }
+.xml-aname-xmlns { color: red }
+.xml-avalue-xmlns { color: red; font-weight: bold }
+.xml-chars { font-weight: bold }
 
 .id { font-family: sans-serif; text-decoration: underline;
       white-space: nowrap }
