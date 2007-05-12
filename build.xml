@@ -4,7 +4,7 @@
 
  <!-- PROPERTIES -->
  <property name='name'      value='NekoHTML'/>
- <property name='version'   value='0.4'/>
+ <property name='version'   value='0.4.1'/>
  <property name='copyright' value='(C) Copyright 2002, Andy Clark. All rights reserved.'/>
   
  <property name='jarfile' value='nekohtml.jar'/>

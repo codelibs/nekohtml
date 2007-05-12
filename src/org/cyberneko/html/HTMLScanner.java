@@ -998,7 +998,7 @@ public class HTMLScanner
                                 if (DEBUG_CALLBACKS) {
                                     System.out.println("startDocument()");
                                 }
-                                fDocumentHandler.startDocument(null, fIANAEncoding, null);
+                                fDocumentHandler.startDocument(HTMLScanner.this, fIANAEncoding, null);
                             }
                             setScannerState(STATE_CONTENT);
                             break;
@@ -1345,12 +1345,10 @@ public class HTMLScanner
                     }
                     throw new EOFException();
                 }
-                if (c == '/' || c == '>') {
+                // Xiaowei/Ac: Fix for <a href=/cgi-bin/myscript>...</a>
+                if (c == '>') {
                     fQName.setValues(null, aname, aname, null);
                     attributes.addAttribute(fQName, "CDATA", "");
-                    if (c == '/') {
-                        skipMarkup();
-                    }
                     return false;
                 }
                 if (c != '\'' && c != '"') {
@@ -1358,18 +1356,11 @@ public class HTMLScanner
                     fStringBuffer.append((char)c);
                     while (true) {
                         c = read();
-                        if (Character.isSpace((char)c) || c == '/' || c == '>') {
-                            if (c == '/') {
-                                c = read();
-                                if (c != '>') {
-                                    fStringBuffer.append('/');
-                                }
-                            }
-                            else {
-                                fCharOffset--;
-                                fColumnNumber--;
-                                break;
-                            }
+                        // Xiaowei/Ac: Fix for <a href=/broken/>...</a>
+                        if (Character.isSpace((char)c) || c == '>') {
+                            fCharOffset--;
+                            fColumnNumber--;
+                            break;
                         }
                         if (c == -1) {
                             if (fReportErrors) {
