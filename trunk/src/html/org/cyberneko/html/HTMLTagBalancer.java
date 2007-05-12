@@ -985,14 +985,16 @@ public class HTMLTagBalancer
      * @param parents The parent elements.
      */
     protected int getParentDepth(HTMLElements.Element[] parents, short bounds) {
-        for (int i = fElementStack.top - 1; i >= 0; i--) {
-            Info info = fElementStack.data[i];
-            if (info.element.code == bounds) {
-                break;
-            }
-            for (int j = 0; j < parents.length; j++) {
-                if (info.element.code == parents[j].code) {
-                    return fElementStack.top - i;
+        if (parents != null) {
+            for (int i = fElementStack.top - 1; i >= 0; i--) {
+                Info info = fElementStack.data[i];
+                if (info.element.code == bounds) {
+                    break;
+                }
+                for (int j = 0; j < parents.length; j++) {
+                    if (info.element.code == parents[j].code) {
+                        return fElementStack.top - i;
+                    }
                 }
             }
         }
