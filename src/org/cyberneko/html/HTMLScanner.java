@@ -11,7 +11,9 @@ import java.io.IOException;
 import java.io.PushbackReader;
 import java.io.Reader;
 import java.io.UnsupportedEncodingException;
+import java.net.URL;
 
+import org.apache.xerces.util.URI;
 import org.apache.xerces.util.XMLAttributesImpl;
 import org.apache.xerces.util.XMLStringBuffer;
 import org.apache.xerces.xni.Augmentations;
@@ -145,7 +147,11 @@ public class HTMLScanner
             InputStream inputStream = source.getByteStream();
             if (inputStream == null) {
                 String systemId = source.getSystemId();
-                inputStream = new FileInputStream(systemId);
+                //inputStream = new FileInputStream(systemId);
+                String baseSystemId = source.getBaseSystemId();
+                String expandedSystemId = expandSystemId(systemId, baseSystemId);
+                URL url = new URL(expandedSystemId);
+                inputStream = url.openStream();
             }
             fByteStream = new PlaybackInputStream(inputStream);
             String encoding = fByteStream.detectEncoding();
@@ -174,6 +180,134 @@ public class HTMLScanner
     public void setDocumentHandler(XMLDocumentHandler handler) {
         fDocumentHandler = handler;
     } // setDocumentHandler(XMLDocumentHandler)
+
+    //
+    // Protected static methods
+    //
+
+    /**
+     * Expands a system id and returns the system id as a URI, if
+     * it can be expanded. A return value of null means that the
+     * identifier is already expanded. An exception thrown
+     * indicates a failure to expand the id.
+     *
+     * @param systemId The systemId to be expanded.
+     *
+     * @return Returns the URI string representing the expanded system
+     *         identifier. A null value indicates that the given
+     *         system identifier is already expanded.
+     *
+     */
+    public static String expandSystemId(String systemId, String baseSystemId) {
+
+        // check for bad parameters id
+        if (systemId == null || systemId.length() == 0) {
+            return systemId;
+        }
+        // if id already expanded, return
+        try {
+            URI uri = new URI(systemId);
+            if (uri != null) {
+                return systemId;
+            }
+        }
+        catch (URI.MalformedURIException e) {
+            // continue on...
+        }
+        // normalize id
+        String id = fixURI(systemId);
+
+        // normalize base
+        URI base = null;
+        URI uri = null;
+        try {
+            if (baseSystemId == null || baseSystemId.length() == 0 ||
+                baseSystemId.equals(systemId)) {
+                String dir;
+                try {
+                    dir = fixURI(System.getProperty("user.dir"));
+                }
+                catch (SecurityException se) {
+                    dir = "";
+                }
+                if (!dir.endsWith("/")) {
+                    dir = dir + "/";
+                }
+                base = new URI("file", "", dir, null, null);
+            }
+            else {
+                try {
+                    base = new URI(fixURI(baseSystemId));
+                }
+                catch (URI.MalformedURIException e) {
+                    String dir;
+                    try {
+                        dir = fixURI(System.getProperty("user.dir"));
+                    }
+                    catch (SecurityException se) {
+                        dir = "";
+                    }
+                    if (baseSystemId.indexOf(':') != -1) {
+                        // for xml schemas we might have baseURI with
+                        // a specified drive
+                        base = new URI("file", "", fixURI(baseSystemId), null, null);
+                    }
+                    else {
+                        if (!dir.endsWith("/")) {
+                            dir = dir + "/";
+                        }
+                        dir = dir + fixURI(baseSystemId);
+                        base = new URI("file", "", dir, null, null);
+                    }
+                }
+             }
+             // expand id
+             uri = new URI(base, id);
+        }
+        catch (Exception e) {
+            // let it go through
+
+        }
+
+        if (uri == null) {
+            return systemId;
+        }
+        return uri.toString();
+
+    } // expandSystemId(String,String):String
+
+    /**
+     * Fixes a platform dependent filename to standard URI form.
+     *
+     * @param str The string to fix.
+     *
+     * @return Returns the fixed URI string.
+     */
+    protected static String fixURI(String str) {
+
+        // handle platform dependent strings
+        str = str.replace(java.io.File.separatorChar, '/');
+
+        // Windows fix
+        if (str.length() >= 2) {
+            char ch1 = str.charAt(1);
+            // change "C:blah" to "/C:blah"
+            if (ch1 == ':') {
+                char ch0 = Character.toUpperCase(str.charAt(0));
+                if (ch0 >= 'A' && ch0 <= 'Z') {
+                    str = "/" + str;
+                }
+            }
+            // change "//blah" to "file://blah"
+            else if (ch1 == '/' && str.charAt(0) == '/') {
+                str = "file:" + str;
+            }
+        }
+
+        // done
+        return str;
+
+    } // fixURI(String):String
 
     //
     // Protected methods
@@ -884,7 +1018,8 @@ public class HTMLScanner
                         fStringBuffer.append((char)c);
                     }
                     fQName.setValues(null, null, aname, null);
-                    attributes.addAttribute(fQName, "CDATA", fStringBuffer.toString());
+                    String avalue = fStringBuffer.toString();
+                    attributes.addAttribute(fQName, "CDATA", avalue);
                     return true;
                 }
                 char quote = (char)c;
@@ -903,7 +1038,8 @@ public class HTMLScanner
                     }
                 } while (c != quote);
                 fQName.setValues(null, null, aname, null);
-                attributes.addAttribute(fQName, "CDATA", fStringBuffer.toString());
+                String avalue = fStringBuffer.toString();
+                attributes.addAttribute(fQName, "CDATA", avalue);
             }
             else {
                 fQName.setValues(null, null, aname, null);

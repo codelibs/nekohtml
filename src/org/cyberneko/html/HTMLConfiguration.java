@@ -5,6 +5,7 @@ package org.cyberneko.html;
 import java.io.IOException;
 import java.util.Locale;
                                                                                
+import org.apache.xerces.util.SymbolTable;
 import org.apache.xerces.xni.XMLDocumentHandler;
 import org.apache.xerces.xni.XMLDTDHandler;
 import org.apache.xerces.xni.XMLDTDContentModelHandler;
@@ -54,6 +55,16 @@ public class HTMLConfiguration
 
     /** HTML tag balancer. */
     protected XMLDocumentFilter fTagBalancer = new HTMLTagBalancer();
+
+    // other components
+
+    // NOTE: This is a hack to get around a problem in the Xerces 2.0.0
+    //       AbstractSAXParser. If it uses a parser configuration that
+    //       does not have a SymbolTable, then it will remove *all* of
+    //       attributes.
+
+    /** Symbol table. */
+    protected SymbolTable fSymbolTable = new SymbolTable();
 
     //
     // XMLParserConfiguration methods
@@ -135,7 +146,16 @@ public class HTMLConfiguration
     public void setProperty(String propertyId, Object value) throws XMLConfigurationException {}
 
     /** Returns a property value. */
-    public Object getProperty(String propertyId) throws XMLConfigurationException { return null; }
+    public Object getProperty(String propertyId) throws XMLConfigurationException { 
+        // NOTE: This is a hack to get around a problem in the Xerces 2.0.0
+        //       AbstractSAXParser. If it uses a parser configuration that
+        //       does not have a SymbolTable, then it will remove *all* of
+        //       attributes.
+        if (propertyId.equals("http://apache.org/xml/properties/internal/symbol-table")) {
+            return fSymbolTable;
+        }
+        return null; 
+    } // getProperty(String):Object
 
     /** Parses a document. */
     public void parse(XMLInputSource source) throws XNIException, IOException {
