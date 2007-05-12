@@ -38,7 +38,10 @@ import org.apache.xerces.xni.parser.XMLConfigurationException;
  * <li>ensuring the string "--" does not appear in the content of
  *     a comment;
  * <li>ensuring the string "]]>" does not appear in the content of
- *     a CDATA section; and
+ *     a CDATA section; 
+ * <li>ensuring that the XML declaration has required pseudo-attributes
+ *     and that the values are correct;
+ * and
  * <li>synthesized missing namespace bindings.
  * </ul>
  * <p>
@@ -185,6 +188,27 @@ public class Purifier
         handleStartDocument();
         super.startDocument(locator, encoding, nscontext, augs);
     } // startDocument(XMLLocator,NamespaceContext,String,Augmentations)
+
+    /** XML declaration. */
+    public void xmlDecl(String version, String encoding, String standalone,
+                        Augmentations augs) throws XNIException {
+        if (version == null || !version.equals("1.0")) {
+            version = "1.0";
+        }
+        if (encoding != null && encoding.length() == 0) {
+            encoding = null;
+        }
+        if (standalone != null) {
+            if (!standalone.equalsIgnoreCase("true") && 
+                !standalone.equalsIgnoreCase("false")) {
+                standalone = null;
+            }
+            else {
+                standalone = standalone.toLowerCase();
+            }
+        }
+        super.xmlDecl(version,encoding,standalone,augs);
+    } // xmlDecl(String,String,String,Augmentations)
 
     /** Comment. */
     public void comment(XMLString text, Augmentations augs)

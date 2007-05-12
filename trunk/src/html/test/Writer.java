@@ -98,6 +98,24 @@ public class Writer
         startDocument(locator, encoding, null, augs);
     } // startDocument(XMLLocator,String,Augmentations)
 
+    /** XML declaration. */
+    public void xmlDecl(String version, String encoding, String standalone,
+                        Augmentations augs) throws XNIException {
+        if (version!=null) {
+            out.print("xversion ");
+            out.println(version);
+        }
+        if (encoding!=null) {
+            out.print("xencoding ");
+            out.println(encoding);
+        }
+        if (standalone!=null) {
+            out.print("xstandalone ");
+            out.println(standalone);
+        }
+        out.flush();
+    } // xmlDecl(String,String,String,Augmentations)
+
     /** Doctype declaration. */
     public void doctypeDecl(String root, String pubid, String sysid, Augmentations augs) throws XNIException {
         chars();
