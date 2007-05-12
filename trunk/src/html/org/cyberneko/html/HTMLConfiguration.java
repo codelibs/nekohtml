@@ -28,7 +28,7 @@ import org.apache.xerces.xni.parser.XMLEntityResolver;
 import org.apache.xerces.xni.parser.XMLErrorHandler;
 import org.apache.xerces.xni.parser.XMLInputSource;
 import org.apache.xerces.xni.parser.XMLParseException;
-import org.apache.xerces.xni.parser.XMLParserConfiguration;
+import org.apache.xerces.xni.parser.XMLPullParserConfiguration;
                                       
 /**
  * An XNI-based parser configuration that can be used to parse HTML 
@@ -68,7 +68,7 @@ import org.apache.xerces.xni.parser.XMLParserConfiguration;
  */
 public class HTMLConfiguration 
     extends ParserConfigurationSettings
-    implements XMLParserConfiguration {
+    implements XMLPullParserConfiguration {
 
     //
     // Constants
@@ -132,6 +132,14 @@ public class HTMLConfiguration
 
     /** Locale. */
     protected Locale fLocale = Locale.getDefault();
+
+    // state
+
+    /** 
+     * Stream opened by parser. Therefore, must close stream manually upon
+     * termination of parsing.
+     */
+    protected boolean fCloseStream;
 
     // components
 
@@ -281,9 +289,11 @@ public class HTMLConfiguration
      * current entity, the scanner returns where it left off at the
      * time this entity source was pushed.
      * <p>
-     * <strong>Note:</strong>
-     * This functionality is experimental at this time and is
-     * subject to change in future releases of NekoHTML.
+     * <strong>Hint:</strong>
+     * To use this feature to insert the output of &lt;SCRIPT&gt;
+     * tags, remember to buffer the <em>entire</em> output of the
+     * processed instructions before pushing a new input source.
+     * Otherwise, events may appear out of sequence.
      *
      * @param inputSource The new input source to start scanning.
      */
@@ -381,11 +391,79 @@ public class HTMLConfiguration
 
     /** Parses a document. */
     public void parse(XMLInputSource source) throws XNIException, IOException {
-        reset();
-        fDocumentScanner.setInputSource(source);
-        fDocumentScanner.scanDocument(true);
+        setInputSource(source);
+        parse(true);
     } // parse(XMLInputSource)
 
+    //
+    // XMLPullParserConfiguration methods
+    //
+
+    // parsing
+
+    /**
+     * Sets the input source for the document to parse.
+     *
+     * @param inputSource The document's input source.
+     *
+     * @exception XMLConfigurationException Thrown if there is a 
+     *                        configuration error when initializing the
+     *                        parser.
+     * @exception IOException Thrown on I/O error.
+     *
+     * @see #parse(boolean)
+     */
+    public void setInputSource(XMLInputSource inputSource)
+        throws XMLConfigurationException, IOException {
+        reset();
+        fCloseStream = inputSource.getByteStream() == null &&
+                       inputSource.getCharacterStream() == null;
+        fDocumentScanner.setInputSource(inputSource);
+    } // setInputSource(XMLInputSource)
+
+    /**
+     * Parses the document in a pull parsing fashion.
+     *
+     * @param complete True if the pull parser should parse the
+     *                 remaining document completely.
+     *
+     * @returns True if there is more document to parse.
+     *
+     * @exception XNIException Any XNI exception, possibly wrapping 
+     *                         another exception.
+     * @exception IOException  An IO exception from the parser, possibly
+     *                         from a byte stream or character stream
+     *                         supplied by the parser.
+     *
+     * @see #setInputSource
+     */
+    public boolean parse(boolean complete) throws XNIException, IOException {
+        try {
+            boolean more = fDocumentScanner.scanDocument(complete);
+            if (!more) {
+                cleanup();
+            }
+            return more;
+        }
+        catch (XNIException e) {
+            cleanup();
+            throw e;
+        }
+        catch (IOException e) {
+            cleanup();
+            throw e;
+        }
+    } // parse(boolean):boolean
+
+    /**
+     * If the application decides to terminate parsing before the xml document
+     * is fully parsed, the application should call this method to free any
+     * resource allocated during parsing. For example, close all opened streams.
+     */
+    public void cleanup() {
+        fDocumentScanner.cleanup(fCloseStream);
+    } // cleanup()
+    
     //
     // Protected methods
     //

@@ -3,22 +3,25 @@
 <project default='all' basedir='.'>
 
  <!-- PROPERTIES -->
- <property name='version'   value='0.6.5'/>
+ <property name='version'   value='0.6.6'/>
  <property name='name'      value='nekohtml'/>
+ <property name='fullname'  value='${name}-${version}'/>
  <property name='Name'      value='NekoHTML ${version}'/>
  <property name='copyright' value='(C) Copyright 2002, Andy Clark. All rights reserved.'/>
   
- <property name='jarfile' value='${name}.jar'/>
- <property name='jarfileXni' value='${name}Xni.jar'/>
+ <property name='jarfile'        value='${name}.jar'/>
+ <property name='jarfileXni'     value='${name}Xni.jar'/>
  <property name='jarfileSamples' value='${name}Samples.jar'/>
- <property name='zipfile' value='${name}-${version}.zip'/>
- <property name='tarfile' value='${name}-${version}.tar'/>
- <property name='tgzfile' value='${name}-${version}.tar.gz'/>
+ <property name='jarfileTest'    value='${name}Test.jar'/>
 
- <property name='contents.misc'   value='LICENSE,LICENSE_apache,README_html,TODO_html,build.bat,build-html.xml'/>
+ <property name='zipfile' value='${fullname}.zip'/>
+ <property name='tarfile' value='${fullname}.tar'/>
+ <property name='tgzfile' value='${fullname}.tar.gz'/>
+
+ <property name='contents.misc'   value='LICENSE,LICENSE_apache,README_html,TODO_html,build.bat,build-html.xml,build-html-test.xml'/>
  <property name='contents.jars'   value='${jarfile},${jarfileXni},${jarfileSamples}'/>
  <property name='contents.source' value='src/html/META-INF/**,src/html/**/*.java,src/html/**/*.properties'/>
- <property name='contents.docs'   value='doc/style.css,doc/html/**,data/html/test*.html'/>
+ <property name='contents.docs'   value='doc/style.css,doc/html/**,data/html/test*.html,data/html/canonical/*'/>
  <property name='contents.libs'   value='lib/xercesMinimal.jar'/>
  <property name='contents' 
            value='${contents.misc},${contents.jars},${contents.source},${contents.docs},${contents.libs}'/>
@@ -55,21 +58,26 @@
  </target> 
 
  <target name='package' depends='jar,doc'>
-  <delete dir='bin/package'/>
-  <mkdir dir='bin/package'/>
-  <copy todir='bin/package'>
+  <mkdir dir='bin/package/${fullname}'/>
+  <copy todir='bin/package/${fullname}'>
    <fileset dir='.' includes='${contents},${contents.full}'/>
    <fileset dir='bin' includes='${contents.jars}'/>
   </copy>
-  <delete dir='bin/package'/>
  </target>
 
- <target name='zip' depends='jar,doc'>
-  <zip zipfile='${zipfile}' basedir='.' includes='${contents},${contents.full}'/>
+ <target name='package-nodir'>
+  <mkdir dir='bin/package-${name}'/>
+  <copy todir='bin/package-${name}'>
+   <fileset dir='bin/package/${fullname}' includes='**'/>
+  </copy>
  </target>
 
- <target name='tgz' depends='jar,doc'>
-  <tar tarfile='${tarfile}' basedir='.' includes='${contents},${contents.full}'/>
+ <target name='zip' depends='package'>
+  <zip zipfile='${zipfile}' basedir='bin/package' includes='${fullname}/**'/>
+ </target>
+
+ <target name='tgz' depends='package'>
+  <tar tarfile='${tarfile}' basedir='bin/package' includes='${fullname}/**'/>
   <gzip zipfile='${tgzfile}' src='${tarfile}'/>
   <delete file='${tarfile}'/>
  </target>
@@ -88,12 +96,30 @@
   <property name='docs.done' value='true'/>
  </target>
  
+ <target name='test' depends='jar'>
+  <javac srcdir='src/html' destdir='bin/html' includes='test/**'/>
+  <jar jarfile='${jarfileTest}' basedir='bin/html' 
+       includes='test/**/*.class,test/**/*.properties'/>
+  <mkdir dir='data/html/output'/>
+  <java classname='org.apache.tools.ant.Main' fork='true' failonerror='true'>
+   <classpath>
+    <pathelement path='${java.class.path}'/>
+    <pathelement location='${jarfile}'/>
+    <pathelement location='${jarfileTest}'/>
+   </classpath>
+   <arg value='-f'/>
+   <arg value='build-html-test.xml'/>
+  </java>
+ </target>
+
  <target name='clean'>
   <delete dir='bin/html' quiet='true'/>
   <delete dir='doc/html/javadoc' quiet='true'/>
   <delete quiet='true'>
    <fileset dir='.' includes='${name}*.jar,${name}*.zip,${name}*.tar.gz'/>
   </delete>
+  <delete dir='bin/package' quiet='true'/>
+  <delete dir='bin/package-${name}' quiet='true'/>
  </target>
 
 </project>
