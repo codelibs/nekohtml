@@ -5,6 +5,7 @@ package org.cyberneko.html;
 import java.io.IOException;
 import java.util.Locale;
                                                                                
+import org.apache.xerces.util.ParserConfigurationSettings;
 import org.apache.xerces.util.SymbolTable;
 import org.apache.xerces.xni.XMLDocumentHandler;
 import org.apache.xerces.xni.XMLDTDHandler;
@@ -24,6 +25,7 @@ import org.apache.xerces.xni.parser.XMLParserConfiguration;
  * @author Andy Clark
  */
 public class HTMLConfiguration 
+    extends ParserConfigurationSettings
     implements XMLParserConfiguration {
 
     //
@@ -56,15 +58,37 @@ public class HTMLConfiguration
     /** HTML tag balancer. */
     protected XMLDocumentFilter fTagBalancer = new HTMLTagBalancer();
 
-    // other components
+    //
+    // Constructors
+    //
 
-    // NOTE: This is a hack to get around a problem in the Xerces 2.0.0
-    //       AbstractSAXParser. If it uses a parser configuration that
-    //       does not have a SymbolTable, then it will remove *all* of
-    //       attributes.
-
-    /** Symbol table. */
-    protected SymbolTable fSymbolTable = new SymbolTable();
+    /** Default constructor. */
+    public HTMLConfiguration() {
+        String NAMESPACES = "http://xml.org/sax/features/namespaces";
+        String[] recognizedFeatures = {
+            // NOTE: These features should not be required but it causes a
+            //       problem if they're not there. This will be fixed in the
+            //       next release of Xerces.
+            NAMESPACES,
+            "http://xml.org/sax/features/validation",
+            "http://apache.org/xml/features/scanner/notify-builtin-refs",
+            "http://apache.org/xml/features/validation/schema/normalized-value",
+        };
+        addRecognizedFeatures(recognizedFeatures);
+        setFeature(NAMESPACES, true);
+        String SYMBOL_TABLE = "http://apache.org/xml/properties/internal/symbol-table";
+        String[] recognizedProperties = {
+            SYMBOL_TABLE,
+        };
+        addRecognizedProperties(recognizedProperties);
+        // NOTE: This is a hack to get around a problem in the Xerces 2.0.0
+        //       AbstractSAXParser. If it uses a parser configuration that
+        //       does not have a SymbolTable, then it will remove *all*
+        //       attributes. This will be fixed in the next release of 
+        //       Xerces.
+        SymbolTable symbolTable = new SymbolTable();
+        setProperty(SYMBOL_TABLE, symbolTable);
+    } // <init>()
 
     //
     // XMLParserConfiguration methods
@@ -129,33 +153,6 @@ public class HTMLConfiguration
     public Locale getLocale() {
         return fLocale;
     } // getLocale():Locale
-
-    /** Adds recognized features. */
-    public void addRecognizedFeatures(String[] featureIds) {}
-
-    /** Sets the state of a feature. */
-    public void setFeature(String featureId, boolean state) throws XMLConfigurationException {}
-
-    /** Returns a feature state. */
-    public boolean getFeature(String featureId) throws XMLConfigurationException { return false; }
-
-    /** Adds recognized properties. */
-    public void addRecognizedProperties(String[] propertyIds) {}
-
-    /** Sets the value of a property. */
-    public void setProperty(String propertyId, Object value) throws XMLConfigurationException {}
-
-    /** Returns a property value. */
-    public Object getProperty(String propertyId) throws XMLConfigurationException { 
-        // NOTE: This is a hack to get around a problem in the Xerces 2.0.0
-        //       AbstractSAXParser. If it uses a parser configuration that
-        //       does not have a SymbolTable, then it will remove *all* of
-        //       attributes.
-        if (propertyId.equals("http://apache.org/xml/properties/internal/symbol-table")) {
-            return fSymbolTable;
-        }
-        return null; 
-    } // getProperty(String):Object
 
     /** Parses a document. */
     public void parse(XMLInputSource source) throws XNIException, IOException {
