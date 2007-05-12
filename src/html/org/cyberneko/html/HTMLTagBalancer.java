@@ -73,17 +73,22 @@ public class HTMLTagBalancer
     /** Document fragment balancing only. */
     protected static final String DOCUMENT_FRAGMENT = "http://cyberneko.org/html/features/document-fragment";
 
+    /** Ignore outside content. */
+    protected static final String IGNORE_OUTSIDE_CONTENT = "http://cyberneko.org/html/features/balance-tags/ignore-outside-content";
+
     /** Recognized features. */
     private static final String[] RECOGNIZED_FEATURES = {
         AUGMENTATIONS,
         REPORT_ERRORS,
         DOCUMENT_FRAGMENT,
+        IGNORE_OUTSIDE_CONTENT,
     };
 
     /** Recognized features defaults. */
     private static final Boolean[] RECOGNIZED_FEATURES_DEFAULTS = {
         null,
         null,
+        Boolean.FALSE,
         Boolean.FALSE,
     };
 
@@ -145,6 +150,9 @@ public class HTMLTagBalancer
 
     /** Document fragment balancing only. */
     protected boolean fDocumentFragment;
+
+    /** Ignore outside content. */
+    protected boolean fIgnoreOutsideContent;
 
     // properties
 
@@ -403,20 +411,24 @@ public class HTMLTagBalancer
             }
             String ename = modifyName("html", fNamesElems);
             fQName.setValues(null, ename, ename, null);
-            startElement(fQName, null, synthesizedAugs());
-            endElement(fQName, synthesizedAugs());
+            if (fDocumentHandler != null) {
+                callStartElement(fQName, emptyAttributes(), synthesizedAugs());
+                callEndElement(fQName, synthesizedAugs());
+            }
         }
 
         // pop all remaining elements
         else {
             int length = fElementStack.top;
             for (int i = 0; i < length; i++) {
-                Info info = fElementStack.peek();
+                Info info = fElementStack.pop();
                 if (fReportErrors) {
                     String ename = info.qname.rawname;
                     fErrorReporter.reportWarning("HTML2001", new Object[]{ename});
                 }
-                endElement(info.qname, synthesizedAugs());
+                if (fDocumentHandler != null) {
+                    callEndElement(info.qname, synthesizedAugs());
+                }
             }
         }
 
@@ -531,7 +543,7 @@ public class HTMLTagBalancer
                     for (int j = length - 1; j >= i; j--) {
                         info = fElementStack.pop();
                         if (fDocumentHandler != null) {
-                            fDocumentHandler.endElement(info.qname, null);
+                            callEndElement(info.qname, null);
                         }
                     }
                     length = i;
@@ -569,7 +581,7 @@ public class HTMLTagBalancer
                 attrs = emptyAttributes();
             }
             if (fDocumentHandler != null) {
-                fDocumentHandler.startElement(elem, attrs, augs);
+                callStartElement(elem, attrs, augs);
             }
         }
 
@@ -740,6 +752,12 @@ public class HTMLTagBalancer
         // get element information
         HTMLElements.Element elem = HTMLElements.getElement(element.rawname);
 
+        // do we ignore outside content?
+        if (!fIgnoreOutsideContent &&
+            (elem.code == HTMLElements.BODY || elem.code == HTMLElements.HTML)) {
+            return;
+        }
+
         // check for end of document
         if (elem.code == HTMLElements.HTML) {
             fSeenRootElementEnd = true;
@@ -771,7 +789,7 @@ public class HTMLTagBalancer
                 fErrorReporter.reportWarning("HTML2007", new Object[]{ename,iname});
             }
             if (fDocumentHandler != null) {
-                fDocumentHandler.endElement(info.qname, augs);
+                callEndElement(info.qname, augs);
             }
         }
 
@@ -876,6 +894,19 @@ public class HTMLTagBalancer
     //
     // Protected methods
     //
+
+    /** Call document handler start element. */
+    protected final void callStartElement(QName element, XMLAttributes attrs,
+                                          Augmentations augs) 
+        throws XNIException {
+        fDocumentHandler.startElement(element, attrs, augs);
+    } // callStartElement(QName,XMLAttributes,Augmentations)
+
+    /** Call document handler end element. */
+    protected final void callEndElement(QName element, Augmentations augs) 
+        throws XNIException {
+        fDocumentHandler.endElement(element, augs);
+    } // callEndElement(QName,Augmentations)
 
     /**
      * Returns the depth of the open tag associated with the specified

@@ -365,11 +365,13 @@ public class HTMLScanner
             throw new IllegalArgumentException("pushed input source has no reader");
         }
         fCurrentEntityStack.push(fCurrentEntity);
+        String encoding = inputSource.getEncoding();
         String publicId = inputSource.getPublicId();
         String baseSystemId = inputSource.getBaseSystemId();
         String literalSystemId = inputSource.getSystemId();
         String expandedSystemId = expandSystemId(literalSystemId, baseSystemId);
-        fCurrentEntity = new CurrentEntity(reader, publicId, baseSystemId,
+        fCurrentEntity = new CurrentEntity(reader, encoding, 
+                                           publicId, baseSystemId,
                                            literalSystemId, expandedSystemId);
     } // pushInputSource(XMLInputSource)
 
@@ -419,6 +421,11 @@ public class HTMLScanner
     //
     // XMLLocator methods
     //
+
+    /** Returns the encoding. */
+    public String getEncoding() {
+        return fCurrentEntity != null ? fCurrentEntity.encoding : null;
+    } // getEncoding():String
 
     /** Returns the public identifier. */
     public String getPublicId() { 
@@ -565,6 +572,7 @@ public class HTMLScanner
         fJavaEncoding = fIANAEncoding;
 
         // get location information
+        String encoding = source.getEncoding();
         String publicId = source.getPublicId();
         String baseSystemId = source.getBaseSystemId();
         String literalSystemId = source.getSystemId();
@@ -580,7 +588,6 @@ public class HTMLScanner
             }
             fByteStream = new PlaybackInputStream(inputStream);
             String[] encodings = new String[2];
-            String encoding = source.getEncoding();
             if (encoding == null) {
                 fByteStream.detectEncoding(encodings);
             }
@@ -604,9 +611,11 @@ public class HTMLScanner
             }
             fIANAEncoding = encodings[0];
             fJavaEncoding = encodings[1];
+            encoding = fIANAEncoding;
             reader = new InputStreamReader(fByteStream, fJavaEncoding);
         }
-        fCurrentEntity = new CurrentEntity(reader, publicId, baseSystemId,
+        fCurrentEntity = new CurrentEntity(reader, encoding,
+                                           publicId, baseSystemId,
                                            literalSystemId, expandedSystemId);
 
         // set scanner and state
@@ -936,6 +945,123 @@ public class HTMLScanner
         return name;
     } // scanName():String
 
+    /** Scans an entity reference. */
+    protected int scanEntityRef(XMLStringBuffer str, boolean content) 
+        throws IOException {
+        str.clear();
+        str.append('&');
+        while (true) {
+            int c = read();
+            if (c == ';') {
+                str.append(';');
+                break;
+            }
+            if (!Character.isLetterOrDigit((char)c) && c != '#') {
+                if (fReportErrors) {
+                    fErrorReporter.reportWarning("HTML1004", null);
+                }
+                fCurrentEntity.offset--;
+                fCurrentEntity.columnNumber--;
+                if (content && fDocumentHandler != null && fElementCount >= fElementDepth) {
+                    fEndLineNumber = fCurrentEntity.lineNumber;
+                    fEndColumnNumber = fCurrentEntity.columnNumber;
+                    fDocumentHandler.characters(str, locationAugs());
+                }
+                return -1;
+            }
+            if (c == -1) {
+                if (fReportErrors) {
+                    fErrorReporter.reportWarning("HTML1004", null);
+                }
+                if (content && fDocumentHandler != null && fElementCount >= fElementDepth) {
+                    fEndLineNumber = fCurrentEntity.lineNumber;
+                    fEndColumnNumber = fCurrentEntity.columnNumber;
+                    fDocumentHandler.characters(str, locationAugs());
+                }
+                return -1;
+            }
+            str.append((char)c);
+        }
+        if (str.length == 1) {
+            if (content && fDocumentHandler != null && fElementCount >= fElementDepth) {
+                fEndLineNumber = fCurrentEntity.lineNumber;
+                fEndColumnNumber = fCurrentEntity.columnNumber;
+                fDocumentHandler.characters(str, locationAugs());
+            }
+            return -1;
+        }
+
+        String name = str.toString().substring(1, str.length-1);
+        if (name.startsWith("#")) {
+            int value = -1;
+            try {
+                if (name.startsWith("#x")) {
+                    value = Integer.parseInt(name.substring(2), 16);
+                }
+                else {
+                    value = Integer.parseInt(name.substring(1));
+                }
+                if (content && fDocumentHandler != null && fElementCount >= fElementDepth) {
+                    fEndLineNumber = fCurrentEntity.lineNumber;
+                    fEndColumnNumber = fCurrentEntity.columnNumber;
+                    if (fNotifyCharRefs) {
+                        XMLResourceIdentifier id = resourceId();
+                        String encoding = null;
+                        fDocumentHandler.startGeneralEntity(name, id, encoding, locationAugs());
+                    }
+                    str.clear();
+                    str.append((char)value);
+                    fDocumentHandler.characters(str, locationAugs());
+                    if (fNotifyCharRefs) {
+                        fDocumentHandler.endGeneralEntity(name, locationAugs());
+                    }
+                }
+            }
+            catch (NumberFormatException e) {
+                if (fReportErrors) {
+                    fErrorReporter.reportError("HTML1005", new Object[]{name});
+                }
+                if (content && fDocumentHandler != null && fElementCount >= fElementDepth) {
+                    fEndLineNumber = fCurrentEntity.lineNumber;
+                    fEndColumnNumber = fCurrentEntity.columnNumber;
+                    fDocumentHandler.characters(str, locationAugs());
+                }
+            }
+            return value;
+        }
+
+        int c = HTMLEntities.get(name);
+        if (c == -1) {
+            if (fReportErrors) {
+                fErrorReporter.reportWarning("HTML1006", new Object[]{name});
+            }
+            if (content && fDocumentHandler != null && fElementCount >= fElementDepth) {
+                fEndLineNumber = fCurrentEntity.lineNumber;
+                fEndColumnNumber = fCurrentEntity.columnNumber;
+                fDocumentHandler.characters(str, locationAugs());
+            }
+            return -1;
+        }
+        if (content && fDocumentHandler != null && fElementCount >= fElementDepth) {
+            fEndLineNumber = fCurrentEntity.lineNumber;
+            fEndColumnNumber = fCurrentEntity.columnNumber;
+            boolean notify = fNotifyHtmlBuiltinRefs || (fNotifyXmlBuiltinRefs && builtinXmlRef(name));
+            if (notify) {
+                XMLResourceIdentifier id = resourceId();
+                String encoding = null;
+                fDocumentHandler.startGeneralEntity(name, id, encoding, locationAugs());
+            }
+            str.clear();
+            str.append((char)c);
+            fDocumentHandler.characters(str, locationAugs());
+            if (notify) {
+                fDocumentHandler.endGeneralEntity(name, locationAugs());
+            }
+        }
+        return c;
+
+    } // scanEntityRef(XMLStringBuffer,boolean):int
+
     /** Skips markup. */
     protected boolean skipMarkup(boolean balance) throws IOException {
         if (DEBUG_BUFFER) {
@@ -1254,6 +1380,9 @@ public class HTMLScanner
         /** Character stream. */
         public Reader stream;
 
+        /** Encoding. */
+        public String encoding;
+
         /** Public identifier. */
         public String publicId;
 
@@ -1288,15 +1417,16 @@ public class HTMLScanner
         //
 
         /** Constructs an entity from the specified stream. */
-        public CurrentEntity(Reader stream, String publicId, String baseSystemId,
+        public CurrentEntity(Reader stream, String encoding, 
+                             String publicId, String baseSystemId,
                              String literalSystemId, String expandedSystemId) {
             this.stream = stream;
+            this.encoding = encoding;
             this.publicId = publicId;
             this.baseSystemId = baseSystemId;
             this.literalSystemId = literalSystemId;
             this.expandedSystemId = expandedSystemId;
         } // <init>(Reader,String,String,String,String)
-
 
     } // class CurrentEntity
 
@@ -1493,123 +1623,6 @@ public class HTMLScanner
         //
         // Protected methods
         //
-
-        /** Scans an entity reference. */
-        protected int scanEntityRef(XMLStringBuffer str, boolean content) 
-            throws IOException {
-            str.clear();
-            str.append('&');
-            while (true) {
-                int c = read();
-                if (c == ';') {
-                    str.append(';');
-                    break;
-                }
-                if (!Character.isLetterOrDigit((char)c) && c != '#') {
-                    if (fReportErrors) {
-                        fErrorReporter.reportWarning("HTML1004", null);
-                    }
-                    fCurrentEntity.offset--;
-                    fCurrentEntity.columnNumber--;
-                    if (content && fDocumentHandler != null && fElementCount >= fElementDepth) {
-                        fEndLineNumber = fCurrentEntity.lineNumber;
-                        fEndColumnNumber = fCurrentEntity.columnNumber;
-                        fDocumentHandler.characters(str, locationAugs());
-                    }
-                    return -1;
-                }
-                if (c == -1) {
-                    if (fReportErrors) {
-                        fErrorReporter.reportWarning("HTML1004", null);
-                    }
-                    if (content && fDocumentHandler != null && fElementCount >= fElementDepth) {
-                        fEndLineNumber = fCurrentEntity.lineNumber;
-                        fEndColumnNumber = fCurrentEntity.columnNumber;
-                        fDocumentHandler.characters(str, locationAugs());
-                    }
-                    return -1;
-                }
-                str.append((char)c);
-            }
-            if (str.length == 1) {
-                if (content && fDocumentHandler != null && fElementCount >= fElementDepth) {
-                    fEndLineNumber = fCurrentEntity.lineNumber;
-                    fEndColumnNumber = fCurrentEntity.columnNumber;
-                    fDocumentHandler.characters(str, locationAugs());
-                }
-                return -1;
-            }
-
-            String name = str.toString().substring(1, str.length-1);
-            if (name.startsWith("#")) {
-                int value = -1;
-                try {
-                    if (name.startsWith("#x")) {
-                        value = Integer.parseInt(name.substring(2), 16);
-                    }
-                    else {
-                        value = Integer.parseInt(name.substring(1));
-                    }
-                    if (content && fDocumentHandler != null && fElementCount >= fElementDepth) {
-                        fEndLineNumber = fCurrentEntity.lineNumber;
-                        fEndColumnNumber = fCurrentEntity.columnNumber;
-                        if (fNotifyCharRefs) {
-                            XMLResourceIdentifier id = resourceId();
-                            String encoding = null;
-                            fDocumentHandler.startGeneralEntity(name, id, encoding, locationAugs());
-                        }
-                        str.clear();
-                        str.append((char)value);
-                        fDocumentHandler.characters(str, locationAugs());
-                        if (fNotifyCharRefs) {
-                            fDocumentHandler.endGeneralEntity(name, locationAugs());
-                        }
-                    }
-                }
-                catch (NumberFormatException e) {
-                    if (fReportErrors) {
-                        fErrorReporter.reportError("HTML1005", new Object[]{name});
-                    }
-                    if (content && fDocumentHandler != null && fElementCount >= fElementDepth) {
-                        fEndLineNumber = fCurrentEntity.lineNumber;
-                        fEndColumnNumber = fCurrentEntity.columnNumber;
-                        fDocumentHandler.characters(str, locationAugs());
-                    }
-                }
-                return value;
-            }
-
-            int c = HTMLEntities.get(name);
-            if (c == -1) {
-                if (fReportErrors) {
-                    fErrorReporter.reportWarning("HTML1006", new Object[]{name});
-                }
-                if (content && fDocumentHandler != null && fElementCount >= fElementDepth) {
-                    fEndLineNumber = fCurrentEntity.lineNumber;
-                    fEndColumnNumber = fCurrentEntity.columnNumber;
-                    fDocumentHandler.characters(str, locationAugs());
-                }
-                return -1;
-            }
-            if (content && fDocumentHandler != null && fElementCount >= fElementDepth) {
-                fEndLineNumber = fCurrentEntity.lineNumber;
-                fEndColumnNumber = fCurrentEntity.columnNumber;
-                boolean notify = fNotifyHtmlBuiltinRefs || (fNotifyXmlBuiltinRefs && builtinXmlRef(name));
-                if (notify) {
-                    XMLResourceIdentifier id = resourceId();
-                    String encoding = null;
-                    fDocumentHandler.startGeneralEntity(name, id, encoding, locationAugs());
-                }
-                str.clear();
-                str.append((char)c);
-                fDocumentHandler.characters(str, locationAugs());
-                if (notify) {
-                    fDocumentHandler.endGeneralEntity(name, locationAugs());
-                }
-            }
-            return c;
-        
-        } // scanEntityRef(XMLStringBuffer,boolean):int
 
         /** Scans characters. */
         protected void scanCharacters() throws IOException {
@@ -2125,6 +2138,9 @@ public class HTMLScanner
         /** True if &lt;script&gt; element. */
         protected boolean fScript;
 
+        /** True if &lt;textarea&gt; element. */
+        protected boolean fTextarea;
+
         // temp vars
 
         /** A qualified name. */
@@ -2141,6 +2157,7 @@ public class HTMLScanner
         public Scanner setElementName(String ename) {
             fElementName = ename;
             fScript = fElementName.equalsIgnoreCase("SCRIPT");
+            fTextarea = fElementName.equalsIgnoreCase("TEXTAREA");
             return this;
         } // setElementName(String):Scanner
 
@@ -2204,6 +2221,14 @@ public class HTMLScanner
                                     fStringBuffer.append((char)c);
                                 }
                             }
+                            else if (c == '&') {
+                                if (fTextarea) {
+                                    scanEntityRef(fStringBuffer, true);
+                                    continue;
+                                }
+                                fStringBuffer.clear();
+                                fStringBuffer.append('&');
+                            }
                             else if (c == -1) {
                                 if (fReportErrors) {
                                     fErrorReporter.reportError("HTML1007", null);
@@ -2246,8 +2271,8 @@ public class HTMLScanner
             boolean strip = fScript && fStripCommentDelims;
             while (true) {
                 int c = read();
-                if (c == -1 || (!comment && c == '<')) {
-                    if (c == '<') {
+                if (c == -1 || (!comment && (c == '<' || c == '&'))) {
+                    if (c != -1) {
                         fCurrentEntity.offset--;
                         fCurrentEntity.columnNumber--;
                     }
