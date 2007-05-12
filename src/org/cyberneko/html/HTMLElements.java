@@ -129,9 +129,9 @@ public class HTMLElements {
     public static final short SUP = SUB+1;
     public static final short TABLE = SUP+1;
     public static final short TBODY = TABLE+1;
-    public static final short TEXTAREA = TBODY+1;
-    public static final short TD = TEXTAREA+1;
-    public static final short TFOOT = TD+1;
+    public static final short TD = TBODY+1;
+    public static final short TEXTAREA = TD+1;
+    public static final short TFOOT = TEXTAREA+1;
     public static final short TH = TFOOT+1;
     public static final short THEAD = TH+1;
     public static final short TITLE = THEAD+1;
@@ -319,10 +319,10 @@ public class HTMLElements {
         ELEMENTS.addElement(new Element(OBJECT, "OBJECT", 0, BODY, null));
         // OL - - (LI)+
         ELEMENTS.addElement(new Element(OL, "OL", Element.BLOCK, BODY, null));
-        // OPTION - O (#PCDATA)
-        ELEMENTS.addElement(new Element(OPTION, "OPTION", 0, SELECT, new short[]{OPTION}));
         // OPTGROUP - - (OPTION)+
         ELEMENTS.addElement(new Element(OPTGROUP, "OPTGROUP", 0, SELECT, new short[]{OPTION}));
+        // OPTION - O (#PCDATA)
+        ELEMENTS.addElement(new Element(OPTION, "OPTION", 0, SELECT, new short[]{OPTION}));
         // P - O (%inline;)*
         ELEMENTS.addElement(new Element(P, "P", 0, BODY, new short[]{P}));
         // PARAM - O EMPTY
@@ -374,21 +374,21 @@ public class HTMLElements {
         // TABLE - - (CAPTION?, (COL*|COLGROUP*), THEAD?, TFOOT?, TBODY+)
         ELEMENTS.addElement(new Element(TABLE, "TABLE", Element.BLOCK|Element.CONTAINER, BODY, null));
         // TBODY O O (TR)+
-        ELEMENTS.addElement(new Element(TBODY, "TBODY", 0, TABLE, new short[]{TD,THEAD,TR}));
-        // TEXTAREA - - (#PCDATA)
-        ELEMENTS.addElement(new Element(TEXTAREA, "TEXTAREA", Element.SPECIAL, FORM, null));
+        ELEMENTS.addElement(new Element(TBODY, "TBODY", 0, TABLE, new short[]{THEAD,TD,TH,TR}));
         // TD - O (%flow;)*
         ELEMENTS.addElement(new Element(TD, "TD", 0, TABLE, new short[]{TD,TH}));
+        // TEXTAREA - - (#PCDATA)
+        ELEMENTS.addElement(new Element(TEXTAREA, "TEXTAREA", Element.SPECIAL, FORM, null));
         // TFOOT - O (TR)+
-        ELEMENTS.addElement(new Element(TFOOT, "TFOOT", 0, TABLE, new short[]{THEAD,TBODY,TD,TR}));
+        ELEMENTS.addElement(new Element(TFOOT, "TFOOT", 0, TABLE, new short[]{THEAD,TBODY,TD,TH,TR}));
         // TH - O (%flow;)*
-        ELEMENTS.addElement(new Element(TH, "TH", 0, TR, null));
+        ELEMENTS.addElement(new Element(TH, "TH", 0, TR, new short[]{TD,TH}));
         // THEAD - O (TR)+
         ELEMENTS.addElement(new Element(THEAD, "THEAD", 0, TABLE, null));
         // TITLE - - (#PCDATA) -(%head.misc;)
         ELEMENTS.addElement(new Element(TITLE, "TITLE", 0, new short[]{HEAD,BODY}, null));
         // TR - O (TH|TD)+
-        ELEMENTS.addElement(new Element(TR, "TR", Element.BLOCK, TABLE, new short[]{TD,TR}));
+        ELEMENTS.addElement(new Element(TR, "TR", Element.BLOCK, TABLE, new short[]{TD,TH,TR}));
         // TT - - (%inline;)*
         ELEMENTS.addElement(new Element(TT, "TT", Element.INLINE, BODY, null));
         // U, 
