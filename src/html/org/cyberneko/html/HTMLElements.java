@@ -258,7 +258,7 @@ public class HTMLElements {
             // FIELDSET - - (#PCDATA,LEGEND,(%flow;)*)
             new Element(FIELDSET, "FIELDSET", 0, BODY, null),
             // FONT
-            new Element(FONT, "FONT", 0, BODY, null),
+            new Element(FONT, "FONT", Element.CONTAINER, BODY, null),
             // FORM - - (%block;|SCRIPT)+ -(FORM)
             new Element(FORM, "FORM", Element.CONTAINER, new short[]{BODY,TD,P,DIV}, new short[]{FORM,BUTTON}),
             // FRAME - O EMPTY
@@ -397,7 +397,7 @@ public class HTMLElements {
             // SPACER
             new Element(SPACER, "SPACER", Element.EMPTY, BODY, null),
             // SPAN - - (%inline;)*
-            new Element(SPAN, "SPAN", 0, BODY, null),
+            new Element(SPAN, "SPAN", Element.CONTAINER, BODY, null),
             // STRIKE
             new Element(STRIKE, "STRIKE", Element.INLINE, BODY, null),
             // STRONG - - (%inline;)*
@@ -415,13 +415,13 @@ public class HTMLElements {
             // TBODY O O (TR)+
             new Element(TBODY, "TBODY", 0, TABLE, new short[]{THEAD,TD,TH,TR,COLGROUP}),
             // TD - O (%flow;)*
-            new Element(TD, "TD", 0, TR, new short[]{TD,TH}),
+            new Element(TD, "TD", 0, TR, TABLE, new short[]{TD,TH}),
             // TEXTAREA - - (#PCDATA)
             new Element(TEXTAREA, "TEXTAREA", Element.SPECIAL, BODY, null),
             // TFOOT - O (TR)+
             new Element(TFOOT, "TFOOT", 0, TABLE, new short[]{THEAD,TBODY,TD,TH,TR}),
             // TH - O (%flow;)*
-            new Element(TH, "TH", 0, TR, new short[]{TD,TH}),
+            new Element(TH, "TH", 0, TR, TABLE, new short[]{TD,TH}),
             // THEAD - O (TR)+
             new Element(THEAD, "THEAD", 0, TABLE, new short[]{COLGROUP}),
             // TITLE - - (#PCDATA) -(%head.misc;)
@@ -581,6 +581,9 @@ public class HTMLElements {
         /** Parent elements. */
         public Element[] parent;
 
+        /** The bounding element code. */
+        public short bounds;
+
         /** List of elements this element can close. */
         public short[] closes;
 
@@ -599,8 +602,22 @@ public class HTMLElements {
          */
         public Element(short code, String name, int flags, 
                        short parent, short[] closes) {
-            this(code, name, flags, new short[]{parent}, closes);
-        } // <init>(short,String,int,short,short[])
+            this(code, name, flags, new short[]{parent}, (short)-1, closes);
+        } // <init>(short,String,int,short,short[]);
+
+        /** 
+         * Constructs an element object.
+         *
+         * @param code The element code.
+         * @param name The element name.
+         * @param flags Informational flags
+         * @param parent Natural closing parent name.
+         * @param closes List of elements this element can close.
+         */
+        public Element(short code, String name, int flags, 
+                       short parent, short bounds, short[] closes) {
+            this(code, name, flags, new short[]{parent}, bounds, closes);
+        } // <init>(short,String,int,short,short,short[])
 
         /** 
          * Constructs an element object.
@@ -613,13 +630,28 @@ public class HTMLElements {
          */
         public Element(short code, String name, int flags, 
                        short[] parent, short[] closes) {
+            this(code, name, flags, parent, (short)-1, closes);
+        } // <init>(short,String,int,short[],short[])
+
+        /** 
+         * Constructs an element object.
+         *
+         * @param code The element code.
+         * @param name The element name.
+         * @param flags Informational flags
+         * @param parents Natural closing parent names.
+         * @param closes List of elements this element can close.
+         */
+        public Element(short code, String name, int flags, 
+                       short[] parent, short bounds, short[] closes) {
             this.code = code;
             this.name = name;
             this.flags = flags;
             this.parentCodes = parent;
             this.parent = null;
+            this.bounds = bounds;
             this.closes = closes;
-        } // <init>(short,String,int,short[],short[])
+        } // <init>(short,String,int,short[],short,short[])
 
         //
         // Public methods

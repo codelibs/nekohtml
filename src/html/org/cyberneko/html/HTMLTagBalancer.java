@@ -193,6 +193,9 @@ public class HTMLTagBalancer
      */
     protected boolean fSeenRootElementEnd;
 
+    /** True if seen &lt;head&lt; element. */
+    protected boolean fSeenHeadElement;
+
     /** True if seen &lt;body&lt; element. */
     protected boolean fSeenBodyElement;
 
@@ -325,6 +328,7 @@ public class HTMLTagBalancer
         fElementStack.top = 0;
         fSeenRootElement = false;
         fSeenRootElementEnd = false;
+        fSeenHeadElement = false;
         fSeenBodyElement = false;
 
         // pass on event
@@ -465,7 +469,20 @@ public class HTMLTagBalancer
 
         // get element information
         HTMLElements.Element element = HTMLElements.getElement(elem.rawname);
-        fSeenBodyElement = fSeenBodyElement || element.code == HTMLElements.BODY;
+
+        // ignore multiple head  and body elements
+        if (element.code == HTMLElements.HEAD) {
+            if (fSeenHeadElement) {
+                return;
+            }
+            fSeenHeadElement = true;
+        }
+        if (element.code == HTMLElements.BODY) {
+            if (fSeenBodyElement) {
+                return;
+            }
+            fSeenBodyElement = true;
+        }
 
         // check proper parent
         if (element.parent != null) {
@@ -482,11 +499,11 @@ public class HTMLTagBalancer
             else {
                 HTMLElements.Element pelement = element.parent[0];
                 if (pelement.code != HTMLElements.HEAD || (!fSeenBodyElement && !fDocumentFragment)) {
-                    int depth = getParentDepth(element.parent);
+                    int depth = getParentDepth(element.parent, element.bounds);
                     if (depth == -1) {
                         String pname = pelement.name;
                         pname = modifyName(pname, fNamesElems);
-                        int pdepth = getParentDepth(pelement.parent);
+                        int pdepth = getParentDepth(pelement.parent, pelement.bounds);
                         if (pdepth != -1) {
                             for (int i = 1; i < pdepth; i++) {
                                 Info info = fElementStack.peek();
@@ -936,9 +953,12 @@ public class HTMLTagBalancer
      *
      * @param parents The parent elements.
      */
-    protected int getParentDepth(HTMLElements.Element[] parents) {
+    protected int getParentDepth(HTMLElements.Element[] parents, short bounds) {
         for (int i = fElementStack.top - 1; i >= 0; i--) {
             Info info = fElementStack.data[i];
+            if (info.element.code == bounds) {
+                break;
+            }
             for (int j = 0; j < parents.length; j++) {
                 if (info.element.code == parents[j].code) {
                     return fElementStack.top - i;
@@ -946,7 +966,7 @@ public class HTMLTagBalancer
             }
         }
         return -1;
-    } // getParentDepth(HTMLElements.Element[]):int
+    } // getParentDepth(HTMLElements.Element[],short):int
 
     /** Returns a set of empty attributes. */
     protected final XMLAttributes emptyAttributes() {
