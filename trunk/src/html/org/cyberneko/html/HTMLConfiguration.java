@@ -1,5 +1,5 @@
 /* 
- * (C) Copyright 2002, Andy Clark.  All rights reserved.
+ * (C) Copyright 2002-2003, Andy Clark.  All rights reserved.
  *
  * This file is distributed under an Apache style license. Please
  * refer to the LICENSE file for specific details.
@@ -173,6 +173,9 @@ public class HTMLConfiguration
     /** Parser version is Xerces 2.0.1. */
     protected static boolean XERCES_2_0_1 = false;
 
+    /** Parser version is XML4J 4.0.x. */
+    protected static boolean XML4J_4_0_x = false;
+
     //
     // Static initializer
     //
@@ -185,6 +188,7 @@ public class HTMLConfiguration
             String versionStr = String.valueOf(field.get(version));
             XERCES_2_0_0 = versionStr.equals("Xerces-J 2.0.0");
             XERCES_2_0_1 = versionStr.equals("Xerces-J 2.0.1");
+            XML4J_4_0_x = versionStr.startsWith("XML4J 4.0.");
         }
         catch (Throwable e) {
             // ignore
@@ -237,7 +241,7 @@ public class HTMLConfiguration
         }
         
         // HACK: Xerces 2.0.1
-        if (XERCES_2_0_0 || XERCES_2_0_1) {
+        if (XERCES_2_0_0 || XERCES_2_0_1 || XML4J_4_0_x) {
             // NOTE: These features should not be required but it causes a
             //       problem if they're not there. This should be fixed in 
             //       subsequent releases of Xerces.
