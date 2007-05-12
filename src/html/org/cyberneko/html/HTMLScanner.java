@@ -966,9 +966,6 @@ public class HTMLScanner
                         fCurrentEntity.offset++;
                         offset++;
                     }
-                    else {
-                        newlines++;
-                    }
                 }
                 else if (c == '\n') {
                     newlines++;
@@ -987,6 +984,13 @@ public class HTMLScanner
             } while (fCurrentEntity.offset < fCurrentEntity.length - 1);
             fCurrentEntity.lineNumber += newlines;
             fCurrentEntity.columnNumber = 1;
+        }
+        if (DEBUG_BUFFER) {
+            System.out.print(")skipNewlines: ");
+            printBuffer();
+            System.out.print(" -> ");
+            System.out.print(newlines);
+            System.out.println();
         }
         return newlines;
     } // skipNewlines():int
@@ -1126,10 +1130,10 @@ public class HTMLScanner
         public String expandedSystemId;
 
         /** Line number. */
-        public int lineNumber;
+        public int lineNumber = 1;
 
         /** Column number. */
-        public int columnNumber;
+        public int columnNumber = 1;
 
         // buffer
 

@@ -1,10 +1,11 @@
 <title>NekoHTML | Change History</title>
-<link rel=stylesheet type=text/css href=style.css>
+<link rel=stylesheet type=text/css href=../style.css>
 
 <h1>Change History</h1>
 <div class='navbar'>
+[<a href='../index.html'>Home</a>]
 [
-<a href='index.html'>Home</a>
+<a href='index.html'>Top</a>
 |
 <a href='usage.html'>Usage</a>
 |
@@ -20,18 +21,33 @@ Changes
 
 <h2>Releases</h2>
 <dl>
+ <dt>Version 0.6.4 (15 Jun 2002)
+     [<a href='http://www.apache.org/~andyc/neko/nekohtml-0.6.4.zip'>zip</a>]
+     [<a href='http://www.apache.org/~andyc/neko/nekohtml-0.6.4.tar.gz'>tgz</a>]
+ <dd>Re-organized package contents for integration into the CyberNeko
+       Tools for XNI package;
+     fixed table closing bug reported by Oskar Liljeblad;
+     fixed newline bug reported by OtisG;
+     and
+     fixed line counting bug reported by Donald Ball.
  <dt>Version 0.6.3 (29 May 2002)
+     [<a href='http://www.apache.org/~andyc/neko/nekohtml-0.6.3.zip'>zip</a>]
+     [<a href='http://www.apache.org/~andyc/neko/nekohtml-0.6.3.tar.gz'>tgz</a>]
  <dd>Fixed bug in handling of &lt;th&gt; elements reported by
        Oskar Liljeblad;
      and
      fixed various tag-balancing problems.
  <dt>Version 0.6.2 (26 May 2002)
+     [<a href='http://www.apache.org/~andyc/neko/nekohtml-0.6.2.zip'>zip</a>]
+     [<a href='http://www.apache.org/~andyc/neko/nekohtml-0.6.2.tar.gz'>tgz</a>]
  <dd>Changed scanner behavior as requested by Alexey Shananin to 
        report malformed start elements (e.g. &lt;...&gt;) as 
        characters 
      and
      fixed tag balancing bug introduced in previous version. Oops!
  <dt>Version 0.6.1 (23 May 2002)
+     [<a href='http://www.apache.org/~andyc/neko/nekohtml-0.6.1.zip'>zip</a>]
+     [<a href='http://www.apache.org/~andyc/neko/nekohtml-0.6.1.tar.gz'>tgz</a>]
  <dd>Changed tag balancer behavior to swallow events after the close 
        of the &lt;html&gt; tag to ensure that the document stream 
        remains well-formed;
@@ -39,6 +55,8 @@ Changes
      and
      improved tag balancer performance.
  <dt>Version 0.6 (12 May 2002)
+     [<a href='http://www.apache.org/~andyc/neko/nekohtml-0.6.zip'>zip</a>]
+     [<a href='http://www.apache.org/~andyc/neko/nekohtml-0.6.tar.gz'>tgz</a>]
  <dd>Added property to allow custom document filters to be appended
        to the default NekoHTML parser pipeline;
      added convenience filters for serializing HTML documents and
@@ -56,6 +74,8 @@ Changes
      and
      re-organized and added new documentation.
  <dt>Version 0.5 (07 May 2002)
+     [<a href='http://www.apache.org/~andyc/neko/nekohtml-0.5.zip'>zip</a>]
+     [<a href='http://www.apache.org/~andyc/neko/nekohtml-0.5.tar.gz'>tgz</a>]
  <dd>Fixed some location reporting information bugs and added 
        feature to report character boundaries of events via the
        associated augmentations object;
@@ -64,6 +84,8 @@ Changes
      added features to notify handlers of start and end of character
        and built-in XML and HTML entity references.
  <dt>Version 0.4.1 (03 May 2002)
+     [<a href='http://www.apache.org/~andyc/neko/nekohtml-0.4.1.zip'>zip</a>]
+     [<a href='http://www.apache.org/~andyc/neko/nekohtml-0.4.1.tar.gz'>tgz</a>]
  <dd>Fixed some unquoted attribute value scanning bugs reported
        by Xiaowei Jiang;
      fixed hack for Xerces 2.0.1 reported by Ron Cemer;
@@ -72,6 +94,8 @@ Changes
      and
      celebrated opening of the Spider-Man movie.
  <dt>Version 0.4 (14 Apr 2002)
+     [<a href='http://www.apache.org/~andyc/neko/nekohtml-0.4.zip'>zip</a>]
+     [<a href='http://www.apache.org/~andyc/neko/nekohtml-0.4.tar.gz'>tgz</a>]
  <dd>Added properties to control case of element and attribute names;
      changed behavior of parser so that only known HTML elements
        have their names modified according to the properties &mdash; all
@@ -86,36 +110,54 @@ Changes
      fixed element information so that more elements are properly
      scanned as "special".
  <dt>Version 0.3.3 (02 Apr 2002)
+     [<a href='http://www.apache.org/~andyc/neko/nekohtml-0.3.3.zip'>zip</a>]
+     [<a href='http://www.apache.org/~andyc/neko/nekohtml-0.3.3.tar.gz'>tgz</a>]
  <dd>Separated <tt>META-INF/services/*</tt> files to separate Jar
      so that HTML parser configuration selection can be controlled 
      more explicitly; added DOM and SAX parser classes for 
      convenience; and fixed bug so that parser now obeys the
      encoding specified in the input source.
  <dt>Version 0.3.2 (15 Mar 2002)
+     [<a href='http://www.apache.org/~andyc/neko/nekohtml-0.3.2.zip'>zip</a>]
+     [<a href='http://www.apache.org/~andyc/neko/nekohtml-0.3.2.tar.gz'>tgz</a>]
  <dd>Fixed problem with bare &lt;input&gt; elements appearing outside
      of &lt;form&gt; tag.
  <dt>Version 0.3.1 (07 Mar 2002)
+     [<a href='http://www.apache.org/~andyc/neko/nekohtml-0.3.1.zip'>zip</a>]
+     [<a href='http://www.apache.org/~andyc/neko/nekohtml-0.3.1.tar.gz'>tgz</a>]
  <dd>Fixed handling of bare ampersands in content and attribute
      values.
  <dt>Version 0.3 (25 Feb 2002)
+     [<a href='http://www.apache.org/~andyc/neko/nekohtml-0.3.zip'>zip</a>]
+     [<a href='http://www.apache.org/~andyc/neko/nekohtml-0.3.tar.gz'>tgz</a>]
  <dd>Changed license to an Apache style license and fixed a
      few bugs.
  <dt>Version 0.2.3 (19 Feb 2002)
+     [<a href='http://www.apache.org/~andyc/neko/nekohtml-0.2.3.zip'>zip</a>]
+     [<a href='http://www.apache.org/~andyc/neko/nekohtml-0.2.3.tar.gz'>tgz</a>]
  <dd>Nested tables bug fix.
  <dt>Version 0.2.2 (17 Feb 2002)
+     [<a href='http://www.apache.org/~andyc/neko/nekohtml-0.2.2.zip'>zip</a>]
+     [<a href='http://www.apache.org/~andyc/neko/nekohtml-0.2.2.tar.gz'>tgz</a>]
  <dd>More bug fixes to allow the parser to be used with Xalan
      2.3.0. The parser wasn't keeping track of features and
      properties and without namespaces turned on, Xalan would
      not correctly transform the SAX events emitted using 
      NekoHTML.
  <dt>Version 0.2.1 (16 Feb 2002)
+     [<a href='http://www.apache.org/~andyc/neko/nekohtml-0.2.1.zip'>zip</a>]
+     [<a href='http://www.apache.org/~andyc/neko/nekohtml-0.2.1.tar.gz'>tgz</a>]
  <dd>Minor bug fix to work around problem in Xerces 2.0.0 SAX 
      parser that drops attributes when parser configuration 
      doesn't have a symbol table.
  <dt>Version 0.2 (14 Feb 2002)
+     [<a href='http://www.apache.org/~andyc/neko/nekohtml-0.2.zip'>zip</a>]
+     [<a href='http://www.apache.org/~andyc/neko/nekohtml-0.2.tar.gz'>tgz</a>]
  <dd>Adding support for UTF-8, UTF-16, and other 8-bit encodings
      supported by Java.
  <dt>Version 0.1 (04 Feb 2002)
+     [<a href='http://www.apache.org/~andyc/neko/nekohtml-0.1.zip'>zip</a>]
+     [<a href='http://www.apache.org/~andyc/neko/nekohtml-0.1.tar.gz'>tgz</a>]
  <dd>Initial writing.
 </dl>
 

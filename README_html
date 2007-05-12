@@ -1,0 +1,28 @@
+NekoHTML Readme
+===============
+
+Building
+--------
+
+You can build NekoHTML with the supplied build.bat file by
+typing the following:
+
+  > build -f build-html.xml (target ...)
+
+The default target will build the entire package.
+
+To build NekoHTML, you need Ant and Xerces2. The first time 
+you try to build, it will tell you is required and where to 
+download the necessary packages.
+
+Documentation
+-------------
+
+The documentation for NekoHTML is located at the following URL:
+
+  doc/html/index.html
+
+Contact Information
+-------------------
+
+Andy Clark <andyc@apache.org>

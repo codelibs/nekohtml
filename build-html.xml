@@ -3,7 +3,7 @@
 <project default='all' basedir='.'>
 
  <!-- PROPERTIES -->
- <property name='version'   value='0.6.3'/>
+ <property name='version'   value='0.6.4'/>
  <property name='name'      value='nekohtml'/>
  <property name='Name'      value='NekoHTML ${version}'/>
  <property name='copyright' value='(C) Copyright 2002, Andy Clark. All rights reserved.'/>
@@ -15,10 +15,10 @@
  <property name='tarfile' value='${name}-${version}.tar'/>
  <property name='tgzfile' value='${name}-${version}.tar.gz'/>
 
- <property name='contents.misc'   value='TODO,LICENSE,build.*'/>
+ <property name='contents.misc'   value='LICENSE,README_html,TODO_html,build.bat,build-html.xml'/>
  <property name='contents.jars'   value='${jarfile},${jarfileXni},${jarfileSamples}'/>
- <property name='contents.source' value='src/META-INF/**,src/**/*.java,src/**/*.properties'/>
- <property name='contents.docs'   value='doc/**,data/test*.html'/>
+ <property name='contents.source' value='src/html/META-INF/**,src/html/**/*.java,src/html/**/*.properties'/>
+ <property name='contents.docs'   value='doc/style.css,doc/html/**,data/html/test*.html'/>
  <property name='contents.libs'   value='lib/xercesMinimal.jar'/>
  <property name='contents' 
            value='${contents.misc},${contents.jars},${contents.source},${contents.docs},${contents.libs}'/>
@@ -35,24 +35,34 @@
  </target>
 
  <target name='compile'>
-  <mkdir dir="bin"/>
-  <javac srcdir='src' destdir='bin' includes='org/**,sample/**'/>
+  <mkdir dir="bin/html"/>
+  <javac srcdir='src/html' destdir='bin/html' includes='org/**,sample/**'/>
  </target>
 
  <target name='jar' depends='compile'>
-  <copy todir='bin'>
-   <fileset dir='src' includes='META-INF/services/**'/>
+  <copy todir='bin/html'>
+   <fileset dir='src/html' includes='META-INF/services/**'/>
   </copy>
-  <copy todir='bin'>
-   <fileset dir='src' includes='**/*.properties'/>
+  <copy todir='bin/html'>
+   <fileset dir='src/html' includes='**/*.properties'/>
   </copy>
-  <jar jarfile='${jarfile}' basedir='bin' 
+  <jar jarfile='${jarfile}' basedir='bin/html' 
        includes='org/**/*.class,org/**/*.properties'/>
-  <jar jarfile='${jarfileXni}' basedir='bin'
+  <jar jarfile='${jarfileXni}' basedir='bin/html'
        includes='META-INF/services/**'/>
-  <jar jarfile='${jarfileSamples}' basedir='bin'
+  <jar jarfile='${jarfileSamples}' basedir='bin/html'
        includes='sample/**'/>
  </target> 
+
+ <target name='package' depends='jar,doc'>
+  <delete dir='bin/package'/>
+  <mkdir dir='bin/package'/>
+  <copy todir='bin/package'>
+   <fileset dir='.' includes='${contents},${contents.full}'/>
+   <fileset dir='bin' includes='${contents.jars}'/>
+  </copy>
+  <delete dir='bin/package'/>
+ </target>
 
  <target name='zip' depends='jar,doc'>
   <zip zipfile='${zipfile}' basedir='.' includes='${contents},${contents.full}'/>
@@ -65,10 +75,10 @@
  </target>
 
  <target name='doc' unless='docs.done'>
-  <delete dir='doc/javadoc'/>
-  <mkdir dir='doc/javadoc'/>
+  <delete dir='doc/html/javadoc'/>
+  <mkdir dir='doc/html/javadoc'/>
   <javadoc packagenames='${package},${package}.parsers,${package}.filters'
-           sourcepath='src' destdir='doc/javadoc'
+           sourcepath='src/html' destdir='doc/html/javadoc'
            author='true' version='true' use='true'
            windowtitle="${Name} Implementation"
            doctitle="${Name}"
@@ -79,10 +89,10 @@
  </target>
  
  <target name='clean'>
-  <delete dir='bin'/>
-  <delete dir='doc/javadoc'/>
-  <delete>
-   <fileset dir='.' includes='*.jar,*.zip,*.tar.gz'/>
+  <delete dir='bin/html' quiet='true'/>
+  <delete dir='doc/html/javadoc' quiet='true'/>
+  <delete quiet='true'>
+   <fileset dir='.' includes='${name}*.jar,${name}*.zip,${name}*.tar.gz'/>
   </delete>
  </target>
 
