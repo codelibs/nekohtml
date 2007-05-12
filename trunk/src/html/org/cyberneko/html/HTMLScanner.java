@@ -2059,6 +2059,16 @@ public class HTMLScanner
                             fStringBuffer.append(fStringBuffer2);
                         }
                     }
+                    else if (c == '\r' || c == '\n') {
+                        if (c == '\r') {
+                            c = read();
+                            if (c != '\n') {
+                                fCurrentEntity.offset--;
+                                fCurrentEntity.columnNumber--;
+                            }
+                        }
+                        fStringBuffer.append(' ');
+                    }
                     else if (c != quote) {
                         fStringBuffer.append((char)c);
                     }
