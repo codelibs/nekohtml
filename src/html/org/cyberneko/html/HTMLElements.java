@@ -403,7 +403,7 @@ public class HTMLElements {
             // STRONG - - (%inline;)*
             new Element(STRONG, "STRONG", Element.INLINE, BODY, null),
             // STYLE - - %StyleSheet;
-            new Element(STYLE, "STYLE", 0, new short[]{HEAD,BODY}, new short[]{STYLE,TITLE,META}),
+            new Element(STYLE, "STYLE", Element.SPECIAL, new short[]{HEAD,BODY}, new short[]{STYLE,TITLE,META}),
             // SUB - - (%inline;)*
             new Element(SUB, "SUB", Element.INLINE, BODY, null),
             // SUP - - (%inline;)*

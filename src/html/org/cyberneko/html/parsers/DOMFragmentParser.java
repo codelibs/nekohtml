@@ -3,11 +3,18 @@
  *
  * This file is distributed under an Apache style license. Please
  * refer to the LICENSE file for specific details.
+ * ==============================================================
+ * This file contains some code from Apache Xerces-J which is
+ * used in accordance with the Apache license. Please refer to
+ * the LICENSE_apache file for specific details.
  */
 
 package org.cyberneko.html.parsers;
 
 import org.cyberneko.html.HTMLConfiguration;
+
+import org.apache.xerces.impl.Constants;
+import org.apache.xerces.util.ErrorHandlerWrapper;
 
 import org.apache.xerces.xni.Augmentations;
 import org.apache.xerces.xni.NamespaceContext;
@@ -19,7 +26,9 @@ import org.apache.xerces.xni.XMLResourceIdentifier;
 import org.apache.xerces.xni.XMLString;
 import org.apache.xerces.xni.XNIException;
 
+import org.apache.xerces.xni.parser.XMLConfigurationException;
 import org.apache.xerces.xni.parser.XMLDocumentSource;
+import org.apache.xerces.xni.parser.XMLErrorHandler;
 import org.apache.xerces.xni.parser.XMLInputSource;
 import org.apache.xerces.xni.parser.XMLParseException;
 import org.apache.xerces.xni.parser.XMLParserConfiguration;
@@ -31,6 +40,7 @@ import java.io.Reader;
 import org.w3c.dom.Attr;
 import org.w3c.dom.CDATASection;
 import org.w3c.dom.Comment;
+import org.w3c.dom.Document;
 import org.w3c.dom.DocumentFragment;
 import org.w3c.dom.Element;
 import org.w3c.dom.EntityReference;
@@ -38,11 +48,12 @@ import org.w3c.dom.Node;
 import org.w3c.dom.ProcessingInstruction;
 import org.w3c.dom.Text;
 
-import org.w3c.dom.html.HTMLDocument;
-
+import org.xml.sax.ErrorHandler;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
+import org.xml.sax.SAXNotRecognizedException;
+import org.xml.sax.SAXNotSupportedException;
 
 /**
  * A DOM parser for HTML fragments.
@@ -61,7 +72,29 @@ public class DOMFragmentParser
     // features
 
     /** Document fragment balancing only. */
-    protected static final String DOCUMENT_FRAGMENT = "http://cyberneko.org/html/features/document-fragment";
+    protected static final String DOCUMENT_FRAGMENT = 
+        "http://cyberneko.org/html/features/document-fragment";
+
+    /** Recognized features. */
+    protected static final String[] RECOGNIZED_FEATURES = {
+        DOCUMENT_FRAGMENT,
+    };
+
+    // properties
+
+    /** Property identifier: error handler. */
+    protected static final String ERROR_HANDLER =
+        Constants.XERCES_PROPERTY_PREFIX + Constants.ERROR_HANDLER_PROPERTY;
+
+    /** Current element node. */
+    protected static final String CURRENT_ELEMENT_NODE =
+        Constants.XERCES_PROPERTY_PREFIX + Constants.CURRENT_ELEMENT_NODE_PROPERTY;
+
+    /** Recognized properties. */
+    protected static final String[] RECOGNIZED_PROPERTIES = {
+        ERROR_HANDLER,
+        CURRENT_ELEMENT_NODE,
+    };
 
     //
     // Data
@@ -76,8 +109,8 @@ public class DOMFragmentParser
     /** DOM document fragment. */
     protected DocumentFragment fDocumentFragment;
 
-    /** HTML document. */
-    protected HTMLDocument fHTMLDocument;
+    /** Document. */
+    protected Document fDocument;
 
     /** Current node. */
     protected Node fCurrentNode;
@@ -92,6 +125,8 @@ public class DOMFragmentParser
     /** Default constructor. */
     public DOMFragmentParser() {
         fParserConfiguration = new HTMLConfiguration();
+        fParserConfiguration.addRecognizedFeatures(RECOGNIZED_FEATURES);
+        fParserConfiguration.addRecognizedProperties(RECOGNIZED_PROPERTIES);
         fParserConfiguration.setFeature(DOCUMENT_FRAGMENT, true);
         fParserConfiguration.setDocumentHandler(this);
     } // <init>()
@@ -110,9 +145,8 @@ public class DOMFragmentParser
     public void parse(InputSource source, DocumentFragment fragment) 
         throws SAXException, IOException {
 
-        fDocumentFragment = fragment;
-        fHTMLDocument = (HTMLDocument)fDocumentFragment.getOwnerDocument();
-        fCurrentNode = fDocumentFragment;
+        fCurrentNode = fDocumentFragment = fragment;
+        fDocument = fDocumentFragment.getOwnerDocument();
 
         try {
             String pubid = source.getPublicId();
@@ -138,6 +172,195 @@ public class DOMFragmentParser
         }
 
     } // parse(InputSource,DocumentFragment)
+
+    /**
+     * Allow an application to register an error event handler.
+     *
+     * <p>If the application does not register an error handler, all
+     * error events reported by the SAX parser will be silently
+     * ignored; however, normal processing may not continue.  It is
+     * highly recommended that all SAX applications implement an
+     * error handler to avoid unexpected bugs.</p>
+     *
+     * <p>Applications may register a new or different handler in the
+     * middle of a parse, and the SAX parser must begin using the new
+     * handler immediately.</p>
+     *
+     * @param errorHandler The error handler.
+     * @exception java.lang.NullPointerException If the handler 
+     *            argument is null.
+     * @see #getErrorHandler
+     */
+    public void setErrorHandler(ErrorHandler errorHandler) {
+
+        try {
+            fParserConfiguration.setProperty(ERROR_HANDLER, 
+                                             new ErrorHandlerWrapper(errorHandler));
+        }
+        catch (XMLConfigurationException e) {
+            // do nothing
+        }
+
+    } // setErrorHandler(ErrorHandler)
+
+    /**
+     * Return the current error handler.
+     *
+     * @return The current error handler, or null if none
+     *         has been registered.
+     * @see #setErrorHandler
+     */
+    public ErrorHandler getErrorHandler() {
+
+        ErrorHandler errorHandler = null;
+        try {
+            XMLErrorHandler xmlErrorHandler = 
+                (XMLErrorHandler)fParserConfiguration.getProperty(ERROR_HANDLER);
+            if (xmlErrorHandler != null && 
+                xmlErrorHandler instanceof ErrorHandlerWrapper) {
+                errorHandler = ((ErrorHandlerWrapper)xmlErrorHandler).getErrorHandler();
+            }
+        }
+        catch (XMLConfigurationException e) {
+            // do nothing
+        }
+        return errorHandler;
+
+    } // getErrorHandler():ErrorHandler
+
+    /**
+     * Set the state of any feature in a SAX2 parser.  The parser
+     * might not recognize the feature, and if it does recognize
+     * it, it might not be able to fulfill the request.
+     *
+     * @param featureId The unique identifier (URI) of the feature.
+     * @param state The requested state of the feature (true or false).
+     *
+     * @exception SAXNotRecognizedException If the
+     *            requested feature is not known.
+     * @exception SAXNotSupportedException If the
+     *            requested feature is known, but the requested
+     *            state is not supported.
+     */
+    public void setFeature(String featureId, boolean state)
+        throws SAXNotRecognizedException, SAXNotSupportedException {
+
+        try {
+            fParserConfiguration.setFeature(featureId, state);
+        }
+        catch (XMLConfigurationException e) {
+            String message = e.getMessage();
+            if (e.getType() == XMLConfigurationException.NOT_RECOGNIZED) {
+                throw new SAXNotRecognizedException(message);
+            }
+            else {
+                throw new SAXNotSupportedException(message);
+            }
+        }
+
+    } // setFeature(String,boolean)
+
+    /**
+     * Query the state of a feature.
+     *
+     * Query the current state of any feature in a SAX2 parser.  The
+     * parser might not recognize the feature.
+     *
+     * @param featureId The unique identifier (URI) of the feature
+     *                  being set.
+     * @return The current state of the feature.
+     * @exception org.xml.sax.SAXNotRecognizedException If the
+     *            requested feature is not known.
+     * @exception SAXNotSupportedException If the
+     *            requested feature is known but not supported.
+     */
+    public boolean getFeature(String featureId)
+        throws SAXNotRecognizedException, SAXNotSupportedException {
+
+        try {
+            return fParserConfiguration.getFeature(featureId);
+        }
+        catch (XMLConfigurationException e) {
+            String message = e.getMessage();
+            if (e.getType() == XMLConfigurationException.NOT_RECOGNIZED) {
+                throw new SAXNotRecognizedException(message);
+            }
+            else {
+                throw new SAXNotSupportedException(message);
+            }
+        }
+
+    } // getFeature(String):boolean
+
+    /**
+     * Set the value of any property in a SAX2 parser.  The parser
+     * might not recognize the property, and if it does recognize
+     * it, it might not support the requested value.
+     *
+     * @param propertyId The unique identifier (URI) of the property
+     *                   being set.
+     * @param Object The value to which the property is being set.
+     *
+     * @exception SAXNotRecognizedException If the
+     *            requested property is not known.
+     * @exception SAXNotSupportedException If the
+     *            requested property is known, but the requested
+     *            value is not supported.
+     */
+    public void setProperty(String propertyId, Object value)
+        throws SAXNotRecognizedException, SAXNotSupportedException {
+
+        try {
+            fParserConfiguration.setProperty(propertyId, value);
+        }
+        catch (XMLConfigurationException e) {
+            String message = e.getMessage();
+            if (e.getType() == XMLConfigurationException.NOT_RECOGNIZED) {
+                throw new SAXNotRecognizedException(message);
+            }
+            else {
+                throw new SAXNotSupportedException(message);
+            }
+        }
+
+    } // setProperty(String,Object)
+
+    /**
+     * Query the value of a property.
+     *
+     * Return the current value of a property in a SAX2 parser.
+     * The parser might not recognize the property.
+     *
+     * @param propertyId The unique identifier (URI) of the property
+     *                   being set.
+     * @return The current value of the property.
+     * @exception org.xml.sax.SAXNotRecognizedException If the
+     *            requested property is not known.
+     * @exception SAXNotSupportedException If the
+     *            requested property is known but not supported.
+     */
+    public Object getProperty(String propertyId)
+        throws SAXNotRecognizedException, SAXNotSupportedException {
+
+        if (propertyId.equals(CURRENT_ELEMENT_NODE)) {
+            return (fCurrentNode!=null && 
+                    fCurrentNode.getNodeType() == Node.ELEMENT_NODE)? fCurrentNode:null;
+        }
+
+        try {
+            return fParserConfiguration.getProperty(propertyId);
+        }
+        catch (XMLConfigurationException e) {
+            String message = e.getMessage();
+            if (e.getType() == XMLConfigurationException.NOT_RECOGNIZED) {
+                throw new SAXNotRecognizedException(message);
+            }
+            else {
+                throw new SAXNotSupportedException(message);
+            }
+        }
+
+    } // getProperty(String):Object
 
     //
     // XMLDocumentHandler methods
@@ -184,14 +407,14 @@ public class DOMFragmentParser
                                       Augmentations augs)
         throws XNIException {
         ProcessingInstruction pi = 
-            fHTMLDocument.createProcessingInstruction(target, data.toString());
+            fDocument.createProcessingInstruction(target, data.toString());
         fCurrentNode.appendChild(pi);
     } // processingInstruction(String,XMLString,Augmentations)
 
     /** Comment. */
     public void comment(XMLString text, Augmentations augs)
         throws XNIException {
-        Comment comment = fHTMLDocument.createComment(text.toString());
+        Comment comment = fDocument.createComment(text.toString());
         fCurrentNode.appendChild(comment);
     } // comment(XMLString,Augmentations)
 
@@ -208,7 +431,7 @@ public class DOMFragmentParser
     /** Start element. */
     public void startElement(QName element, XMLAttributes attrs,
                              Augmentations augs) throws XNIException {
-        Element elementNode = fHTMLDocument.createElement(element.rawname);
+        Element elementNode = fDocument.createElement(element.rawname);
         int count = attrs != null ? attrs.getLength() : 0;
         for (int i = 0; i < count; i++) {
             String aname = attrs.getQName(i);
@@ -237,7 +460,7 @@ public class DOMFragmentParser
                 cdata.appendData(text.toString());
             }
             else {
-                CDATASection cdata = fHTMLDocument.createCDATASection(text.toString());
+                CDATASection cdata = fDocument.createCDATASection(text.toString());
                 fCurrentNode.appendChild(cdata);
             }
         }
@@ -248,7 +471,7 @@ public class DOMFragmentParser
                 textNode.appendData(text.toString());
             }
             else {
-                Text textNode = fHTMLDocument.createTextNode(text.toString());
+                Text textNode = fDocument.createTextNode(text.toString());
                 fCurrentNode.appendChild(textNode);
             }
         }
@@ -265,7 +488,7 @@ public class DOMFragmentParser
     public void startGeneralEntity(String name, XMLResourceIdentifier id,
                                    String encoding, Augmentations augs)
         throws XNIException {
-        EntityReference entityRef = fHTMLDocument.createEntityReference(name);
+        EntityReference entityRef = fDocument.createEntityReference(name);
         fCurrentNode.appendChild(entityRef);
         fCurrentNode = entityRef;
     } // startGeneralEntity(String,XMLResourceIdentifier,String,Augmentations)
