@@ -1,4 +1,9 @@
-/* (C) Copyright 2002, Andy Clark. All rights reserved. */
+/* 
+ * (C) Copyright 2002, Andy Clark.  All rights reserved.
+ *
+ * This file is distributed under an Apache style license. Please
+ * refer to the LICENSE file for specific details.
+ */
 
 package org.cyberneko.html;
 
@@ -8,6 +13,8 @@ import java.util.Vector;
  * Collection of HTML element information.
  *
  * @author Andy Clark
+ *
+ * @version $Id$
  */
 public class HTMLElements {
     
@@ -166,11 +173,11 @@ public class HTMLElements {
         // NOBR
         ELEMENTS.addElement(new Element("NOBR", Element.INLINE, "BODY", new String[]{}));
         // NOEMBED
-        ELEMENTS.addElement(new Element("NOEMBED", 0, "EMBED", null));
+        ELEMENTS.addElement(new Element("NOEMBED", 0, "BODY", null));
         // NOFRAMES - - (BODY) -(NOFRAMES)
         ELEMENTS.addElement(new Element("NOFRAMES", 0, "FRAMESET", null));
         // NOLAYER
-        ELEMENTS.addElement(new Element("NOLAYER", 0, "LAYER", null));
+        ELEMENTS.addElement(new Element("NOLAYER", 0, "BODY", null));
         // NOSCRIPT - - (%block;)+
         ELEMENTS.addElement(new Element("NOSCRIPT", 0, new String[]{"HEAD","BODY"}, null));
         // OBJECT - - (PARAM | %flow;)*

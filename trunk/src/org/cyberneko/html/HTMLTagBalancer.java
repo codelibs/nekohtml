@@ -1,4 +1,9 @@
-/* (C) Copyright 2002, Andy Clark. All rights reserved. */
+/* 
+ * (C) Copyright 2002, Andy Clark.  All rights reserved.
+ *
+ * This file is distributed under an Apache style license. Please
+ * refer to the LICENSE file for specific details.
+ */
 
 package org.cyberneko.html;
 
@@ -108,6 +113,7 @@ public class HTMLTagBalancer
         // handle empty document
         if (!fSeenRootElement) {
             fQName.setValues(null, "HTML", "HTML", null);
+            EMPTY_ATTRS.removeAllAttributes();
             startElement(fQName, EMPTY_ATTRS, null);
             endElement(fQName, null);
         }
@@ -159,6 +165,7 @@ public class HTMLTagBalancer
             if (!fSeenRootElement) {
                 String ENAME = element.parent instanceof String ? (String)element.parent : ((String[])element.parent)[0];
                 QName qname = new QName(null, ENAME, ENAME, null);
+                EMPTY_ATTRS.removeAllAttributes();
                 startElement(qname, EMPTY_ATTRS, null);
             }
             else {
@@ -177,6 +184,7 @@ public class HTMLTagBalancer
                             }
                             String ENAME = element.parent instanceof String ? (String)element.parent : ((String[])element.parent)[0];
                             QName qname = new QName(null, ENAME, ENAME, null);
+                            EMPTY_ATTRS.removeAllAttributes();
                             startElement(qname, EMPTY_ATTRS, null);
                         }
                     }
@@ -279,6 +287,7 @@ public class HTMLTagBalancer
                 return;
             }
             fQName.setValues(null, "BODY", "BODY", null);
+            EMPTY_ATTRS.removeAllAttributes();
             startElement(fQName, EMPTY_ATTRS, null);
         }
 
@@ -328,7 +337,12 @@ public class HTMLTagBalancer
             int size = fInlineStack.size();
             for (int i = 0; i < size; i++) {
                 Info info = (Info)fInlineStack.pop();
-                startElement(info.element, info.attributes, null);
+                XMLAttributes attributes = info.attributes;
+                if (attributes == null) {
+                    attributes = EMPTY_ATTRS;
+                    EMPTY_ATTRS.removeAllAttributes();
+                }
+                startElement(info.element, attributes, null);
             }
         }
 
@@ -475,9 +489,6 @@ public class HTMLTagBalancer
                         newattrs.setSpecified(i, specified);
                     }
                     this.attributes = newattrs;
-                }
-                else {
-                    this.attributes = EMPTY_ATTRS;
                 }
             }
         } // <init>(QName,XMLAttributes)
