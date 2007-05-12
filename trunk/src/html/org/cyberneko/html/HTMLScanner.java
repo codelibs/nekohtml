@@ -330,6 +330,9 @@ public class HTMLScanner
     /** String buffer. */
     private final XMLStringBuffer fStringBuffer2 = new XMLStringBuffer(1024);
 
+    /** Non-normalized attribute string buffer. */
+    private final XMLStringBuffer fNonNormAttr = new XMLStringBuffer(128);
+
     /** Augmentations. */
     private final Augmentations fInfosetAugs = new AugmentationsImpl();
 
@@ -892,6 +895,77 @@ public class HTMLScanner
 
     // scanning
 
+    /** Scans a DOCTYPE line. */
+    protected void scanDoctype() throws IOException {
+        String root = null;
+        String pubid = null;
+        String sysid = null;
+
+        if (skipSpaces()) {
+            root = scanName();
+            if (root == null) {
+                if (fReportErrors) {
+                    fErrorReporter.reportError("HTML1014", null);
+                }
+            }
+            else {
+                root = modifyName(root, fNamesElems);
+            }
+            if (skipSpaces()) {
+                if (skip("PUBLIC", false)) {
+                    skipSpaces();
+                    pubid = scanLiteral();
+                    if (skipSpaces()) {
+                        sysid = scanLiteral();
+                    }
+                }
+                else if (skip("SYSTEM", false)) {
+                    skipSpaces();
+                    sysid = scanLiteral();
+                }
+            }
+        }
+        skipMarkup(true);
+
+        if (fDocumentHandler != null) {
+            fDocumentHandler.doctypeDecl(root, pubid, sysid, null);
+        }
+
+    } // scanDoctype()
+
+    /** Scans a quoted literal. */
+    protected String scanLiteral() throws IOException {
+        int quote = read();
+        if (quote == '\'' || quote == '"') {
+            StringBuffer str = new StringBuffer();
+            int c;
+            while ((c = read()) != -1) {
+                if (c == quote) {
+                    break;
+                }
+                if (c == '\r' || c == '\n') {
+                    fCurrentEntity.offset--;
+                    fCurrentEntity.columnNumber--;
+                    int newlines = skipNewlines();
+                    for (int i = 0; i < newlines; i++) {
+                        str.append('\n');
+                    }
+                }
+                else {
+                    str.append((char)c);
+                }
+            }
+            if (c == -1) {
+                if (fReportErrors) {
+                    fErrorReporter.reportError("HTML1007", null);
+                }
+                throw new EOFException();
+            }
+            return str.toString();
+        }
+        return null;
+    } // scanLiteral():String
+
     /** Scans a name. */
     protected String scanName() throws IOException {
         if (DEBUG_BUFFER) {
@@ -1062,6 +1136,32 @@ public class HTMLScanner
 
     } // scanEntityRef(XMLStringBuffer,boolean):int
 
+    /** Returns true if the specified text is present and is skipped. */
+    protected boolean skip(String s, boolean caseSensitive) throws IOException {
+        int length = s != null ? s.length() : 0;
+        for (int i = 0; i < length; i++) {
+            if (fCurrentEntity.offset == fCurrentEntity.length) {
+                System.arraycopy(fCurrentEntity.buffer, fCurrentEntity.offset - i, fCurrentEntity.buffer, 0, i);
+                if (load(i) == -1) {
+                    fCurrentEntity.offset = 0;
+                    return false;
+                }
+            }
+            char c0 = s.charAt(i);
+            char c1 = fCurrentEntity.buffer[fCurrentEntity.offset++];
+            fCurrentEntity.columnNumber++;
+            if (!caseSensitive) {
+                c0 = Character.toUpperCase(c0);
+                c1 = Character.toUpperCase(c1);
+            }
+            if (c0 != c1) {
+                fCurrentEntity.offset -= i + 1;
+                return false;
+            }
+        }
+        return true;
+    } // skip(String):boolean
+
     /** Skips markup. */
     protected boolean skipMarkup(boolean balance) throws IOException {
         if (DEBUG_BUFFER) {
@@ -1124,12 +1224,13 @@ public class HTMLScanner
     } // skipMarkup():boolean
 
     /** Skips whitespace. */
-    protected void skipSpaces() throws IOException {
+    protected boolean skipSpaces() throws IOException {
         if (DEBUG_BUFFER) {
             System.out.print("(skipMarkup: ");
             printBuffer();
             System.out.println();
         }
+        boolean spaces = false;
         while (true) {
             if (fCurrentEntity.offset == fCurrentEntity.length) {
                 if (load(0) == -1) {
@@ -1140,6 +1241,7 @@ public class HTMLScanner
             if (!Character.isSpace(c)) {
                 break;
             }
+            spaces = true;
             if (c == '\r' || c == '\n') {
                 skipNewlines();
                 continue;
@@ -1150,8 +1252,11 @@ public class HTMLScanner
         if (DEBUG_BUFFER) {
             System.out.print(")skipSpaces: ");
             printBuffer();
+            System.out.print(" -> ");
+            System.out.print(spaces);
             System.out.println();
         }
+        return spaces;
     } // skipSpaces()
 
     /** Skips newlines and returns the number of newlines skipped. */
@@ -1485,7 +1590,10 @@ public class HTMLScanner
                         case STATE_MARKUP_BRACKET: {
                             int c = read();
                             if (c == '!') {
-                                if (read() == '-' && read() == '-') {
+                                if (skip("DOCTYPE", false)) {
+                                    scanDoctype();
+                                }
+                                else if (read() == '-' && read() == '-') {
                                     scanComment();
                                 }
                                 else {
@@ -1932,7 +2040,9 @@ public class HTMLScanner
         protected boolean scanAttribute(XMLAttributesImpl attributes,
                                         boolean[] empty)
             throws IOException {
-            skipSpaces();
+            if (!skipSpaces() && fReportErrors) {
+                fErrorReporter.reportError("HTML1013", null);
+            }
             fBeginLineNumber = fCurrentEntity.lineNumber;
             fBeginColumnNumber = fCurrentEntity.columnNumber;
             int c = read();
@@ -1978,6 +2088,8 @@ public class HTMLScanner
                 }
                 return false;
             }
+            /***
+            // REVISIT: [Q] Why is this still here? -Ac
             if (c == '/' || c == '>') {
                 if (c == '/') {
                     fCurrentEntity.offset--;
@@ -1992,6 +2104,7 @@ public class HTMLScanner
                 }
                 return false;
             }
+            /***/
             if (c == '=') {
                 skipSpaces();
                 c = read();
@@ -2011,9 +2124,11 @@ public class HTMLScanner
                     }
                     return false;
                 }
+                fStringBuffer.clear();
+                fNonNormAttr.clear();
                 if (c != '\'' && c != '"') {
-                    fStringBuffer.clear();
-                    fStringBuffer.append((char)c);
+                    fCurrentEntity.offset--;
+                    fCurrentEntity.columnNumber--;
                     while (true) {
                         c = read();
                         // Xiaowei/Ac: Fix for <a href=/broken/>...</a>
@@ -2029,19 +2144,34 @@ public class HTMLScanner
                             }
                             throw new EOFException();
                         }
-                        fStringBuffer.append((char)c);
+                        if (c == '&') {
+                            int ce = scanEntityRef(fStringBuffer2, false);
+                            if (ce != -1) {
+                                fStringBuffer.append((char)ce);
+                            }
+                            else {
+                                fStringBuffer.append(fStringBuffer2);
+                            }
+                            fNonNormAttr.append(fStringBuffer2);
+                        }
+                        else {
+                            fStringBuffer.append((char)c);
+                            fNonNormAttr.append((char)c);
+                        }
                     }
                     fQName.setValues(null, aname, aname, null);
                     String avalue = fStringBuffer.toString();
                     attributes.addAttribute(fQName, "CDATA", avalue);
-                    attributes.setSpecified(attributes.getLength()-1, true);
+
+                    int lastattr = attributes.getLength()-1;
+                    attributes.setSpecified(lastattr, true);
+                    attributes.setNonNormalizedValue(lastattr, fNonNormAttr.toString());
                     if (fAugmentations) {
                         addLocationItem(attributes, attributes.getLength() - 1);
                     }
                     return true;
                 }
                 char quote = (char)c;
-                fStringBuffer.clear();
                 do {
                     c = read();
                     if (c == -1) {
@@ -2058,25 +2188,40 @@ public class HTMLScanner
                         else {
                             fStringBuffer.append(fStringBuffer2);
                         }
+                        fNonNormAttr.append(fStringBuffer2);
+                    }
+                    else if (c == '\t') {
+                        fStringBuffer.append(' ');
+                        fNonNormAttr.append('\t');
                     }
                     else if (c == '\r' || c == '\n') {
+                        fCurrentEntity.lineNumber++;
+                        fCurrentEntity.columnNumber = 0;
                         if (c == '\r') {
                             c = read();
                             if (c != '\n') {
                                 fCurrentEntity.offset--;
                                 fCurrentEntity.columnNumber--;
                             }
+                            else {
+                                fNonNormAttr.append('\r');
+                            }
                         }
                         fStringBuffer.append(' ');
+                        fNonNormAttr.append((char)c);
                     }
                     else if (c != quote) {
                         fStringBuffer.append((char)c);
+                        fNonNormAttr.append((char)c);
                     }
                 } while (c != quote);
                 fQName.setValues(null, aname, aname, null);
                 String avalue = fStringBuffer.toString();
                 attributes.addAttribute(fQName, "CDATA", avalue);
-                attributes.setSpecified(attributes.getLength()-1, true);
+
+                int lastattr = attributes.getLength()-1;
+                attributes.setSpecified(lastattr, true);
+                attributes.setNonNormalizedValue(lastattr, fNonNormAttr.toString());
                 if (fAugmentations) {
                     addLocationItem(attributes, attributes.getLength() - 1);
                 }
