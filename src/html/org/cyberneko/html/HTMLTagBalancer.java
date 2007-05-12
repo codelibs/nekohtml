@@ -20,6 +20,7 @@ import org.apache.xerces.xni.XNIException;
 import org.apache.xerces.xni.parser.XMLComponentManager;
 import org.apache.xerces.xni.parser.XMLConfigurationException;
 import org.apache.xerces.xni.parser.XMLDocumentFilter;
+import org.apache.xerces.xni.parser.XMLDocumentSource;
                       
 /**
  * Balances tags in an HTML document. This component receives document events
@@ -144,7 +145,10 @@ public class HTMLTagBalancer
     /** Error reporter. */
     protected HTMLErrorReporter fErrorReporter;
 
-    // handlers
+    // connections
+
+    /** The document source. */
+    protected XMLDocumentSource fDocumentSource;
 
     /** The document handler. */
     protected XMLDocumentHandler fDocumentHandler;
@@ -274,6 +278,13 @@ public class HTMLTagBalancer
     public void setDocumentHandler(XMLDocumentHandler handler) {
         fDocumentHandler = handler;
     } // setDocumentHandler(XMLDocumentHandler)
+
+    // @since Xerces 2.1.0
+
+    /** Returns the document handler. */
+    public XMLDocumentHandler getDocumentHandler() {
+        return fDocumentHandler;
+    } // getDocumentHandler():XMLDocumentHandler
 
     //
     // XMLDocumentHandler methods
@@ -695,6 +706,18 @@ public class HTMLTagBalancer
         }
 
     } // endPrefixMapping(String,Augmentations)
+
+    // @since Xerces 2.1.0
+
+    /** Sets the document source. */
+    public void setDocumentSource(XMLDocumentSource source) {
+        fDocumentSource = source;
+    } // setDocumentSource(XMLDocumentSource)
+
+    /** Returns the document source. */
+    public XMLDocumentSource getDocumentSource() {
+        return fDocumentSource;
+    } // getDocumentSource():XMLDocumentSource
 
     //
     // Protected methods

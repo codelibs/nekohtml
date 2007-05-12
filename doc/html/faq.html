@@ -1,0 +1,67 @@
+<title>NekoHTML | Frequently Asked Questions</title>
+<link rel=stylesheet type=text/css href=../style.css>
+
+<h1>Frequently Asked Questions</h1>
+<div class='navbar'>
+[<a href='../index.html'>Home</a>]
+[
+<a href='index.html'>Top</a>
+|
+<a href='usage.html'>Usage</a>
+|
+<a href='settings.html'>Settings</a>
+|
+<a href='filters.html'>Filters</a>
+|
+<a href='javadoc/index.html'>JavaDoc</a>
+|
+FAQ
+|
+<a href='changes.html'>Changes</a>
+]
+</div>
+
+<h3>Why are the DOM element names always uppercase?</h3>
+
+<p>
+The <a href='http://www.w3.org/TR/1998/REC-DOM-Level-1-19981001/level-one-html.html'>HTML 
+DOM</a> specification explicitly states that element and
+attribute names follow the semantics, including case-sensitivity,
+specified in the <a href='http://www.w3.org/TR/html4/'>HTML
+4</a> specification.  In addition,
+<a href='http://www.w3.org/TR/html4/about.html#h-1.2.1'>section
+1.2.1</a> of the HTML 4.01 specification states:
+<blockquote>
+Element names are written in uppercase letters (e.g., BODY). 
+Attribute names are written in lowercase letters (e.g., lang, onsubmit). 
+</blockquote>
+<p>
+The Xerces HTML DOM implementation (used by default in the
+NekoHTML <code>DOMParser</code> class) follows this convention.
+Therefore, even if the 
+"http://cyberneko.org/html/properties/names/elems" property is
+set to "lower", the DOM will still uppercase the element names.
+<p>
+To get around this problem, instantiate a Xerces2 <code>DOMParser</code>
+object using the NekoHTML parser configuration. By default, the
+Xerces DOM parser class creates a standard XML DOM tree, not
+an HTML DOM tree. Therefore, the element and attribute names
+will follow the settings for the
+"http://cyberneko.org/html/properties/names/elems" and
+"http://cyberneko.org/html/properties/names/attrs" properties.
+However, realize that the application will not be able to cast
+the document nodes to the HTML DOM interfaces for accessing the 
+document's information.
+<p>
+The following sample code shows how to instantiate a DOM
+parser using the NekoHTML parser configuration:
+<pre class='code'>
+<span class='code-comment'>// import org.apache.xerces.parsers.DOMParser;
+// import org.cyberneko.html.HTMLConfiguration;</span>
+
+DOMParser parser <span class='code-punct'>=</span> <span class='code-keyword'>new</span> DOMParser<span class='code-punct'>(</span><span class='code-keyword'>new</span> HTMLConfiguration<span class='code-punct'>());</span>
+</pre>
+
+<div class='copyright'>
+(C) Copyright 2002, Andy Clark. All rights reserved.
+</div>
