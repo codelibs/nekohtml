@@ -25,6 +25,21 @@ Changes
 
 <h2>Releases</h2>
 <dl>
+ <dt>Version 0.7.6 (06 May 2003)
+     [<a href='http://www.apache.org/~andyc/neko/nekohtml-0.7.6.zip'>zip</a>]
+     [<a href='http://www.apache.org/~andyc/neko/nekohtml-0.7.6.tar.gz'>tgz</a>]
+ <dd>Fixed infinite loop in special tags reported by Mike Bowler.
+ <dt>Version 0.7.5 (02 May 2003)
+     [<a href='http://www.apache.org/~andyc/neko/nekohtml-0.7.5.zip'>zip</a>]
+     [<a href='http://www.apache.org/~andyc/neko/nekohtml-0.7.5.tar.gz'>tgz</a>]
+ <dd>Fixed parsing of entity reference within &lt;textarea&gt; tags reported
+       by Mattias Jiderhamn;
+     changed behavior of tag balancer to not consume content after the end
+       &lt;body&gt; and &lt;html&gt; tags but retained old behavior through
+       new feature;
+     fixed &lt;noscript&gt; bug reported by Takashi Tomokiyo;
+     and
+     updated implementation for XNI changes introduced in Xerces-J 2.4.0.
  <dt>Version 0.7.4 (03 Mar 2003)
      [<a href='http://www.apache.org/~andyc/neko/nekohtml-0.7.4.zip'>zip</a>]
      [<a href='http://www.apache.org/~andyc/neko/nekohtml-0.7.4.tar.gz'>tgz</a>]

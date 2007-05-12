@@ -66,6 +66,18 @@ The NekoHTML parser supports the following features:
   <td align='center'>true
  <tr>
   <td>
+   <a name='ignore-outside-content'></a>
+   <span class='id'>http://cyberneko.org/html/features/balance-tags/ignore-outside-content</span>
+   <br>
+   Specifies if the NekoHTML parser should ignore content after the end 
+   of the document root element. If this feature is set to true, all 
+   elements and character content appearing outside of the document body 
+   is consumed. If set to false, the end elements for the &lt;body&gt;
+   and &lt;html&gt; are ignored, allowing content appearing outside of
+   the document to be parsed and communicated to the application.
+  <td align='center'>false
+ <tr>
+  <td>
    <a name='document-fragment'></a>
    <span class='id'>http://cyberneko.org/html/features/document-fragment</span>
    <br>
