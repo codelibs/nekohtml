@@ -15,7 +15,7 @@ import org.cyberneko.html.HTMLConfiguration;
  *
  * @author Andy Clark
  *
- * @version $Id$
+ * @version $Id: SAXParser.java,v 1.3 2004/02/19 20:00:17 andyc Exp $
  */
 public class SAXParser
     extends AbstractSAXParser {

@@ -37,7 +37,7 @@ import java.io.InputStreamReader;
  * when bundled as part of the JDK.
  * <p>
  *
- * @version $Id: ObjectFactory.java,v 1.5 2004/03/11 22:57:28 mrglavas Exp $
+ * @version $Id: ObjectFactory.java,v 1.1 2004/03/31 20:00:21 andyc Exp $
  */
 class ObjectFactory {
 

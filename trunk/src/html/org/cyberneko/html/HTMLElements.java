@@ -12,7 +12,7 @@ package org.cyberneko.html;
  *
  * @author Andy Clark
  *
- * @version $Id$
+ * @version $Id: HTMLElements.java,v 1.10 2004/06/30 19:00:28 andyc Exp $
  */
 public class HTMLElements {
 

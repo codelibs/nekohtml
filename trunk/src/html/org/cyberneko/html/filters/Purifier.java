@@ -7,12 +7,12 @@
 
 package org.cyberneko.html.filters;
 
+import org.cyberneko.html.HTMLAugmentations;
 import org.cyberneko.html.HTMLEventInfo;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.InvocationTargetException;
 
-import org.apache.xerces.util.AugmentationsImpl;
 import org.apache.xerces.util.XMLChar;
 import org.apache.xerces.util.XMLStringBuffer;
 import org.apache.xerces.xni.Augmentations;
@@ -62,7 +62,7 @@ import org.apache.xerces.xni.parser.XMLConfigurationException;
  * 
  * @author Andy Clark
  * 
- * @version $Id$
+ * @version $Id: Purifier.java,v 1.4 2004/11/16 08:43:03 andyc Exp $
  */
 public class Purifier
     extends DefaultFilter {
@@ -144,7 +144,7 @@ public class Purifier
     private QName fQName = new QName();
 
     /** Augmentations. */
-    private final Augmentations fInfosetAugs = new AugmentationsImpl();
+    private final HTMLAugmentations fInfosetAugs = new HTMLAugmentations();
 
     /** String buffer. */
     private final XMLStringBuffer fStringBuffer = new XMLStringBuffer();
@@ -388,33 +388,7 @@ public class Purifier
         Augmentations augs = null;
         if (fAugmentations) {
             augs = fInfosetAugs;
-            Class cls = augs.getClass();
-            Method method = null;
-            try {
-                method = cls.getMethod("clear", null);
-            }
-            catch (NoSuchMethodException e) {
-                try {
-                    method = cls.getMethod("removeAllItems", null);
-                }
-                catch (NoSuchMethodException e2) {
-                    // NOTE: This should not happen! -Ac
-                    augs = new AugmentationsImpl();
-                }
-            }
-            if (method != null) {
-                try {
-                    method.invoke(augs, null);
-                }
-                catch (IllegalAccessException e) {
-                    // NOTE: This should not happen! -Ac
-                    augs = new AugmentationsImpl();
-                } 
-                catch (InvocationTargetException e) {
-                    // NOTE: This should not happen! -Ac
-                    augs = new AugmentationsImpl();
-                } 
-            }
+            augs.removeAllItems();
             augs.putItem(AUGMENTATIONS, SYNTHESIZED_ITEM);
         }
         return augs;

@@ -33,7 +33,7 @@ import org.apache.xerces.xni.parser.XMLDocumentSource;
  *
  * @author Andy Clark
  *
- * @version $Id$
+ * @version $Id: DefaultFilter.java,v 1.6 2004/02/19 20:00:17 andyc Exp $
  */
 public class DefaultFilter 
     implements XMLDocumentFilter, HTMLComponent {

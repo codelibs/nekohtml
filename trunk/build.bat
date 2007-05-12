@@ -1,7 +1,7 @@
 @echo off
 if "%JAVA_HOME%" == "" goto error
 if not exist lib\xalan.jar goto requirements
-set LOCALCLASSPATH=%JAVA_HOME%\lib\tools.jar;%JAVA_HOME%\jre\lib\rt.jar;lib\xml-apis.jar;lib\xalan.jar;lib\xercesImpl.jar;lib\ant.jar;lib\jing.jar;lib\junit.jar
+set LOCALCLASSPATH=%JAVA_HOME%\lib\tools.jar;%JAVA_HOME%\jre\lib\rt.jar;lib\xml-apis.jar;lib\xalan.jar;lib\xercesImpl.jar;lib\ant.jar;lib\ant-launcher.jar;lib\jing.jar;lib\junit.jar
 "%JAVA_HOME%\bin\java" -classpath "%LOCALCLASSPATH%" org.apache.tools.ant.Main %1 %2 %3 %4 %5
 goto end
 :error

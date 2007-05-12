@@ -19,7 +19,7 @@ import org.w3c.dom.DOMException;
  *
  * @author Andy Clark
  *
- * @version $Id$
+ * @version $Id: DOMParser.java,v 1.4 2004/02/19 20:00:17 andyc Exp $
  */
 public class DOMParser
     /***/

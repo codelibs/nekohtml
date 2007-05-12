@@ -17,7 +17,6 @@ import org.cyberneko.html.HTMLElements;
 import org.cyberneko.html.HTMLEntities;
 import org.cyberneko.html.filters.DefaultFilter;
 
-import org.apache.xerces.util.XMLAttributesImpl;
 import org.apache.xerces.xni.Augmentations;
 import org.apache.xerces.xni.NamespaceContext;
 import org.apache.xerces.xni.QName;
@@ -52,7 +51,7 @@ import org.apache.xerces.xni.parser.XMLParserConfiguration;
  *
  * @author Andy Clark
  *
- * @version $Id$
+ * @version $Id: Writer.java,v 1.6 2004/11/16 08:43:29 andyc Exp $
  */
 public class Writer 
     extends DefaultFilter {

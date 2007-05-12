@@ -60,7 +60,7 @@ import org.xml.sax.SAXNotSupportedException;
  *
  * @author Andy Clark
  *
- * @version $Id$
+ * @version $Id: DOMFragmentParser.java,v 1.7 2004/11/16 08:48:27 andyc Exp $
  */
 public class DOMFragmentParser
     implements XMLDocumentHandler {
@@ -192,15 +192,7 @@ public class DOMFragmentParser
      * @see #getErrorHandler
      */
     public void setErrorHandler(ErrorHandler errorHandler) {
-
-        try {
-            fParserConfiguration.setProperty(ERROR_HANDLER, 
-                                             new ErrorHandlerWrapper(errorHandler));
-        }
-        catch (XMLConfigurationException e) {
-            // do nothing
-        }
-
+        fParserConfiguration.setErrorHandler(new ErrorHandlerWrapper(errorHandler));
     } // setErrorHandler(ErrorHandler)
 
     /**

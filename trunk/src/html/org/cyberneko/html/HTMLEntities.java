@@ -16,7 +16,7 @@ import java.util.Properties;
  *
  * @author Andy Clark
  *
- * @version $Id$
+ * @version $Id: HTMLEntities.java,v 1.4 2004/03/31 20:00:21 andyc Exp $
  */
 public class HTMLEntities {
 

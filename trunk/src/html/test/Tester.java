@@ -9,14 +9,8 @@ package test;
 
 import org.cyberneko.html.HTMLConfiguration;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.InputStreamReader;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.util.Vector;
+import java.io.*;
+import java.util.*;
 
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.DirectoryScanner;
@@ -95,9 +89,6 @@ public class Tester
             throw new BuildException("must specify at least one fileset");
         }
 
-        // create parser
-        XMLParserConfiguration parser = new HTMLConfiguration();
-
         // parse input files and produce output files
         log("Parsing test files and generating output...");
         File outdir = new File(outputdir);
@@ -113,10 +104,37 @@ public class Tester
                 log("  "+outfile, Project.MSG_VERBOSE);
                 OutputStream out = null;
                 try {
+                    // create filters
                     out = new FileOutputStream(outfile);
                     XMLDocumentFilter[] filters = { new Writer(out) };
+                    
+                    // create parser
+                    XMLParserConfiguration parser = new HTMLConfiguration();
+
+                    // parser settings
                     parser.setProperty("http://cyberneko.org/html/properties/filters", filters);
-                    parser.parse(new XMLInputSource(null, infile.toString(), null));
+                    String infilename = infile.toString();
+                    File insettings = new File(infilename+".settings");
+                    if (insettings.exists()) {
+                        BufferedReader settings = new BufferedReader(new FileReader(insettings));
+                        String settingline;
+                        while ((settingline = settings.readLine()) != null) {
+                            StringTokenizer tokenizer = new StringTokenizer(settingline);
+                            String type = tokenizer.nextToken();
+                            String id = tokenizer.nextToken();
+                            String value = tokenizer.nextToken();
+                            if (type.equals("feature")) {
+                                parser.setFeature(id, value.equals("true"));
+                            }
+                            else {
+                                parser.setProperty(id, value);
+                            }
+                        }
+                        settings.close();
+                    }
+
+                    // parse
+                    parser.parse(new XMLInputSource(null, infilename, null));
                 }
                 catch (Exception e) {
                     log("  error parsing input file, "+infile);

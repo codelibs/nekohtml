@@ -73,7 +73,7 @@ import org.apache.xerces.xni.parser.XMLPullParserConfiguration;
  *
  * @author Andy Clark
  *
- * @version $Id$
+ * @version $Id: HTMLConfiguration.java,v 1.8 2004/06/30 19:00:28 andyc Exp $
  */
 public class HTMLConfiguration 
     extends ParserConfigurationSettings
