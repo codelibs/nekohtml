@@ -1,7 +1,7 @@
 <title>NekoHTML</title>
 <link rel=stylesheet type=text/css href=../style.css>
 
-<h1>CyberNeko HTML Parser <sub>0.6.7</sub></h1>
+<h1>CyberNeko HTML Parser <sub>0.6.8</sub></h1>
 <div class='navbar'>
 [<a href='../index.html'>Home</a>]
 [
@@ -67,7 +67,7 @@ This version of NekoHTML requires the following:
 <ul>
 <li><a href='http://java.sun.com/products/'>Java 1.1</a> (or 
     higher)
-<li><a href='http://xml.apache.org/dist/xerces-j/'>Xerces 2.0.0</a>
+<li><a href='http://xml.apache.org/dist/xerces-j/'>Xerces-J 2.0.0</a>
     (or higher)
 </ul>
 <p>
@@ -78,13 +78,13 @@ This version has the following limitations:
     documents with multiple &lt;html&gt; tags are inherently 
     ill-formed because XML documents may only have a single root
     element.
-<li>Code added to the core DOM implementation in Xerces 2.0.1
+<li>Code added to the core DOM implementation in Xerces-J 2.0.1
     introduced a bug in the HTML DOM implementation based on it.
     The bug causes the element nodes in the resultant HTML document 
     object to be of type <code>org.apache.xerces.dom.ElementNSImpl</code> 
     instead of the appropriate HTML DOM element objects. The problem
-    affects NekoHTML users who use the parser with Xerces 2.0.1 and
-    anyone using the HTML DOM implementation in Xerces 2.0.1.    
+    affects NekoHTML users who use the parser with Xerces-J 2.0.1 and
+    anyone using the HTML DOM implementation in Xerces-J 2.0.1.    
 <li>There are no other known major limitations with this release. 
     However, additional work can always be done to improve 
     performance, fix bugs, and add functionality.

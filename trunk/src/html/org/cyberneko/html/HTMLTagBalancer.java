@@ -7,9 +7,12 @@
 
 package org.cyberneko.html;
 
+import java.lang.reflect.Method;
+
 import org.apache.xerces.util.AugmentationsImpl;
 import org.apache.xerces.util.XMLAttributesImpl;
 import org.apache.xerces.xni.Augmentations;
+import org.apache.xerces.xni.NamespaceContext;
 import org.apache.xerces.xni.QName;
 import org.apache.xerces.xni.XMLAttributes;
 import org.apache.xerces.xni.XMLDocumentHandler;
@@ -173,6 +176,9 @@ public class HTMLTagBalancer
      */
     protected boolean fSeenRootElementEnd;
 
+    /** True if seen &lt;body&lt; element. */
+    protected boolean fSeenBodyElement;
+
     // temp vars
 
     /** A qualified name. */
@@ -290,18 +296,74 @@ public class HTMLTagBalancer
     // XMLDocumentHandler methods
     //
 
+    // since Xerces-J 2.2.0
+
     /** Start document. */
-    public void startDocument(XMLLocator locator, String encoding, Augmentations augs) 
+    public void startDocument(XMLLocator locator, String encoding, 
+                              NamespaceContext nscontext, Augmentations augs) 
         throws XNIException {
-        
+
+        // reset state
         fElementStack.top = 0;
         fSeenRootElement = false;
         fSeenRootElementEnd = false;
-        if (fDocumentHandler != null) {
-            fDocumentHandler.startDocument(locator, encoding, augs);
-        }
+        fSeenBodyElement = false;
 
-    } // startDocument(Augmentations)
+        // pass on event
+        if (fDocumentHandler != null) {
+            try {
+                // NOTE: Hack to allow the default filter to work with
+                //       old and new versions of the XNI document handler
+                //       interface. -Ac
+                Class cls = fDocumentHandler.getClass();
+                Class[] types = {
+                    XMLLocator.class, String.class,
+                    NamespaceContext.class, Augmentations.class
+                };
+                Method method = cls.getMethod("startDocument", types);
+                Object[] params = {
+                    locator, encoding, 
+                    nscontext, augs
+                };
+                method.invoke(fDocumentHandler, params);
+            }
+            catch (XNIException e) {
+                throw e;
+            }
+            catch (Exception e) {
+                try {
+                    // NOTE: Hack to allow the default filter to work with
+                    //       old and new versions of the XNI document handler
+                    //       interface. -Ac
+                    Class cls = fDocumentHandler.getClass();
+                    Class[] types = {
+                        XMLLocator.class, String.class, Augmentations.class
+                    };
+                    Method method = cls.getMethod("startDocument", types);
+                    Object[] params = {
+                        locator, encoding, augs
+                    };
+                    method.invoke(fDocumentHandler, params);
+                }
+                catch (XNIException ex) {
+                    throw ex;
+                }
+                catch (Exception ex) {
+                    // NOTE: Should never reach here!
+                    throw new XNIException(ex);
+                }
+            }
+        }
+    
+    } // startDocument(XMLLocator,String,Augmentations)
+
+    // old methods
+
+    /** Start document. */
+    public void startDocument(XMLLocator locator, String encoding, Augmentations augs) 
+        throws XNIException {
+        startDocument(locator, encoding, null, augs);
+    } // startDocument(XMLLocator,String,Augmentations)
 
     /** XML declaration. */
     public void xmlDecl(String version, String encoding, String standalone,
@@ -395,6 +457,7 @@ public class HTMLTagBalancer
 
         // get element information
         HTMLElements.Element element = HTMLElements.getElement(elem.rawname);
+        fSeenBodyElement = fSeenBodyElement || element.code == HTMLElements.BODY;
 
         // check proper parent
         if (element.parent != null) {
@@ -410,29 +473,31 @@ public class HTMLTagBalancer
             }
             else {
                 HTMLElements.Element pelement = element.parent[0];
-                int depth = getParentDepth(element.parent);
-                if (depth == -1) {
-                    String pname = pelement.name;
-                    pname = modifyName(pname, fNamesElems);
-                    int pdepth = getParentDepth(pelement.parent);
-                    if (pdepth != -1) {
-                        for (int i = 1; i < pdepth; i++) {
-                            Info info = fElementStack.peek();
-                            if (fReportErrors) {
-                                String iname = modifyName(info.qname.rawname, fNamesElems);
-                                String ename = elem.rawname;
-                                String ppname = pelement.parent[0].name;
-                                ppname = modifyName(ppname, fNamesElems);
-                                fErrorReporter.reportWarning("HTML2003", new Object[]{iname,ename,pname,ppname});
+                if (pelement.code != HTMLElements.HEAD || !fSeenBodyElement) {
+                    int depth = getParentDepth(element.parent);
+                    if (depth == -1) {
+                        String pname = pelement.name;
+                        pname = modifyName(pname, fNamesElems);
+                        int pdepth = getParentDepth(pelement.parent);
+                        if (pdepth != -1) {
+                            for (int i = 1; i < pdepth; i++) {
+                                Info info = fElementStack.peek();
+                                if (fReportErrors) {
+                                    String iname = modifyName(info.qname.rawname, fNamesElems);
+                                    String ename = elem.rawname;
+                                    String ppname = pelement.parent[0].name;
+                                    ppname = modifyName(ppname, fNamesElems);
+                                    fErrorReporter.reportWarning("HTML2003", new Object[]{iname,ename,pname,ppname});
+                                }
+                                endElement(info.qname, synthesizedAugs());
                             }
-                            endElement(info.qname, synthesizedAugs());
+                            QName qname = new QName(null, pname, pname, null);
+                            if (fReportErrors) {
+                                String ename = elem.rawname;
+                                fErrorReporter.reportWarning("HTML2004", new Object[]{ename,pname});
+                            }
+                            startElement(qname, emptyAttributes(), synthesizedAugs());
                         }
-                        QName qname = new QName(null, pname, pname, null);
-                        if (fReportErrors) {
-                            String ename = elem.rawname;
-                            fErrorReporter.reportWarning("HTML2004", new Object[]{ename,pname});
-                        }
-                        startElement(qname, emptyAttributes(), synthesizedAugs());
                     }
                 }
             }

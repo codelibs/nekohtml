@@ -194,7 +194,7 @@ public class Tester
             n++;
             if ((l2 = i2.readLine()) == null) {
                 errors++;
-                log("  file lengths don't match");
+                log("  file lengths don't match ("+f1+")");
                 break;
             }
             if (compare(f1.getName(), n, l1, l2)) {
@@ -204,7 +204,7 @@ public class Tester
         }
         if (errors == 0 && (l2 = i2.readLine()) != null) {
             errors++;
-            log("  file lengths don't match");
+            log("  file lengths don't match ("+f1+")");
         }
         i1.close();
         i2.close();

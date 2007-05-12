@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.io.PushbackReader;
 import java.io.Reader;
 import java.io.UnsupportedEncodingException;
+import java.lang.reflect.Method;
 import java.net.URL;
 import java.util.Stack;
 
@@ -29,6 +30,7 @@ import org.apache.xerces.util.URI;
 import org.apache.xerces.util.XMLAttributesImpl;
 import org.apache.xerces.util.XMLStringBuffer;
 import org.apache.xerces.xni.Augmentations;
+import org.apache.xerces.xni.NamespaceContext;
 import org.apache.xerces.xni.QName;
 import org.apache.xerces.xni.XMLAttributes;
 import org.apache.xerces.xni.XMLDocumentHandler;
@@ -330,6 +332,9 @@ public class HTMLScanner
 
     /** Location infoset item. */
     private final LocationItem fLocationItem = new LocationItem();
+
+    /** Single boolean array. */
+    private final boolean[] fSingleBoolean = { false };
 
     //
     // Public methods
@@ -925,13 +930,14 @@ public class HTMLScanner
     } // scanName():String
 
     /** Skips markup. */
-    protected void skipMarkup(boolean balance) throws IOException {
+    protected boolean skipMarkup(boolean balance) throws IOException {
         if (DEBUG_BUFFER) {
             System.out.print("(skipMarkup: ");
             printBuffer();
             System.out.println();
         }
         int depth = 1;
+        boolean slashgt = false;
         OUTER: while (true) {
             if (fCurrentEntity.offset == fCurrentEntity.length) {
                 if (load(0) == -1) {
@@ -950,6 +956,21 @@ public class HTMLScanner
                         break OUTER;
                     }
                 }
+                else if (c == '/') {
+                    c = fCurrentEntity.buffer[fCurrentEntity.offset++];
+                    fCurrentEntity.columnNumber++;
+                    if (c == '>') {
+                        slashgt = true;
+                        depth--;
+                        if (depth == 0) {
+                            break OUTER;
+                        }
+                    }
+                    else {
+                        fCurrentEntity.offset--;
+                        fCurrentEntity.columnNumber--;
+                    }
+                }
                 else if (c == '\r' || c == '\n') {
                     skipNewlines();
                 }
@@ -958,9 +979,11 @@ public class HTMLScanner
         if (DEBUG_BUFFER) {
             System.out.print(")skipMarkup: ");
             printBuffer();
+            System.out.print(" -> "+slashgt);
             System.out.println();
         }
-    } // skipMarkup()
+        return slashgt;
+    } // skipMarkup():boolean
 
     /** Skips whitespace. */
     protected void skipSpaces() throws IOException {
@@ -1312,8 +1335,10 @@ public class HTMLScanner
                                 fCurrentEntity.offset--;
                                 fCurrentEntity.columnNumber--;
                                 fElementCount++;
-                                String ename = scanStartElement();
-                                if (ename != null && HTMLElements.getElement(ename).isSpecial()) {
+                                fSingleBoolean[0] = false;
+                                String ename = scanStartElement(fSingleBoolean);
+                                if (ename != null && !fSingleBoolean[0] &&
+                                    HTMLElements.getElement(ename).isSpecial()) {
                                     setScanner(fSpecialScanner.setElementName(ename));
                                     setScannerState(STATE_CONTENT);
                                     return true;
@@ -1327,7 +1352,52 @@ public class HTMLScanner
                                 if (DEBUG_CALLBACKS) {
                                     System.out.println("startDocument()");
                                 }
-                                fDocumentHandler.startDocument(HTMLScanner.this, fIANAEncoding, locationAugs());
+                                XMLLocator locator = HTMLScanner.this;
+                                String encoding = fIANAEncoding;
+                                NamespaceContext nscontext = null;
+                                Augmentations augs = locationAugs();
+                                try {
+                                    // NOTE: Hack to allow the default filter to work with
+                                    //       old and new versions of the XNI document handler
+                                    //       interface. -Ac
+                                    Class cls = fDocumentHandler.getClass();
+                                    Class[] types = {
+                                        XMLLocator.class, String.class,
+                                        NamespaceContext.class, Augmentations.class
+                                    };
+                                    Method method = cls.getMethod("startDocument", types);
+                                    Object[] params = {
+                                        locator, encoding, 
+                                        nscontext, augs
+                                    };
+                                    method.invoke(fDocumentHandler, params);
+                                }
+                                catch (XNIException e) {
+                                    throw e;
+                                }
+                                catch (Exception e) {
+                                    try {
+                                        // NOTE: Hack to allow the default filter to work with
+                                        //       old and new versions of the XNI document handler
+                                        //       interface. -Ac
+                                        Class cls = fDocumentHandler.getClass();
+                                        Class[] types = {
+                                            XMLLocator.class, String.class, Augmentations.class
+                                        };
+                                        Method method = cls.getMethod("startDocument", types);
+                                        Object[] params = {
+                                            locator, encoding, augs
+                                        };
+                                        method.invoke(fDocumentHandler, params);
+                                    }
+                                    catch (XNIException ex) {
+                                        throw ex;
+                                    }
+                                    catch (Exception ex) {
+                                        // NOTE: Should never reach here!
+                                        throw new XNIException(ex);
+                                    }
+                                }
                             }
                             setScannerState(STATE_CONTENT);
                             break;
@@ -1598,7 +1668,69 @@ public class HTMLScanner
             if (fReportErrors) {
                 fErrorReporter.reportWarning("HTML1008", null);
             }
-            skipMarkup(false);
+            String target = scanName();
+            while (true) {
+                int c = read();
+                if (c == '\r' || c == '\n') {
+                    fCurrentEntity.lineNumber++;
+                    fCurrentEntity.columnNumber = 1;
+                    if (c == '\r') {
+                        c = read();
+                        if (c != '\n') {
+                            fCurrentEntity.offset--;
+                        }
+                    }
+                    continue;
+                }
+                if (c == -1) {
+                    break;
+                }
+                if (c != ' ' && c != '\t') {
+                    fCurrentEntity.offset--;
+                    fCurrentEntity.columnNumber--;
+                    break;
+                }
+            }
+            fStringBuffer.clear();
+            while (true) {
+                int c = read();
+                if (c == '?') {
+                    c = read();
+                    if (c == '>') {
+                        break;
+                    }
+                    else {
+                        fStringBuffer.append('?');
+                        fCurrentEntity.offset--;
+                        fCurrentEntity.columnNumber--;
+                        continue;
+                    }
+                }
+                else if (c == '\r' || c == '\n') {
+                    fStringBuffer.append('\n');
+                    fCurrentEntity.lineNumber++;
+                    fCurrentEntity.columnNumber = 1;
+                    if (c == '\r') {
+                        c = read();
+                        if (c != '\n') {
+                            fCurrentEntity.offset--;
+                        }
+                    }
+                    continue;
+                }
+                else if (c == -1) {
+                    break;
+                }
+                else {
+                    fStringBuffer.append((char)c);
+                }
+            }
+            XMLString data = fStringBuffer;
+            if (fDocumentHandler != null) {
+                fEndLineNumber = fCurrentEntity.lineNumber;
+                fEndColumnNumber = fCurrentEntity.columnNumber;
+                fDocumentHandler.processingInstruction(target, data, locationAugs());
+            }
             if (DEBUG_BUFFER) {
                 System.out.print(")scanPI: ");
                 printBuffer();
@@ -1606,8 +1738,13 @@ public class HTMLScanner
             }
         } // scanPI()
 
-        /** Scans a start element. */
-        protected String scanStartElement() throws IOException {
+        /** 
+         * Scans a start element. 
+         *
+         * @param empty Is used for a second return value to indicate whether
+         *              the start element tag is empty (e.g. "/&gt;").
+         */
+        protected String scanStartElement(boolean[] empty) throws IOException {
             String ename = scanName();
             int length = ename != null ? ename.length() : 0;
             int c = length > 0 ? ename.charAt(0) : -1;
@@ -1630,7 +1767,7 @@ public class HTMLScanner
             boolean print = false;
             int beginLineNumber = fBeginLineNumber;
             int beginColumnNumber = fBeginColumnNumber;
-            while (scanAttribute(fAttributes)) {
+            while (scanAttribute(fAttributes, empty)) {
                 // do nothing
             }
             fBeginLineNumber = beginLineNumber;
@@ -1702,13 +1839,26 @@ public class HTMLScanner
                 }
                 fEndLineNumber = fCurrentEntity.lineNumber;
                 fEndColumnNumber = fCurrentEntity.columnNumber;
-                fDocumentHandler.startElement(fQName, fAttributes, locationAugs());
+                if (empty[0]) {
+                    fDocumentHandler.emptyElement(fQName, fAttributes, locationAugs());
+                }
+                else {
+                    fDocumentHandler.startElement(fQName, fAttributes, locationAugs());
+                }
             }
             return ename;
         } // scanStartElement():ename
 
-        /** Scans an attribute. */
-        protected boolean scanAttribute(XMLAttributesImpl attributes)
+        /** 
+         * Scans an attribute. 
+         *
+         * @param attributes The list of attributes.
+         * @param empty      Is used for a second return value to indicate 
+         *                   whether the start element tag is empty 
+         *                   (e.g. "/&gt;").
+         */
+        protected boolean scanAttribute(XMLAttributesImpl attributes,
+                                        boolean[] empty)
             throws IOException {
             skipSpaces();
             fBeginLineNumber = fCurrentEntity.lineNumber;
@@ -1730,7 +1880,7 @@ public class HTMLScanner
                 if (fReportErrors) {
                     fErrorReporter.reportError("HTML1011", null);
                 }
-                skipMarkup(false);
+                empty[0] = skipMarkup(false);
                 return false;
             }
             aname = modifyName(aname, fNamesAttrs);
@@ -1750,13 +1900,17 @@ public class HTMLScanner
                     addLocationItem(attributes, attributes.getLength() - 1);
                 }
                 if (c == '/') {
-                    skipMarkup(false);
+                    fCurrentEntity.offset--;
+                    fCurrentEntity.columnNumber--;
+                    empty[0] = skipMarkup(false);
                 }
                 return false;
             }
             if (c == '/' || c == '>') {
                 if (c == '/') {
-                    skipMarkup(false);
+                    fCurrentEntity.offset--;
+                    fCurrentEntity.columnNumber--;
+                    empty[0] = skipMarkup(false);
                 }
                 fQName.setValues(null, aname, aname, null);
                 attributes.addAttribute(fQName, "CDATA", "");

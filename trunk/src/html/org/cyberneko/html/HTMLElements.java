@@ -146,7 +146,10 @@ public class HTMLElements {
 
     // information
 
-    /** Element information. */
+    /** Element information organized by first letter. */
+    protected static final Element[][] ELEMENTS_ARRAY = new Element[26][];
+
+    /** Element information as a contiguous list. */
     protected static final ElementList ELEMENTS = new ElementList();
 
     /** No such element. */
@@ -174,236 +177,291 @@ public class HTMLElements {
         // <!ENTITY % block "P | %heading; | %list; | %preformatted; | DL | DIV | NOSCRIPT | BLOCKQUOTE | FORM | HR | TABLE | FIELDSET | ADDRESS">
         // <!ENTITY % flow "%block; | %inline;">
 
-        // A - - (%inline;)* -(A)
-        ELEMENTS.addElement(new Element(A, "A", Element.INLINE, BODY, null));
-        // ABBR - - (%inline;)*
-        ELEMENTS.addElement(new Element(ABBR, "ABBR", Element.INLINE, BODY, null));
-        // ACRONYM - - (%inline;)*
-        ELEMENTS.addElement(new Element(ACRONYM, "ACRONYM", Element.INLINE, BODY, null));
-        // ADDRESS - - (%inline;)*
-        ELEMENTS.addElement(new Element(ADDRESS, "ADDRESS", Element.BLOCK, BODY, null));
-        // APPLET
-        ELEMENTS.addElement(new Element(APPLET, "APPLET", 0, BODY, null));
-        // AREA - O EMPTY
-        ELEMENTS.addElement(new Element(AREA, "AREA", Element.EMPTY, MAP, null));
-        // B - - (%inline;)*
-        ELEMENTS.addElement(new Element(B, "B", Element.INLINE, BODY, null));
-        // BASE - O EMPTY
-        ELEMENTS.addElement(new Element(BASE, "BASE", Element.EMPTY, HEAD, null));
-        // BASEFONT
-        ELEMENTS.addElement(new Element(BASEFONT, "BASEFONT", 0, HEAD, null));
-        // BDO - - (%inline;)*
-        ELEMENTS.addElement(new Element(BDO, "BDO", Element.INLINE, BODY, null));
-        // BGSOUND
-        ELEMENTS.addElement(new Element(BGSOUND, "BGSOUND", Element.EMPTY, HEAD, null));
-        // BIG - - (%inline;)*
-        ELEMENTS.addElement(new Element(BIG, "BIG", Element.INLINE, BODY, null));
-        // BLINK
-        ELEMENTS.addElement(new Element(BLINK, "BLINK", Element.INLINE, BODY, null));
-        // BLOCKQUOTE - - (%block;|SCRIPT)+
-        ELEMENTS.addElement(new Element(BLOCKQUOTE, "BLOCKQUOTE", Element.BLOCK, BODY, null));
-        // BODY O O (%block;|SCRIPT)+ +(INS|DEL)
-        ELEMENTS.addElement(new Element(BODY, "BODY", 0, HTML, new short[]{HEAD}));
-        // BR - O EMPTY
-        ELEMENTS.addElement(new Element(BR, "BR", Element.EMPTY, BODY, null));
-        // BUTTON - - (%flow;)* -(A|%formctrl;|FORM|FIELDSET)
-        ELEMENTS.addElement(new Element(BUTTON, "BUTTON", 0, FORM, null));
-        // CAPTION - - (%inline;)*
-        ELEMENTS.addElement(new Element(CAPTION, "CAPTION", Element.INLINE, TABLE, null));
-        // CENTER, 
-        ELEMENTS.addElement(new Element(CENTER, "CENTER", Element.INLINE, BODY, null));
-        // CITE - - (%inline;)*
-        ELEMENTS.addElement(new Element(CITE, "CITE", Element.INLINE, BODY, null));
-        // CODE - - (%inline;)*
-        ELEMENTS.addElement(new Element(CODE, "CODE", Element.INLINE, BODY, null));
-        // COL - O EMPTY
-        ELEMENTS.addElement(new Element(COL, "COL", Element.EMPTY, TABLE, null));
-        // COLGROUP - O (COL)*
-        ELEMENTS.addElement(new Element(COLGROUP, "COLGROUP", 0, TABLE, new short[]{COL,COLGROUP}));
-        // COMMENT
-        ELEMENTS.addElement(new Element(COMMENT, "COMMENT", Element.SPECIAL, HTML, null));
-        // DEL - - (%flow;)*
-        ELEMENTS.addElement(new Element(DEL, "DEL", 0, BODY, null));
-        // DFN - - (%inline;)*
-        ELEMENTS.addElement(new Element(DFN, "DFN", Element.INLINE, BODY, null));
-        // DIR
-        ELEMENTS.addElement(new Element(DIR, "DIR", 0, BODY, null));
-        // DIV - - (%flow;)*
-        ELEMENTS.addElement(new Element(DIV, "DIV", Element.BLOCK, BODY, null));
-        // DD - O (%flow;)*
-        ELEMENTS.addElement(new Element(DD, "DD", 0, DL, new short[]{DT,DD}));
-        // DL - - (DT|DD)+
-        ELEMENTS.addElement(new Element(DL, "DL", Element.BLOCK, BODY, null));
-        // DT - O (%inline;)*
-        ELEMENTS.addElement(new Element(DT, "DT", 0, DL, new short[]{DT,DD}));
-        // EM - - (%inline;)*
-        ELEMENTS.addElement(new Element(EM, "EM", Element.INLINE, BODY, null));
-        // EMBED
-        ELEMENTS.addElement(new Element(EMBED, "EMBED", 0, BODY, null));
-        // FIELDSET - - (#PCDATA,LEGEND,(%flow;)*)
-        ELEMENTS.addElement(new Element(FIELDSET, "FIELDSET", 0, FORM, null));
-        // FONT
-        ELEMENTS.addElement(new Element(FONT, "FONT", Element.INLINE, BODY, null));
-        // FORM - - (%block;|SCRIPT)+ -(FORM)
-        ELEMENTS.addElement(new Element(FORM, "FORM", 0, new short[]{BODY,TD}, null));
-        // FRAME - O EMPTY
-        ELEMENTS.addElement(new Element(FRAME, "FRAME", Element.EMPTY, FRAMESET, null));
-        // FRAMESET - - ((FRAMESET|FRAME)+ & NOFRAMES?)
-        ELEMENTS.addElement(new Element(FRAMESET, "FRAMESET", 0, HTML, null));
-        // (H1|H2|H3|H4|H5|H6) - - (%inline;)*
-        ELEMENTS.addElement(new Element(H1, "H1", Element.BLOCK, BODY, new short[]{H1,H2,H3,H4,H5,H6,P}));
-        ELEMENTS.addElement(new Element(H2, "H2", Element.BLOCK, BODY, new short[]{H1,H2,H3,H4,H5,H6,P}));
-        ELEMENTS.addElement(new Element(H3, "H3", Element.BLOCK, BODY, new short[]{H1,H2,H3,H4,H5,H6,P}));
-        ELEMENTS.addElement(new Element(H4, "H4", Element.BLOCK, BODY, new short[]{H1,H2,H3,H4,H5,H6,P}));
-        ELEMENTS.addElement(new Element(H5, "H5", Element.BLOCK, BODY, new short[]{H1,H2,H3,H4,H5,H6,P}));
-        ELEMENTS.addElement(new Element(H6, "H6", Element.BLOCK, BODY, new short[]{H1,H2,H3,H4,H5,H6,P}));
-        // HEAD O O (%head.content;) +(%head.misc;)
-        ELEMENTS.addElement(new Element(HEAD, "HEAD", 0, HTML, null));
-        // HR - O EMPTY
-        ELEMENTS.addElement(new Element(HR, "HR", Element.EMPTY, BODY, new short[]{P}));
-        // HTML O O (%html.content;)
-        ELEMENTS.addElement(new Element(HTML, "HTML", 0, null, null));
-        // I - - (%inline;)*
-        ELEMENTS.addElement(new Element(I, "I", Element.INLINE, BODY, null));
-        // IFRAME
-        ELEMENTS.addElement(new Element(IFRAME, "IFRAME", Element.BLOCK, BODY, null));
-        // ILAYER
-        ELEMENTS.addElement(new Element(ILAYER, "ILAYER", Element.BLOCK, BODY, null));
-        // IMG - O EMPTY
-        ELEMENTS.addElement(new Element(IMG, "IMG", Element.EMPTY, BODY, null));
-        // INPUT - O EMPTY
-        ELEMENTS.addElement(new Element(INPUT, "INPUT", Element.EMPTY, FORM, null));
-        // INS - - (%flow;)*
-        ELEMENTS.addElement(new Element(INS, "INS", 0, BODY, null));
-        // ISINDEX
-        ELEMENTS.addElement(new Element(ISINDEX, "ISINDEX", 0, HEAD, null));
-        // KBD - - (%inline;)*
-        ELEMENTS.addElement(new Element(KBD, "KBD", Element.INLINE, BODY, null));
-        // KEYGEN
-        ELEMENTS.addElement(new Element(KEYGEN, "KEYGEN", 0, FORM, null));
-        // LABEL - - (%inline;)* -(LABEL)
-        ELEMENTS.addElement(new Element(LABEL, "LABEL", 0, FORM, null));
-        // LAYER
-        ELEMENTS.addElement(new Element(LAYER, "LAYER", Element.BLOCK, BODY, null));
-        // LEGEND - - (%inline;)*
-        ELEMENTS.addElement(new Element(LEGEND, "LEGEND", Element.INLINE, FIELDSET, null));
-        // LI - O (%flow;)*
-        ELEMENTS.addElement(new Element(LI, "LI", 0, BODY, new short[]{LI}));
-        // LINK - O EMPTY
-        ELEMENTS.addElement(new Element(LINK, "LINK", Element.EMPTY, HEAD, null));
-        // LISTING
-        ELEMENTS.addElement(new Element(LISTING, "LISTING", 0, BODY, null));
-        // MAP - - ((%block;) | AREA)+
-        ELEMENTS.addElement(new Element(MAP, "MAP", Element.INLINE, BODY, null));
-        // MARQUEE
-        ELEMENTS.addElement(new Element(MARQUEE, "MARQUEE", 0, BODY, null));
-        // MENU
-        ELEMENTS.addElement(new Element(MENU, "MENU", 0, BODY, null));
-        // META - O EMPTY
-        ELEMENTS.addElement(new Element(META, "META", Element.EMPTY, HEAD, new short[]{STYLE,TITLE}));
-        // MULTICOL
-        ELEMENTS.addElement(new Element(MULTICOL, "MULTICOL", 0, BODY, null));
-        // NEXTID
-        ELEMENTS.addElement(new Element(NEXTID, "NEXTID", Element.EMPTY, BODY, null));
-        // NOBR
-        ELEMENTS.addElement(new Element(NOBR, "NOBR", Element.INLINE, BODY, null));
-        // NOEMBED
-        ELEMENTS.addElement(new Element(NOEMBED, "NOEMBED", 0, BODY, null));
-        // NOFRAMES - - (BODY) -(NOFRAMES)
-        ELEMENTS.addElement(new Element(NOFRAMES, "NOFRAMES", 0, FRAMESET, null));
-        // NOLAYER
-        ELEMENTS.addElement(new Element(NOLAYER, "NOLAYER", 0, BODY, null));
-        // NOSCRIPT - - (%block;)+
-        ELEMENTS.addElement(new Element(NOSCRIPT, "NOSCRIPT", 0, new short[]{HEAD,BODY}, null));
-        // OBJECT - - (PARAM | %flow;)*
-        ELEMENTS.addElement(new Element(OBJECT, "OBJECT", 0, BODY, null));
-        // OL - - (LI)+
-        ELEMENTS.addElement(new Element(OL, "OL", Element.BLOCK, BODY, null));
-        // OPTGROUP - - (OPTION)+
-        ELEMENTS.addElement(new Element(OPTGROUP, "OPTGROUP", 0, SELECT, new short[]{OPTION}));
-        // OPTION - O (#PCDATA)
-        ELEMENTS.addElement(new Element(OPTION, "OPTION", 0, SELECT, new short[]{OPTION}));
-        // P - O (%inline;)*
-        ELEMENTS.addElement(new Element(P, "P", 0, BODY, new short[]{P}));
-        // PARAM - O EMPTY
-        ELEMENTS.addElement(new Element(PARAM, "PARAM", Element.EMPTY, OBJECT, null));
-        // PLAINTEXT
-        ELEMENTS.addElement(new Element(PLAINTEXT, "PLAINTEXT", Element.SPECIAL, BODY, null));
-        // PRE - - (%inline;)* -(%pre.exclusion;)
-        ELEMENTS.addElement(new Element(PRE, "PRE", 0, BODY, null));
-        // Q - - (%inline;)*
-        ELEMENTS.addElement(new Element(Q, "Q", Element.INLINE, BODY, null));
-        // RB
-        ELEMENTS.addElement(new Element(RB, "RB", Element.INLINE, RUBY, new short[]{RB}));
-        // RBC
-        ELEMENTS.addElement(new Element(RBC, "RBC", 0, RUBY, null));
-        // RP
-        ELEMENTS.addElement(new Element(RP, "RP", Element.INLINE, RUBY, new short[]{RB}));
-        // RT
-        ELEMENTS.addElement(new Element(RT, "RT", Element.INLINE, RUBY, new short[]{RB,RP}));
-        // RTC
-        ELEMENTS.addElement(new Element(RTC, "RTC", 0, RUBY, new short[]{RBC}));
-        // RUBY
-        ELEMENTS.addElement(new Element(RUBY, "RUBY", 0, BODY, new short[]{RUBY}));
-        // S
-        ELEMENTS.addElement(new Element(S, "S", 0, BODY, null));
-        // SAMP - - (%inline;)*
-        ELEMENTS.addElement(new Element(SAMP, "SAMP", Element.INLINE, BODY, null));
-        // SCRIPT - - %Script;
-        ELEMENTS.addElement(new Element(SCRIPT, "SCRIPT", Element.SPECIAL, new short[]{HEAD,BODY}, null));
-        // SELECT - - (OPTGROUP|OPTION)+
-        ELEMENTS.addElement(new Element(SELECT, "SELECT", 0, FORM, new short[]{SELECT}));
-        // SMALL - - (%inline;)*
-        ELEMENTS.addElement(new Element(SMALL, "SMALL", Element.INLINE, BODY, null));
-        // SOUND
-        ELEMENTS.addElement(new Element(SOUND, "SOUND", Element.EMPTY, HEAD, null));
-        // SPACER
-        ELEMENTS.addElement(new Element(SPACER, "SPACER", Element.EMPTY, BODY, null));
-        // SPAN - - (%inline;)*
-        ELEMENTS.addElement(new Element(SPAN, "SPAN", Element.INLINE, BODY, null));
-        // STRIKE
-        ELEMENTS.addElement(new Element(STRIKE, "STRIKE", Element.INLINE, BODY, null));
-        // STRONG - - (%inline;)*
-        ELEMENTS.addElement(new Element(STRONG, "STRONG", Element.INLINE, BODY, null));
-        // STYLE - - %StyleSheet;
-        ELEMENTS.addElement(new Element(STYLE, "STYLE", 0, new short[]{HEAD,BODY}, new short[]{STYLE,TITLE,META}));
-        // SUB - - (%inline;)*
-        ELEMENTS.addElement(new Element(SUB, "SUB", Element.INLINE, BODY, null));
-        // SUP - - (%inline;)*
-        ELEMENTS.addElement(new Element(SUP, "SUP", Element.INLINE, BODY, null));
-        // TABLE - - (CAPTION?, (COL*|COLGROUP*), THEAD?, TFOOT?, TBODY+)
-        ELEMENTS.addElement(new Element(TABLE, "TABLE", Element.BLOCK|Element.CONTAINER, BODY, null));
-        // TBODY O O (TR)+
-        ELEMENTS.addElement(new Element(TBODY, "TBODY", 0, TABLE, new short[]{THEAD,TD,TH,TR,COLGROUP}));
-        // TD - O (%flow;)*
-        ELEMENTS.addElement(new Element(TD, "TD", 0, TR, new short[]{TD,TH}));
-        // TEXTAREA - - (#PCDATA)
-        ELEMENTS.addElement(new Element(TEXTAREA, "TEXTAREA", Element.SPECIAL, FORM, null));
-        // TFOOT - O (TR)+
-        ELEMENTS.addElement(new Element(TFOOT, "TFOOT", 0, TABLE, new short[]{THEAD,TBODY,TD,TH,TR}));
-        // TH - O (%flow;)*
-        ELEMENTS.addElement(new Element(TH, "TH", 0, TR, new short[]{TD,TH}));
-        // THEAD - O (TR)+
-        ELEMENTS.addElement(new Element(THEAD, "THEAD", 0, TABLE, new short[]{COLGROUP}));
-        // TITLE - - (#PCDATA) -(%head.misc;)
-        ELEMENTS.addElement(new Element(TITLE, "TITLE", 0, new short[]{HEAD,BODY}, null));
-        // TR - O (TH|TD)+
-        ELEMENTS.addElement(new Element(TR, "TR", Element.BLOCK, TABLE, new short[]{TD,TH,TR,COLGROUP}));
-        // TT - - (%inline;)*
-        ELEMENTS.addElement(new Element(TT, "TT", Element.INLINE, BODY, null));
-        // U, 
-        ELEMENTS.addElement(new Element(U, "U", Element.INLINE, BODY, null));
-        // UL - - (LI)+
-        ELEMENTS.addElement(new Element(UL, "UL", Element.BLOCK, BODY, null));
-        // VAR - - (%inline;)*
-        ELEMENTS.addElement(new Element(VAR, "VAR", Element.INLINE, BODY, null));
-        // WBR
-        ELEMENTS.addElement(new Element(WBR, "WBR", Element.EMPTY, BODY, null));
-        // XML
-        ELEMENTS.addElement(new Element(XML, "XML", 0, BODY, null));
-        // XMP
-        ELEMENTS.addElement(new Element(XMP, "XMP", Element.SPECIAL, BODY, null));
-        // no such element -- this should always be at the end
+        // initialize array of element information
+        ELEMENTS_ARRAY['A'-'A'] = new Element[] {
+            // A - - (%inline;)* -(A)
+            new Element(A, "A", Element.INLINE, BODY, null),
+            // ABBR - - (%inline;)*
+            new Element(ABBR, "ABBR", Element.INLINE, BODY, null),
+            // ACRONYM - - (%inline;)*
+            new Element(ACRONYM, "ACRONYM", Element.INLINE, BODY, null),
+            // ADDRESS - - (%inline;)*
+            new Element(ADDRESS, "ADDRESS", Element.BLOCK, BODY, null),
+            // APPLET
+            new Element(APPLET, "APPLET", 0, BODY, null),
+            // AREA - O EMPTY
+            new Element(AREA, "AREA", Element.EMPTY, MAP, null),
+        };
+        ELEMENTS_ARRAY['B'-'A'] = new Element[] {
+            // B - - (%inline;)*
+            new Element(B, "B", Element.INLINE, BODY, null),
+            // BASE - O EMPTY
+            new Element(BASE, "BASE", Element.EMPTY, HEAD, null),
+            // BASEFONT
+            new Element(BASEFONT, "BASEFONT", 0, HEAD, null),
+            // BDO - - (%inline;)*
+            new Element(BDO, "BDO", Element.INLINE, BODY, null),
+            // BGSOUND
+            new Element(BGSOUND, "BGSOUND", Element.EMPTY, HEAD, null),
+            // BIG - - (%inline;)*
+            new Element(BIG, "BIG", Element.INLINE, BODY, null),
+            // BLINK
+            new Element(BLINK, "BLINK", Element.INLINE, BODY, null),
+            // BLOCKQUOTE - - (%block;|SCRIPT)+
+            new Element(BLOCKQUOTE, "BLOCKQUOTE", Element.BLOCK, BODY, null),
+            // BODY O O (%block;|SCRIPT)+ +(INS|DEL)
+            new Element(BODY, "BODY", 0, HTML, new short[]{HEAD}),
+            // BR - O EMPTY
+            new Element(BR, "BR", Element.EMPTY, BODY, null),
+            // BUTTON - - (%flow;)* -(A|%formctrl;|FORM|FIELDSET)
+            new Element(BUTTON, "BUTTON", 0, FORM, null),
+        };
+        ELEMENTS_ARRAY['C'-'A'] = new Element[] {
+            // CAPTION - - (%inline;)*
+            new Element(CAPTION, "CAPTION", Element.INLINE, TABLE, null),
+            // CENTER, 
+            new Element(CENTER, "CENTER", Element.INLINE, BODY, null),
+            // CITE - - (%inline;)*
+            new Element(CITE, "CITE", Element.INLINE, BODY, null),
+            // CODE - - (%inline;)*
+            new Element(CODE, "CODE", Element.INLINE, BODY, null),
+            // COL - O EMPTY
+            new Element(COL, "COL", Element.EMPTY, TABLE, null),
+            // COLGROUP - O (COL)*
+            new Element(COLGROUP, "COLGROUP", 0, TABLE, new short[]{COL,COLGROUP}),
+            // COMMENT
+            new Element(COMMENT, "COMMENT", Element.SPECIAL, HTML, null),
+        };
+        ELEMENTS_ARRAY['D'-'A'] = new Element[] {
+            // DEL - - (%flow;)*
+            new Element(DEL, "DEL", 0, BODY, null),
+            // DFN - - (%inline;)*
+            new Element(DFN, "DFN", Element.INLINE, BODY, null),
+            // DIR
+            new Element(DIR, "DIR", 0, BODY, null),
+            // DIV - - (%flow;)*
+            new Element(DIV, "DIV", Element.BLOCK, BODY, null),
+            // DD - O (%flow;)*
+            new Element(DD, "DD", 0, DL, new short[]{DT,DD}),
+            // DL - - (DT|DD)+
+            new Element(DL, "DL", Element.BLOCK, BODY, null),
+            // DT - O (%inline;)*
+            new Element(DT, "DT", 0, DL, new short[]{DT,DD}),
+        };
+        ELEMENTS_ARRAY['E'-'A'] = new Element[] {
+            // EM - - (%inline;)*
+            new Element(EM, "EM", Element.INLINE, BODY, null),
+            // EMBED
+            new Element(EMBED, "EMBED", 0, BODY, null),
+        };
+        ELEMENTS_ARRAY['F'-'A'] = new Element[] {
+            // FIELDSET - - (#PCDATA,LEGEND,(%flow;)*)
+            new Element(FIELDSET, "FIELDSET", 0, FORM, null),
+            // FONT
+            new Element(FONT, "FONT", Element.INLINE, BODY, null),
+            // FORM - - (%block;|SCRIPT)+ -(FORM)
+            new Element(FORM, "FORM", 0, new short[]{BODY,TD,P,DIV}, null),
+            // FRAME - O EMPTY
+            new Element(FRAME, "FRAME", Element.EMPTY, FRAMESET, null),
+            // FRAMESET - - ((FRAMESET|FRAME)+ & NOFRAMES?)
+            new Element(FRAMESET, "FRAMESET", 0, HTML, null),
+        };
+        ELEMENTS_ARRAY['H'-'A'] = new Element[] {
+            // (H1|H2|H3|H4|H5|H6) - - (%inline;)*
+            new Element(H1, "H1", Element.BLOCK, BODY, new short[]{H1,H2,H3,H4,H5,H6,P}),
+            new Element(H2, "H2", Element.BLOCK, BODY, new short[]{H1,H2,H3,H4,H5,H6,P}),
+            new Element(H3, "H3", Element.BLOCK, BODY, new short[]{H1,H2,H3,H4,H5,H6,P}),
+            new Element(H4, "H4", Element.BLOCK, BODY, new short[]{H1,H2,H3,H4,H5,H6,P}),
+            new Element(H5, "H5", Element.BLOCK, BODY, new short[]{H1,H2,H3,H4,H5,H6,P}),
+            new Element(H6, "H6", Element.BLOCK, BODY, new short[]{H1,H2,H3,H4,H5,H6,P}),
+            // HEAD O O (%head.content;) +(%head.misc;)
+            new Element(HEAD, "HEAD", 0, HTML, null),
+            // HR - O EMPTY
+            new Element(HR, "HR", Element.EMPTY, BODY, new short[]{P}),
+            // HTML O O (%html.content;)
+            new Element(HTML, "HTML", 0, null, null),
+        };
+        ELEMENTS_ARRAY['I'-'A'] = new Element[] {
+            // I - - (%inline;)*
+            new Element(I, "I", Element.INLINE, BODY, null),
+            // IFRAME
+            new Element(IFRAME, "IFRAME", Element.BLOCK, BODY, null),
+            // ILAYER
+            new Element(ILAYER, "ILAYER", Element.BLOCK, BODY, null),
+            // IMG - O EMPTY
+            new Element(IMG, "IMG", Element.EMPTY, BODY, null),
+            // INPUT - O EMPTY
+            new Element(INPUT, "INPUT", Element.EMPTY, FORM, null),
+            // INS - - (%flow;)*
+            new Element(INS, "INS", 0, BODY, null),
+            // ISINDEX
+            new Element(ISINDEX, "ISINDEX", 0, HEAD, null),
+        };
+        ELEMENTS_ARRAY['K'-'A'] = new Element[] {
+            // KBD - - (%inline;)*
+            new Element(KBD, "KBD", Element.INLINE, BODY, null),
+            // KEYGEN
+            new Element(KEYGEN, "KEYGEN", 0, FORM, null),
+        };
+        ELEMENTS_ARRAY['L'-'A'] = new Element[] {
+            // LABEL - - (%inline;)* -(LABEL)
+            new Element(LABEL, "LABEL", 0, FORM, null),
+            // LAYER
+            new Element(LAYER, "LAYER", Element.BLOCK, BODY, null),
+            // LEGEND - - (%inline;)*
+            new Element(LEGEND, "LEGEND", Element.INLINE, FIELDSET, null),
+            // LI - O (%flow;)*
+            new Element(LI, "LI", 0, BODY, new short[]{LI}),
+            // LINK - O EMPTY
+            new Element(LINK, "LINK", Element.EMPTY, HEAD, null),
+            // LISTING
+            new Element(LISTING, "LISTING", 0, BODY, null),
+        };
+        ELEMENTS_ARRAY['M'-'A'] = new Element[] {
+            // MAP - - ((%block;) | AREA)+
+            new Element(MAP, "MAP", Element.INLINE, BODY, null),
+            // MARQUEE
+            new Element(MARQUEE, "MARQUEE", 0, BODY, null),
+            // MENU
+            new Element(MENU, "MENU", 0, BODY, null),
+            // META - O EMPTY
+            new Element(META, "META", Element.EMPTY, HEAD, new short[]{STYLE,TITLE}),
+            // MULTICOL
+            new Element(MULTICOL, "MULTICOL", 0, BODY, null),
+        };
+        ELEMENTS_ARRAY['N'-'A'] = new Element[] {
+            // NEXTID
+            new Element(NEXTID, "NEXTID", Element.EMPTY, BODY, null),
+            // NOBR
+            new Element(NOBR, "NOBR", Element.INLINE, BODY, null),
+            // NOEMBED
+            new Element(NOEMBED, "NOEMBED", 0, BODY, null),
+            // NOFRAMES - - (BODY) -(NOFRAMES)
+            new Element(NOFRAMES, "NOFRAMES", 0, FRAMESET, null),
+            // NOLAYER
+            new Element(NOLAYER, "NOLAYER", 0, BODY, null),
+            // NOSCRIPT - - (%block;)+
+            new Element(NOSCRIPT, "NOSCRIPT", Element.SPECIAL, new short[]{HEAD,BODY}, null),
+        };
+        ELEMENTS_ARRAY['O'-'A'] = new Element[] {
+            // OBJECT - - (PARAM | %flow;)*
+            new Element(OBJECT, "OBJECT", 0, BODY, null),
+            // OL - - (LI)+
+            new Element(OL, "OL", Element.BLOCK, BODY, null),
+            // OPTGROUP - - (OPTION)+
+            new Element(OPTGROUP, "OPTGROUP", 0, SELECT, new short[]{OPTION}),
+            // OPTION - O (#PCDATA)
+            new Element(OPTION, "OPTION", 0, SELECT, new short[]{OPTION}),
+        };
+        ELEMENTS_ARRAY['P'-'A'] = new Element[] {
+            // P - O (%inline;)*
+            new Element(P, "P", 0, BODY, new short[]{P}),
+            // PARAM - O EMPTY
+            new Element(PARAM, "PARAM", Element.EMPTY, OBJECT, null),
+            // PLAINTEXT
+            new Element(PLAINTEXT, "PLAINTEXT", Element.SPECIAL, BODY, null),
+            // PRE - - (%inline;)* -(%pre.exclusion;)
+            new Element(PRE, "PRE", 0, BODY, null),
+        };
+        ELEMENTS_ARRAY['Q'-'A'] = new Element[] {
+            // Q - - (%inline;)*
+            new Element(Q, "Q", Element.INLINE, BODY, null),
+        };
+        ELEMENTS_ARRAY['R'-'A'] = new Element[] {
+            // RB
+            new Element(RB, "RB", Element.INLINE, RUBY, new short[]{RB}),
+            // RBC
+            new Element(RBC, "RBC", 0, RUBY, null),
+            // RP
+            new Element(RP, "RP", Element.INLINE, RUBY, new short[]{RB}),
+            // RT
+            new Element(RT, "RT", Element.INLINE, RUBY, new short[]{RB,RP}),
+            // RTC
+            new Element(RTC, "RTC", 0, RUBY, new short[]{RBC}),
+            // RUBY
+            new Element(RUBY, "RUBY", 0, BODY, new short[]{RUBY}),
+        };
+        ELEMENTS_ARRAY['S'-'A'] = new Element[] {
+            // S
+            new Element(S, "S", 0, BODY, null),
+            // SAMP - - (%inline;)*
+            new Element(SAMP, "SAMP", Element.INLINE, BODY, null),
+            // SCRIPT - - %Script;
+            new Element(SCRIPT, "SCRIPT", Element.SPECIAL, new short[]{HEAD,BODY}, null),
+            // SELECT - - (OPTGROUP|OPTION)+
+            new Element(SELECT, "SELECT", 0, FORM, new short[]{SELECT}),
+            // SMALL - - (%inline;)*
+            new Element(SMALL, "SMALL", Element.INLINE, BODY, null),
+            // SOUND
+            new Element(SOUND, "SOUND", Element.EMPTY, HEAD, null),
+            // SPACER
+            new Element(SPACER, "SPACER", Element.EMPTY, BODY, null),
+            // SPAN - - (%inline;)*
+            new Element(SPAN, "SPAN", Element.INLINE, BODY, null),
+            // STRIKE
+            new Element(STRIKE, "STRIKE", Element.INLINE, BODY, null),
+            // STRONG - - (%inline;)*
+            new Element(STRONG, "STRONG", Element.INLINE, BODY, null),
+            // STYLE - - %StyleSheet;
+            new Element(STYLE, "STYLE", 0, new short[]{HEAD,BODY}, new short[]{STYLE,TITLE,META}),
+            // SUB - - (%inline;)*
+            new Element(SUB, "SUB", Element.INLINE, BODY, null),
+            // SUP - - (%inline;)*
+            new Element(SUP, "SUP", Element.INLINE, BODY, null),
+        };
+        ELEMENTS_ARRAY['T'-'A'] = new Element[] {
+            // TABLE - - (CAPTION?, (COL*|COLGROUP*), THEAD?, TFOOT?, TBODY+)
+            new Element(TABLE, "TABLE", Element.BLOCK|Element.CONTAINER, BODY, null),
+            // TBODY O O (TR)+
+            new Element(TBODY, "TBODY", 0, TABLE, new short[]{THEAD,TD,TH,TR,COLGROUP}),
+            // TD - O (%flow;)*
+            new Element(TD, "TD", 0, TR, new short[]{TD,TH}),
+            // TEXTAREA - - (#PCDATA)
+            new Element(TEXTAREA, "TEXTAREA", Element.SPECIAL, FORM, null),
+            // TFOOT - O (TR)+
+            new Element(TFOOT, "TFOOT", 0, TABLE, new short[]{THEAD,TBODY,TD,TH,TR}),
+            // TH - O (%flow;)*
+            new Element(TH, "TH", 0, TR, new short[]{TD,TH}),
+            // THEAD - O (TR)+
+            new Element(THEAD, "THEAD", 0, TABLE, new short[]{COLGROUP}),
+            // TITLE - - (#PCDATA) -(%head.misc;)
+            new Element(TITLE, "TITLE", 0, new short[]{HEAD,BODY}, null),
+            // TR - O (TH|TD)+
+            new Element(TR, "TR", Element.BLOCK, TABLE, new short[]{TD,TH,TR,COLGROUP}),
+            // TT - - (%inline;)*
+            new Element(TT, "TT", Element.INLINE, BODY, null),
+        };
+        ELEMENTS_ARRAY['U'-'A'] = new Element[] {
+            // U, 
+            new Element(U, "U", Element.INLINE, BODY, null),
+            // UL - - (LI)+
+            new Element(UL, "UL", Element.BLOCK, BODY, null),
+        };
+        ELEMENTS_ARRAY['V'-'A'] = new Element[] {
+            // VAR - - (%inline;)*
+            new Element(VAR, "VAR", Element.INLINE, BODY, null),
+        };
+        ELEMENTS_ARRAY['W'-'A'] = new Element[] {
+            // WBR
+            new Element(WBR, "WBR", Element.EMPTY, BODY, null),
+        };
+        ELEMENTS_ARRAY['X'-'A'] = new Element[] {
+            // XML
+            new Element(XML, "XML", 0, BODY, null),
+            // XMP
+            new Element(XMP, "XMP", Element.SPECIAL, BODY, null),
+        };
+
+        // keep contiguous list of elements for lookups by code
+        for (int i = 0; i < ELEMENTS_ARRAY.length; i++) {
+            Element[] elements = ELEMENTS_ARRAY[i];
+            if (elements != null) {
+                for (int j = 0; j < elements.length; j++) {
+                    Element element = elements[j];
+                    ELEMENTS.addElement(element);
+                }
+            }
+        }
         ELEMENTS.addElement(NO_SUCH_ELEMENT);
 
         // initialize cross references to parent elements
@@ -450,20 +508,21 @@ public class HTMLElements {
      */
     public static final Element getElement(String ename, Element element) {
 
-        int head = 0;
-        int tail = ELEMENTS.size;
-        while (head != tail) {
-            int midpoint = head + (tail - head) / 2;
-            Element elem = ELEMENTS.data[midpoint];
-            int comparison = elem.name.compareToIgnoreCase(ename);
-            if (comparison == 0) {
-                return elem;
+        if (ename.length() > 0) {
+            int c = ename.charAt(0);
+            if (c >= 'a' && c <= 'z') {
+                c = 'A' + c - 'a';
             }
-            if (comparison < 0) {
-                head = midpoint + 1;
-            }
-            else {
-                tail = midpoint;
+            if (c >= 'A' && c <= 'Z') {
+                Element[] elements = ELEMENTS_ARRAY[c - 'A'];
+                if (elements != null) {
+                    for (int i = 0; i < elements.length; i++) {
+                        Element elem = elements[i];
+                        if (elem.name.equalsIgnoreCase(ename)) {
+                            return elem;
+                        }
+                    }
+                }
             }
         }
         return element;

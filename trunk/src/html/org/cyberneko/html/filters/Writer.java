@@ -18,6 +18,7 @@ import org.cyberneko.html.filters.DefaultFilter;
 
 import org.apache.xerces.util.XMLAttributesImpl;
 import org.apache.xerces.xni.Augmentations;
+import org.apache.xerces.xni.NamespaceContext;
 import org.apache.xerces.xni.QName;
 import org.apache.xerces.xni.XMLAttributes;
 import org.apache.xerces.xni.XMLLocator;
@@ -136,15 +137,26 @@ public class Writer
     // XMLDocumentHandler methods
     //
 
+    // since Xerces-J 2.2.0
+
     /** Start document. */
-    public void startDocument(XMLLocator locator, String encoding, Augmentations augs)
+    public void startDocument(XMLLocator locator, String encoding, 
+                              NamespaceContext nscontext, Augmentations augs)
         throws XNIException {
         fSeenRootElement = false;
         fSeenHttpEquiv = false;
         fElementDepth = 0;
         fNormalize = true;
         fPrintChars = true;
-        super.startDocument(locator, encoding, augs);
+        super.startDocument(locator, encoding, nscontext, augs);
+    } // startDocument(XMLLocator,String,NamespaceContext,Augmentations)
+
+    // old methods
+
+    /** Start document. */
+    public void startDocument(XMLLocator locator, String encoding, Augmentations augs)
+        throws XNIException {
+        startDocument(locator, encoding, null, augs);
     } // startDocument(XMLLocator,String,Augmentations)
 
     /** Comment. */
