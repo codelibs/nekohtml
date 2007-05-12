@@ -233,7 +233,7 @@ public class DOMFragmentParser
         if (fInCDATASection) {
             Node node = fCurrentNode.getLastChild();
             if (node != null && node.getNodeType() == Node.CDATA_SECTION_NODE) {
-                CDATASection cdata = (CDATASection)fCurrentNode;
+                CDATASection cdata = (CDATASection)node;
                 cdata.appendData(text.toString());
             }
             else {
@@ -244,7 +244,7 @@ public class DOMFragmentParser
         else {
             Node node = fCurrentNode.getLastChild();
             if (node != null && node.getNodeType() == Node.TEXT_NODE) {
-                Text textNode = (Text)fCurrentNode;
+                Text textNode = (Text)node;
                 textNode.appendData(text.toString());
             }
             else {

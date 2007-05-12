@@ -214,7 +214,7 @@ public class HTMLElements {
             // BR - O EMPTY
             new Element(BR, "BR", Element.EMPTY, BODY, null),
             // BUTTON - - (%flow;)* -(A|%formctrl;|FORM|FIELDSET)
-            new Element(BUTTON, "BUTTON", 0, FORM, null),
+            new Element(BUTTON, "BUTTON", 0, BODY, null),
         };
         ELEMENTS_ARRAY['C'-'A'] = new Element[] {
             // CAPTION - - (%inline;)*
@@ -256,11 +256,11 @@ public class HTMLElements {
         };
         ELEMENTS_ARRAY['F'-'A'] = new Element[] {
             // FIELDSET - - (#PCDATA,LEGEND,(%flow;)*)
-            new Element(FIELDSET, "FIELDSET", 0, FORM, null),
+            new Element(FIELDSET, "FIELDSET", 0, BODY, null),
             // FONT
             new Element(FONT, "FONT", Element.INLINE, BODY, null),
             // FORM - - (%block;|SCRIPT)+ -(FORM)
-            new Element(FORM, "FORM", 0, new short[]{BODY,TD,P,DIV}, null),
+            new Element(FORM, "FORM", 0, new short[]{BODY,TD,P,DIV}, new short[]{FORM,BUTTON}),
             // FRAME - O EMPTY
             new Element(FRAME, "FRAME", Element.EMPTY, FRAMESET, null),
             // FRAMESET - - ((FRAMESET|FRAME)+ & NOFRAMES?)
@@ -291,7 +291,7 @@ public class HTMLElements {
             // IMG - O EMPTY
             new Element(IMG, "IMG", Element.EMPTY, BODY, null),
             // INPUT - O EMPTY
-            new Element(INPUT, "INPUT", Element.EMPTY, FORM, null),
+            new Element(INPUT, "INPUT", Element.EMPTY, BODY, null),
             // INS - - (%flow;)*
             new Element(INS, "INS", 0, BODY, null),
             // ISINDEX
@@ -301,11 +301,11 @@ public class HTMLElements {
             // KBD - - (%inline;)*
             new Element(KBD, "KBD", Element.INLINE, BODY, null),
             // KEYGEN
-            new Element(KEYGEN, "KEYGEN", 0, FORM, null),
+            new Element(KEYGEN, "KEYGEN", 0, BODY, null),
         };
         ELEMENTS_ARRAY['L'-'A'] = new Element[] {
             // LABEL - - (%inline;)* -(LABEL)
-            new Element(LABEL, "LABEL", 0, FORM, null),
+            new Element(LABEL, "LABEL", 0, BODY, null),
             // LAYER
             new Element(LAYER, "LAYER", Element.BLOCK, BODY, null),
             // LEGEND - - (%inline;)*
@@ -389,7 +389,7 @@ public class HTMLElements {
             // SCRIPT - - %Script;
             new Element(SCRIPT, "SCRIPT", Element.SPECIAL, new short[]{HEAD,BODY}, null),
             // SELECT - - (OPTGROUP|OPTION)+
-            new Element(SELECT, "SELECT", 0, FORM, new short[]{SELECT}),
+            new Element(SELECT, "SELECT", 0, BODY, new short[]{SELECT}),
             // SMALL - - (%inline;)*
             new Element(SMALL, "SMALL", Element.INLINE, BODY, null),
             // SOUND
@@ -397,7 +397,7 @@ public class HTMLElements {
             // SPACER
             new Element(SPACER, "SPACER", Element.EMPTY, BODY, null),
             // SPAN - - (%inline;)*
-            new Element(SPAN, "SPAN", Element.INLINE, BODY, null),
+            new Element(SPAN, "SPAN", 0, BODY, null),
             // STRIKE
             new Element(STRIKE, "STRIKE", Element.INLINE, BODY, null),
             // STRONG - - (%inline;)*
@@ -417,7 +417,7 @@ public class HTMLElements {
             // TD - O (%flow;)*
             new Element(TD, "TD", 0, TR, new short[]{TD,TH}),
             // TEXTAREA - - (#PCDATA)
-            new Element(TEXTAREA, "TEXTAREA", Element.SPECIAL, FORM, null),
+            new Element(TEXTAREA, "TEXTAREA", Element.SPECIAL, BODY, null),
             // TFOOT - O (TR)+
             new Element(TFOOT, "TFOOT", 0, TABLE, new short[]{THEAD,TBODY,TD,TH,TR}),
             // TH - O (%flow;)*

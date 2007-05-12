@@ -3,11 +3,11 @@
 <project default='all' basedir='.'>
 
  <!-- PROPERTIES -->
- <property name='version'   value='0.7.1'/>
+ <property name='version'   value='0.7.2'/>
  <property name='name'      value='nekohtml'/>
  <property name='fullname'  value='${name}-${version}'/>
  <property name='Name'      value='NekoHTML ${version}'/>
- <property name='copyright' value='(C) Copyright 2002, Andy Clark. All rights reserved.'/>
+ <property name='copyright' value='(C) Copyright 2002-2003, Andy Clark. All rights reserved.'/>
   
  <property name='jarfile'        value='${name}.jar'/>
  <property name='jarfileXni'     value='${name}Xni.jar'/>
