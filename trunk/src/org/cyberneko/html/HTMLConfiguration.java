@@ -104,7 +104,7 @@ public class HTMLConfiguration
     /** Parser version is Xerces 2.0.0. */
     protected static boolean XERCES_2_0_0 = false;
 
-    /** Parser version is Xerces 2.0.0. */
+    /** Parser version is Xerces 2.0.1. */
     protected static boolean XERCES_2_0_1 = false;
 
     //
@@ -162,7 +162,6 @@ public class HTMLConfiguration
             //       subsequent releases of Xerces.
             recognizedFeatures = new String[] {
                 "http://apache.org/xml/features/scanner/notify-builtin-refs",
-                "http://apache.org/xml/features/validation/schema/normalized-value",
             };
             addRecognizedFeatures(recognizedFeatures);
         }
@@ -173,6 +172,7 @@ public class HTMLConfiguration
             //       problem if they're not there. This should be fixed in 
             //       subsequent releases of Xerces.
             recognizedFeatures = new String[] {
+                "http://apache.org/xml/features/validation/schema/normalized-value",
                 "http://apache.org/xml/features/scanner/notify-char-refs",
             };
             addRecognizedFeatures(recognizedFeatures);
