@@ -5,7 +5,8 @@
  * refer to the LICENSE file for specific details.
  *
  * NOTE: The URI fixing code in this source was taken from the Apache
- *       Xerces parser which is distributed under the Apache 
+ *       Xerces parser which is distributed under the Apache license.
+ *       Refer to the LICENSE_apache file for details.
  */
 
 package org.cyberneko.html;
@@ -1583,7 +1584,7 @@ public class HTMLScanner
                             System.out.println("+++ @content-type: \""+httpEquiv+'"');
                         }
                         String content = getValue(fAttributes, "content");
-                        int index1 = content != null ? content.indexOf("charset=") : -1;
+                        int index1 = content != null ? content.toLowerCase().indexOf("charset=") : -1;
                         if (index1 != -1) {
                             int index2 = content.indexOf(';', index1);
                             String charset = index2 != -1 ? content.substring(index1+8, index2) : content.substring(index1+8);
@@ -1682,6 +1683,7 @@ public class HTMLScanner
             if (c == '/' || c == '>') {
                 fQName.setValues(null, aname, aname, null);
                 attributes.addAttribute(fQName, "CDATA", "");
+                attributes.setSpecified(attributes.getLength()-1, true);
                 if (fAugmentations) {
                     addLocationItem(attributes, attributes.getLength() - 1);
                 }
@@ -1696,6 +1698,7 @@ public class HTMLScanner
                 }
                 fQName.setValues(null, aname, aname, null);
                 attributes.addAttribute(fQName, "CDATA", "");
+                attributes.setSpecified(attributes.getLength()-1, true);
                 if (fAugmentations) {
                     addLocationItem(attributes, attributes.getLength() - 1);
                 }
@@ -1714,6 +1717,7 @@ public class HTMLScanner
                 if (c == '>') {
                     fQName.setValues(null, aname, aname, null);
                     attributes.addAttribute(fQName, "CDATA", "");
+                    attributes.setSpecified(attributes.getLength()-1, true);
                     if (fAugmentations) {
                         addLocationItem(attributes, attributes.getLength() - 1);
                     }
@@ -1742,6 +1746,7 @@ public class HTMLScanner
                     fQName.setValues(null, aname, aname, null);
                     String avalue = fStringBuffer.toString();
                     attributes.addAttribute(fQName, "CDATA", avalue);
+                    attributes.setSpecified(attributes.getLength()-1, true);
                     if (fAugmentations) {
                         addLocationItem(attributes, attributes.getLength() - 1);
                     }
@@ -1773,6 +1778,7 @@ public class HTMLScanner
                 fQName.setValues(null, aname, aname, null);
                 String avalue = fStringBuffer.toString();
                 attributes.addAttribute(fQName, "CDATA", avalue);
+                attributes.setSpecified(attributes.getLength()-1, true);
                 if (fAugmentations) {
                     addLocationItem(attributes, attributes.getLength() - 1);
                 }
@@ -1780,6 +1786,7 @@ public class HTMLScanner
             else {
                 fQName.setValues(null, aname, aname, null);
                 attributes.addAttribute(fQName, "CDATA", "");
+                attributes.setSpecified(attributes.getLength()-1, true);
                 fCurrentEntity.offset--;
                 fCurrentEntity.columnNumber--;
                 if (fAugmentations) {
