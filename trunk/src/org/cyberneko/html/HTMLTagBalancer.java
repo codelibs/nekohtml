@@ -561,15 +561,17 @@ public class HTMLTagBalancer
             return;
         }
 
+        // is this text whitespace?
+        boolean whitespace = true;
+        for (int i = 0; i < text.length; i++) {
+            if (!Character.isWhitespace(text.ch[text.offset + i])) {
+                whitespace = false;
+                break;
+            }
+        }
+
         // handle bare characters
         if (!fSeenRootElement) {
-            boolean whitespace = true;
-            for (int i = 0; i < text.length; i++) {
-                if (!Character.isWhitespace(text.ch[text.offset + i])) {
-                    whitespace = false;
-                    break;
-                }
-            }
             if (whitespace) {
                 return;
             }
@@ -585,7 +587,7 @@ public class HTMLTagBalancer
         // NOTE: This fequently happens when the document looks like:
         //       <title>Title</title>
         //       And here's some text.
-        else {
+        else if (!whitespace) {
             Info info = fElementStack.peek();
             if (info.element.code == HTMLElements.HEAD) {
                 String hname = modifyName("head", fNamesElems);
