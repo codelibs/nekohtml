@@ -3,11 +3,15 @@
 <project default='all' basedir='.'>
 
  <!-- PROPERTIES -->
- <property name='version'   value='0.9.2'/>
+ <property name='version'   value='0.9.3'/>
  <property name='name'      value='nekohtml'/>
  <property name='fullname'  value='${name}-${version}'/>
- <property name='Name'      value='NekoHTML ${version}'/>
- <property name='copyright' value='(C) Copyright 2002-2004, Andy Clark. All rights reserved.'/>
+ <property name='Title'     value='NekoHTML'/>
+ <property name='FullTitle' value='CyberNeko HTML Parser'/>
+ <property name='Name'      value='${Title} ${version}'/>
+ <property name='author'    value='Andy Clark'/>
+ <property name='copyright' value='(C) Copyright 2002-2004, ${author}. All rights reserved.'/>
+ <property name='URL'       value='http://www.apache.org/~andyc/neko/doc/html/index.html'/>
   
  <property name='jarfile'        value='${name}.jar'/>
  <property name='jarfileXni'     value='${name}Xni.jar'/>
@@ -28,6 +32,11 @@
 
  <property name='package' value='org.cyberneko.html'/>
 
+ <property name='version.dir'      value='bin/html/src'/>
+ <property name='version.manifest' value='${version.dir}/MANIFEST_html'/>
+ <property name='version.dir.java' value='${version.dir}/org/cyberneko/html'/>
+ <property name='version.java'     value='${version.dir.java}/Version.java'/>
+ 
  <!-- TARGETS --> 
  <target name='universe' depends='full,all'/>
 
@@ -37,9 +46,10 @@
   <property name='contents.full' value='lib/**'/>
  </target>
 
- <target name='compile'>
+ <target name='compile' depends='version'>
   <mkdir dir="bin/html"/>
   <javac srcdir='src/html' destdir='bin/html' includes='org/**,sample/**'/>
+  <javac srcdir='bin/html/src' destdir='bin/html' includes='org/**'/>
  </target>
 
  <target name='jar' depends='compile'>
@@ -49,6 +59,7 @@
    <fileset dir='src/html' includes='**/*.properties'/>
   </copy>
   <jar jarfile='${jarfile}' basedir='bin/html' 
+       manifest='${version.manifest}'
        includes='LICENSE,org/**/*.class,org/**/*.properties'/>
   <jar jarfile='${jarfileXni}' basedir='bin/html'
        includes='LICENSE,META-INF/services/**'/>
@@ -92,6 +103,52 @@
            bottom="${copyright}" 
            />
   <property name='docs.done' value='true'/>
+ </target>
+
+ <target name='version-init'>
+  <mkdir dir='${version.dir.java}/'/>
+  <dependset>
+   <srcfilelist dir='.' files='build-html.xml'/>
+   <srcfileset dir='src/html' includes='**/*.java'/>
+   <targetfilelist dir='.' files='${version.manifest},${version.java}'/>
+  </dependset>
+  <available property='available.version' file='${version.java}'/>
+ </target>
+
+ <target name='version' depends='version-init' unless='available.version'>
+  <echo message='Generating ${version.java}'/>
+  <echo file='${version.java}'>/* ${copyright} */
+
+package org.cyberneko.html;
+
+/**
+ * This class holds version information for the ${FullTitle}.
+ *
+ * @author ${author}
+ */
+public class Version {
+
+    /** Returns the version string. */
+    public static String getVersion() { return "${Name}"; }
+
+    /** Prints the version string to standard output. */
+    public static void main(String[] argv) {
+        System.out.println(getVersion());
+    } // main(String[])
+
+} // class Version</echo>
+  <echo message='Generating ${version.manifest}'/>
+  <echo file='${version.manifest}'>
+Name: org/cyberneko/html/
+Implementation-Title: ${FullTitle}
+Implementation-Version: ${version}
+Implementation-Vendor: ${author}
+Implementation-URL: ${URL}
+Specification-Title: Hyper-Text Markup Language (HTML)
+Specification-Vendor: World Wide Web Consortium (W3C)
+Specification-Version: 4.01
+
+</echo>
  </target>
  
  <target name='test' depends='jar'>

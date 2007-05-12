@@ -79,19 +79,19 @@ shows how to use the NekoHTML <code>DOMParser</code> directly:
 <span class='code-keyword'>import</span> org.w3c.dom.Node<span class='code-punct'>;</span>
 
 <span class='code-keyword'>public class</span> TestHTMLDOM <span class='code-punct'>{</span>
-    <span class='code-keyword'>public static void</span> main<span class='code-punct'>(</span>String<span class='code-punct'>[]</span> argv<span class='code-punct'>)</span> <span class='code-keyword'>throws</span> Exception <span class='code-punct'>{</span>
+    <span class='code-keyword'>public static void</span> <span class='code-func'>main</span><span class='code-punct'>(</span>String<span class='code-punct'>[]</span> argv<span class='code-punct'>)</span> <span class='code-keyword'>throws</span> Exception <span class='code-punct'>{</span>
         DOMParser parser <span class='code-punct'>=</span> <span class='code-keyword'>new</span> DOMParser<span class='code-punct'>();</span>
         <span class='code-keyword'>for</span> <span class='code-punct'>(</span><span class='code-keyword'>int</span> i <span class='code-punct'>=</span> 0<span class='code-punct'>;</span> i <span class='code-punct'><</span> argv<span class='code-punct'>.</span>length<span class='code-punct'>;</span> i<span class='code-punct'>++) {</span>
-            parser<span class='code-punct'>.</span>parse<span class='code-punct'>(</span>argv<span class='code-punct'>[</span>i<span class='code-punct'>]);</span>
-            print<span class='code-punct'>(</span>parser<span class='code-punct'>.</span>getDocument<span class='code-punct'>(),</span> <span class='code-string'>""</span><span class='code-punct'>);</span>
+            parser<span class='code-punct'>.</span><span class='code-func'>parse</span><span class='code-punct'>(</span>argv<span class='code-punct'>[</span>i<span class='code-punct'>]);</span>
+            <span class='code-func'>print</span><span class='code-punct'>(</span>parser<span class='code-punct'>.</span><span class='code-func'>getDocument</span><span class='code-punct'>(),</span> <span class='code-string'>""</span><span class='code-punct'>);</span>
         <span class='code-punct'>}</span>
     <span class='code-punct'>}</span>
-    <span class='code-keyword'>public static void</span> print<span class='code-punct'>(</span>Node node<span class='code-punct'>,</span> String indent<span class='code-punct'>) {</span>
-        System<span class='code-punct'>.</span>out<span class='code-punct'>.</span>println<span class='code-punct'>(</span>indent<span class='code-punct'>+</span>node<span class='code-punct'>.</span>getClass<span class='code-punct'>().</span>getName<span class='code-punct'>());</span>
-        Node child <span class='code-punct'>=</span> node<span class='code-punct'>.</span>getFirstChild<span class='code-punct'>();</span>
+    <span class='code-keyword'>public static void</span> <span class='code-func'>print</span><span class='code-punct'>(</span>Node node<span class='code-punct'>,</span> String indent<span class='code-punct'>) {</span>
+        System<span class='code-punct'>.</span>out<span class='code-punct'>.</span><span class='code-func'>println</span><span class='code-punct'>(</span>indent<span class='code-punct'>+</span>node<span class='code-punct'>.</span><span class='code-func'>getClass</span><span class='code-punct'>().</span><span class='code-func'>getName</span><span class='code-punct'>());</span>
+        Node child <span class='code-punct'>=</span> node<span class='code-punct'>.</span><span class='code-func'>getFirstChild</span><span class='code-punct'>();</span>
         <span class='code-keyword'>while</span> <span class='code-punct'>(</span>child <span class='code-punct'>!=</span> <span class='code-keyword'>null</span><span class='code-punct'>) {</span>
             print<span class='code-punct'>(</span>child<span class='code-punct'>,</span> indent<span class='code-punct'>+</span><span class='code-string'>" "</span><span class='code-punct'>);</span>
-            child <span class='code-punct'>=</span> child<span class='code-punct'>.</span>getNextSibling<span class='code-punct'>();</span>
+            child <span class='code-punct'>=</span> child<span class='code-punct'>.</span><span class='code-func'>getNextSibling</span><span class='code-punct'>();</span>
         <span class='code-punct'>}
     }</span>
 <span class='code-punct'>}</span>
@@ -130,21 +130,21 @@ how to use the NekoHTML <code>DOMFragmentParser</code> directly:
 <span class='code-keyword'>import</span> org.w3c.dom.html.HTMLDocument<span class='code-punct'>;</span>
 
 <span class='code-keyword'>public class</span> TestHTMLDOMFragment <span class='code-punct'>{</span>
-    <span class='code-keyword'>public static void</span> main<span class='code-punct'>(</span>String<span class='code-punct'>[]</span> argv<span class='code-punct'>)</span> <span class='code-keyword'>throws</span> Exception <span class='code-punct'>{</span>
+    <span class='code-keyword'>public static void</span> <span class='code-func'>main</span><span class='code-punct'>(</span>String<span class='code-punct'>[]</span> argv<span class='code-punct'>)</span> <span class='code-keyword'>throws</span> Exception <span class='code-punct'>{</span>
         DOMFragmentParser parser <span class='code-punct'>=</span> <span class='code-keyword'>new</span> DOMFragmentParser<span class='code-punct'>();</span>
         HTMLDocument document <span class='code-punct'>=</span> <span class='code-keyword'>new</span> HTMLDocumentImpl<span class='code-punct'>();</span>
         <span class='code-keyword'>for</span> <span class='code-punct'>(</span><span class='code-keyword'>int</span> i <span class='code-punct'>=</span> 0<span class='code-punct'>;</span> i <span class='code-punct'><</span> argv<span class='code-punct'>.</span>length<span class='code-punct'>;</span> i<span class='code-punct'>++) {</span>
-            DocumentFragment fragment <span class='code-punct'>=</span> document.createDocumentFragment<span class='code-punct'>();</span>
-            parser<span class='code-punct'>.</span>parse<span class='code-punct'>(</span>argv<span class='code-punct'>[</span>i<span class='code-punct'>],</span> fragment<span class='code-punct'>);</span>
-            print<span class='code-punct'>(</span>fragment<span class='code-punct'>,</span> <span class='code-string'>""</span><span class='code-punct'>);</span>
+            DocumentFragment fragment <span class='code-punct'>=</span> document<span class='code-punct'>.</span><span class='code-func'>createDocumentFragment</span><span class='code-punct'>();</span>
+            parser<span class='code-punct'>.</span><span class='code-func'>parse</span><span class='code-punct'>(</span>argv<span class='code-punct'>[</span>i<span class='code-punct'>],</span> fragment<span class='code-punct'>);</span>
+            <span class='code-func'>print</span><span class='code-punct'>(</span>fragment<span class='code-punct'>,</span> <span class='code-string'>""</span><span class='code-punct'>);</span>
         <span class='code-punct'>}</span>
     <span class='code-punct'>}</span>
-    <span class='code-keyword'>public static void</span> print<span class='code-punct'>(</span>Node node<span class='code-punct'>,</span> String indent<span class='code-punct'>) {</span>
-        System<span class='code-punct'>.</span>out<span class='code-punct'>.</span>println<span class='code-punct'>(</span>indent<span class='code-punct'>+</span>node<span class='code-punct'>.</span>getClass<span class='code-punct'>().</span>getName<span class='code-punct'>());</span>
-        Node child <span class='code-punct'>=</span> node<span class='code-punct'>.</span>getFirstChild<span class='code-punct'>();</span>
+    <span class='code-keyword'>public static void</span> <span class='code-func'>print</span><span class='code-punct'>(</span>Node node<span class='code-punct'>,</span> String indent<span class='code-punct'>) {</span>
+        System<span class='code-punct'>.</span>out<span class='code-punct'>.</span><span class='code-func'>println</span><span class='code-punct'>(</span>indent<span class='code-punct'>+</span>node<span class='code-punct'>.</span><span class='code-func'>getClass</span><span class='code-punct'>().</span><span class='code-func'>getName</span><span class='code-punct'>());</span>
+        Node child <span class='code-punct'>=</span> node<span class='code-punct'>.</span><span class='code-func'>getFirstChild</span><span class='code-punct'>();</span>
         <span class='code-keyword'>while</span> <span class='code-punct'>(</span>child <span class='code-punct'>!=</span> <span class='code-keyword'>null</span><span class='code-punct'>) {</span>
-            print<span class='code-punct'>(</span>child<span class='code-punct'>,</span> indent<span class='code-punct'>+</span><span class='code-string'>" "</span><span class='code-punct'>);</span>
-            child <span class='code-punct'>=</span> child<span class='code-punct'>.</span>getNextSibling<span class='code-punct'>();</span>
+            <span class='code-func'>print</span><span class='code-punct'>(</span>child<span class='code-punct'>,</span> indent<span class='code-punct'>+</span><span class='code-string'>" "</span><span class='code-punct'>);</span>
+            child <span class='code-punct'>=</span> child<span class='code-punct'>.</span><span class='code-func'>getNextSibling</span><span class='code-punct'>();</span>
         <span class='code-punct'>}
     }</span>
 <span class='code-punct'>}</span>

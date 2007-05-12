@@ -48,8 +48,9 @@ import org.apache.xerces.xni.parser.XMLInputSource;
 
 /**
  * A simple HTML scanner. This scanner makes no attempt to balance tags
- * or fix other problems in the source document -- it just scans what it
- * can and generates XNI document "events", ignoring errors of all kinds.
+ * or fix other problems in the source document &mdash; it just scans what 
+ * it can and generates XNI document "events", ignoring errors of all 
+ * kinds.
  * <p>
  * This component recognizes the following features:
  * <ul>
@@ -150,20 +151,20 @@ public class HTMLScanner
     public static final String NOTIFY_HTML_BUILTIN_REFS = "http://cyberneko.org/html/features/scanner/notify-builtin-refs";
 
     /** 
-     * Strip HTML comment delimiters ("&lt;!--" and "--&gt;") from SCRIPT
-     * tag contents.
+     * Strip HTML comment delimiters ("&lt;!&minus;&minus;" and 
+     * "&minus;&minus;&gt;") from SCRIPT tag contents.
      */
     public static final String SCRIPT_STRIP_COMMENT_DELIMS = "http://cyberneko.org/html/features/scanner/script/strip-comment-delims";
 
     /** 
-     * Strip HTML comment delimiters ("&lt;!--" and "--&gt;") from STYLE
-     * tag contents.
+     * Strip HTML comment delimiters ("&lt;!&minus;&minus;" and 
+     * "&minus;&minus;&gt;") from STYLE tag contents.
      */
     public static final String STYLE_STRIP_COMMENT_DELIMS = "http://cyberneko.org/html/features/scanner/style/strip-comment-delims";
 
     /**
      * Ignore specified charset found in the &lt;meta equiv='Content-Type'
-     * content='text/html;charset=...'&gt; tag.
+     * content='text/html;charset=&hellip;'&gt; tag.
      */
     public static final String IGNORE_SPECIFIED_CHARSET = "http://cyberneko.org/html/features/scanner/ignore-specified-charset";
 
@@ -1668,7 +1669,7 @@ public class HTMLScanner
          * @param complete True if the scanner should not return until
          *                 scanning is complete.
          *
-         * @returns True if additional scanning is required.
+         * @return True if additional scanning is required.
          *
          * @throws IOException Thrown if I/O error occurs.
          */
@@ -2153,70 +2154,101 @@ public class HTMLScanner
             if (fReportErrors) {
                 fErrorReporter.reportWarning("HTML1008", null);
             }
+
+            // scan processing instruction
             String target = scanName();
-            while (true) {
-                int c = read();
-                if (c == '\r' || c == '\n') {
-                    fCurrentEntity.lineNumber++;
-                    fCurrentEntity.columnNumber = 1;
-                    if (c == '\r') {
+            if (target != null && !target.equalsIgnoreCase("xml")) {
+                while (true) {
+                    int c = read();
+                    if (c == '\r' || c == '\n') {
+                        fCurrentEntity.lineNumber++;
+                        fCurrentEntity.columnNumber = 1;
+                        if (c == '\r') {
+                            c = read();
+                            if (c != '\n') {
+                                fCurrentEntity.offset--;
+                            }
+                        }
+                        continue;
+                    }
+                    if (c == -1) {
+                        break;
+                    }
+                    if (c != ' ' && c != '\t') {
+                        fCurrentEntity.offset--;
+                        fCurrentEntity.columnNumber--;
+                        break;
+                    }
+                }
+                fStringBuffer.clear();
+                while (true) {
+                    int c = read();
+                    if (c == '?' || c == '/') {
+                        char c0 = (char)c;
                         c = read();
-                        if (c != '\n') {
+                        if (c == '>') {
+                            break;
+                        }
+                        else {
+                            fStringBuffer.append(c0);
                             fCurrentEntity.offset--;
+                            fCurrentEntity.columnNumber--;
+                            continue;
                         }
                     }
-                    continue;
-                }
-                if (c == -1) {
-                    break;
-                }
-                if (c != ' ' && c != '\t') {
-                    fCurrentEntity.offset--;
-                    fCurrentEntity.columnNumber--;
-                    break;
-                }
-            }
-            fStringBuffer.clear();
-            while (true) {
-                int c = read();
-                if (c == '?' || c == '/') {
-                    char c0 = (char)c;
-                    c = read();
-                    if (c == '>') {
+                    else if (c == '\r' || c == '\n') {
+                        fStringBuffer.append('\n');
+                        fCurrentEntity.lineNumber++;
+                        fCurrentEntity.columnNumber = 1;
+                        if (c == '\r') {
+                            c = read();
+                            if (c != '\n') {
+                                fCurrentEntity.offset--;
+                            }
+                        }
+                        continue;
+                    }
+                    else if (c == -1) {
                         break;
                     }
                     else {
-                        fStringBuffer.append(c0);
-                        fCurrentEntity.offset--;
-                        fCurrentEntity.columnNumber--;
-                        continue;
+                        fStringBuffer.append((char)c);
                     }
                 }
-                else if (c == '\r' || c == '\n') {
-                    fStringBuffer.append('\n');
-                    fCurrentEntity.lineNumber++;
-                    fCurrentEntity.columnNumber = 1;
-                    if (c == '\r') {
-                        c = read();
-                        if (c != '\n') {
-                            fCurrentEntity.offset--;
-                        }
-                    }
-                    continue;
-                }
-                else if (c == -1) {
-                    break;
-                }
-                else {
-                    fStringBuffer.append((char)c);
+                XMLString data = fStringBuffer;
+                if (fDocumentHandler != null) {
+                    fEndLineNumber = fCurrentEntity.lineNumber;
+                    fEndColumnNumber = fCurrentEntity.columnNumber;
+                    fDocumentHandler.processingInstruction(target, data, locationAugs());
                 }
             }
-            XMLString data = fStringBuffer;
-            if (fDocumentHandler != null) {
-                fEndLineNumber = fCurrentEntity.lineNumber;
-                fEndColumnNumber = fCurrentEntity.columnNumber;
-                fDocumentHandler.processingInstruction(target, data, locationAugs());
+
+            // scan xml/text declaration
+            else {
+                int beginLineNumber = fBeginLineNumber;
+                int beginColumnNumber = fBeginColumnNumber;
+                fAttributes.removeAllAttributes();
+                int aindex = 0;
+                while (scanPseudoAttribute(fAttributes)) {
+                    fAttributes.getName(aindex,fQName);
+                    fQName.rawname = fQName.rawname.toLowerCase();
+                    fAttributes.setName(aindex,fQName);
+                    aindex++;
+                }
+                if (fDocumentHandler != null) {
+                    String version = fAttributes.getValue("version");
+                    String encoding = fAttributes.getValue("encoding");
+                    String standalone = fAttributes.getValue("standalone");
+
+                    fBeginLineNumber = beginLineNumber;
+                    fBeginColumnNumber = beginColumnNumber;
+                    fEndLineNumber = fCurrentEntity.lineNumber;
+                    fEndColumnNumber = fCurrentEntity.columnNumber;
+                    fDocumentHandler.xmlDecl(version, encoding, standalone,
+                                             locationAugs());
+                }
             }
+
             if (DEBUG_BUFFER) {
                 System.out.print(")scanPI: ");
                 printBuffer();
@@ -2336,7 +2368,7 @@ public class HTMLScanner
         } // scanStartElement():ename
 
         /** 
-         * Scans an attribute. 
+         * Scans a real attribute. 
          *
          * @param attributes The list of attributes.
          * @param empty      Is used for a second return value to indicate 
@@ -2345,6 +2377,32 @@ public class HTMLScanner
          */
         protected boolean scanAttribute(XMLAttributesImpl attributes,
                                         boolean[] empty)
+            throws IOException {
+            return scanAttribute(attributes,empty,'/');
+        } // scanAttribute(XMLAttributesImpl,boolean[]):boolean
+
+        /** 
+         * Scans a pseudo attribute. 
+         *
+         * @param attributes The list of attributes.
+         */
+        protected boolean scanPseudoAttribute(XMLAttributesImpl attributes)
+            throws IOException {
+            return scanAttribute(attributes,fSingleBoolean,'?');
+        } // scanPseudoAttribute(XMLAttributesImpl):boolean
+
+        /** 
+         * Scans an attribute, pseudo or real. 
+         *
+         * @param attributes The list of attributes.
+         * @param empty      Is used for a second return value to indicate 
+         *                   whether the start element tag is empty 
+         *                   (e.g. "/&gt;").
+         * @param endc       The end character that appears before the
+         *                   closing angle bracket ('>').
+         */
+        protected boolean scanAttribute(XMLAttributesImpl attributes,
+                                        boolean[] empty, char endc)
             throws IOException {
             boolean skippedSpaces = skipSpaces();
             fBeginLineNumber = fCurrentEntity.lineNumber;
@@ -2670,20 +2728,25 @@ public class HTMLScanner
                                     String ename = scanName();
                                     if (ename != null) {
                                         if (ename.equalsIgnoreCase(fElementName)) {
-                                            ename = modifyName(ename, fNamesElems);
-                                            skipMarkup(false);
-                                            if (fDocumentHandler != null && fElementCount >= fElementDepth) {
-                                                fQName.setValues(null, ename, ename, null);
-                                                if (DEBUG_CALLBACKS) {
-                                                    System.out.println("endElement("+fQName+")");
+                                            if (read() == '>') {
+                                                ename = modifyName(ename, fNamesElems);
+                                                if (fDocumentHandler != null && fElementCount >= fElementDepth) {
+                                                    fQName.setValues(null, ename, ename, null);
+                                                    if (DEBUG_CALLBACKS) {
+                                                        System.out.println("endElement("+fQName+")");
+                                                    }
+                                                    fEndLineNumber = fCurrentEntity.lineNumber;
+                                                    fEndColumnNumber = fCurrentEntity.columnNumber;
+                                                    fDocumentHandler.endElement(fQName, locationAugs());
                                                 }
-                                                fEndLineNumber = fCurrentEntity.lineNumber;
-                                                fEndColumnNumber = fCurrentEntity.columnNumber;
-                                                fDocumentHandler.endElement(fQName, locationAugs());
+                                                setScanner(fContentScanner);
+                                                setScannerState(STATE_CONTENT);
+                                                return true;
                                             }
-                                            setScanner(fContentScanner);
-                                            setScannerState(STATE_CONTENT);
-                                            return true;
+                                            else {
+                                                fCurrentEntity.offset--;
+                                                fCurrentEntity.columnNumber--;
+                                            }
                                         }
                                         fStringBuffer.clear();
                                         fStringBuffer.append("</");

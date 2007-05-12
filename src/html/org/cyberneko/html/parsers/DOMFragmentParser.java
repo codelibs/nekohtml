@@ -299,7 +299,7 @@ public class DOMFragmentParser
      *
      * @param propertyId The unique identifier (URI) of the property
      *                   being set.
-     * @param Object The value to which the property is being set.
+     * @param value      The value to which the property is being set.
      *
      * @exception SAXNotRecognizedException If the
      *            requested property is not known.

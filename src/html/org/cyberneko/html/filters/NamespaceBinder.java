@@ -204,7 +204,7 @@ public class NamespaceBinder
      * about any features and properties that affect the operation of the
      * component.
      *
-     * @param componentManager The component manager.
+     * @param manager The component manager.
      *
      * @throws XNIException Thrown by component on initialization error.
      */

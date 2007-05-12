@@ -197,6 +197,9 @@ public class HTMLTagBalancer
     /** The inline stack. */
     protected final InfoStack fInlineStack = new InfoStack();
 
+    /** True if seen anything. Important for xml declaration. */
+    protected boolean fSeenAnything;
+
     /** True if root element has been seen. */
     protected boolean fSeenDoctype;
 
@@ -347,6 +350,7 @@ public class HTMLTagBalancer
 
         // reset state
         fElementStack.top = 0;
+        fSeenAnything = false;
         fSeenDoctype = false;
         fSeenRootElement = false;
         fSeenRootElementEnd = false;
@@ -414,7 +418,7 @@ public class HTMLTagBalancer
     /** XML declaration. */
     public void xmlDecl(String version, String encoding, String standalone,
                         Augmentations augs) throws XNIException {
-        if (fDocumentHandler != null) {
+        if (!fSeenAnything && fDocumentHandler != null) {
             fDocumentHandler.xmlDecl(version, encoding, standalone, augs);
         }
     } // xmlDecl(String,String,String,Augmentations)
@@ -422,6 +426,7 @@ public class HTMLTagBalancer
     /** Doctype declaration. */
     public void doctypeDecl(String rootElementName, String publicId, String systemId,
                             Augmentations augs) throws XNIException {
+        fSeenAnything = true;
         if (fReportErrors) {
             if (fSeenRootElement) {
                 fErrorReporter.reportError("HTML2010", null);
@@ -478,6 +483,7 @@ public class HTMLTagBalancer
 
     /** Comment. */
     public void comment(XMLString text, Augmentations augs) throws XNIException {
+        fSeenAnything = true;
         if (fDocumentHandler != null) {
             fDocumentHandler.comment(text, augs);
         }
@@ -486,6 +492,7 @@ public class HTMLTagBalancer
     /** Processing instruction. */
     public void processingInstruction(String target, XMLString data,
                                       Augmentations augs) throws XNIException {
+        fSeenAnything = true;
         if (fDocumentHandler != null) {
             fDocumentHandler.processingInstruction(target, data, augs);
         }
@@ -494,6 +501,7 @@ public class HTMLTagBalancer
     /** Start element. */
     public void startElement(QName elem, XMLAttributes attrs, Augmentations augs)
         throws XNIException {
+        fSeenAnything = true;
         
         // check for end of document
         if (fSeenRootElementEnd) {
@@ -658,6 +666,7 @@ public class HTMLTagBalancer
                                    XMLResourceIdentifier id,
                                    String encoding,
                                    Augmentations augs) throws XNIException {
+        fSeenAnything = true;
 
         // check for end of document
         if (fSeenRootElementEnd) {
@@ -701,6 +710,7 @@ public class HTMLTagBalancer
     /** Text declaration. */
     public void textDecl(String version, String encoding, Augmentations augs)
         throws XNIException {
+        fSeenAnything = true;
         
         // check for end of document
         if (fSeenRootElementEnd) {
@@ -731,6 +741,7 @@ public class HTMLTagBalancer
 
     /** Start CDATA section. */
     public void startCDATA(Augmentations augs) throws XNIException {
+        fSeenAnything = true;
         
         // check for end of document
         if (fSeenRootElementEnd) {

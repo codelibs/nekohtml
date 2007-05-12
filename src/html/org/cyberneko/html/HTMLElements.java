@@ -629,8 +629,8 @@ public class HTMLElements {
          * @param closes List of elements this element can close.
          */
         public Element(short code, String name, int flags, 
-                       short[] parent, short[] closes) {
-            this(code, name, flags, parent, (short)-1, closes);
+                       short[] parents, short[] closes) {
+            this(code, name, flags, parents, (short)-1, closes);
         } // <init>(short,String,int,short[],short[])
 
         /** 
@@ -643,11 +643,11 @@ public class HTMLElements {
          * @param closes List of elements this element can close.
          */
         public Element(short code, String name, int flags, 
-                       short[] parent, short bounds, short[] closes) {
+                       short[] parents, short bounds, short[] closes) {
             this.code = code;
             this.name = name;
             this.flags = flags;
-            this.parentCodes = parent;
+            this.parentCodes = parents;
             this.parent = null;
             this.bounds = bounds;
             this.closes = closes;
