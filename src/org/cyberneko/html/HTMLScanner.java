@@ -1,4 +1,9 @@
-/* (C) Copyright 2002, Andy Clark. All rights reserved. */
+/* 
+ * (C) Copyright 2002, Andy Clark.  All rights reserved.
+ *
+ * This file is distributed under an Apache style license. Please
+ * refer to the LICENSE file for specific details.
+ */
 
 package org.cyberneko.html;
 
@@ -31,6 +36,8 @@ import org.apache.xerces.xni.parser.XMLInputSource;
  * can and generates XNI document "events", ignoring errors of all kinds.
  *
  * @author Andy Clark
+ *
+ * @version $Id$
  */
 public class HTMLScanner 
     implements XMLDocumentScanner {

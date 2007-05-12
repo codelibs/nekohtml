@@ -1,6 +1,6 @@
 <title>NekoHTML</title>
 <link rel=stylesheet type=text/css href=style.css>
-<h1>NekoHTML 0.2.3</h1>
+<h1>NekoHTML 0.3</h1>
 <h2>About</h2>
 <p>
 NekoHTML is a simple <a href='http://www.w3.org/TR/html4/'>HTML</a>
@@ -34,8 +34,8 @@ doc/index.html: 10 ms (69 elems, 35 attrs, 0 spaces, 3512 chars)
 </pre>
 <p>
 Alternatively, you can construct any XNI-based parser class
-using the <code>org.cyberneko.html.HTMLConfiguration</code>
-parser configuration class. For example:
+using the <code>HTMLConfiguration</code> parser configuration class
+found in the <code>org.cyberneko.html</code> package. For example:
 <pre class='code'>
 <span class='code-keyword'>import</span> org.apache.xerces.parsers.AbstractSAXParser<span class='code-punct'>;</span>
 <span class='code-keyword'>import</span> org.cyberneko.html.HTMLConfiguration<span class='code-punct'>;</span>
@@ -62,13 +62,9 @@ Refer to the Xerces documentation for
 parser properties</a>.
 <h2>License Agreement</h2>
 <p>
-NekoHTML is available with complete source code but is 
-<strong>not</strong> "free" or "open source". It is being 
-released with full source code to allow users to experiment but 
-gives <strong>no</strong> right to the user to incorporate this 
-code into a product of any kind, commercial or otherwise.
-Please refer to the official <a href='../LICENSE'>License 
-Agreement</a> for complete information.
+NekoHTML is distributed under an Apache style license. Please
+refer to the <a href='../LICENSE'>LICENSE</a> file for specific 
+details.
 <p>
 It is my intention, depending on the level of interest in this
 code, to either donate the code to the Xerces-J project at the 
@@ -77,7 +73,7 @@ create a separate open source project hosted elsewhere (possibly
 <a href='http://sourceforge.net'>SourceForge</a>). If you find 
 this code useful and are interested in its further development, 
 please contact me at
-<a href='mailto:andyc@mailto.com'>andyc@apache.org</a>.
+<a href='mailto:andyc@apache.org'>andyc@apache.org</a>.
 <h2>Requirements and Limitations</h2>
 <p>
 This version of NekoHTML requires the following:
@@ -98,6 +94,9 @@ For a more complete list of items to be done, please refer to
 the <a href='../TODO'>Todo Items</a>.
 <h2>Release History</h2>
 <dl>
+ <dt>Version 0.3 (25 Feb 2002)
+ <dd>Changed license to an Apache style license and fixed a
+     few bugs.
  <dt>Version 0.2.3 (19 Feb 2002)
  <dd>Nested tables bug fix.
  <dt>Version 0.2.2 (17 Feb 2002)

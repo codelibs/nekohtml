@@ -1,4 +1,9 @@
-/* (C) Copyright 2002, Andy Clark. All rights reserved. */
+/* 
+ * (C) Copyright 2002, Andy Clark.  All rights reserved.
+ *
+ * This file is distributed under an Apache style license. Please
+ * refer to the LICENSE file for specific details.
+ */
 
 package org.cyberneko.html;
 
@@ -23,6 +28,8 @@ import org.apache.xerces.xni.parser.XMLParserConfiguration;
  * An XNI-based parser configuration that can be used to parse HTML documents.
  *
  * @author Andy Clark
+ *
+ * @version $Id$
  */
 public class HTMLConfiguration 
     extends ParserConfigurationSettings
