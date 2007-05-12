@@ -34,8 +34,15 @@ PRE.code { margin: 15; margin-left: 30; margin-right: 30;
 .code-string { color: cyan }
 .code-comment { color: silver }
 
+PRE.document { margin: 15; margin-left: 30; margin-right: 30;
+               padding: 5; border: solid black 1;
+               background: white; color: black }
+
 .id { font-family: sans-serif; text-decoration: underline;
       white-space: nowrap }
+
+.navbar { margin: 10; text-align: center }
+DIV.navbar A { text-decoration: none }
 
 .copyright { margin: -10; margin-top: 10;
              text-align: center; background: #DDDDFF;

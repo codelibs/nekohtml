@@ -1,7 +1,22 @@
 <title>NekoHTML</title>
 <link rel=stylesheet type=text/css href=style.css>
 
-<h1>NekoHTML 0.5</h1>
+<h1>NekoHTML 0.6</h1>
+<div class='navbar'>
+[
+Home
+|
+<a href='usage.html'>Usage</a>
+|
+<a href='settings.html'>Settings</a>
+|
+<a href='filters.html'>Filters</a>
+|
+<a href='javadoc/index.html'>JavaDoc</a>
+|
+<a href='changes.html'>Changes</a>
+]
+</div>
 
 <h2>About</h2>
 <p>
@@ -21,225 +36,27 @@ Native Interface</a> (XNI) that is the foundation of the
 implementation. This enables you to use the NekoHTML parser
 with existing XNI tools without modification or rewriting code.
 
-<h2>Usage Instructions</h2>
-<p>
-NekoHTML is designed to be as lightweight and simple to use as
-possible. Using the Xerces 2.0.0 parser as a foundation, NekoHTML 
-can be transparent for applications that instantiate parser objects 
-with the <a href='http://java.sun.com/xml/jaxp/index.html'>Java 
-API for XML Processing</a> (JAXP). Just put the appropriate NekoHTML 
-jar files in the classpath <em>before</em> the Xerces jar files. For 
-example (on Windows): [NOTE: The classpath should be contiguous. It
-is split among separate lines in this example to make it easier to
-read.]
-<pre class='cmdline'>
-<span class='cmdline-prompt'>&gt;</span> <span class='cmdline-cmd'>java -cp nekohtml.jar;nekohtmlXni.jar;
-           xmlParserAPIs.jar;xercesImpl.jar;xercesSamples.jar 
-       sax.Counter doc/index.html</span>
-doc/index.html: 10 ms (69 elems, 35 attrs, 0 spaces, 3512 chars)
-</pre>
-<p>
-However, separate DOM and SAX parser classes are included in the
-<code>org.cyberneko.html.parsers</code> package for convenience. 
-Both parsers use the <code>HTMLConfiguration</code> class to be 
-able to parse HTML documents but the DOM parser also uses the 
-Xerces HTML DOM implementation. Therefore, when parsing documents 
-using the NekoHTML <code>DOMParser</code> class, the documents 
-returned will be of type <code>org.w3c.dom.html.HTMLDocument</code>. 
-The following example shows how to use the NekoHTML 
-<code>DOMParser</code> directly:
-<pre class='code'>
-<span class='code-keyword'>import</span> org.cyberneko.html.parsers.DOMParser<span class='code-punct'>;</span>
-<span class='code-keyword'>import</span> org.w3c.dom.html.HTMLDocument<span class='code-punct'>;</span>
-
-<span class='code-keyword'>public class</span> TestHTMLDOM <span class='code-punct'>{</span>
-    <span class='code-keyword'>public static void</span> main<span class='code-punct'>(</span>String<span class='code-punct'>[]</span> argv<span class='code-punct'>)</span> <span class='code-keyword'>throws</span> Exception <span class='code-punct'>{</span>
-        DOMParser parser <span class='code-punct'>=</span> <span class='code-keyword'>new</span> DOMParser<span class='code-punct'>();</span>
-        parser<span class='code-punct'>.</span>parse<span class='code-punct'>(</span>argv<span class='code-punct'>[</span><span class='code-number'>0</span><span class='code-punct'>]);</span>
-        HTMLDocument doc <span class='code-punct'>= (</span>HTMLDocument<span class='code-punct'>)</span>parser<span class='code-punct'>.</span>getDocument<span class='code-punct'>();</span>
-        System<span class='code-punct'>.</span>out<span class='code-punct'>.</span>println<span class='code-punct'>(</span><span class='code-string'>"document-class-name: "</span><span class='code-punct'>+</span>doc<span class='code-punct'>.</span>getClass<span class='code-punct'>().</span>getName<span class='code-punct'>());</span>
-        System<span class='code-punct'>.</span>out<span class='code-punct'>.</span>println<span class='code-punct'>(</span><span class='code-string'>"paragraphs: "</span><span class='code-punct'>+</span>doc<span class='code-punct'>.</span>getElementsByTagName<span class='code-punct'>(</span><span class='code-string'>"P"</span><span class='code-punct'>).</span>getLength<span class='code-punct'>());</span>
-    <span class='code-punct'>}</span>
-<span class='code-punct'>}</span>
-</pre>
-<p>
-Running this program produces the following output:
-<pre class='cmdline'>
-<span class='cmdline-prompt'>&gt;</span> <span class='cmdline-cmd'>java -cp nekohtml.jar;xmlParserAPIs.jar;xercesImpl.jar;xercesSamples.jar 
-       TestHTMLDOM doc/index.html</span>
-document-class-name: org.apache.html.dom.HTMLDocumentImpl
-paragraphs: 12
-</pre>
-<p>
-Alternatively, you can construct any XNI-based parser class
-using the <code>HTMLConfiguration</code> parser configuration class
-found in the <code>org.cyberneko.html</code> package. For example:
-<pre class='code'>
-<span class='code-keyword'>import</span> org.apache.xerces.parsers.AbstractSAXParser<span class='code-punct'>;</span>
-<span class='code-keyword'>import</span> org.cyberneko.html.HTMLConfiguration<span class='code-punct'>;</span>
-
-<span class='code-keyword'>public class</span> MySAXParser <span class='code-keyword'>extends</span> AbstractSAXParser <span class='code-punct'>{</span>
-
-    <span class='code-keyword'>public</span> MySAXParser<span class='code-punct'>() {</span>
-        <span class='code-keyword'>super</span><span class='code-punct'>(</span><span class='code-keyword'>new</span> HTMLConfiguration<span class='code-punct'>());</span>
-    <span class='code-punct'>}</span>
-
-<span class='code-punct'>}</span>
-</pre>
-
-<h2>Parser Settings</h2>
-<p>
-The application can set a variety of NekoHTML settings to more
-precisely control the behavior of the parser. These settings
-can be set directly on the <code>HTMLConfiguration</code> class
-or on the supplied parser classes by calling the
-<code>setFeature</code> and <code>setProperty</code> methods.
-For example:
-<pre class='code'>
-<span class='code-comment'>// settings on HTMLConfiguration</span>
-org<span class='code-punct'>.</span>apache<span class='code-punct'>.</span>xerces<span class='code-punct'>.</span>xni<span class='code-punct'>.</span>parser<span class='code-punct'>.</span>XMLParserConfiguration config <span class='code-punct'>=</span>
-  <span class='code-keyword'>new</span> org<span class='code-punct'>.</span>cyberneko<span class='code-punct'>.</span>html<span class='code-punct'>.</span>HTMLConfiguration<span class='code-punct'>();</span>
-config<span class='code-punct'>.</span>setFeature<span class='code-punct'>(</span><span class='code-string'>"http://cyberneko.org/html/features/augmentations"</span><span class='code-punct'>,</span> <span class='code-keyword'>true</span><span class='code-punct'>);</span>
-config<span class='code-punct'>.</span>setProperty<span class='code-punct'>(</span><span class='code-string'>"http://cyberneko.org/html/properties/names/elems"</span><span class='code-punct'>,</span> <span class='code-string'>"lower"</span><span class='code-punct'>);</span>
-
-<span class='code-comment'>// settings on DOMParser</span>
-org<span class='code-punct'>.</span>cyberneko<span class='code-punct'>.</span>html<span class='code-punct'>.</span>parser<span class='code-punct'>.</span>DOMParser parser <span class='code-punct'>=</span> 
-  <span class='code-keyword'>new</span> org<span class='code-punct'>.</span>cyberneko<span class='code-punct'>.</span>html<span class='code-punct'>.</span>parser<span class='code-punct'>.</span>DOMParser<span class='code-punct'>();</span>
-parser<span class='code-punct'>.</span>setFeature<span class='code-punct'>(</span><span class='code-string'>"http://cyberneko.org/html/features/augmentations"</span><span class='code-punct'>,</span> <span class='code-keyword'>true</span><span class='code-punct'>);</span>
-parser<span class='code-punct'>.</span>setProperty<span class='code-punct'>(</span><span class='code-string'>"http://cyberneko.org/html/properties/names/elems"</span><span class='code-punct'>,</span> <span class='code-string'>"lower"</span><span class='code-punct'>);</span>
-</pre>
-<h2>Features</h2>
-The NekoHTML parser supports the following features:
-<table cellpadding='4' cellspacing='0'>
- <tr><th>Feature Id / Description<th>Default
- <tr>
-  <td>
-   <span class='id'>http://cyberneko.org/html/features/balance-tags</span>
-   <br>
-   Specifies if the NekoHTML parser should attempt to balance
-   the tags in the parsed document. Balancing the tags fixes up many
-   common mistakes by adding missing parent elements, automatically
-   closing elements with optional end tags, and correcting unbalanced
-   inline element tags. In order to process HTML documents as XML, this
-   feature should <strong>not</strong> be turned off. This feature is
-   provided as a performance enhancement for applications that only
-   care about the appearance of specific elements, attributes, and/or
-   content regardless of the document's ill-formed structure.
-  <td align='center'>true
- <tr>
-  <td>
-   <span class='id'>http://apache.org/xml/features/scanner/notify-char-refs</span>
-   <br>
-   Specifies whether character entity references (e.g. &amp;#32;, &amp;#x20;, 
-   etc) should be reported to the registered document handler. The name of 
-   the entity reported will contain the leading pound sign and optional 'x' 
-   character. For example, the name of the character entity reference
-   <code>&amp;#x20;</code> will be reported as "#x20".
-  <td align='center'>false
- <tr>
-  <td>
-   <span class='id'>http://apache.org/xml/features/scanner/notify-builtin-refs</span>
-   <br>
-   Specifies whether the XML built-in entity references (e.g. &amp;amp;, 
-   &amp;lt;, etc) should be reported to the registered document handler.
-   This only applies to the five pre-defined XML general entities --
-   specifically, "amp", "lt", "gt", "quot", and "apos". This is done for
-   compatibility with the Xerces feature.
-   To be notified of the built-in entity references in HTML, set the 
-   <code>http://cyberneko.org/html/features/scanner/notify-builtin-refs</code> 
-   feature to <code>true</code>.
-  <td align='center'>false
- <tr>
-  <td>
-   <span class='id'>http://cyberneko.org/html/features/scanner/notify-builtin-refs</span>
-   <br>
-   Specifies whether the HTML built-in entity references (e.g. &amp;nobr;, 
-   &amp;copy;, etc) should be reported to the registered document
-   handler. This <em>includes</em> the five pre-defined XML general 
-   entities.
-  <td align='center'>false
- <tr>
-  <td>
-   <span class='id'>http://cyberneko.org/html/features/augmentations</span>
-   <br>
-   Specifies whether infoset items that correspond to the
-   HTML events are included in the parsing pipeline. If
-   included, the augmented item will implement the
-   <code>HTMLEventInfo</code> interface found in the
-   <code>org.cyberneko.html</code> package. The augmentations 
-   can be queried in XNI by calling the <code>getItem</code> 
-   method with the key 
-   "http://cyberneko.org/html/features/augmentations".
-   Currently, the HTML event info augmentation can report event
-   character boundaries and whether the event is synthesized.
-  <td align='center'>false
- <tr>
-  <td>
-   <span class='id'>http://cyberneko.org/html/features/report-errors</span>
-   <br>
-   Specifies whether errors should be reported to the registered error
-   handler. Since HTML applications are supposed to permit the
-   liberal use (and abuse) of HTML documents, errors should
-   normally be handled silently. However, if the application wants
-   to know about errors in the parsed HTML document, this feature
-   can be set to <code>true</code>.
-  <td align='center'>false
-</table>
-<h2>Properties</h2>
-The NekoHTML parser supports the following properties:
-<table cellpadding='4' cellspacing='0'>
- <tr><th>Property Id / Description<th>Values<th>Default
- <tr>
-  <td>
-   <span class='id'>http://cyberneko.org/html/properties/default-encoding</span>
-   <br>
-   Sets the default encoding the NekoHTML scanner should use
-   when parsing documents. In the absence of an
-   <code>http-equiv</code> directive in the source document,
-   this setting is important because the parser does not
-   have any support to <i>auto-detect</i> the encoding.
-  <td>
-   <a href='http://www.iana.org/assignments/character-sets'>IANA</a> 
-   encoding names
-  <td align='center'><nobr>"Windows-1252"</nobr>
- <tr>
-  <td>
-   <span class='id'>http://cyberneko.org/html/properties/names/elems</span>
-   <br>
-   Specifies how the NekoHTML components should modify recognized
-   element names. Names can be converted to upper-case, converted
-   to lower-case, or left as-is. The value of "match" specifies
-   that element names are to be left as-is but the end tag name will
-   be modified to match the start tag name. This is required to
-   ensure that the parser generates a well-formed XML document.
-  <td>"upper"<br>"lower"<br>"match"
-  <td align='center'>"upper"
- <tr>
-  <td>
-   <span class='id'>http://cyberneko.org/html/properties/names/attrs</span>
-   <br>
-   Specifies how the NekoHTML components should modify attribute names
-   of recognized elements. Names can be converted to upper-case, 
-   converted to lower-case, or left as-is.
-   <br>
-  <td>"upper"<br>"lower"<br><nobr>"no-change"</nobr>
-  <td align='center'>"lower"
-</table>
-
 <h2>License Agreement</h2>
 <p>
-NekoHTML is distributed under an Apache style license. Please
-refer to the <a href='../LICENSE'>LICENSE</a> file for specific 
-details.
+The NekoHTML parser is distributed under an Apache-style license
+and is currently being considered as a sub-project of the Apache 
+Xerces project. If accepted, the license and development of NekoHTML
+will move to Apache. However, this will not affect the ability of
+the parser to be freely used as specified by the current license.
 <p>
-It is my intention, depending on the level of interest in this
-code, to either donate the code to the Xerces-J project at the 
-<a href='http://xml.apache.org/'>Apache XML Project</a> <i>or</i> 
-create a separate open source project hosted elsewhere (possibly 
-<a href='http://sourceforge.net'>SourceForge</a>). If you find 
-this code useful and are interested in its further development, 
-please contact me at
-<a href='mailto:andyc@apache.org'>andyc@apache.org</a>.
+For specific license details, please refer to the 
+<a href='../LICENSE'>LICENSE</a> file.
+
+<h2>Download</h2>
+<p>
+The NekoHTML parser includes complete Java source code and 
+documentation. You can download the latest version from the 
+following location:
+<ul>
+<li>NekoHTML 
+    [<a href='http://www.apache.org/~andyc/nekohtml/nekohtml-0.6.zip'>zip</a>]
+    [<a href='http://www.apache.org/~andyc/nekohtml/nekohtml-0.6.tar.gz'>tgz</a>] 
+</ul>
 
 <h2>Requirements and Limitations</h2>
 <p>
@@ -272,74 +89,11 @@ This version has the following limitations:
 <p>
 For a more complete list of items to be done, please refer to
 the <a href='../TODO'>Todo Items</a>.
-<h2>Release History</h2>
-<dl>
- <dt>Version 0.5 (07 May 2002)
- <dd>Fixed some location reporting information bugs and added 
-       feature to report character boundaries of events via the
-       associated augmentations object;
-     added feature to disable tag balancing;
-     and
-     added features to notify handlers of start and end of character
-       and built-in XML and HTML entity references.
- <dt>Version 0.4.1 (03 May 2002)
- <dd>Fixed some unquoted attribute value scanning bugs reported
-       by Xiaowei Jiang;
-     fixed hack for Xerces 2.0.1 reported by Ron Cemer;
-     now passing locator object to <code>startDocument</code>
-       method;
-     and
-     celebrated opening of the Spider-Man movie.
- <dt>Version 0.4 (14 Apr 2002)
- <dd>Added properties to control case of element and attribute names;
-     changed behavior of parser so that only known HTML elements
-       have their names modified according to the properties &mdash; all
-       unknown tags are left as-is;
-     added property to set default encoding;
-     added feature to augment infoset to report "synthesized" events;
-     added feature to be able to report errors and localized the error
-       messages;
-     implemented the locator so that location information can be
-     reported;
-     and
-     fixed element information so that more elements are properly
-     scanned as "special".
- <dt>Version 0.3.3 (02 Apr 2002)
- <dd>Separated <tt>META-INF/services/*</tt> files to separate Jar
-     so that HTML parser configuration selection can be controlled 
-     more explicitly; added DOM and SAX parser classes for 
-     convenience; and fixed bug so that parser now obeys the
-     encoding specified in the input source.
- <dt>Version 0.3.2 (15 Mar 2002)
- <dd>Fixed problem with bare &lt;input&gt; elements appearing outside
-     of &lt;form&gt; tag.
- <dt>Version 0.3.1 (07 Mar 2002)
- <dd>Fixed handling of bare ampersands in content and attribute
-     values.
- <dt>Version 0.3 (25 Feb 2002)
- <dd>Changed license to an Apache style license and fixed a
-     few bugs.
- <dt>Version 0.2.3 (19 Feb 2002)
- <dd>Nested tables bug fix.
- <dt>Version 0.2.2 (17 Feb 2002)
- <dd>More bug fixes to allow the parser to be used with Xalan
-     2.3.0. The parser wasn't keeping track of features and
-     properties and without namespaces turned on, Xalan would
-     not correctly transform the SAX events emitted using 
-     NekoHTML.
- <dt>Version 0.2.1 (16 Feb 2002)
- <dd>Minor bug fix to work around problem in Xerces 2.0.0 SAX 
-     parser that drops attributes when parser configuration 
-     doesn't have a symbol table.
- <dt>Version 0.2 (14 Feb 2002)
- <dd>Adding support for UTF-8, UTF-16, and other 8-bit encodings
-     supported by Java.
- <dt>Version 0.1 (04 Feb 2002)
- <dd>Initial writing.
-</dl>
+
 <h2>Contact Information</h2>
 <p>
 Andy Clark &lt;<a href='mailto:andyc@apache.org'>andyc@apache.org</a>&gt;
+
 <div class='copyright'>
 (C) Copyright 2002, Andy Clark. All rights reserved.
 </div>

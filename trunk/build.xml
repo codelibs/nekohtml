@@ -3,17 +3,27 @@
 <project default='all' basedir='.'>
 
  <!-- PROPERTIES -->
- <property name='name'      value='NekoHTML'/>
- <property name='version'   value='0.5'/>
+ <property name='version'   value='0.6'/>
+ <property name='name'      value='nekohtml'/>
+ <property name='Name'      value='NekoHTML ${version}'/>
  <property name='copyright' value='(C) Copyright 2002, Andy Clark. All rights reserved.'/>
   
- <property name='jarfile' value='nekohtml.jar'/>
- <property name='jarfileXni' value='nekohtmlXni.jar'/>
- <property name='zipfile' value='nekohtml-${version}.zip'/>
- <property name='tarfile' value='nekohtml-${version}.tar'/>
- <property name='tgzfile' value='nekohtml-${version}.tar.gz'/>
+ <property name='jarfile' value='${name}.jar'/>
+ <property name='jarfileXni' value='${name}Xni.jar'/>
+ <property name='jarfileSamples' value='${name}Samples.jar'/>
+ <property name='zipfile' value='${name}-${version}.zip'/>
+ <property name='tarfile' value='${name}-${version}.tar'/>
+ <property name='tgzfile' value='${name}-${version}.tar.gz'/>
 
- <property name='contents' value='TODO,LICENSE,${jarfile},${jarfileXni},build.*,src/org/**/*.java,src/org/**/*.properties,src/META-INF/**,doc/**,data/test*.html'/>
+ <property name='contents.misc'   value='TODO,LICENSE,build.*'/>
+ <property name='contents.jars'   value='${jarfile},${jarfileXni},${jarfileSamples}'/>
+ <property name='contents.source' value='src/META-INF/**,src/**/*.java,src/**/*.properties'/>
+ <property name='contents.docs'   value='doc/**,data/test*.html'/>
+ <property name='contents.libs'   value='lib/xercesMinimal.jar'/>
+ <property name='contents' 
+           value='${contents.misc},${contents.jars},${contents.source},${contents.docs},${contents.libs}'/>
+
+ <property name='package' value='org.cyberneko.html'/>
 
  <!-- TARGETS --> 
  <target name='universe' depends='full,all'/>
@@ -26,7 +36,7 @@
 
  <target name='compile'>
   <mkdir dir="bin"/>
-  <javac srcdir='src' destdir='bin' includes='org/**'/>
+  <javac srcdir='src' destdir='bin' includes='org/**,sample/**'/>
  </target>
 
  <target name='jar' depends='compile'>
@@ -37,10 +47,11 @@
    <fileset dir='src' includes='**/*.properties'/>
   </copy>
   <jar jarfile='${jarfile}' basedir='bin' 
-       includes='org/**/*.class,**/*.properties'
-       excludes='META-INF/services/**'/>
+       includes='org/**/*.class,org/**/*.properties'/>
   <jar jarfile='${jarfileXni}' basedir='bin'
        includes='META-INF/services/**'/>
+  <jar jarfile='${jarfileSamples}' basedir='bin'
+       includes='sample/**'/>
  </target> 
 
  <target name='zip' depends='jar,doc'>
@@ -56,11 +67,11 @@
  <target name='doc' unless='docs.done'>
   <delete dir='doc/javadoc'/>
   <mkdir dir='doc/javadoc'/>
-  <javadoc packagenames='org.cyberneko.html,org.cyberneko.html.parsers'
+  <javadoc packagenames='${package},${package}.parsers,${package}.filters'
            sourcepath='src' destdir='doc/javadoc'
            author='true' version='true' use='true'
-           windowtitle="${name} Implementation"
-           doctitle="${name}"
+           windowtitle="${Name} Implementation"
+           doctitle="${Name}"
            bottom="${copyright}" 
            locale='en_US'
            />

@@ -1,0 +1,106 @@
+<title>NekoHTML | Change History</title>
+<link rel=stylesheet type=text/css href=style.css>
+
+<h1>Change History</h1>
+<div class='navbar'>
+[
+<a href='index.html'>Home</a>
+|
+<a href='usage.html'>Usage</a>
+|
+<a href='settings.html'>Settings</a>
+|
+<a href='filters.html'>Filters</a>
+|
+<a href='javadoc/index.html'>JavaDoc</a>
+|
+Changes
+]
+</div>
+
+<h2>Releases</h2>
+<dl>
+ <dt>Version 0.6 (12 May 2002)
+ <dd>Added property to allow custom document filters to be appended
+       to the default NekoHTML parser pipeline;
+     added convenience filters for serializing HTML documents and
+       removing elements from the document event stream;
+     added samples to demonstrate the filtering feature;
+     added <font color=red>experimental</font> functionality to
+       allow applications to dynamically insert content into the
+       HTML document stream;
+     added a minimal Xerces2 Jar file containing just the files
+       required for using the HTMLConfiguration class directly to
+       alleviate full dependence on Xerces2 distribution;
+     applied patch from Serge Proskuryakov to fix handling of 
+       misplaced &lt;title&gt; within &lt;body&gt;;
+     fixed minor tag balancing bug;
+     and
+     re-organized and added new documentation.
+ <dt>Version 0.5 (07 May 2002)
+ <dd>Fixed some location reporting information bugs and added 
+       feature to report character boundaries of events via the
+       associated augmentations object;
+     added feature to disable tag balancing;
+     and
+     added features to notify handlers of start and end of character
+       and built-in XML and HTML entity references.
+ <dt>Version 0.4.1 (03 May 2002)
+ <dd>Fixed some unquoted attribute value scanning bugs reported
+       by Xiaowei Jiang;
+     fixed hack for Xerces 2.0.1 reported by Ron Cemer;
+     now passing locator object to <code>startDocument</code>
+       method;
+     and
+     celebrated opening of the Spider-Man movie.
+ <dt>Version 0.4 (14 Apr 2002)
+ <dd>Added properties to control case of element and attribute names;
+     changed behavior of parser so that only known HTML elements
+       have their names modified according to the properties &mdash; all
+       unknown tags are left as-is;
+     added property to set default encoding;
+     added feature to augment infoset to report "synthesized" events;
+     added feature to be able to report errors and localized the error
+       messages;
+     implemented the locator so that location information can be
+     reported;
+     and
+     fixed element information so that more elements are properly
+     scanned as "special".
+ <dt>Version 0.3.3 (02 Apr 2002)
+ <dd>Separated <tt>META-INF/services/*</tt> files to separate Jar
+     so that HTML parser configuration selection can be controlled 
+     more explicitly; added DOM and SAX parser classes for 
+     convenience; and fixed bug so that parser now obeys the
+     encoding specified in the input source.
+ <dt>Version 0.3.2 (15 Mar 2002)
+ <dd>Fixed problem with bare &lt;input&gt; elements appearing outside
+     of &lt;form&gt; tag.
+ <dt>Version 0.3.1 (07 Mar 2002)
+ <dd>Fixed handling of bare ampersands in content and attribute
+     values.
+ <dt>Version 0.3 (25 Feb 2002)
+ <dd>Changed license to an Apache style license and fixed a
+     few bugs.
+ <dt>Version 0.2.3 (19 Feb 2002)
+ <dd>Nested tables bug fix.
+ <dt>Version 0.2.2 (17 Feb 2002)
+ <dd>More bug fixes to allow the parser to be used with Xalan
+     2.3.0. The parser wasn't keeping track of features and
+     properties and without namespaces turned on, Xalan would
+     not correctly transform the SAX events emitted using 
+     NekoHTML.
+ <dt>Version 0.2.1 (16 Feb 2002)
+ <dd>Minor bug fix to work around problem in Xerces 2.0.0 SAX 
+     parser that drops attributes when parser configuration 
+     doesn't have a symbol table.
+ <dt>Version 0.2 (14 Feb 2002)
+ <dd>Adding support for UTF-8, UTF-16, and other 8-bit encodings
+     supported by Java.
+ <dt>Version 0.1 (04 Feb 2002)
+ <dd>Initial writing.
+</dl>
+
+<div class='copyright'>
+(C) Copyright 2002, Andy Clark. All rights reserved.
+</div>
