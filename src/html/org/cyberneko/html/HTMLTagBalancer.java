@@ -1,5 +1,5 @@
 /* 
- * (C) Copyright 2002-2003, Andy Clark.  All rights reserved.
+ * (C) Copyright 2002-2004, Andy Clark.  All rights reserved.
  *
  * This file is distributed under an Apache style license. Please
  * refer to the LICENSE file for specific details.
@@ -40,6 +40,8 @@ import org.apache.xerces.xni.parser.XMLDocumentSource;
  * <ul>
  * <li>http://cyberneko.org/html/features/augmentations
  * <li>http://cyberneko.org/html/features/report-errors
+ * <li>http://cyberneko.org/html/features/balance-tags/document-fragment
+ * <li>http://cyberneko.org/html/features/balance-tags/ignore-outside-content
  * </ul>
  * <p>
  * This component recognizes the following properties:
@@ -64,6 +66,9 @@ public class HTMLTagBalancer
 
     // features
 
+    /** Namespaces. */
+    protected static final String NAMESPACES = "http://xml.org/sax/features/namespaces";
+
     /** Include infoset augmentations. */
     protected static final String AUGMENTATIONS = "http://cyberneko.org/html/features/augmentations";
 
@@ -81,6 +86,7 @@ public class HTMLTagBalancer
 
     /** Recognized features. */
     private static final String[] RECOGNIZED_FEATURES = {
+        NAMESPACES,
         AUGMENTATIONS,
         REPORT_ERRORS,
         DOCUMENT_FRAGMENT_DEPRECATED,
@@ -90,6 +96,7 @@ public class HTMLTagBalancer
 
     /** Recognized features defaults. */
     private static final Boolean[] RECOGNIZED_FEATURES_DEFAULTS = {
+        null,
         null,
         null,
         null,
@@ -139,13 +146,17 @@ public class HTMLTagBalancer
     // static vars
 
     /** Synthesized event info item. */
-    protected static final HTMLEventInfo SYNTHESIZED_ITEM = new SynthesizedItem();
+    protected static final HTMLEventInfo SYNTHESIZED_ITEM = 
+        new HTMLEventInfo.SynthesizedItem();
 
     //
     // Data
     //
 
     // features
+
+    /** Namespaces. */
+    protected boolean fNamespaces;
 
     /** Include infoset augmentations. */
     protected boolean fAugmentations;
@@ -263,6 +274,7 @@ public class HTMLTagBalancer
         throws XMLConfigurationException {
 
         // get features
+        fNamespaces = manager.getFeature(NAMESPACES);
         fAugmentations = manager.getFeature(AUGMENTATIONS);
         fReportErrors = manager.getFeature(REPORT_ERRORS);
         fDocumentFragment = manager.getFeature(DOCUMENT_FRAGMENT) ||
@@ -489,7 +501,7 @@ public class HTMLTagBalancer
         }
 
         // get element information
-        HTMLElements.Element element = HTMLElements.getElement(elem.rawname);
+        HTMLElements.Element element = getElement(elem.rawname);
 
         // ignore multiple html, head, body elements
         if (fSeenRootElement && element.code == HTMLElements.HTML) {
@@ -791,7 +803,7 @@ public class HTMLTagBalancer
         }
         
         // get element information
-        HTMLElements.Element elem = HTMLElements.getElement(element.rawname);
+        HTMLElements.Element elem = getElement(element.rawname);
 
         // do we ignore outside content?
         if (!fIgnoreOutsideContent &&
@@ -942,6 +954,17 @@ public class HTMLTagBalancer
     //
     // Protected methods
     //
+
+    /** Returns an HTML element. */
+    protected HTMLElements.Element getElement(String name) {
+        if (fNamespaces) {
+            int index = name.indexOf(':');
+            if (index != -1) {
+                name = name.substring(index+1);
+            }
+        }
+        return HTMLElements.getElement(name);
+    } // getElement(String):HTMLElements.Element
 
     /** Call document handler start element. */
     protected final void callStartElement(QName element, XMLAttributes attrs,
@@ -1158,58 +1181,6 @@ public class HTMLTagBalancer
         } // <init>(HTMLElements.Element,QName,XMLAttributes)
 
     } // class Info
-
-    /**
-     * Synthesized infoset item.
-     *
-     * @author Andy Clark
-     */
-    protected static class SynthesizedItem
-        implements HTMLEventInfo {
-
-        //
-        // HTMLEventInfo methods
-        //
-
-        // location information
-
-        /** Returns the line number of the beginning of this event.*/
-        public int getBeginLineNumber() {
-            return -1;
-        } // getBeginLineNumber():int
-
-        /** Returns the column number of the beginning of this event.*/
-        public int getBeginColumnNumber() { 
-            return -1;
-        } // getBeginColumnNumber():int
-
-        /** Returns the line number of the end of this event.*/
-        public int getEndLineNumber() {
-            return -1;
-        } // getEndLineNumber():int
-
-        /** Returns the column number of the end of this event.*/
-        public int getEndColumnNumber() {
-            return -1;
-        } // getEndColumnNumber():int
-
-        // other information
-
-        /** Returns true if this corresponding event was synthesized. */
-        public boolean isSynthesized() {
-            return true;
-        } // isSynthesized():boolean
-
-        //
-        // Object methods
-        //
-
-        /** Returns a string representation of this object. */
-        public String toString() {
-            return "synthesized";
-        } // toString():String
-
-    } // class SynthesizedItem
 
     /** Unsynchronized stack of element information. */
     public static class InfoStack {

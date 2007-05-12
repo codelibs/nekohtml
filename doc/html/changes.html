@@ -25,6 +25,24 @@ Changes
 
 <h2>Releases</h2>
 <dl>
+ <dt>Version 0.9 (19 Feb 2004)
+     [<a href='http://www.apache.org/~andyc/neko/nekohtml-0.9.zip'>zip</a>]
+     [<a href='http://www.apache.org/~andyc/neko/nekohtml-0.9.tar.gz'>tgz</a>]
+ <dd>Implemented scanning of CDATA sections;
+     implemented namespace processing;
+     added features to 
+       override namespace bindings,
+       insert namespace bindings if not present,
+       override doctype public and system identifiers, and
+       insert doctype declaration if not present;
+     added a filter to allow applications to "purify" the input, ensuring
+       that the output is well-formed XML;
+     added missing location augmentations from document type declaration
+       callback;
+     fixed newline scanning bugs reported by Jonathan Baxter;
+     and
+     fixed comment scanning bugs and infinite loop bug caused by extremely
+       long element and attribute names found by Ram Subbaroyan.
  <dt>Version 0.8.3 (12 Dec 2003)
      [<a href='http://www.apache.org/~andyc/neko/nekohtml-0.8.3.zip'>zip</a>]
      [<a href='http://www.apache.org/~andyc/neko/nekohtml-0.8.3.tar.gz'>tgz</a>]
@@ -356,5 +374,5 @@ Changes
 </dl>
 
 <div class='copyright'>
-(C) Copyright 2002-2003, Andy Clark. All rights reserved.
+(C) Copyright 2002-2004, Andy Clark. All rights reserved.
 </div>

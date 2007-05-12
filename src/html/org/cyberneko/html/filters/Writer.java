@@ -1,5 +1,5 @@
 /* 
- * (C) Copyright 2002-2003, Andy Clark.  All rights reserved.
+ * (C) Copyright 2002-2004, Andy Clark.  All rights reserved.
  *
  * This file is distributed under an Apache style license. Please
  * refer to the LICENSE file for specific details.
@@ -423,6 +423,7 @@ public class Writer
         parser.setFeature(NOTIFY_HTML_BUILTIN_REFS, true);
         String encoding = "Windows-1252";
         boolean identity = false;
+        boolean purify = false;
         for (int i = 0; i < argv.length; i++) {
             String arg = argv[i];
             if (arg.equals("-e")) {
@@ -433,21 +434,25 @@ public class Writer
                 identity = true;
                 continue;
             }
+            if (arg.equals("-p")) {
+                purify = true;
+                continue;
+            }
             if (arg.equals("-h")) {
                 printUsage();
                 System.exit(1);
             }
-            XMLDocumentFilter[] filters;
+            java.util.Vector filtersVector = new java.util.Vector(2);
             if (identity) {
-                parser.setFeature(AUGMENTATIONS, true);
-                filters = new XMLDocumentFilter[] { 
-                    new Identity(),
-                    new Writer(System.out, encoding) 
-                };
+                filtersVector.addElement(new Identity());
             }
-            else {
-                filters = new XMLDocumentFilter[] { new Writer(System.out, encoding) };
+            else if (purify) {
+                filtersVector.addElement(new Purifier());
             }
+            filtersVector.addElement(new Writer(System.out, encoding));
+            XMLDocumentFilter[] filters = 
+                new XMLDocumentFilter[filtersVector.size()];
+            filtersVector.copyInto(filters);
             parser.setProperty(FILTERS, filters);
             parser.parse(new XMLInputSource(null, arg, null));
         }
@@ -460,7 +465,11 @@ public class Writer
         System.err.println("options:");
         System.err.println("  -e name  Specify IANA name of output encoding.");
         System.err.println("  -i       Perform identity transform.");
+        System.err.println("  -p       Purify output to ensure XML well-formedness.");
         System.err.println("  -h       Display help screen.");
+        System.err.println();
+        System.err.println("notes:");
+        System.err.println("  The -i and -p options are mutually exclusive.");
     } // printUsage()
 
 } // class Writer

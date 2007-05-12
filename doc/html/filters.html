@@ -23,6 +23,27 @@ Filters
 ]
 </div>
 
+<h2>Table of Contents</h2>
+<ul>
+<li><a href='#overview'>Overview</a>
+ <ul>
+ <li><a href='#overview.create'>Creating a New Filter</a>
+ <li><a href='#overview.append'>Appending Filters to the Pipeline</a>
+ </ul>
+<li><a href='#filters'>Sample Filters</a>
+ <ul>
+ <li><a href='#filters.serialize'>Serializing HTML Documents</a>
+ <li><a href='#filters.namespaces'>Namespace Processing</a>
+ <li><a href='#filters.well-formedness'>Ensuring XML Well-Formedness</a>
+ <li><a href='#filters.removing'>Removing Elements</a>
+ <li><a href='#filters.identity'>Performing Identity Transform</a>
+ <li><a href='#filters.dynamic'>Dynamically Inserting Content</a>
+ </ul>
+</ul>
+
+<hr>
+
+<a name='overview'></a>
 <h2>Overview</h2>
 <p>
 The Xerces Native Interface (XNI) defines a parser configuration
@@ -34,6 +55,7 @@ this modular framework, new functionality can be quickly and
 easily added to the parser by appending custom document filters 
 to the end of the default NekoHTML parsing pipeline.
 
+<a name='overview.create'></a>
 <h3>Creating a New Filter</h3>
 <p>
 To write a custom filter, simply write a new class that implements
@@ -54,6 +76,7 @@ relevent methods to add your own behavior. Once done, the only
 thing you need to do is append the filter to the end of the
 parser pipeline.
 
+<a name='overview.append'></a>
 <h3>Appending Filters to the Pipeline</h3>
 <p>
 The NekoHTML parser has a <a href='settings.html#filters'>filters
@@ -70,18 +93,20 @@ XMLParserConfiguration parser <span class='code-punct'>=</span> <span class='cod
 parser<span class='code-punct'>.</span>setProperty<span class='code-punct'>(</span><span class='code-string'>"http://cyberneko.org/html/properties/filters"</span><span class='code-punct'>,</span> filters<span class='code-punct'>);</span>
 </pre>
 
+<a name='filters'></a>
 <h2>Sample Filters</h2>
 <p>
-This section describes a few of the basic basic document filters 
+This section describes a few of the basic document filters 
 that are included with the NekoHTML parser. The included filters 
-enable applications to:
+enable applications to perform a variety of operations, including:
 <ul>
-<li>serialize HTML documents;
-<li>remove elements;
+<li>serializing HTML documents;
+<li>ensuring XML well-formedness;
     and
-<li>perform identity transform.
+<li>performing identity transform.
 </ul>
 
+<a name='filters.serialize'></a>
 <h3>Serializing HTML Documents</h3>
 <p>
 NekoHTML includes a simple HTML serializer written as a filter. 
@@ -133,11 +158,53 @@ The following table shows the standard usage of the writer:
 <td><pre>
   -e name  Specify IANA name of output encoding.
   -i       Perform identity transform.
+  -p       Purify output to ensure XML well-formedness.
   -h       Display help screen.</pre>
 </td>
 </tr>
 </table>
 
+<a name='filters.namespaces'></a>
+<h3>Namespace Processing</h3>
+<p>
+A filter to perform namespace processing is included with NekoHTML,
+for convenience. You do not need to add this filter manually because
+it is automatically added to the parsing pipeline if the SAX namespaces 
+feature is enabled. However, if you are interested, the
+<code>NamespaceBinder</code> component is included in the 
+<code>org.cyberneko.html.filters</code> package.
+<p>
+<strong>Note:</strong>
+This component does not perform <em>any</em> namespace processing
+unless the SAX namespaces feature, 
+"http://xml.org/sax/features/namespaces", is enabled.
+
+<a name='filters.well-formedness'></a>
+<h3>Ensuring XML Well-Formedness</h3>
+<p>
+HTML allows documents to be less strict than XML documents which 
+means that most HTML documents cannot be parsed with an XML parser. 
+But even if an HTML document can be parsed and accessed by
+applications using standard XML programming interfaces, many
+applications need to produce well-formed output. Not only do tags
+need to be balanced properly, but the document content must also
+be legal according to the XML specification. Therefore, the 
+NekoHTML parser provides a filter that "purifies" the input, 
+ensuring that the output is well-formed XML.
+<p>
+The <code>Purifier</code> class in the
+<code>org.cyberneko.html.filters</code> package lets the application
+convert the HTML input into well-formed XML output. Some of the
+changes that the Purifier performs, are:
+<ul>
+<li>fixing illegal element and attribute names;
+<li>ensuring the string "--" does not appear in the content of
+    a comment;
+<li>escaping illegal characters appearing in the document;
+<li>etc.
+</ul>
+
+<a name='filters.removing'></a>
 <h3>Removing Elements</h3>
 <p>
 The NekoHTML parser also provides a basic document filter capable 
@@ -206,6 +273,7 @@ removes the &lt;HTML&gt; element (with or without retaining its
 children), the resulting document event stream will no longer be
 well-formed.
 
+<a name='filters.identity'></a>
 <h3>Performing Identity Transform</h3>
 <p>
 An identity filter is provided that performs an identity 
@@ -230,6 +298,7 @@ element and attributes names may have been modified from the
 original document. For example, by default, NekoHTML converts
 element names to upper-case and attribute names to lower-case.
 
+<a name='filters.dynamic'></a>
 <h3>Dynamically Inserting Content</h3>
 <p>
 The NekoHTML parser has the ability to dynamically insert content
@@ -300,5 +369,5 @@ example to make it easier to read.]
 </pre>
 
 <div class='copyright'>
-(C) Copyright 2002-2003, Andy Clark. All rights reserved.
+(C) Copyright 2002-2004, Andy Clark. All rights reserved.
 </div>

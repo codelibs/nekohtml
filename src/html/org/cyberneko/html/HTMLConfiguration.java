@@ -1,5 +1,5 @@
 /* 
- * (C) Copyright 2002-2003, Andy Clark.  All rights reserved.
+ * (C) Copyright 2002-2004, Andy Clark.  All rights reserved.
  *
  * This file is distributed under an Apache style license. Please
  * refer to the LICENSE file for specific details.
@@ -17,6 +17,8 @@ import java.util.Properties;
 import java.util.ResourceBundle;
 import java.util.Vector;
                                                                                
+import org.cyberneko.html.filters.NamespaceBinder;
+
 import org.apache.xerces.util.DefaultErrorHandler;
 import org.apache.xerces.util.ObjectFactory;
 import org.apache.xerces.util.ParserConfigurationSettings;
@@ -78,6 +80,9 @@ public class HTMLConfiguration
     //
 
     // features
+
+    /** Namespaces. */
+    protected static final String NAMESPACES = "http://xml.org/sax/features/namespaces";
 
     /** Include infoset augmentations. */
     protected static final String AUGMENTATIONS = "http://cyberneko.org/html/features/augmentations";
@@ -162,6 +167,9 @@ public class HTMLConfiguration
     /** HTML tag balancer. */
     protected HTMLTagBalancer fTagBalancer = new HTMLTagBalancer();
 
+    /** Namespace binder. */
+    protected NamespaceBinder fNamespaceBinder = new NamespaceBinder();
+
     // other components
 
     /** Error reporter. */
@@ -207,13 +215,13 @@ public class HTMLConfiguration
         // add components
         addComponent(fDocumentScanner);
         addComponent(fTagBalancer);
+        addComponent(fNamespaceBinder);
 
         //
         // features
         //
 
         // recognized features
-        String NAMESPACES = "http://xml.org/sax/features/namespaces";
         String VALIDATION = "http://xml.org/sax/features/validation";
         String[] recognizedFeatures = {
             AUGMENTATIONS,
@@ -290,7 +298,6 @@ public class HTMLConfiguration
     } // <init>()
 
     //
-    //
     // Public methods
     //
 
@@ -331,6 +338,19 @@ public class HTMLConfiguration
     public void setProperty(String propertyId, Object value)
         throws XMLConfigurationException {
         super.setProperty(propertyId, value);
+
+        if (propertyId.equals(FILTERS)) {
+            XMLDocumentFilter[] filters = (XMLDocumentFilter[])getProperty(FILTERS);
+            if (filters != null) {
+                for (int i = 0; i < filters.length; i++) {
+                    XMLDocumentFilter filter = filters[i];
+                    if (filter instanceof HTMLComponent) {
+                        addComponent((HTMLComponent)filter);
+                    }
+                }
+            }
+        }
+
         int size = fHTMLComponents.size();
         for (int i = 0; i < size; i++) {
             HTMLComponent component = (HTMLComponent)fHTMLComponents.elementAt(i);
@@ -523,9 +543,14 @@ public class HTMLConfiguration
         // configure pipeline
         XMLDocumentSource lastSource = fDocumentScanner;
         if (getFeature(BALANCE_TAGS)) {
-            fDocumentScanner.setDocumentHandler(fTagBalancer);
+            lastSource.setDocumentHandler(fTagBalancer);
             fTagBalancer.setDocumentSource(fDocumentScanner);
             lastSource = fTagBalancer;
+        }
+        if (getFeature(NAMESPACES)) {
+            lastSource.setDocumentHandler(fNamespaceBinder);
+            fNamespaceBinder.setDocumentSource(fTagBalancer);
+            lastSource = fNamespaceBinder;
         }
         XMLDocumentFilter[] filters = (XMLDocumentFilter[])getProperty(FILTERS);
         if (filters != null) {
