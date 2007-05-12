@@ -21,6 +21,22 @@ public interface HTMLEventInfo {
     // HTMLEventInfo methods
     //
 
+    // location information
+
+    /** Returns the line number of the beginning of this event.*/
+    public int getBeginLineNumber();
+
+    /** Returns the column number of the beginning of this event.*/
+    public int getBeginColumnNumber();
+
+    /** Returns the line number of the end of this event.*/
+    public int getEndLineNumber();
+
+    /** Returns the column number of the end of this event.*/
+    public int getEndColumnNumber();
+
+    // other information
+
     /** Returns true if this corresponding event was synthesized. */
     public boolean isSynthesized();
 

@@ -61,7 +61,7 @@ public class HTMLTagBalancer
 
     /** Recognized features defaults. */
     private static final Boolean[] RECOGNIZED_FEATURES_DEFAULTS = {
-        Boolean.FALSE,
+        null,
         null,
     };
 
@@ -72,7 +72,7 @@ public class HTMLTagBalancer
 
     /** Modify HTML attribute names: { "upper", "lower", "default" }. */
     protected static final String NAMES_ATTRS = "http://cyberneko.org/html/properties/names/attrs";
-
+    
     /** Error reporter. */
     protected static final String ERROR_REPORTER = "http://cyberneko.org/html/properties/error-reporter";
 
@@ -85,8 +85,8 @@ public class HTMLTagBalancer
 
     /** Recognized properties defaults. */
     private static final Object[] RECOGNIZED_PROPERTIES_DEFAULTS = {
-        "upper",
-        "lower",
+        null,
+        null,
         null,
     };
 
@@ -156,8 +156,8 @@ public class HTMLTagBalancer
     /** Empty attributes. */
     private final XMLAttributes fEmptyAttrs = new XMLAttributesImpl();
 
-    /** Augmentations for synthesize values. */
-    private final Augmentations fSynthesizedAugs = new AugmentationsImpl();
+    /** Augmentations. */
+    private final Augmentations fInfosetAugs = new AugmentationsImpl();
 
     //
     // HTMLComponent methods
@@ -232,11 +232,12 @@ public class HTMLTagBalancer
     /** Sets a property. */
     public void setProperty(String propertyId, Object value)
         throws XMLConfigurationException {
-        
+    
         if (propertyId.equals(NAMES_ELEMS)) {
             fNamesElems = getNamesValue(String.valueOf(value));
             return;
         }
+
         if (propertyId.equals(NAMES_ATTRS)) {
             fNamesAttrs = getNamesValue(String.valueOf(value));
             return;
@@ -305,7 +306,8 @@ public class HTMLTagBalancer
             for (int i = 0; i < length; i++) {
                 Info info = (Info)fElementStack.peek();
                 if (fReportErrors) {
-                    String ename = modifyName(info.element.rawname, fNamesElems);
+                    //String ename = modifyName(info.element.rawname, fNamesElems);
+                    String ename = info.element.rawname;
                     fErrorReporter.reportWarning("HTML2001", new Object[]{ename});
                 }
                 endElement(info.element, synthesizedAugs());
@@ -348,7 +350,8 @@ public class HTMLTagBalancer
         
         // get element information
         HTMLElements.Element element = HTMLElements.getElement(elem.rawname);
-        String ename = modifyName(elem.rawname, fNamesElems);
+        //String ename = modifyName(elem.rawname, fNamesElems);
+        String ename = elem.rawname;
 
         // check proper parent
         if (element.parent != null) {
@@ -402,7 +405,8 @@ public class HTMLTagBalancer
             Info info = (Info)fElementStack.peek();
             if (element.closes(info.element.rawname)) {
                 if (fReportErrors) {
-                    String iname = modifyName(info.element.rawname, fNamesElems);
+                    //String iname = modifyName(info.element.rawname, fNamesElems);
+                    String iname = info.element.rawname;
                     fErrorReporter.reportWarning("HTML2005", new Object[]{ename,iname});
                 }
                 for (int j = length - 1; j >= i; j--) {
@@ -416,6 +420,7 @@ public class HTMLTagBalancer
             }
         }
 
+        /***
         // modify element and attribute names
         if (HTMLElements.getElement(elem.rawname, null) != null) {
             QName qname = elem;
@@ -429,6 +434,7 @@ public class HTMLTagBalancer
                 attrs.setName(i, qname);
             }
         }
+        /***/
 
         // call handler
         fSeenRootElement = true;
@@ -560,7 +566,8 @@ public class HTMLTagBalancer
             Info info = (Info)fElementStack.pop();
             if (fReportErrors && i < depth - 1) {
                 String ename = modifyName(element.rawname, fNamesElems);
-                String iname = modifyName(info.element.rawname, fNamesElems);
+                //String iname = modifyName(info.element.rawname, fNamesElems);
+                String iname = info.element.rawname;
                 fErrorReporter.reportWarning("HTML2007", new Object[]{ename,iname});
             }
             if (fDocumentHandler != null) {
@@ -578,7 +585,8 @@ public class HTMLTagBalancer
                     attributes = emptyAttributes();
                 }
                 if (fReportErrors) {
-                    String iname = modifyName(info.element.rawname, fNamesElems);
+                    //String iname = modifyName(info.element.rawname, fNamesElems);
+                    String iname = info.element.rawname;
                     fErrorReporter.reportWarning("HTML2008", new Object[]{iname});
                 }
                 startElement(info.element, attributes, synthesizedAugs());
@@ -652,6 +660,27 @@ public class HTMLTagBalancer
 
     } // getDepth(String,boolean):int
 
+    /** Returns a set of empty attributes. */
+    protected final XMLAttributes emptyAttributes() {
+        fEmptyAttrs.removeAllAttributes();
+        return fEmptyAttrs;
+    } // emptyAttributes():XMLAttributes
+
+    /** Returns an augmentations object with a synthesized item added. */
+    protected final Augmentations synthesizedAugs() {
+        Augmentations augs = null;
+        if (fAugmentations) {
+            augs = fInfosetAugs;
+            augs.clear();
+            augs.putItem(AUGMENTATIONS, SYNTHESIZED_ITEM);
+        }
+        return augs;
+    } // synthesizedAugs():Augmentations
+
+    //
+    // Protected static methods
+    //
+
     /** Modifies the given name based on the specified mode. */
     protected static final String modifyName(String name, short mode) {
         switch (mode) {
@@ -677,23 +706,6 @@ public class HTMLTagBalancer
         }
         return NAMES_NO_CHANGE;
     } // getNamesValue(String):short
-
-    /** Returns a set of empty attributes. */
-    protected final XMLAttributes emptyAttributes() {
-        fEmptyAttrs.removeAllAttributes();
-        return fEmptyAttrs;
-    } // emptyAttributes():XMLAttributes
-
-    /** Returns an augmentations object with a synthesized item added. */
-    protected final Augmentations synthesizedAugs() {
-        Augmentations augs = null;
-        if (fAugmentations) {
-            augs = fSynthesizedAugs;
-            augs.clear();
-            augs.putItem(AUGMENTATIONS, SYNTHESIZED_ITEM);
-        }
-        return augs;
-    } // synthesizedAugs():Augmentations
 
     //
     // Classes
@@ -788,6 +800,30 @@ public class HTMLTagBalancer
         //
         // HTMLEventInfo methods
         //
+
+        // location information
+
+        /** Returns the line number of the beginning of this event.*/
+        public int getBeginLineNumber() {
+            return -1;
+        } // getBeginLineNumber():int
+
+        /** Returns the column number of the beginning of this event.*/
+        public int getBeginColumnNumber() { 
+            return -1;
+        } // getBeginColumnNumber():int
+
+        /** Returns the line number of the end of this event.*/
+        public int getEndLineNumber() {
+            return -1;
+        } // getEndLineNumber():int
+
+        /** Returns the column number of the end of this event.*/
+        public int getEndColumnNumber() {
+            return -1;
+        } // getEndColumnNumber():int
+
+        // other information
 
         /** Returns true if this corresponding event was synthesized. */
         public boolean isSynthesized() {

@@ -45,11 +45,17 @@ public class HTMLConfiguration
 
     // features
 
+    /** Include infoset augmentations. */
+    protected static final String AUGMENTATIONS = "http://cyberneko.org/html/features/augmentations";
+
     /** Report errors. */
     protected static final String REPORT_ERRORS = "http://cyberneko.org/html/features/report-errors";
 
     /** Simple report format. */
     protected static final String SIMPLE_ERROR_FORMAT = "http://cyberneko.org/html/features/report-errors/simple";
+
+    /** Balance tags. */
+    protected static final String BALANCE_TAGS = "http://cyberneko.org/html/features/balance-tags";
 
     // properties
 
@@ -65,6 +71,8 @@ public class HTMLConfiguration
     // Data
     //
 
+    // handlers
+
     /** Document handler. */
     protected XMLDocumentHandler fDocumentHandler;
 
@@ -77,11 +85,15 @@ public class HTMLConfiguration
     /** Error handler. */
     protected XMLErrorHandler fErrorHandler;
 
+    // other settings
+
     /** Entity resolver. */
     protected XMLEntityResolver fEntityResolver;
 
     /** Locale. */
     protected Locale fLocale = Locale.getDefault();
+
+    // components
 
     /** Components. */
     protected Vector fHTMLComponents = new Vector(2);
@@ -120,7 +132,7 @@ public class HTMLConfiguration
             XERCES_2_0_0 = versionStr.equals("Xerces-J 2.0.0");
             XERCES_2_0_1 = versionStr.equals("Xerces-J 2.0.1");
         }
-        catch (Exception e) {
+        catch (Throwable e) {
             // ignore
         }
     } // <clinit>()
@@ -144,16 +156,20 @@ public class HTMLConfiguration
         String NAMESPACES = "http://xml.org/sax/features/namespaces";
         String VALIDATION = "http://xml.org/sax/features/validation";
         String[] recognizedFeatures = {
+            AUGMENTATIONS,
             NAMESPACES,
             VALIDATION,
             REPORT_ERRORS,
             SIMPLE_ERROR_FORMAT,
+            BALANCE_TAGS,
         };
         addRecognizedFeatures(recognizedFeatures);
+        setFeature(AUGMENTATIONS, false);
         setFeature(NAMESPACES, true);
         setFeature(VALIDATION, false);
         setFeature(REPORT_ERRORS, false);
         setFeature(SIMPLE_ERROR_FORMAT, false);
+        setFeature(BALANCE_TAGS, true);
 
         // HACK: Xerces 2.0.0
         if (XERCES_2_0_0) {
@@ -349,8 +365,14 @@ public class HTMLConfiguration
         }
 
         // configure pipeline
-        fDocumentScanner.setDocumentHandler(fTagBalancer);
-        fTagBalancer.setDocumentHandler(fDocumentHandler);
+        boolean balance = getFeature(BALANCE_TAGS);
+        if (balance) {
+            fDocumentScanner.setDocumentHandler(fTagBalancer);
+            fTagBalancer.setDocumentHandler(fDocumentHandler);
+        }
+        else {
+            fDocumentScanner.setDocumentHandler(fDocumentHandler);
+        }
 
     } // reset()
 

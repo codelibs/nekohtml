@@ -1,8 +1,8 @@
 @echo off
 if "%JAVA_HOME%" == "" goto error
 if not exist lib\xercesImpl.jar goto requirements
-set LOCALCLASSPATH=%JAVA_HOME%\lib\tools.jar;%JAVA_HOME%\lib\classes.zip;.\lib\ant.jar;.\lib\xercesImpl.jar;.\lib\xmlParserAPIs.jar
-"%JAVA_HOME%\bin\java" -Dant.home="./lib" -classpath "%LOCALCLASSPATH%" org.apache.tools.ant.Main %1 %2 %3 %4 %5
+set LOCALCLASSPATH=%JAVA_HOME%\lib\tools.jar;%JAVA_HOME%\jre\lib\rt.jar;lib\xmlParserAPIs.jar;lib\xercesImpl.jar;lib\ant.jar
+"%JAVA_HOME%\bin\java" -classpath "%LOCALCLASSPATH%" org.apache.tools.ant.Main %1 %2 %3 %4 %5
 goto end
 :error
 echo error: JAVA_HOME not found in your environment.

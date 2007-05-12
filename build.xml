@@ -4,7 +4,7 @@
 
  <!-- PROPERTIES -->
  <property name='name'      value='NekoHTML'/>
- <property name='version'   value='0.4.1'/>
+ <property name='version'   value='0.5'/>
  <property name='copyright' value='(C) Copyright 2002, Andy Clark. All rights reserved.'/>
   
  <property name='jarfile' value='nekohtml.jar'/>
@@ -13,10 +13,12 @@
  <property name='tarfile' value='nekohtml-${version}.tar'/>
  <property name='tgzfile' value='nekohtml-${version}.tar.gz'/>
 
- <property name='contents' value='TODO,LICENSE,${jarfile},${jarfileXni},build.*,src/org/**,src/META-INF/**,doc/**,data/test*.html'/>
+ <property name='contents' value='TODO,LICENSE,${jarfile},${jarfileXni},build.*,src/org/**/*.java,src/org/**/*.properties,src/META-INF/**,doc/**,data/test*.html'/>
 
  <!-- TARGETS --> 
- <target name='all' depends='full,zip,tgz'/>
+ <target name='universe' depends='full,all'/>
+
+ <target name='all' depends='zip,tgz'/>
 
  <target name='full'>
   <property name='contents.full' value='lib/**'/>
@@ -40,7 +42,7 @@
   <jar jarfile='${jarfileXni}' basedir='bin'
        includes='META-INF/services/**'/>
  </target> 
- 
+
  <target name='zip' depends='jar,doc'>
   <zip zipfile='${zipfile}' basedir='.' includes='${contents},${contents.full}'/>
  </target>
