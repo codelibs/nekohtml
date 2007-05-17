@@ -11,7 +11,7 @@
  <property name='Name'      value='${Title} ${version}'/>
  <property name='author'    value='Andy Clark'/>
  <property name='copyright' value='(C) Copyright 2002-2005, ${author}. All rights reserved.'/>
- <property name='URL'       value='http://www.apache.org/~andyc/neko/doc/html/index.html'/>
+ <property name='URL'       value='http://nekohtml.sourceforge.net/index.html'/>
   
  <property name='jarfile'        value='${name}.jar'/>
  <property name='jarfileXni'     value='${name}Xni.jar'/>
@@ -22,17 +22,17 @@
  <property name='tarfile' value='${fullname}.tar'/>
  <property name='tgzfile' value='${fullname}.tar.gz'/>
 
- <property name='contents.misc'   value='LICENSE,LICENSE_apache,README_html,TODO_html,build.bat,build-html.xml,build-html-test.xml'/>
+ <property name='contents.misc'   value='LICENSE,LICENSE_apache,README_html,TODO_html,build.bat,build.xml,build-test.xml'/>
  <property name='contents.jars'   value='${jarfile},${jarfileXni},${jarfileSamples}'/>
- <property name='contents.source' value='src/html/META-INF/**,src/html/**/*.java,src/html/**/*.properties'/>
- <property name='contents.docs'   value='doc/style.css,doc/html/**,data/html/test*.html*,data/html/canonical/*'/>
+ <property name='contents.source' value='src/META-INF/**,src/**/*.java,src/**/*.properties'/>
+ <property name='contents.docs'   value='doc/**,data/test*.html*,data/canonical/*'/>
  <property name='contents.libs'   value='lib/xercesMinimal.jar'/>
  <property name='contents' 
            value='${contents.misc},${contents.jars},${contents.source},${contents.docs},${contents.libs}'/>
 
  <property name='package' value='org.cyberneko.html'/>
 
- <property name='version.dir'      value='bin/html/src'/>
+ <property name='version.dir'      value='bin/src'/>
  <property name='version.manifest' value='${version.dir}/MANIFEST_html'/>
  <property name='version.dir.java' value='${version.dir}/org/cyberneko/html'/>
  <property name='version.java'     value='${version.dir.java}/Version.java'/>
@@ -47,30 +47,30 @@
  </target>
 
  <target name='compile' depends='version'>
-  <mkdir dir="bin/html"/>
-  <javac srcdir='src/html' destdir='bin/html' includes='org/**,sample/**' debug='true'/>
-  <javac srcdir='bin/html/src' destdir='bin/html' includes='org/**'/>
+  <mkdir dir="bin"/>
+  <javac srcdir='src' destdir='bin' includes='org/**,sample/**' debug='true'/>
+  <javac srcdir='bin/src' destdir='bin' includes='org/**'/>
  </target>
 
  <target name='jar' depends='compile'>
-  <copy todir='bin/html'>
+  <copy todir='bin'>
    <fileset dir='.' includes='LICENSE'/>
-   <fileset dir='src/html' includes='**/*.properties'/>
+   <fileset dir='src' includes='**/*.properties'/>
   </copy>
-  <jar jarfile='${jarfile}' basedir='bin/html' 
+  <jar jarfile='${jarfile}' basedir='bin' 
        manifest='${version.manifest}'
        includes='LICENSE,org/**/*.class,org/**/*.properties'/>
-  <jar jarfile='${jarfileSamples}' basedir='bin/html'
+  <jar jarfile='${jarfileSamples}' basedir='bin'
        includes='LICENSE,sample/**'/>
  </target> 
 
  <target name='jar-xni'>
-  <mkdir dir="bin/html"/>
-  <copy todir='bin/html'>
+  <mkdir dir="bin"/>
+  <copy todir='bin'>
    <fileset dir='.' includes='LICENSE'/>
-   <fileset dir='src/html' includes='META-INF/services/**'/>
+   <fileset dir='src' includes='META-INF/services/**'/>
   </copy>
-  <jar jarfile='${jarfileXni}' basedir='bin/html'
+  <jar jarfile='${jarfileXni}' basedir='bin'
        includes='LICENSE,META-INF/services/**'/>
  </target>
 
@@ -100,10 +100,10 @@
  </target>
 
  <target name='doc' unless='docs.done'>
-  <delete dir='doc/html/javadoc'/>
-  <mkdir dir='doc/html/javadoc'/>
+  <delete dir='doc/javadoc'/>
+  <mkdir dir='doc/javadoc'/>
   <javadoc packagenames='${package},${package}.parsers,${package}.filters'
-           sourcepath='src/html' destdir='doc/html/javadoc'
+           sourcepath='src' destdir='doc/javadoc'
            author='true' version='true' use='true'
            windowtitle="${Name} Implementation"
            doctitle="${Name}"
@@ -158,10 +158,10 @@ Specification-Version: 4.01
  </target>
  
  <target name='test' depends='jar'>
-  <javac srcdir='src/html' destdir='bin/html' includes='test/**'/>
-  <jar jarfile='${jarfileTest}' basedir='bin/html' 
+  <javac srcdir='src' destdir='bin' includes='test/**'/>
+  <jar jarfile='${jarfileTest}' basedir='bin' 
        includes='test/**/*.class,test/**/*.properties'/>
-  <mkdir dir='data/html/output'/>
+  <mkdir dir='data/output'/>
   <java classname='org.apache.tools.ant.Main' fork='true' failonerror='true'>
    <classpath>
     <pathelement path='${java.class.path}'/>
@@ -174,8 +174,8 @@ Specification-Version: 4.01
  </target>
 
  <target name='clean'>
-  <delete dir='bin/html' quiet='true'/>
-  <delete dir='doc/html/javadoc' quiet='true'/>
+  <delete dir='bin' quiet='true'/>
+  <delete dir='doc/javadoc' quiet='true'/>
   <delete quiet='true'>
    <fileset dir='.' includes='${name}*.jar,${name}*.zip,${name}*.tar.gz'/>
   </delete>
