@@ -1,124 +1,144 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<!-- $Id: build-html.xml,v 1.22 2005/05/27 04:03:31 andyc Exp $ -->
 <project default='all' basedir='.'>
 
  <!-- PROPERTIES -->
- <property name='version'   value='0.9.5'/>
+ <property file='build-custom.properties' />
+ 
+ <property name='version'   value='0.9.6'/>
  <property name='name'      value='nekohtml'/>
  <property name='fullname'  value='${name}-${version}'/>
  <property name='Title'     value='NekoHTML'/>
  <property name='FullTitle' value='CyberNeko HTML Parser'/>
  <property name='Name'      value='${Title} ${version}'/>
  <property name='author'    value='Andy Clark'/>
- <property name='copyright' value='(C) Copyright 2002-2005, ${author}. All rights reserved.'/>
+ <property name='copyright' value='(C) Copyright 2002-2007, ${author}. All rights reserved.'/>
  <property name='URL'       value='http://nekohtml.sourceforge.net/index.html'/>
   
- <property name='jarfile'        value='${name}.jar'/>
- <property name='jarfileXni'     value='${name}Xni.jar'/>
- <property name='jarfileSamples' value='${name}Samples.jar'/>
- <property name='jarfileTest'    value='${name}Test.jar'/>
+ <property name='src.dir'           value='src' />
+ <property name='doc.dir'           value='doc' />
+ <property name='data.dir'          value='data' />
+ <property name='lib.dir'           value='lib' />
+ <property name='build.dir'         value='build' />
+ <property name='build.classes.dir' value='${build.dir}/classes' />
+ <property name='build.src.dir'     value='${build.dir}/src' />
+ <property name='build.doc.dir'     value='${build.dir}/doc/javadoc' />
+ <property name='build.data.dir'	value='${build.dir}/data/output' />
+ <property name='build.lib.dir'     value='${build.dir}/lib' />
+ 
+ <property name='jar.file'         value='${build.lib.dir}/${name}.jar'/>
+ <property name='jar.samples.file' value='${build.lib.dir}/${name}Samples.jar'/>
+ <property name='jar.xni.file'     value='${build.lib.dir}/${name}Xni.jar'/>
 
- <property name='zipfile' value='${fullname}.zip'/>
- <property name='tarfile' value='${fullname}.tar'/>
- <property name='tgzfile' value='${fullname}.tar.gz'/>
-
- <property name='contents.misc'   value='LICENSE,LICENSE_apache,README_html,TODO_html,build.bat,build.xml,build-test.xml'/>
- <property name='contents.jars'   value='${jarfile},${jarfileXni},${jarfileSamples}'/>
- <property name='contents.source' value='src/META-INF/**,src/**/*.java,src/**/*.properties'/>
- <property name='contents.docs'   value='doc/**,data/test*.html*,data/canonical/*'/>
- <property name='contents.libs'   value='lib/xercesMinimal.jar'/>
- <property name='contents' 
-           value='${contents.misc},${contents.jars},${contents.source},${contents.docs},${contents.libs}'/>
+ <property name='zip.file' value='${build.dir}/${fullname}.zip'/>
+ <property name='tgz.file' value='${build.dir}/${fullname}.tar.gz'/>
 
  <property name='package' value='org.cyberneko.html'/>
 
- <property name='version.dir'      value='bin/src'/>
- <property name='version.manifest' value='${version.dir}/MANIFEST_html'/>
- <property name='version.dir.java' value='${version.dir}/org/cyberneko/html'/>
- <property name='version.java'     value='${version.dir.java}/Version.java'/>
+ <property name='version.java.dir' value='${build.src.dir}/org/cyberneko/html'/>
+ <property name='version.java'     value='${version.java.dir}/Version.java'/>
+ 
+ <property name='tgz.xerces.filename'	value='Xerces-J-bin.2.9.1.tar.gz' />
+ <property name='tgz.bcel.filename'		value='bcel-current.tar.gz' />
+ 
+ <!-- DEPENDENCIES -->
+ <available property='xerces.available' file='${lib.dir}/xercesImpl.jar' />
+ <available property='bcel.available' file='${lib.dir}/bcel-5.2.jar' />
  
  <!-- TARGETS --> 
- <target name='universe' depends='full,all'/>
-
  <target name='all' depends='zip,tgz'/>
 
- <target name='full'>
-  <property name='contents.full' value='lib/**'/>
+ <target name='init' unless='xerces.available'>
+ 	<fail>
+ 	!!! REQUIRED FILES MISSING !!!
+ 	
+ 	Please install the Xerces2 jars into the lib/ directory. 
+ 	</fail>
  </target>
-
- <target name='compile' depends='version'>
-  <mkdir dir="bin"/>
-  <javac srcdir='src' destdir='bin' includes='org/**,sample/**' debug='true'/>
-  <javac srcdir='bin/src' destdir='bin' includes='org/**'/>
+ 
+ <target name='compile' depends='init,version'>
+  <mkdir dir="${build.classes.dir}"/>
+  <javac destdir='${build.classes.dir}' debug='true'>
+  	<classpath>
+  		<fileset dir='${lib.dir}' includes='xml-apis.jar,xerces*.jar' />
+  	</classpath>
+    <src path='${src.dir}' />
+    <src path='${build.src.dir}' />
+    <include name='**/*.java' />
+    <exclude name='test/**' />
+  </javac>
  </target>
 
  <target name='jar' depends='compile'>
-  <copy todir='bin'>
-   <fileset dir='.' includes='LICENSE'/>
-   <fileset dir='src' includes='**/*.properties'/>
-  </copy>
-  <jar jarfile='${jarfile}' basedir='bin' 
-       manifest='${version.manifest}'
-       includes='LICENSE,org/**/*.class,org/**/*.properties'/>
-  <jar jarfile='${jarfileSamples}' basedir='bin'
-       includes='LICENSE,sample/**'/>
+  <mkdir dir='${build.lib.dir}' />
+  <jar jarfile='${jar.file}'>
+	<manifest>
+    	<attribute name="Built-By" value="${author}"/>
+    	<section name="org/cyberneko/html/">
+		  <attribute name="Specification-Title" value="Hyper-Text Markup Language (HTML)" />
+    	  <attribute name="Specification-Version" value="4.01" />
+	      <attribute name="Specification-Vendor" value="World Wide Web Consortium (W3C)" />
+    	  <attribute name="Implementation-Title" value="${FullTitle}" />
+	      <attribute name="Implementation-Version" value="${version}" /> 
+    	  <attribute name="Implementation-Vendor" value="${author}" />
+		  <attribute name="Implementation-URL" value="${URL}" />
+    	</section>
+	</manifest>
+    <fileset dir='.' includes='LICENSE*' />
+    <fileset dir='${build.classes.dir}' includes='org/**/*.class' />
+    <fileset dir='${src.dir}' includes='org/**/*.properties' />
+  </jar>
+  <jar jarfile='${jar.samples.file}'>
+    <fileset dir='.' includes='LICENSE.txt' />
+    <fileset dir='${build.classes.dir}' includes='sample/**' />
+  </jar>
  </target> 
 
  <target name='jar-xni'>
-  <mkdir dir="bin"/>
-  <copy todir='bin'>
-   <fileset dir='.' includes='LICENSE'/>
-   <fileset dir='src' includes='META-INF/services/**'/>
-  </copy>
-  <jar jarfile='${jarfileXni}' basedir='bin'
-       includes='LICENSE,META-INF/services/**'/>
+  <mkdir dir="${build.lib.dir}"/>
+  <jar jarfile='${jar.xni.file}'>
+    <fileset dir='.' includes='LICENSE.txt' />
+    <fileset dir='${src.dir}' includes='META-INF/services/**' />
+  </jar>
  </target>
 
- <target name='package' depends='jar,doc'>
-  <mkdir dir='bin/package/${fullname}'/>
-  <copy todir='bin/package/${fullname}'>
-   <fileset dir='.' includes='${contents},${contents.full}'/>
-   <fileset dir='bin' includes='${contents.jars}'/>
-  </copy>
+ <target name='zip' depends='jar,doc'>
+  <zip zipfile='${zip.file}'>
+    <zipfileset prefix='${fullname}' dir='.' includes='LICENSE*,README*,TODO*' />
+    <zipfileset prefix='${fullname}' dir='.' includes='build.xml' />
+    <zipfileset prefix='${fullname}' dir='.' includes='${src.dir}/**' />
+    <zipfileset prefix='${fullname}' dir='.' includes='${doc.dir}/**' excludes='${doc.dir}/javadoc/**' />
+    <zipfileset prefix='${fullname}' dir='.' includes='${data.dir}/**' />
+    <zipfileset prefix='${fullname}' dir='.' includes='${lib.dir}/xercesMinimal.jar' />
+    <zipfileset prefix='${fullname}' dir='${build.dir}' includes='doc/**' />
+    <zipfileset prefix='${fullname}' dir='${build.lib.dir}' includes='**' />
+  </zip>
  </target>
 
- <target name='package-nodir'>
-  <mkdir dir='bin/package-${name}'/>
-  <copy todir='bin/package-${name}'>
-   <fileset dir='bin/package/${fullname}' includes='**'/>
-  </copy>
+ <target name='tgz' depends='zip'>
+  <unzip src='${zip.file}' dest='${build.dir}' />
+  <tar destfile='${tgz.file}' compression='gzip'>
+  	<tarfileset dir='${build.dir}' includes='${fullname}/**' />
+  </tar>
  </target>
 
- <target name='zip' depends='package'>
-  <zip zipfile='${zipfile}' basedir='bin/package' includes='${fullname}/**'/>
- </target>
-
- <target name='tgz' depends='package'>
-  <tar tarfile='${tarfile}' basedir='bin/package' includes='${fullname}/**'/>
-  <gzip zipfile='${tgzfile}' src='${tarfile}'/>
-  <delete file='${tarfile}'/>
- </target>
-
- <target name='doc' unless='docs.done'>
-  <delete dir='doc/javadoc'/>
-  <mkdir dir='doc/javadoc'/>
+ <target name='doc' depends='doc-init' unless='doc.done'>
+  <delete dir='${build.doc.dir}'/>
+  <mkdir dir='${build.doc.dir}'/>
   <javadoc packagenames='${package},${package}.parsers,${package}.filters'
-           sourcepath='src' destdir='doc/javadoc'
+           sourcepath='${src.dir}' destdir='${build.doc.dir}'
            author='true' version='true' use='true'
            windowtitle="${Name} Implementation"
            doctitle="${Name}"
            bottom="${copyright}" 
-           />
-  <property name='docs.done' value='true'/>
+  />
  </target>
-
- <target name='version-init'>
-  <mkdir dir='${version.dir.java}/'/>
-  <dependset>
-   <srcfilelist dir='.' files='build-html.xml'/>
-   <targetfilelist dir='.' files='${version.manifest},${version.java}'/>
-  </dependset>
-  <available property='available.version' file='${version.java}'/>
+ 
+ <target name='doc-init'>
+ 	<dependset>
+ 		<srcfileset dir='${src.dir}' />
+ 		<targetfileset dir='${build.doc.dir}' />
+ 	</dependset>
+ 	<available property='doc.done' file='${build.doc.dir}/index.html' />	
  </target>
 
  <target name='version' depends='version-init' unless='available.version'>
@@ -143,44 +163,63 @@ public class Version {
     } // main(String[])
 
 } // class Version</echo>
-  <echo message='Generating ${version.manifest}'/>
-  <echo file='${version.manifest}'>
-Name: org/cyberneko/html/
-Implementation-Title: ${FullTitle}
-Implementation-Version: ${version}
-Implementation-Vendor: ${author}
-Implementation-URL: ${URL}
-Specification-Title: Hyper-Text Markup Language (HTML)
-Specification-Vendor: World Wide Web Consortium (W3C)
-Specification-Version: 4.01
+ </target>
 
-</echo>
+ <target name='version-init'>
+  <mkdir dir='${version.java.dir}/'/>
+  <dependset>
+   <srcfilelist    dir='.' files='build.xml'/>
+   <targetfilelist dir='.' files='${version.java}'/>
+  </dependset>
+  <available property='available.version' file='${version.java}'/>
+ </target>
+
+ <target name='minimal' depends='minimal-init,compile'>
+ 	<java classname='org.apache.tools.ant.Main'>
+ 		<classpath>
+ 			<pathelement path='${java.class.path}' />
+ 			<pathelement location='${lib.dir}/bcel-5.2.jar' />
+ 		</classpath>
+ 		<arg value='x-minimal' />
+ 	</java>
+ </target>
+ <target name='x-minimal'>
+ 	<unzip dest='${build.classes.dir}' src='${lib.dir}/xercesImpl.jar' />
+ 	<classfileset id='minimal.classes' 
+ 				  dir="${build.classes.dir}" includes='org/apache/**' 
+ 				  rootclass='org.cyberneko.html.HTMLConfiguration' 
+ 	/>
+ 	<mkdir dir='${build.lib.dir}' />
+ 	<jar destfile='${build.lib.dir}/xercesMinimal.jar'>
+ 		<fileset refid='minimal.classes' />
+ 		<exclude name='org/cyberneko/**' />
+	</jar>
  </target>
  
+ <target name='minimal-init' unless='bcel.available'>
+ 	<fail>
+ 	!!! REQUIRED FILES MISSING !!!
+ 	
+ 	Please install the BCEL jars into the lib/ directory. 
+ 	</fail>
+</target>
+ 
  <target name='test' depends='jar'>
-  <javac srcdir='src' destdir='bin' includes='test/**'/>
-  <jar jarfile='${jarfileTest}' basedir='bin' 
-       includes='test/**/*.class,test/**/*.properties'/>
-  <mkdir dir='data/output'/>
-  <java classname='org.apache.tools.ant.Main' fork='true' failonerror='true'>
+  <javac srcdir='${src.dir}' destdir='${build.classes.dir}' includes='test/**'/>
+  <taskdef name='tester' classname='test.Tester'>
    <classpath>
     <pathelement path='${java.class.path}'/>
-    <pathelement location='${jarfile}'/>
-    <pathelement location='${jarfileTest}'/>
+    <pathelement location='${build.classes.dir}' />
    </classpath>
-   <arg value='-f'/>
-   <arg value='build-html-test.xml'/>
-  </java>
+  </taskdef>
+  <mkdir dir='${build.data.dir}' />
+  <tester canondir='${data.dir}/canonical' outputdir='${build.data.dir}'>
+   <fileset dir='${data.dir}' includes='test*.html'/>
+  </tester>
  </target>
 
  <target name='clean'>
-  <delete dir='bin' quiet='true'/>
-  <delete dir='doc/javadoc' quiet='true'/>
-  <delete quiet='true'>
-   <fileset dir='.' includes='${name}*.jar,${name}*.zip,${name}*.tar.gz'/>
-  </delete>
-  <delete dir='bin/package' quiet='true'/>
-  <delete dir='bin/package-${name}' quiet='true'/>
+  <delete dir='${build.dir}' />
  </target>
 
 </project>

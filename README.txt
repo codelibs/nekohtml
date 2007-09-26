@@ -4,23 +4,23 @@ NekoHTML Readme
 Building
 --------
 
-You can build NekoHTML with the supplied build.bat file by
-typing the following:
+You can build NekoHTML by typing the following command:
 
-  > build -f build-html.xml (target ...)
+  > ant (target ...)
 
 The default target will build the entire package.
 
 To build NekoHTML, you need Ant and Xerces2. The first time 
-you try to build, it will tell you is required and where to 
-download the necessary packages.
+you try to build, it will attempt to download the necessary 
+packages. If you already have Xerces and want to avoid this
+step, place the Xerces jar files in the lib/ directory.
 
 Documentation
 -------------
 
 The documentation for NekoHTML is located at the following URL:
 
-  doc/html/index.html
+  doc/index.html
 
 Contact Information
 -------------------
