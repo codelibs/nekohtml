@@ -1,8 +1,0 @@
-<project default='test'>
- <taskdef name='tester' classname='test.Tester'/>
- <target name='test'>
-  <tester canondir='data/html/canonical' outputdir='data/html/output'>
-   <fileset dir='data/html' includes='test*.html'/>
-  </tester>
- </target>
-</project>
