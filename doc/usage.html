@@ -46,8 +46,8 @@ it easier to read.]
 <pre class='cmdline'>
 <span class='cmdline-prompt'>&gt;</span> <span class='cmdline-cmd'>java -cp nekohtml.jar;nekohtmlXni.jar;
            xmlParserAPIs.jar;xercesImpl.jar;xercesSamples.jar 
-       sax.Counter doc/html/index.html</span>
-doc/html/index.html: 10 ms (49 elems, 21 attrs, 0 spaces, 2652 chars)
+       sax.Counter doc/index.html</span>
+doc/index.html: 10 ms (49 elems, 21 attrs, 0 spaces, 2652 chars)
 </pre>
 <p>
 The Xerces2 implementation dynamically instantiates the default
@@ -119,14 +119,14 @@ it easier to read.]
 <pre class='cmdline'>
 <span class='cmdline-prompt'>&gt;</span> <span class='cmdline-cmd'>java -cp nekohtml.jar;nekohtmlSamples.jar;
            xmlParserAPIs.jar;xercesImpl.jar
-       sample.TestHTMLDOM data/html/test01.html</span>
+       sample.TestHTMLDOM data/test01.html</span>
 org.apache.html.dom.HTMLDocumentImpl
  org.apache.html.dom.HTMLHtmlElementImpl
   org.apache.html.dom.HTMLBodyElementImpl
    org.apache.xerces.dom.TextImpl
 </pre>
 <p>
-This source code is included in the <code>src/html/sample/</code> directory.
+This source code is included in the <code>src/sample/</code> directory.
 <p>
 In addition to the provided DOM and SAX parser classes, NekoHTML
 also provides a DOM fragment parser class. The <code>DOMFragmentParser</code>
@@ -165,7 +165,7 @@ how to use the NekoHTML <code>DOMFragmentParser</code> directly:
 <span class='code-punct'>}</span>
 </pre>
 <p>
-This source code is included in the <code>src/html/sample/</code> 
+This source code is included in the <code>src/sample/</code> 
 directory.
 <p>
 Notice that the application parses a document fragment a little
@@ -205,8 +205,8 @@ configuration to the base class in the constructor.
 <span class='code-punct'>}</span>
 </pre>
 <p>
-This source code is included in the <code>src/html/sample/</code> directory.
+This source code is included in the <code>src/sample/</code> directory.
 
 <div class='copyright'>
-(C) Copyright 2002-2005, Andy Clark. All rights reserved.
+(C) Copyright 2002-2007, Andy Clark. All rights reserved.
 </div>
