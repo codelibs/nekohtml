@@ -597,6 +597,16 @@ public class HTMLScanner
     public int getColumnNumber() { 
         return fCurrentEntity != null ? fCurrentEntity.columnNumber : -1; 
     } // getColumnNumber():int
+    
+    /** Returns the XML version. */
+    public String getXMLVersion() {
+    	return "1.0";
+    } // getXMLVersion():String
+    
+    /** Returns the character offset. */
+    public int getCharacterOffset() {
+    	return -1;
+    } // getCharacterOffset():int
 
     //
     // HTMLComponent methods
