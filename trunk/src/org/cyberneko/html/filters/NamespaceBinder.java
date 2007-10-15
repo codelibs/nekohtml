@@ -623,7 +623,9 @@ public class NamespaceBinder
 
         /** Pop context. */
         public void popContext() {
-            fTop--;
+            if (fTop > 1) {
+				fTop--;
+			}
         } // popContext()
 
         /** Declare prefix. */
