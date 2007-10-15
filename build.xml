@@ -210,6 +210,7 @@ public class Version {
    <classpath>
     <pathelement path='${java.class.path}'/>
     <pathelement location='${build.classes.dir}' />
+    <pathelement location='${jar.file}' />
    </classpath>
   </taskdef>
   <mkdir dir='${build.data.dir}' />
