@@ -600,12 +600,12 @@ public class HTMLScanner
     
     /** Returns the XML version. */
     public String getXMLVersion() {
-    	return "1.0";
+		return fCurrentEntity != null ? fCurrentEntity.version : null; 
     } // getXMLVersion():String
     
     /** Returns the character offset. */
     public int getCharacterOffset() {
-    	return -1;
+		return fCurrentEntity != null ? fCurrentEntity.charOffset : -1; 
     } // getCharacterOffset():int
 
     //
@@ -1765,11 +1765,17 @@ public class HTMLScanner
         /** Expanded system identifier. */
         public String expandedSystemId;
 
+		/** XML version. */
+		public String version = "1.0";
+
         /** Line number. */
         public int lineNumber = 1;
 
         /** Column number. */
         public int columnNumber = 1;
+        
+        /** Character offset. */
+        public int charOffset = -1;
 
         // buffer
 
