@@ -13,6 +13,9 @@
  <property name='author'    value='Andy Clark'/>
  <property name='copyright' value='(C) Copyright 2002-2007, ${author}. All rights reserved.'/>
  <property name='URL'       value='http://nekohtml.sourceforge.net/index.html'/>
+ 
+ <property name='compile.source' value='1.3' />
+ <property name='compile.target' value='1.2' />
   
  <property name='src.dir'           value='src' />
  <property name='doc.dir'           value='doc' />
@@ -57,7 +60,8 @@
  
  <target name='compile' depends='init,version'>
   <mkdir dir="${build.classes.dir}"/>
-  <javac destdir='${build.classes.dir}' debug='true'>
+  <javac destdir='${build.classes.dir}' debug='true'
+  		 source='${compile.source}' target='${compile.target}'>
   	<classpath>
   		<fileset dir='${lib.dir}' includes='xml-apis.jar,xerces*.jar' />
   	</classpath>
