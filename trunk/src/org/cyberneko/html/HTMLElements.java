@@ -250,7 +250,7 @@ public class HTMLElements {
             // DIR
             new Element(DIR, "DIR", 0, BODY, null),
             // DIV - - (%flow;)*
-            new Element(DIV, "DIV", Element.BLOCK, BODY, null),
+            new Element(DIV, "DIV", Element.BLOCK, BODY, new short[]{P}),
             // DD - O (%flow;)*
             new Element(DD, "DD", 0, DL, new short[]{DT,DD}),
             // DL - - (DT|DD)+
