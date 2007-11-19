@@ -2384,6 +2384,7 @@ public class HTMLScanner
                                                 || ianaEncoding.equalsIgnoreCase(fDefaultIANAEncoding);
                                 fCurrentEntity.stream = new InputStreamReader(fByteStream, javaEncoding);
                                 fByteStream.playback();
+                                fByteStream = null;
                                 fElementDepth = fElementCount;
                                 fElementCount = 0;
                                 fCurrentEntity.offset = fCurrentEntity.length = 0;
@@ -2398,18 +2399,21 @@ public class HTMLScanner
                                 //       then there's no point in continuing to 
                                 //       buffer the input stream.
                                 fByteStream.clear();
+                                fByteStream = null;
                             }
                         }
                     }
                 }
                 else if (ename.equalsIgnoreCase("BODY")) {
                     fByteStream.clear();
+                    fByteStream = null;
                 }
                 else {
                      HTMLElements.Element element = HTMLElements.getElement(ename);
                      if (element.parent != null && element.parent.length > 0) {
                          if (element.parent[0].code == HTMLElements.BODY) {
                              fByteStream.clear();
+                             fByteStream = null;
                          }
                      }
                 }
