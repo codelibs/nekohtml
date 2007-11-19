@@ -351,7 +351,7 @@ public class HTMLElements {
             // NOLAYER
             new Element(NOLAYER, "NOLAYER", 0, BODY, null),
             // NOSCRIPT - - (%block;)+
-            new Element(NOSCRIPT, "NOSCRIPT", 0, new short[]{HEAD,BODY}, null),
+            new Element(NOSCRIPT, "NOSCRIPT", 0, new short[]{BODY}, null),
         };
         ELEMENTS_ARRAY['O'-'A'] = new Element[] {
             // OBJECT - - (PARAM | %flow;)*
