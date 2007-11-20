@@ -28,6 +28,7 @@ import java.io.UnsupportedEncodingException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
+import java.nio.charset.Charset;
 import java.util.Stack;
 
 import org.apache.xerces.util.EncodingMap;
@@ -2379,17 +2380,35 @@ public class HTMLScanner
                                         fErrorReporter.reportError("HTML1001", new Object[]{ianaEncoding});
                                     }
                                 }
-                                fIso8859Encoding = ianaEncoding == null 
-                                                || ianaEncoding.toUpperCase().startsWith("ISO-8859")
-                                                || ianaEncoding.equalsIgnoreCase(fDefaultIANAEncoding);
-                                fCurrentEntity.stream = new InputStreamReader(fByteStream, javaEncoding);
-                                fByteStream.playback();
-                                fByteStream = null;
-                                fElementDepth = fElementCount;
-                                fElementCount = 0;
-                                fCurrentEntity.offset = fCurrentEntity.length = 0;
-                                fCurrentEntity.lineNumber = 1;
-                                fCurrentEntity.columnNumber = 1;
+                                // patch: Marc Guillemot
+                                if (!javaEncoding.equals(fJavaEncoding)) { // otherwise nothing, this was already what we used
+                                	float avg0 = Charset.forName(fJavaEncoding).newDecoder().averageCharsPerByte();
+                                	float avg1 = Charset.forName(javaEncoding).newDecoder().averageCharsPerByte();
+                             	
+                               		// If the average number of bytes for the old and new
+                               		// charset don't match, there's very little chance that
+                               		// we'll be able to properly parse the document with the
+                               		// new encoding. So assume the specified charset is wrong
+                               		// and do nothing.
+                                  	if (avg0 > avg1 + 0.1) {
+                                        if (fReportErrors) {
+                                            fErrorReporter.reportError("HTML1015", new Object[]{javaEncoding,fJavaEncoding});
+                                        }
+                                 	}
+                              		// change the charset
+                                 	else {
+                                         fIso8859Encoding = ianaEncoding == null 
+ 		                                        || ianaEncoding.toUpperCase().startsWith("ISO-8859")
+ 		                                        || ianaEncoding.equalsIgnoreCase(fDefaultIANAEncoding);
+ 				                        fCurrentEntity.stream = new InputStreamReader(fByteStream, javaEncoding);
+ 				                        fByteStream.playback();
+ 				                        fElementDepth = fElementCount;
+ 				                        fElementCount = 0;
+ 				                        fCurrentEntity.offset = fCurrentEntity.length = 0;
+ 				                        fCurrentEntity.lineNumber = 1;
+ 				                        fCurrentEntity.columnNumber = 1;
+                                 	}
+                                 }
                             }
                             catch (UnsupportedEncodingException e) {
                                 if (fReportErrors) {
