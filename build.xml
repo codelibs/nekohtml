@@ -60,7 +60,7 @@
  
  <target name='compile' depends='init,version'>
   <mkdir dir="${build.classes.dir}"/>
-  <javac destdir='${build.classes.dir}' debug='true'
+  <javac destdir='${build.classes.dir}' debug='true' encoding="ISO-8859-1" 
   		 source='${compile.source}' target='${compile.target}'>
   	<classpath>
   		<fileset dir='${lib.dir}' includes='xml-apis.jar,xerces*.jar' />
@@ -132,7 +132,7 @@
            sourcepath='${src.dir}' destdir='${build.doc.dir}'
            author='true' version='true' use='true'
            windowtitle="${Name} Implementation"
-           doctitle="${Name}"
+           doctitle="${Name}" encoding="ISO-8859-1"
            bottom="${copyright}" 
   />
  </target>
