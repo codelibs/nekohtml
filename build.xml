@@ -209,7 +209,7 @@ public class Version {
 </target>
  
  <target name='test' depends='jar'>
-  <javac srcdir='${src.dir}' destdir='${build.classes.dir}' includes='test/**'/>
+  <javac srcdir='${src.dir}' destdir='${build.classes.dir}' includes='test/**' debug='true' encoding="ISO-8859-1"/>
   <taskdef name='tester' classname='test.Tester'>
    <classpath>
     <pathelement path='${java.class.path}'/>
