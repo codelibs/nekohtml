@@ -200,6 +200,9 @@ public class HTMLScanner
     /** Insert document type declaration. */
     public static final String INSERT_DOCTYPE = "http://cyberneko.org/html/features/insert-doctype";
 
+    /** Normalize attribute values. */
+    protected static final String NORMALIZE_ATTRIBUTES = "http://cyberneko.org/html/features/normalize-attributes";
+
     /** Recognized features. */
     private static final String[] RECOGNIZED_FEATURES = {
         AUGMENTATIONS,
@@ -216,6 +219,7 @@ public class HTMLScanner
         CDATA_SECTIONS,
         OVERRIDE_DOCTYPE,
         INSERT_DOCTYPE,
+        NORMALIZE_ATTRIBUTES,
     };
 
     /** Recognized features defaults. */
@@ -234,6 +238,7 @@ public class HTMLScanner
         Boolean.FALSE,
         Boolean.FALSE,
         Boolean.FALSE,
+        Boolean.TRUE,
     };
 
     // properties
@@ -376,6 +381,9 @@ public class HTMLScanner
 
     /** Insert document type declaration. */
     protected boolean fInsertDoctype;
+
+    /** Normalize attribute values. */
+    protected boolean fNormalizeAttributes;
 
     // properties
 
@@ -668,6 +676,7 @@ public class HTMLScanner
         fCDATASections = manager.getFeature(CDATA_SECTIONS);
         fOverrideDoctype = manager.getFeature(OVERRIDE_DOCTYPE);
         fInsertDoctype = manager.getFeature(INSERT_DOCTYPE);
+        fNormalizeAttributes = manager.getFeature(NORMALIZE_ATTRIBUTES);
 
         // get properties
         fNamesElems = getNamesValue(String.valueOf(manager.getProperty(NAMES_ELEMS)));
@@ -2668,13 +2677,16 @@ public class HTMLScanner
                         fNonNormAttr.append((char)c);
                     }
                 } while (c != quote);
+
                 fQName.setValues(null, aname, aname, null);
-                String avalue = fStringBuffer.toString();
+                final String attrNormalizedValue = fStringBuffer.toString();
+                final String attrNonNormalizedValue = fNonNormAttr.toString();
+                final String avalue = fNormalizeAttributes ? attrNormalizedValue : attrNonNormalizedValue;
                 attributes.addAttribute(fQName, "CDATA", avalue);
 
                 int lastattr = attributes.getLength()-1;
                 attributes.setSpecified(lastattr, true);
-                attributes.setNonNormalizedValue(lastattr, fNonNormAttr.toString());
+                attributes.setNonNormalizedValue(lastattr, attrNonNormalizedValue);
                 if (fAugmentations) {
                     addLocationItem(attributes, attributes.getLength() - 1);
                 }
