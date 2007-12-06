@@ -327,12 +327,37 @@ public class HTMLScanner
 
     /** Set to true to debug callbacks. */
     protected static final boolean DEBUG_CALLBACKS = false;
-
+    
+    // other
+    
+    /** Charset#forName method, if available. */
+    protected static Method CHARSET_forName;
+    
+    /** CharsetDecoder#averageCharsPerByte method, if available. */
+    protected static Method DECODER_averageCharsPerByte;
+    
     // static vars
 
     /** Synthesized event info item. */
     protected static final HTMLEventInfo SYNTHESIZED_ITEM = 
         new HTMLEventInfo.SynthesizedItem();
+        
+    //
+    // Static initializer
+    //
+    
+    static {
+    	try {
+    		Class charsetClass = Class.forName("java.nio.charset.Charset");
+			CHARSET_forName = charsetClass.getMethod("forName", new Class[]{String.class});
+
+    		Class decoderClass = Class.forName("java.nio.charset.CharsetDecoder");
+			DECODER_averageCharsPerByte = decoderClass.getMethod("averageCharsPerByte", (Class[])null);
+    	}
+    	catch (Exception e) {
+    		// ignore
+    	}
+    }
 
     //
     // Data
@@ -2390,16 +2415,8 @@ public class HTMLScanner
                                     }
                                 }
                                 // patch: Marc Guillemot
-                                if (!javaEncoding.equals(fJavaEncoding)) { // otherwise nothing, this was already what we used
-                                	float avg0 = Charset.forName(fJavaEncoding).newDecoder().averageCharsPerByte();
-                                	float avg1 = Charset.forName(javaEncoding).newDecoder().averageCharsPerByte();
-                             	
-                               		// If the average number of bytes for the old and new
-                               		// charset don't match, there's very little chance that
-                               		// we'll be able to properly parse the document with the
-                               		// new encoding. So assume the specified charset is wrong
-                               		// and do nothing.
-                                  	if (avg0 > avg1 + 0.1) {
+                                if (!javaEncoding.equals(fJavaEncoding)) { 
+                                  	if (!isCompatible(javaEncoding, fJavaEncoding)) {
                                         if (fReportErrors) {
                                             fErrorReporter.reportError("HTML1015", new Object[]{javaEncoding,fJavaEncoding});
                                         }
@@ -2735,6 +2752,34 @@ public class HTMLScanner
                 }
             }
         } // scanEndElement()
+        
+        //
+        // Private methods
+        //
+        
+        private boolean isCompatible(String encoding1, String encoding2) {
+        	if (CHARSET_forName == null || DECODER_averageCharsPerByte == null) {
+        		return false;
+        	}
+        
+        	try {
+        		Object charset1 = CHARSET_forName.invoke(null, new Object[]{encoding1});
+        		Object charset2 = CHARSET_forName.invoke(null, new Object[]{encoding2});
+        		
+        		Float average1 = (Float)DECODER_averageCharsPerByte.invoke(charset1, (Object[])null);
+        		Float average2 = (Float)DECODER_averageCharsPerByte.invoke(charset2, (Object[])null);
+        		
+           		// If the average number of bytes for the old and new
+           		// charset don't match, there's very little chance that
+           		// we'll be able to properly parse the document with the
+           		// new encoding. So assume the specified charset is wrong
+           		// and do nothing.
+                return Math.abs(average1.floatValue() - average2.floatValue()) < 0.1;
+        	}
+        	catch (Exception e) {
+        		return false;
+        	}
+        }
 
     } // class ContentScanner
 
