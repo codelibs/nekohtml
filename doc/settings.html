@@ -161,6 +161,24 @@ The NekoHTML parser supports the following features:
   <td align='center'>false
  <tr>
   <td>
+   <a name='normalize-attributes'></a>
+   <span class='id'>http://cyberneko.org/html/features/scanner/normalize-attrs</span>
+   <br>
+   Specifies whether attribute values should be normalized according to
+   section <a href='http://www.w3.org/TR/xml/#AVNormalize'>3.3.3</a> of
+   the XML 1.0 specification. When set to <code>false</code>, only
+   end-of-line normalization and expansion of entities are performed.
+   When set to <code>true</code>, leading and trailing whitespace is
+   trimmed and consecutive whitespace is normalized to a single space
+   character.
+   <strong>Note:</strong>
+   The raw attribute values can be queried by turning on the the 
+   <a href='#augmentations'>augmentations</a> feature and using XNI.
+   <p class='see'>
+   See:&nbsp;<a href='#augmentations'>http://cyberneko.org/html/features/augmentations</a>
+   <td align='center'>false
+ <tr>
+  <td>
    <a name='cdata-sections'></a>
    <span class='id'>http://cyberneko.org/html/features/scanner/cdata-sections</span>
    <br>

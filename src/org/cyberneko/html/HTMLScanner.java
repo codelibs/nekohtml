@@ -28,7 +28,6 @@ import java.io.UnsupportedEncodingException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
-import java.nio.charset.Charset;
 import java.util.Stack;
 
 import org.apache.xerces.util.EncodingMap;
@@ -201,7 +200,7 @@ public class HTMLScanner
     public static final String INSERT_DOCTYPE = "http://cyberneko.org/html/features/insert-doctype";
 
     /** Normalize attribute values. */
-    protected static final String NORMALIZE_ATTRIBUTES = "http://cyberneko.org/html/features/normalize-attributes";
+    protected static final String NORMALIZE_ATTRIBUTES = "http://cyberneko.org/html/features/scanner/normalize-attrs";
 
     /** Recognized features. */
     private static final String[] RECOGNIZED_FEATURES = {
@@ -238,7 +237,7 @@ public class HTMLScanner
         Boolean.FALSE,
         Boolean.FALSE,
         Boolean.FALSE,
-        Boolean.TRUE,
+        Boolean.FALSE,
     };
 
     // properties
@@ -2650,7 +2649,10 @@ public class HTMLScanner
                     return true;
                 }
                 char quote = (char)c;
+                boolean isStart = true;
+                boolean prevSpace = false;
                 do {
+                	boolean acceptSpace = !fNormalizeAttributes || (!isStart && !prevSpace);
                     c = read();
                     if (c == -1) {
                         if (fReportErrors) {
@@ -2659,6 +2661,7 @@ public class HTMLScanner
                         throw new EOFException();
                     }
                     if (c == '&') {
+                    	isStart = false;
                         int ce = scanEntityRef(fStringBuffer2, false);
                         if (ce != -1) {
                             fStringBuffer.append((char)ce);
@@ -2668,9 +2671,11 @@ public class HTMLScanner
                         }
                         fNonNormAttr.append(fStringBuffer2);
                     }
-                    else if (c == '\t') {
-                        fStringBuffer.append(' ');
-                        fNonNormAttr.append('\t');
+                    else if (c == ' ' || c == '\t') {
+                    	if (acceptSpace) {
+	                        fStringBuffer.append(fNormalizeAttributes ? ' ' : (char)c);
+	                    }
+                        fNonNormAttr.append((char)c);
                     }
                     else if (c == '\r' || c == '\n') {
                         fCurrentEntity.lineNumber++;
@@ -2686,24 +2691,34 @@ public class HTMLScanner
                                 c = c2;
                             }
                         }
-                        fStringBuffer.append(' ');
+                        if (acceptSpace) {
+	                        fStringBuffer.append(fNormalizeAttributes ? ' ' : '\n');
+	                    }
                         fNonNormAttr.append((char)c);
                     }
                     else if (c != quote) {
+                    	isStart = false;
                         fStringBuffer.append((char)c);
                         fNonNormAttr.append((char)c);
                     }
+                    prevSpace = c == ' ' || c == '\t' || c == '\r' || c == '\n';
+                    isStart = isStart && prevSpace;
                 } while (c != quote);
+                
+                if (fNormalizeAttributes) {
+                	// trailing whitespace already normalized to single space
+       	        	if (fStringBuffer.ch[fStringBuffer.length - 1] == ' ') {
+           	    		fStringBuffer.length--;
+               		}
+    	        }
 
                 fQName.setValues(null, aname, aname, null);
-                final String attrNormalizedValue = fStringBuffer.toString();
-                final String attrNonNormalizedValue = fNonNormAttr.toString();
-                final String avalue = fNormalizeAttributes ? attrNormalizedValue : attrNonNormalizedValue;
+                String avalue = fStringBuffer.toString();
                 attributes.addAttribute(fQName, "CDATA", avalue);
 
                 int lastattr = attributes.getLength()-1;
                 attributes.setSpecified(lastattr, true);
-                attributes.setNonNormalizedValue(lastattr, attrNonNormalizedValue);
+                attributes.setNonNormalizedValue(lastattr, fNonNormAttr.toString());
                 if (fAugmentations) {
                     addLocationItem(attributes, attributes.getLength() - 1);
                 }
