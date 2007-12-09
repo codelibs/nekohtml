@@ -61,7 +61,8 @@
  <target name='compile' depends='init,version'>
   <mkdir dir="${build.classes.dir}"/>
   <javac destdir='${build.classes.dir}' debug='true' encoding="ISO-8859-1" 
-  		 source='${compile.source}' target='${compile.target}'>
+  		 source='${compile.source}' target='${compile.target}'
+  		 includeAntRuntime='false'>
   	<classpath>
   		<fileset dir='${lib.dir}' includes='xml-apis.jar,xerces*.jar' />
   	</classpath>
