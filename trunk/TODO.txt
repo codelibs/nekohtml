@@ -1,6 +1,0 @@
-TODO:
- * scanner
-   * optimize (more)
- * tag balancer
-   * optimize (more)
-   * incorporate ideas from JTidy
