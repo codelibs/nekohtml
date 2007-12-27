@@ -17,7 +17,6 @@
 package sample;
 
 import org.cyberneko.html.parsers.DOMParser;
-import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
 /**

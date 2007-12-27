@@ -569,9 +569,6 @@ public class HTMLElements {
         /** Special element. */
         public static final int SPECIAL = 0x10;
 
-        /** Empty array. */
-        private static final short[] EMPTY_ARRAY = new short[0];
-
         //
         // Data
         //

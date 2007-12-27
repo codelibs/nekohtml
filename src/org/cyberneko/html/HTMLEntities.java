@@ -102,7 +102,6 @@ public class HTMLEntities {
     //
 
     static class IntProperties {
-        private int top = 0;
         private Entry[] entries = new Entry[101];
         public void put(int key, String value) {
             int hash = key % entries.length;

@@ -16,12 +16,6 @@
 
 package org.cyberneko.html.filters;
 
-import org.cyberneko.html.HTMLAugmentations;
-import org.cyberneko.html.HTMLEventInfo;
-
-import java.lang.reflect.Method;
-import java.lang.reflect.InvocationTargetException;
-
 import org.apache.xerces.util.XMLChar;
 import org.apache.xerces.util.XMLStringBuffer;
 import org.apache.xerces.xni.Augmentations;
@@ -33,6 +27,8 @@ import org.apache.xerces.xni.XMLString;
 import org.apache.xerces.xni.XNIException;
 import org.apache.xerces.xni.parser.XMLComponentManager;
 import org.apache.xerces.xni.parser.XMLConfigurationException;
+import org.cyberneko.html.HTMLAugmentations;
+import org.cyberneko.html.HTMLEventInfo;
 
 /**
  * This filter purifies the HTML input to ensure XML well-formedness.
@@ -94,12 +90,6 @@ public class Purifier
     private static final String[] RECOGNIZED_FEATURES = {
         NAMESPACES,
         AUGMENTATIONS,
-    };
-
-    /** Recognized features defaults. */
-    private static final Boolean[] RECOGNIZED_FEATURES_DEFAULTS = {
-        null,
-        null,
     };
 
     // static vars

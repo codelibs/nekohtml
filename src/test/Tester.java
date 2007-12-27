@@ -104,7 +104,7 @@ public class Tester
         int size = fFileSets.size();
         for (int i = 0; i < size; i++) {
             FileSet fileset = (FileSet)fFileSets.elementAt(i);
-            DirectoryScanner dirscanner = fileset.getDirectoryScanner(project);
+            DirectoryScanner dirscanner = fileset.getDirectoryScanner(getProject());
             File indir = dirscanner.getBasedir();
             String[] files = dirscanner.getIncludedFiles();
             for (int j = 0; j < files.length; j++) {
@@ -167,8 +167,7 @@ public class Tester
         int errors = 0;
         for (int i = 0; i < size; i++) {
             FileSet fileset = (FileSet)fFileSets.elementAt(i);
-            DirectoryScanner dirscanner = fileset.getDirectoryScanner(project);
-            File indir = dirscanner.getBasedir();
+            DirectoryScanner dirscanner = fileset.getDirectoryScanner(getProject());
             String[] files = dirscanner.getIncludedFiles();
             for (int j = 0; j < files.length; j++) {
                 File canonfile = new File(canondir, files[j]);
