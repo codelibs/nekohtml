@@ -16,9 +16,8 @@
 
 package sample;
 
-import org.cyberneko.html.parsers.DOMFragmentParser;
 import org.apache.html.dom.HTMLDocumentImpl;
-import org.w3c.dom.Document;
+import org.cyberneko.html.parsers.DOMFragmentParser;
 import org.w3c.dom.DocumentFragment;
 import org.w3c.dom.Node;
 import org.w3c.dom.html.HTMLDocument;

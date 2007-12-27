@@ -19,11 +19,12 @@
 
 package org.cyberneko.html.parsers;
 
-import org.cyberneko.html.HTMLConfiguration;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.Reader;
 
 import org.apache.xerces.impl.Constants;
 import org.apache.xerces.util.ErrorHandlerWrapper;
-
 import org.apache.xerces.xni.Augmentations;
 import org.apache.xerces.xni.NamespaceContext;
 import org.apache.xerces.xni.QName;
@@ -33,19 +34,13 @@ import org.apache.xerces.xni.XMLLocator;
 import org.apache.xerces.xni.XMLResourceIdentifier;
 import org.apache.xerces.xni.XMLString;
 import org.apache.xerces.xni.XNIException;
-
 import org.apache.xerces.xni.parser.XMLConfigurationException;
 import org.apache.xerces.xni.parser.XMLDocumentSource;
 import org.apache.xerces.xni.parser.XMLErrorHandler;
 import org.apache.xerces.xni.parser.XMLInputSource;
 import org.apache.xerces.xni.parser.XMLParseException;
 import org.apache.xerces.xni.parser.XMLParserConfiguration;
-
-import java.io.InputStream;
-import java.io.IOException;
-import java.io.Reader;
-
-import org.w3c.dom.Attr;
+import org.cyberneko.html.HTMLConfiguration;
 import org.w3c.dom.CDATASection;
 import org.w3c.dom.Comment;
 import org.w3c.dom.Document;
@@ -55,13 +50,12 @@ import org.w3c.dom.EntityReference;
 import org.w3c.dom.Node;
 import org.w3c.dom.ProcessingInstruction;
 import org.w3c.dom.Text;
-
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
-import org.xml.sax.SAXParseException;
 import org.xml.sax.SAXNotRecognizedException;
 import org.xml.sax.SAXNotSupportedException;
+import org.xml.sax.SAXParseException;
 
 /**
  * A DOM parser for HTML fragments.

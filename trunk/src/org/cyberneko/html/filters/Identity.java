@@ -16,16 +16,11 @@
 
 package org.cyberneko.html.filters;
 
-import org.cyberneko.html.HTMLConfiguration;
-import org.cyberneko.html.HTMLEventInfo;
-
 import org.apache.xerces.xni.Augmentations;
 import org.apache.xerces.xni.QName;
 import org.apache.xerces.xni.XMLAttributes;
 import org.apache.xerces.xni.XNIException;
-import org.apache.xerces.xni.parser.XMLDocumentFilter;
-import org.apache.xerces.xni.parser.XMLInputSource;
-import org.apache.xerces.xni.parser.XMLParserConfiguration;
+import org.cyberneko.html.HTMLEventInfo;
 
 /**
  * This filter performs the identity operation of the original 

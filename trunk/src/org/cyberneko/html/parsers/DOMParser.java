@@ -16,12 +16,9 @@
 
 package org.cyberneko.html.parsers;
 
-import org.cyberneko.html.HTMLConfiguration;
-
 import org.apache.xerces.xni.Augmentations;
 import org.apache.xerces.xni.XNIException;
-
-import org.w3c.dom.DOMException;
+import org.cyberneko.html.HTMLConfiguration;
 
 /**
  * A DOM parser for HTML documents.
@@ -80,7 +77,7 @@ public class DOMParser
         //       don't insert this node into the tree for those 
         //       versions... -Ac
 
-        String VERSION = org.apache.xerces.impl.Version.fVersion;
+        String VERSION = org.apache.xerces.impl.Version.getVersion();
         boolean okay = true;
         if (VERSION.startsWith("Xerces-J 2.")) {
             okay = getParserSubVersion() > 5;
@@ -106,7 +103,7 @@ public class DOMParser
     /** Returns the parser's sub-version number. */
     private static int getParserSubVersion() {
         try {
-            String VERSION = org.apache.xerces.impl.Version.fVersion;
+            String VERSION = org.apache.xerces.impl.Version.getVersion();
             int index1 = VERSION.indexOf('.') + 1;
             int index2 = VERSION.indexOf('.', index1);
             if (index2 == -1) { index2 = VERSION.length(); }
