@@ -16,16 +16,19 @@
 
 package org.cyberneko.html;
 
+import java.io.ByteArrayOutputStream;
 import java.io.EOFException;
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.PrintStream;
 import java.io.Reader;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.Stack;
 
 import org.apache.xerces.util.EncodingMap;
@@ -2412,7 +2415,7 @@ public class HTMLScanner
                                 }
                                 // patch: Marc Guillemot
                                 if (!javaEncoding.equals(fJavaEncoding)) { 
-                                  	if (!isCompatible(javaEncoding, fJavaEncoding)) {
+                                  	if (!isEncodingCompatible(javaEncoding, fJavaEncoding)) {
                                         if (fReportErrors) {
                                             fErrorReporter.reportError("HTML1015", new Object[]{javaEncoding,fJavaEncoding});
                                         }
@@ -2764,35 +2767,6 @@ public class HTMLScanner
                 }
             }
         } // scanEndElement()
-        
-        //
-        // Private methods
-        //
-        
-        private boolean isCompatible(String encoding1, String encoding2) {
-        	if (CHARSET_forName == null || DECODER_averageCharsPerByte == null) {
-        		return false;
-        	}
-        
-        	try {
-        		Object charset1 = CHARSET_forName.invoke(null, new Object[]{encoding1});
-        		Object charset2 = CHARSET_forName.invoke(null, new Object[]{encoding2});
-        		
-        		Float average1 = (Float)DECODER_averageCharsPerByte.invoke(charset1, (Object[])null);
-        		Float average2 = (Float)DECODER_averageCharsPerByte.invoke(charset2, (Object[])null);
-        		
-           		// If the average number of bytes for the old and new
-           		// charset don't match, there's very little chance that
-           		// we'll be able to properly parse the document with the
-           		// new encoding. So assume the specified charset is wrong
-           		// and do nothing.
-                return Math.abs(average1.floatValue() - average2.floatValue()) < 0.1;
-        	}
-        	catch (Exception e) {
-        		return false;
-        	}
-        }
-
     } // class ContentScanner
 
     /**
@@ -3387,4 +3361,31 @@ public class HTMLScanner
 
     } // class LocationItem
 
+    /**
+     * To detect if 2 encoding are compatible, both must be able to read the meta tag specifying
+     * the new encoding. This means that the byte representation of some minimal html markup must
+     * be the same in both encodings
+     */ 
+    boolean isEncodingCompatible(final String encoding1, final String encoding2) {
+		try {
+			return hashValue(encoding1) == hashValue(encoding2);
+		}
+		catch (final UnsupportedEncodingException e) {
+			return false;
+		}
+    }
+
+    /**
+     * Gets the hashCode of the bytes representation of some html markup in the given encoding
+     * @param encoding the encoding to use
+     * @return the hash code
+     * @throws UnsupportedEncodingException if the encoding is not supported
+     */
+	private int hashValue(final String encoding) throws UnsupportedEncodingException {
+		final String reference = "<html><head><meta http-equiv=\"Content-Type\" content=\"text/html;charset=";
+		final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		final PrintStream ps = new PrintStream(baos, true, encoding);
+		ps.print(reference);
+		return Arrays.hashCode(baos.toByteArray());
+	}
 } // class HTMLScanner

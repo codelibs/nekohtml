@@ -163,23 +163,23 @@ public class HTMLConfiguration
     // components
 
     /** Components. */
-    protected Vector fHTMLComponents = new Vector(2);
+    protected final Vector fHTMLComponents = new Vector(2);
 
     // pipeline
 
     /** Document scanner. */
-    protected HTMLScanner fDocumentScanner = new HTMLScanner();
+    protected final HTMLScanner fDocumentScanner = new HTMLScanner();
 
     /** HTML tag balancer. */
-    protected HTMLTagBalancer fTagBalancer = new HTMLTagBalancer();
+    protected final HTMLTagBalancer fTagBalancer = new HTMLTagBalancer();
 
     /** Namespace binder. */
-    protected NamespaceBinder fNamespaceBinder = new NamespaceBinder();
+    protected final NamespaceBinder fNamespaceBinder = new NamespaceBinder();
 
     // other components
 
     /** Error reporter. */
-    protected HTMLErrorReporter fErrorReporter = new ErrorReporter();
+    protected final HTMLErrorReporter fErrorReporter = new ErrorReporter();
 
     // HACK: workarounds Xerces 2.0.x problems
 
