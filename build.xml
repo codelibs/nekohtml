@@ -71,8 +71,11 @@
     <src path='${src.dir}' />
     <src path='${build.src.dir}' />
     <include name='**/*.java' />
-    <exclude name='test/**' />
   </javac>
+
+	<copy todir="${build.classes.dir}">
+		<fileset dir='${src.dir}' includes='**/*.properties' />
+  	</copy>
  </target>
 
  <target name='jar' depends='compile'>
@@ -220,7 +223,7 @@ public class Version {
 	  <mkdir dir="${build.test-classes.dir}"/>
 	  <javac destdir='${build.test-classes.dir}' debug='true' encoding="ISO-8859-1" 
 	  		 source='${compile.source}' target='${compile.target}'
-	  		 includeAntRuntime='false'>
+	  		 includeAntRuntime='true'>
 	  	<classpath>
 	  		<fileset dir='${lib.dir}' includes='xml-apis.jar,xerces*.jar, junit*.jar' />
 		    <pathelement location='${build.classes.dir}' />
@@ -230,7 +233,7 @@ public class Version {
 	 </target>
 
 	<target name='test' depends='compile, compile.test'>
-	  <taskdef name='tester' classname='test.Tester'>
+	  <taskdef name='tester' classname='org.cyberneko.html.Tester'>
 	   <classpath>
 	    <pathelement path='${build.test-classes.dir}'/>
 	    <pathelement location='${build.classes.dir}' />
