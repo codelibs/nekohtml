@@ -2826,7 +2826,6 @@ public class HTMLScanner
             do {
                 try {
                     next = false;
-                    int delimiter = -1;
                     switch (fScannerState) {
                         case STATE_CONTENT: {
                             fBeginLineNumber = fCurrentEntity.lineNumber;
@@ -2859,6 +2858,7 @@ public class HTMLScanner
                             break;
                         } // case STATE_CONTENT
                         case STATE_MARKUP_BRACKET: {
+                            int delimiter = -1;
                             int c = read();
                             if (c == '!') {
                                 if (skip("--", false)) {
@@ -2994,6 +2994,34 @@ public class HTMLScanner
                     int newlines = skipNewlines();
                     for (int i = 0; i < newlines; i++) {
                         buffer.append('\n');
+                    }
+                }
+                else if (c == '\'' || c == '"') {
+                    buffer.append((char)c);
+                    final int stringChar = c;
+                    while (true) {
+                        c = read();
+                        if (c == '\\') {
+                            buffer.append((char)c);
+                            //always consume next character
+                            buffer.append((char)read());
+                        }
+                        else if (c == stringChar) {
+                            buffer.append((char)c);
+                            break;
+                        }
+                        else if (c == '\r' || c == '\n') {
+                            fCurrentEntity.offset--;
+                            fCurrentEntity.columnNumber--;
+                            int newlines = skipNewlines();
+                            for (int i = 0; i < newlines; i++) {
+                                buffer.append('\n');
+                            }
+                            break;
+                        }
+                        else {
+                            buffer.append((char)c);
+                        }
                     }
                 }
                 else if (delimiter != -1 && c == (char)delimiter) {
