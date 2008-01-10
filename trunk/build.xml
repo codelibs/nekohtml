@@ -74,7 +74,7 @@
   </javac>
 
 	<copy todir="${build.classes.dir}">
-		<fileset dir='${src.dir}' includes='**/*.properties' />
+		<fileset dir='${src.dir}' includes='**' excludes='META-INF/**, **/*.java*' />
   	</copy>
  </target>
 
@@ -94,8 +94,7 @@
     	</section>
 	</manifest>
     <fileset dir='.' includes='LICENSE*' />
-    <fileset dir='${build.classes.dir}' includes='org/**/*.class' />
-    <fileset dir='${src.dir}' includes='org/**/*.properties' />
+    <fileset dir='${build.classes.dir}' includes='org/**/*' />
   </jar>
   <jar jarfile='${jar.samples.file}'>
     <fileset dir='.' includes='LICENSE.txt' />
