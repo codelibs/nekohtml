@@ -11,7 +11,7 @@
  <property name='FullTitle' value='CyberNeko HTML Parser'/>
  <property name='Name'      value='${Title} ${version}'/>
  <property name='author'    value='Andy Clark'/>
- <property name='copyright' value='(C) Copyright 2002-2007, ${author}. All rights reserved.'/>
+ <property name='copyright' value='(C) Copyright 2002-2008, ${author}. All rights reserved.'/>
  <property name='URL'       value='http://nekohtml.sourceforge.net/index.html'/>
  
  <property name='compile.source' value='1.3' />
