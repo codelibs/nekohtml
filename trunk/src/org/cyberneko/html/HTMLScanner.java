@@ -328,37 +328,12 @@ public class HTMLScanner
     /** Set to true to debug callbacks. */
     protected static final boolean DEBUG_CALLBACKS = false;
     
-    // other
-    
-    /** Charset#forName method, if available. */
-    protected static Method CHARSET_forName;
-    
-    /** CharsetDecoder#averageCharsPerByte method, if available. */
-    protected static Method DECODER_averageCharsPerByte;
-    
     // static vars
 
     /** Synthesized event info item. */
     protected static final HTMLEventInfo SYNTHESIZED_ITEM = 
         new HTMLEventInfo.SynthesizedItem();
         
-    //
-    // Static initializer
-    //
-    
-    static {
-    	try {
-    		Class charsetClass = Class.forName("java.nio.charset.Charset");
-			CHARSET_forName = charsetClass.getMethod("forName", new Class[]{String.class});
-
-    		Class decoderClass = Class.forName("java.nio.charset.CharsetDecoder");
-			DECODER_averageCharsPerByte = decoderClass.getMethod("averageCharsPerByte", (Class[])null);
-    	}
-    	catch (Exception e) {
-    		// ignore
-    	}
-    }
-
     //
     // Data
     //
@@ -3395,25 +3370,25 @@ public class HTMLScanner
      * be the same in both encodings
      */ 
     boolean isEncodingCompatible(final String encoding1, final String encoding2) {
+		final String reference = "<html><head><meta http-equiv=\"Content-Type\" content=\"text/html;charset=";
 		try {
-			return hashValue(encoding1) == hashValue(encoding2);
+			final byte[] bytesEncoding1 = reference.getBytes(encoding1);
+			final byte[] bytesEncoding2 = reference.getBytes(encoding2);
+			if (bytesEncoding1.length != bytesEncoding2.length) {
+				return false;
+			}
+			else {
+				for (int i=0; i<bytesEncoding1.length; ++i) {
+					if (bytesEncoding1[i] != bytesEncoding2[i]) {
+						return false;
+					}
+				}
+			}
+
+			return true;
 		}
 		catch (final UnsupportedEncodingException e) {
 			return false;
 		}
     }
-
-    /**
-     * Gets the hashCode of the bytes representation of some html markup in the given encoding
-     * @param encoding the encoding to use
-     * @return the hash code
-     * @throws UnsupportedEncodingException if the encoding is not supported
-     */
-	private int hashValue(final String encoding) throws UnsupportedEncodingException {
-		final String reference = "<html><head><meta http-equiv=\"Content-Type\" content=\"text/html;charset=";
-		final ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		final PrintStream ps = new PrintStream(baos, true, encoding);
-		ps.print(reference);
-		return Arrays.hashCode(baos.toByteArray());
-	}
 } // class HTMLScanner
