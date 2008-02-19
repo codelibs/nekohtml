@@ -231,6 +231,8 @@ public class Version {
 	  </javac>
 	 </target>
 
+	<target name='tests' depends='junit, test' description="Run all the tests"/>
+
 	<target name='test' depends='compile, compile.test'>
 	  <taskdef name='tester' classname='org.cyberneko.html.Tester'>
 	   <classpath>
