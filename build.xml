@@ -42,22 +42,15 @@
  <property name='version.java.dir' value='${build.src.dir}/org/cyberneko/html'/>
  <property name='version.java'     value='${version.java.dir}/Version.java'/>
  
- <property name='tgz.xerces.filename'	value='Xerces-J-bin.2.9.1.tar.gz' />
- <property name='tgz.bcel.filename'		value='bcel-current.tar.gz' />
- 
  <!-- DEPENDENCIES -->
- <available property='xerces.available' file='${lib.dir}/xercesImpl.jar' />
  <available property='bcel.available' file='${lib.dir}/bcel-5.2.jar' />
- 
+
+ <property name="xerces.version" value="xerces-2.8.1"/>
+
  <!-- TARGETS --> 
  <target name='all' depends='zip,tgz'/>
 
- <target name='init' unless='xerces.available'>
- 	<fail>
- 	!!! REQUIRED FILES MISSING !!!
- 	
- 	Please install the Xerces2 jars into the lib/ directory. 
- 	</fail>
+ <target name='init'>
  </target>
  
  <target name='compile' depends='init,version'>
@@ -66,7 +59,7 @@
   		 source='${compile.source}' target='${compile.target}'
   		 includeAntRuntime='false'>
   	<classpath>
-  		<fileset dir='${lib.dir}' includes='xml-apis.jar,xerces*.jar, junit*.jar' />
+  		<fileset dir='${lib.dir}/${xerces.version}' includes='*.jar' />
   	</classpath>
     <src path='${src.dir}' />
     <src path='${build.src.dir}' />
@@ -256,7 +249,8 @@ public class Version {
 			<classpath>
 			    <pathelement path='${build.test-classes.dir}'/>
 			    <pathelement location='${build.classes.dir}' />
-		  		<fileset dir='${lib.dir}' includes='xml-apis.jar,xerces*.jar, junit*.jar' />
+		  		<fileset dir='${lib.dir}' includes='junit*.jar' />
+	  	  		<fileset dir='${lib.dir}/${xerces.version}' includes='*.jar' />
 			</classpath>
 
 			<formatter type="xml"/>
