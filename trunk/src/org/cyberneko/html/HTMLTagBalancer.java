@@ -252,7 +252,6 @@ public class HTMLTagBalancer
                 return RECOGNIZED_FEATURES_DEFAULTS[i];
             }
         }
-        System.out.println(java.nio.charset.Charset.defaultCharset());
         return null;
     } // getFeatureDefault(String):Boolean
 
