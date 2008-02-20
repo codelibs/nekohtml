@@ -20,6 +20,7 @@ package org.cyberneko.html;
  * Collection of HTML element information.
  *
  * @author Andy Clark
+ * @author Ahmed Ashour
  *
  * @version $Id: HTMLElements.java,v 1.12 2005/02/14 07:16:59 andyc Exp $
  */
@@ -435,7 +436,7 @@ public class HTMLElements {
             // THEAD - O (TR)+
             new Element(THEAD, "THEAD", 0, TABLE, new short[]{COLGROUP}),
             // TITLE - - (#PCDATA) -(%head.misc;)
-            new Element(TITLE, "TITLE", 0, new short[]{HEAD,BODY}, null),
+            new Element(TITLE, "TITLE", Element.SPECIAL, new short[]{HEAD,BODY}, null),
             // TR - O (TH|TD)+
             new Element(TR, "TR", Element.BLOCK, TABLE, new short[]{TD,TH,TR,COLGROUP}),
             // TT - - (%inline;)*

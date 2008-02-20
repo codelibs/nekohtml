@@ -89,6 +89,7 @@ import org.apache.xerces.xni.parser.XMLInputSource;
  * @see HTMLEntities
  *
  * @author Andy Clark
+ * @author Ahmed Ashour
  *
  * @version $Id: HTMLScanner.java,v 1.19 2005/06/14 05:52:37 andyc Exp $
  */
@@ -2770,6 +2771,9 @@ public class HTMLScanner
         /** True if &lt;textarea&gt; element. */
         protected boolean fTextarea;
 
+        /** True if &lt;title&gt; element. */
+        protected boolean fTitle;
+
         // temp vars
 
         /** A qualified name. */
@@ -2788,6 +2792,7 @@ public class HTMLScanner
             fScript = fElementName.equalsIgnoreCase("SCRIPT");
             fStyle = fElementName.equalsIgnoreCase("STYLE");
             fTextarea = fElementName.equalsIgnoreCase("TEXTAREA");
+            fTitle = fElementName.equalsIgnoreCase("TITLE");
             return this;
         } // setElementName(String):Scanner
 
@@ -2811,7 +2816,7 @@ public class HTMLScanner
                                 continue;
                             }
                             if (c == '&') {
-                                if (fTextarea) {
+                                if (fTextarea || fTitle) {
                                     scanEntityRef(fStringBuffer, true);
                                     continue;
                                 }
