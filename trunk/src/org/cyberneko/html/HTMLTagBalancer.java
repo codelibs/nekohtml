@@ -229,6 +229,9 @@ public class HTMLTagBalancer
     /** True if seen &lt;body&lt; element. */
     protected boolean fSeenBodyElement;
 
+    /** True if a form is in the stack (allow to discard opening of nested forms) */
+    protected boolean fOpenedForm;
+
     // temp vars
 
     /** A qualified name. */
@@ -534,11 +537,17 @@ public class HTMLTagBalancer
             }
             fSeenHeadElement = true;
         }
-        if (element.code == HTMLElements.BODY) {
+        else if (element.code == HTMLElements.BODY) {
             if (fSeenBodyElement) {
                 return;
             }
             fSeenBodyElement = true;
+        }
+        else if (element.code == HTMLElements.FORM) {
+        	if (fOpenedForm) {
+        		return;
+        	}
+        	fOpenedForm = true;
         }
 
         // check proper parent
@@ -858,6 +867,9 @@ public class HTMLTagBalancer
         // check for end of document
         if (elem.code == HTMLElements.HTML) {
             fSeenRootElementEnd = true;
+        }
+        else if (elem.code == HTMLElements.FORM) {
+        	fOpenedForm = false;
         }
 
         // empty element
