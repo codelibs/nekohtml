@@ -271,7 +271,7 @@ public class HTMLElements {
             // FONT
             new Element(FONT, "FONT", Element.CONTAINER, BODY, null),
             // FORM - - (%block;|SCRIPT)+ -(FORM)
-            new Element(FORM, "FORM", Element.CONTAINER, new short[]{BODY,TD,P,DIV}, new short[]{FORM,BUTTON}),
+            new Element(FORM, "FORM", Element.CONTAINER, new short[]{BODY,TD,P,DIV}, new short[]{BUTTON}),
             // FRAME - O EMPTY
             new Element(FRAME, "FRAME", Element.EMPTY, FRAMESET, null),
             // FRAMESET - - ((FRAMESET|FRAME)+ & NOFRAMES?)
