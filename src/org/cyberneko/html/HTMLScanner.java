@@ -16,19 +16,16 @@
 
 package org.cyberneko.html;
 
-import java.io.ByteArrayOutputStream;
 import java.io.EOFException;
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.PrintStream;
 import java.io.Reader;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
-import java.util.Arrays;
 import java.util.Stack;
 
 import org.apache.xerces.util.EncodingMap;
@@ -509,13 +506,12 @@ public class HTMLScanner
      * subject to change in future releases of NekoHTML.
      *
      * @param inputSource The new input source to start scanning.
+     * @see #evaluateInputSource(XMLInputSource)
      */
     public void pushInputSource(XMLInputSource inputSource) {
-        Reader reader = inputSource.getCharacterStream();
-        if (reader == null) {
-            throw new IllegalArgumentException("pushed input source has no reader");
-        }
-        fCurrentEntityStack.push(fCurrentEntity);
+    	final Reader reader = getReader(inputSource);
+
+    	fCurrentEntityStack.push(fCurrentEntity);
         String encoding = inputSource.getEncoding();
         String publicId = inputSource.getPublicId();
         String baseSystemId = inputSource.getBaseSystemId();
@@ -525,6 +521,47 @@ public class HTMLScanner
                                            publicId, baseSystemId,
                                            literalSystemId, expandedSystemId);
     } // pushInputSource(XMLInputSource)
+
+    private Reader getReader(final XMLInputSource inputSource) {
+        Reader reader = inputSource.getCharacterStream();
+        if (reader == null) {
+        	try {
+				return new InputStreamReader(inputSource.getByteStream(), fJavaEncoding);
+			}
+        	catch (final UnsupportedEncodingException e) {
+				// should not happen as this encoding is already used to parse the "main" source
+			}
+        }
+        return reader;
+	}
+
+	/** 
+     * Immediately evaluates an input source and add the new content (e.g. 
+     * the output written by an embedded script).
+     *
+     * @param inputSource The new input source to start evaluating.
+     * @see #pushInputSource(XMLInputSource)
+     */
+    public void evaluateInputSource(XMLInputSource inputSource) {
+        final Reader reader = getReader(inputSource);
+
+        String encoding = inputSource.getEncoding();
+        String publicId = inputSource.getPublicId();
+        String baseSystemId = inputSource.getBaseSystemId();
+        String literalSystemId = inputSource.getSystemId();
+        String expandedSystemId = expandSystemId(literalSystemId, baseSystemId);
+        fCurrentEntity = new CurrentEntity(reader, encoding, 
+                                           publicId, baseSystemId,
+                                           literalSystemId, expandedSystemId);
+        setScanner(fContentScanner);
+        setScannerState(STATE_CONTENT);
+        try {
+            fScanner.scan(false);
+        }
+        catch (final IOException e) {
+            // ignore
+        }
+    } // evaluateInputSource(XMLInputSource)
 
     /**
      * Cleans up used resources. For example, if scanning is terminated
