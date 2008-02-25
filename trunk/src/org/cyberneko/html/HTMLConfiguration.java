@@ -321,10 +321,22 @@ public class HTMLConfiguration
      * Otherwise, events may appear out of sequence.
      *
      * @param inputSource The new input source to start scanning.
+     * @see #evaluateInputSource(XMLInputSource)
      */
     public void pushInputSource(XMLInputSource inputSource) {
         fDocumentScanner.pushInputSource(inputSource);
     } // pushInputSource(XMLInputSource)
+
+    /**
+     * Immediately evaluates an input source and add the new content (e.g. 
+     * the output written by an embedded script).
+     *
+     * @param inputSource The new input source to start scanning.
+     * @see #pushInputSource(XMLInputSource)
+     */
+    public void evaluateInputSource(XMLInputSource inputSource) {
+        fDocumentScanner.evaluateInputSource(inputSource);
+    } // evaluateInputSource(XMLInputSource)
 
     // XMLParserConfiguration methods
     //
