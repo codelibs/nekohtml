@@ -328,6 +328,7 @@ public class HTMLConfiguration
     } // pushInputSource(XMLInputSource)
 
     /**
+     * <font color="red">EXPERIMENTAL: may change in next release</font><br/>
      * Immediately evaluates an input source and add the new content (e.g. 
      * the output written by an embedded script).
      *
@@ -379,6 +380,9 @@ public class HTMLConfiguration
     /** Sets the document handler. */
     public void setDocumentHandler(XMLDocumentHandler handler) {
         fDocumentHandler = handler;
+        if (handler instanceof HTMLTagBalancingListener) {
+        	fTagBalancer.setTagBalancingListener((HTMLTagBalancingListener) handler);
+        }
     } // setDocumentHandler(XMLDocumentHandler)
 
     /** Returns the document handler. */

@@ -243,6 +243,7 @@ public class HTMLTagBalancer
     /** Augmentations. */
     private final HTMLAugmentations fInfosetAugs = new HTMLAugmentations();
 
+    protected HTMLTagBalancingListener tagBalancingListener;
     //
     // HTMLComponent methods
     //
@@ -515,12 +516,13 @@ public class HTMLTagBalancer
     } // processingInstruction(String,XMLString,Augmentations)
 
     /** Start element. */
-    public void startElement(QName elem, XMLAttributes attrs, Augmentations augs)
+    public void startElement(final QName elem, XMLAttributes attrs, final Augmentations augs)
         throws XNIException {
         fSeenAnything = true;
         
         // check for end of document
         if (fSeenRootElementEnd) {
+        	notifyDiscardedStartElement(elem, attrs, augs);
             return;
         }
 
@@ -529,22 +531,26 @@ public class HTMLTagBalancer
 
         // ignore multiple html, head, body elements
         if (fSeenRootElement && element.code == HTMLElements.HTML) {
+        	notifyDiscardedStartElement(elem, attrs, augs);
             return;
         }
         if (element.code == HTMLElements.HEAD) {
             if (fSeenHeadElement) {
+            	notifyDiscardedStartElement(elem, attrs, augs);
                 return;
             }
             fSeenHeadElement = true;
         }
         else if (element.code == HTMLElements.BODY) {
             if (fSeenBodyElement) {
+            	notifyDiscardedStartElement(elem, attrs, augs);
                 return;
             }
             fSeenBodyElement = true;
         }
         else if (element.code == HTMLElements.FORM) {
         	if (fOpenedForm) {
+            	notifyDiscardedStartElement(elem, attrs, augs);
         		return;
         	}
         	fOpenedForm = true;
@@ -666,7 +672,7 @@ public class HTMLTagBalancer
 
     } // startElement(QName,XMLAttributes,Augmentations)
 
-    /** Empty element. */
+	/** Empty element. */
     public void emptyElement(QName elem, XMLAttributes attrs, Augmentations augs)
         throws XNIException {
         startElement(elem, attrs, augs);
@@ -848,10 +854,10 @@ public class HTMLTagBalancer
     } // ignorableWhitespace(XMLString,Augmentations)
 
     /** End element. */
-    public void endElement(QName element, Augmentations augs) throws XNIException {
-        
+    public void endElement(final QName element, final Augmentations augs) throws XNIException {
         // is there anything to do?
         if (fSeenRootElementEnd) {
+        	notifyDiscardedEndElement(element, augs);
             return;
         }
         
@@ -861,6 +867,7 @@ public class HTMLTagBalancer
         // do we ignore outside content?
         if (!fIgnoreOutsideContent &&
             (elem.code == HTMLElements.BODY || elem.code == HTMLElements.HTML)) {
+        	notifyDiscardedEndElement(element, augs);
             return;
         }
 
@@ -874,9 +881,14 @@ public class HTMLTagBalancer
 
         // empty element
         int depth = getElementDepth(elem);
-        if (depth == -1 && elem.code == HTMLElements.P) {
-            startElement(element, emptyAttributes(), synthesizedAugs());
-            endElement(element, augs);
+        if (depth == -1) {
+        	if (elem.code == HTMLElements.P) {
+	            startElement(element, emptyAttributes(), synthesizedAugs());
+	            endElement(element, augs);
+        	}
+        	else if (!elem.isEmpty()) {
+            	notifyDiscardedEndElement(element, augs);
+        	}
             return;
         }
 
@@ -928,7 +940,7 @@ public class HTMLTagBalancer
 
     // @since Xerces 2.1.0
 
-    /** Sets the document source. */
+	/** Sets the document source. */
     public void setDocumentSource(XMLDocumentSource source) {
         fDocumentSource = source;
     } // setDocumentSource(XMLDocumentSource)
@@ -1251,5 +1263,26 @@ public class HTMLTagBalancer
         } // pop():Info
 
     } // class InfoStack
+
+	void setTagBalancingListener(final HTMLTagBalancingListener tagBalancingListener) {
+		this.tagBalancingListener = tagBalancingListener;
+	}
+
+	/**
+	 * Notifies the tagBalancingListener (if any) of an ignored start element
+	 */
+    private void notifyDiscardedStartElement(final QName elem, final XMLAttributes attrs,
+    		final Augmentations augs) {
+    	if (tagBalancingListener != null)
+    		tagBalancingListener.ignoredStartElement(elem, attrs, augs);
+	}
+
+	/**
+	 * Notifies the tagBalancingListener (if any) of an ignored end element
+	 */
+    private void notifyDiscardedEndElement(final QName element, final Augmentations augs) {
+    	if (tagBalancingListener != null)
+    		tagBalancingListener.ignoredEndElement(element, augs);
+	}
 
 } // class HTMLTagBalancer
