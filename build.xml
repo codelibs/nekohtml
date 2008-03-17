@@ -108,6 +108,7 @@
     <zipfileset prefix='${fullname}' dir='.' includes='LICENSE*,README*,TODO*' />
     <zipfileset prefix='${fullname}' dir='.' includes='build.xml' />
     <zipfileset prefix='${fullname}' dir='.' includes='${src.dir}/**' />
+    <zipfileset prefix='${fullname}' dir='.' includes='${src.test.dir}/**' />
     <zipfileset prefix='${fullname}' dir='.' includes='${doc.dir}/**' excludes='${doc.dir}/javadoc/**' />
     <zipfileset prefix='${fullname}' dir='.' includes='${data.dir}/**' />
     <zipfileset prefix='${fullname}' dir='.' includes='${lib.dir}/xercesMinimal.jar' />
