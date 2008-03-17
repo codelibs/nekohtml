@@ -4,7 +4,7 @@
  <!-- PROPERTIES -->
  <property file='build-custom.properties' />
  
- <property name='version'   value='1.9.6.1'/>
+ <property name='version'   value='1.9.6.2'/>
  <property name='name'      value='nekohtml'/>
  <property name='fullname'  value='${name}-${version}'/>
  <property name='Title'     value='NekoHTML'/>
@@ -270,5 +270,31 @@ public class Version {
 		</junitreport>
 		<echo message="Report has been generated to ${build.dir}/junit/index.html"/>
 		<fail message="JUnit test failed" if="junitFailed"/>
+	</target>
+	
+	<target name="create-mvn-upload-bundle" depends="doc, jar">
+		<property name="mvn.bundle.javadoc" value="${build.dir}/dist/nekohtml-${version}-javadoc.jar"/>
+		<property name="mvn.bundle.sources" value="${build.dir}/dist/nekohtml-${version}-sources.jar"/>
+		<property name="mvn.bundle.jar" value="${build.dir}/dist/nekohtml-${version}.jar"/>
+
+		<mkdir dir="${build.dir}/dist"/>
+	 	<jar destfile="${mvn.bundle.javadoc}">
+	 		<fileset dir="${build.doc.dir}"/>
+		</jar>
+	 	<jar destfile="${mvn.bundle.sources}">
+		    <include name='${src.dir}/**/*.*' />
+		    <include name='${build.src.dir}/**/*.*' />
+		</jar>
+		<copy file="${build.lib.dir}/${name}.jar" tofile="${mvn.bundle.jar}"/>
+		<jar destfile="${build.dir}/dist/nekohtml-${version}-bundle.jar">
+			<fileset dir="${build.dir}/dist">
+			    <include name="nekohtml-${version}-javadoc.jar" />
+			    <include name="nekohtml-${version}-sources.jar" />
+			    <include name="nekohtml-${version}.jar" />
+			</fileset>
+			<fileset dir=".">
+			    <include name='pom.xml' />
+			</fileset>
+		</jar>
 	</target>
 </project>
