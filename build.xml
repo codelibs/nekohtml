@@ -52,25 +52,52 @@
 
  <target name='init'>
  </target>
- 
- <target name='compile' depends='init,version'>
-  <mkdir dir="${build.classes.dir}"/>
-  <javac destdir='${build.classes.dir}' debug='true' encoding="ISO-8859-1" 
-  		 source='${compile.source}' target='${compile.target}'
-  		 includeAntRuntime='false'>
-  	<classpath>
-  		<fileset dir='${lib.dir}/${xerces.version}' includes='*.jar' />
-  	</classpath>
-    <src path='${src.dir}' />
-    <src path='${build.src.dir}' />
-    <include name='**/*.java' />
-  </javac>
+
+	<!-- ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+<macrodef name="compileWith" description="clean compile for the specified Xerces version">
+	<attribute name="xercesVersion" description="the name of the /lib subfolder containing Xerces"/>
+	<attribute name="bridge" description="the name of the bridge package that should be compiled"/>
+	<sequential>
+		<echo message="Compiling with Xerces-@{xercesVersion}"/>
+		<delete>
+			<fileset dir='${build.classes.dir}'>
+				<include name="**/*"/>
+				<exclude name="**/xercesbridge/XercesBridge_*.*"/>
+				<include name="**/xercesbridge/XercesBridge_@{bridge}.*"/>
+			</fileset>
+		</delete>
+		<javac destdir='${build.classes.dir}' debug='true' encoding="ISO-8859-1" 
+			source='${compile.source}' target='${compile.target}'
+			includeAntRuntime='false'>
+			<classpath>
+				<fileset dir='${lib.dir}/xerces-@{xercesVersion}' includes='*.jar' />
+			</classpath>
+			<src path='${src.dir}' />
+			<src path='${build.src.dir}' />
+			<include name='**/*.java' />
+			<exclude name="**/xercesbridge/XercesBridge_*.java"/>
+			<include name="**/xercesbridge/XercesBridge_@{bridge}.java"/>
+		</javac>
+	</sequential>
+</macrodef>
+	
+<target name='compile' depends='init,version' 
+		description="compiles many times to ensure compatibility with the different Xerces versions">
+	<mkdir dir="${build.classes.dir}"/>
+	
+	<compileWith xercesVersion="2.0.2" bridge="2_0"/>
+	<compileWith xercesVersion="2.1.0" bridge="2_1"/>
+	<compileWith xercesVersion="2.2.1" bridge="2_2"/>
+	<compileWith xercesVersion="2.3.0" bridge="2_3"/>
+	<compileWith xercesVersion="2.8.1" bridge="2_3"/>
+	<compileWith xercesVersion="2.9.1" bridge="2_3"/>
 
 	<copy todir="${build.classes.dir}">
 		<fileset dir='${src.dir}' includes='**' excludes='META-INF/**, **/*.java*' />
   	</copy>
- </target>
+</target>
 
+	<!-- ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
  <target name='jar' depends='compile'>
   <mkdir dir='${build.lib.dir}' />
   <jar jarfile='${jar.file}'>
@@ -227,18 +254,34 @@ public class Version {
 
 	<target name='tests' depends='junit, test' description="Run all the tests"/>
 
+	
+	<!-- ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+	<macrodef name="testWith" description="run the tests for the specified Xerces version">
+		<attribute name="xercesVersion" description="the name of the /lib subfolder containing Xerces"/>
+		<sequential>
+			<echo message="Testing with Xerces-@{xercesVersion}"/>
+			<taskdef name='tester' classname='org.cyberneko.html.Tester'>
+				<classpath>
+					<pathelement path='${build.test-classes.dir}'/>
+					<pathelement location='${build.classes.dir}' />
+					<fileset dir='${lib.dir}' includes='junit*.jar' />
+					<fileset dir='${lib.dir}' includes='lib/xerces-@{xercesVersion}/*.jar' />
+				</classpath>
+			</taskdef>
+			<mkdir dir='${build.data.dir}' />
+			<tester canondir='${data.dir}/canonical' outputdir='${build.data.dir}'>
+				<fileset dir='${data.dir}' includes='test*.html'/>
+			</tester>
+		</sequential>
+	</macrodef>
+
 	<target name='test' depends='compile, compile.test'>
-	  <taskdef name='tester' classname='org.cyberneko.html.Tester'>
-	   <classpath>
-	    <pathelement path='${build.test-classes.dir}'/>
-	    <pathelement location='${build.classes.dir}' />
-  		<fileset dir='${lib.dir}' includes='xml-apis.jar,xerces*.jar, junit*.jar' />
-	   </classpath>
-	  </taskdef>
-	  <mkdir dir='${build.data.dir}' />
-	  <tester canondir='${data.dir}/canonical' outputdir='${build.data.dir}'>
-	   <fileset dir='${data.dir}' includes='test*.html'/>
-	  </tester>
+		<testWith xercesVersion="2.0.2"/>
+		<testWith xercesVersion="2.1.0"/>
+		<testWith xercesVersion="2.2.1"/>
+		<testWith xercesVersion="2.3.0"/>
+		<testWith xercesVersion="2.8.1"/>
+		<testWith xercesVersion="2.9.1"/>
 	</target>
 
 	<!-- ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->

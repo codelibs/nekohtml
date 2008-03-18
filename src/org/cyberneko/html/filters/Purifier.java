@@ -29,6 +29,7 @@ import org.apache.xerces.xni.parser.XMLComponentManager;
 import org.apache.xerces.xni.parser.XMLConfigurationException;
 import org.cyberneko.html.HTMLAugmentations;
 import org.cyberneko.html.HTMLEventInfo;
+import org.cyberneko.html.xercesbridge.XercesBridge;
 
 /**
  * This filter purifies the HTML input to ensure XML well-formedness.
@@ -378,7 +379,7 @@ public class Purifier
         attrs.addAttribute(fQName, atype, avalue);
 
         // bind namespace
-        fNamespaceContext.declarePrefix(ns, avalue);
+        XercesBridge.getInstance().NamespaceContext_declarePrefix(fNamespaceContext, ns, avalue);
 
     } // synthesizeBinding(XMLAttributes,String)
 
