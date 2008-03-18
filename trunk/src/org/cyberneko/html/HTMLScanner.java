@@ -23,8 +23,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.UnsupportedEncodingException;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.net.URL;
 import java.util.Stack;
 
@@ -47,6 +45,7 @@ import org.apache.xerces.xni.parser.XMLComponentManager;
 import org.apache.xerces.xni.parser.XMLConfigurationException;
 import org.apache.xerces.xni.parser.XMLDocumentScanner;
 import org.apache.xerces.xni.parser.XMLInputSource;
+import org.cyberneko.html.xercesbridge.XercesBridge;
 
 /**
  * A simple HTML scanner. This scanner makes no attempt to balance tags
@@ -1966,57 +1965,8 @@ public class HTMLScanner
                                 XMLLocator locator = HTMLScanner.this;
                                 String encoding = fIANAEncoding;
                                 Augmentations augs = locationAugs();
-                                try {
-                                    // NOTE: Hack to allow the default filter to work with
-                                    //       old and new versions of the XNI document handler
-                                    //       interface. -Ac
-                                    Class cls = fDocumentHandler.getClass();
-                                    Class[] types = {
-                                        XMLLocator.class, String.class,
-                                        NamespaceContext.class, Augmentations.class
-                                    };
-                                    Method method = cls.getMethod("startDocument", types);
-                                    NamespaceContext nscontext = new NamespaceSupport();
-                                    Object[] params = {
-                                        locator, encoding, 
-                                        nscontext, augs
-                                    };
-                                    method.invoke(fDocumentHandler, params);
-                                }
-                                catch (IllegalAccessException e) {
-                                    throw new XNIException(e);
-                                } 
-                                catch (InvocationTargetException e) {
-                                    throw new XNIException(e);
-                                } 
-                                catch (NoSuchMethodException e) {
-                                    try {
-                                        // NOTE: Hack to allow the default filter to work with
-                                        //       old and new versions of the XNI document handler
-                                        //       interface. -Ac
-                                        Class cls = fDocumentHandler.getClass();
-                                        Class[] types = {
-                                            XMLLocator.class, String.class, Augmentations.class
-                                        };
-                                        Method method = cls.getMethod("startDocument", types);
-                                        Object[] params = {
-                                            locator, encoding, augs
-                                        };
-                                        method.invoke(fDocumentHandler, params);
-                                    }
-                                    catch (IllegalAccessException ex) {
-                                        // NOTE: Should never reach here!
-                                        throw new XNIException(ex);
-                                    } 
-                                    catch (InvocationTargetException ex) {
-                                        // NOTE: Should never reach here!
-                                        throw new XNIException(ex);
-                                    } 
-                                    catch (NoSuchMethodException ex) {
-                                        // NOTE: Should never reach here!
-                                        throw new XNIException(ex);
-                                    }
-                                }
+                                NamespaceContext nscontext = new NamespaceSupport();
+                                XercesBridge.getInstance().XMLDocumentHandler_startDocument(fDocumentHandler, locator, encoding, nscontext, augs);
                             }
                             if (fInsertDoctype && fDocumentHandler != null) {
                                 String root = HTMLElements.getElement(HTMLElements.HTML).name;

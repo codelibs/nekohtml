@@ -16,10 +16,6 @@
 
 package org.cyberneko.html.filters;
 
-import org.cyberneko.html.HTMLElements;
-
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.Enumeration;
 import java.util.Vector;
 
@@ -31,6 +27,8 @@ import org.apache.xerces.xni.XMLLocator;
 import org.apache.xerces.xni.XNIException;
 import org.apache.xerces.xni.parser.XMLComponentManager;
 import org.apache.xerces.xni.parser.XMLConfigurationException;
+import org.cyberneko.html.HTMLElements;
+import org.cyberneko.html.xercesbridge.XercesBridge;
 
 /**
  * This filter binds namespaces if namespace processing is turned on
@@ -268,25 +266,10 @@ public class NamespaceBinder
 
             int dcount = fNamespaceContext.getDeclaredPrefixCount();
             if (fDocumentHandler != null && dcount > 0) {
-                try {
-                    Class cls = fDocumentHandler.getClass();
-                    Class[] types = { String.class, String.class };
-                    Method method = cls.getMethod("startPrefixMapping", types);
-                    for (int i = 0; i < dcount; i++) {
-                        String prefix = fNamespaceContext.getDeclaredPrefixAt(i);
-                        String uri = fNamespaceContext.getURI(prefix);
-                        Object[] args = { prefix, uri };
-                        method.invoke(fDocumentHandler, args);
-                    }
-                }
-                catch (NoSuchMethodException e) {
-                    // ignore
-                }
-                catch (InvocationTargetException e) {
-                    // ignore
-                }
-                catch (IllegalAccessException e) {
-                    // ignore
+                for (int i = 0; i < dcount; i++) {
+                    String prefix = fNamespaceContext.getDeclaredPrefixAt(i);
+                    String uri = fNamespaceContext.getURI(prefix);
+                    XercesBridge.getInstance().XMLDocumentHandler_startPrefixMapping(fDocumentHandler, prefix, uri, augs);
                 }
             }
         }
@@ -307,25 +290,10 @@ public class NamespaceBinder
 
             int dcount = fNamespaceContext.getDeclaredPrefixCount();
             if (fDocumentHandler != null && dcount > 0) {
-                try {
-                    Class cls = fDocumentHandler.getClass();
-                    Class[] types = { String.class, String.class };
-                    Method method = cls.getMethod("startPrefixMapping", types);
-                    for (int i = 0; i < dcount; i++) {
-                        String prefix = fNamespaceContext.getDeclaredPrefixAt(i);
-                        String uri = fNamespaceContext.getURI(prefix);
-                        Object[] args = { prefix, uri };
-                        method.invoke(fDocumentHandler, args);
-                    }
-                }
-                catch (NoSuchMethodException e) {
-                    // ignore
-                }
-                catch (InvocationTargetException e) {
-                    // ignore
-                }
-                catch (IllegalAccessException e) {
-                    // ignore
+                for (int i = 0; i < dcount; i++) {
+                    String prefix = fNamespaceContext.getDeclaredPrefixAt(i);
+                    String uri = fNamespaceContext.getURI(prefix);
+                    XercesBridge.getInstance().XMLDocumentHandler_startPrefixMapping(fDocumentHandler, prefix, uri, augs);
                 }
             }
         }
@@ -337,24 +305,9 @@ public class NamespaceBinder
         if (fNamespaces) {
             int dcount = fNamespaceContext.getDeclaredPrefixCount();
             if (fDocumentHandler != null && dcount > 0) {
-                try {
-                    Class cls = fDocumentHandler.getClass();
-                    Class[] types = { String.class };
-                    Method method = cls.getMethod("endPrefixMapping", types);
-                    for (int i = dcount-1; i >= 0; i--) {
-                        String prefix = fNamespaceContext.getDeclaredPrefixAt(i);
-                        Object[] args = { prefix };
-                        method.invoke(fDocumentHandler, args);
-                    }
-                }
-                catch (NoSuchMethodException e) {
-                    // ignore
-                }
-                catch (InvocationTargetException e) {
-                    // ignore
-                }
-                catch (IllegalAccessException e) {
-                    // ignore
+                for (int i = dcount-1; i >= 0; i--) {
+                    String prefix = fNamespaceContext.getDeclaredPrefixAt(i);
+                    XercesBridge.getInstance().XMLDocumentHandler_endPrefixMapping(fDocumentHandler, prefix, augs);
                 }
             }
             
@@ -379,24 +332,9 @@ public class NamespaceBinder
         if (fNamespaces) {
             int dcount = fNamespaceContext.getDeclaredPrefixCount();
             if (fDocumentHandler != null && dcount > 0) {
-                try {
-                    Class cls = fDocumentHandler.getClass();
-                    Class[] types = { String.class };
-                    Method method = cls.getMethod("endPrefixMapping", types);
-                    for (int i = dcount-1; i >= 0; i--) {
-                        String prefix = fNamespaceContext.getDeclaredPrefixAt(i);
-                        Object[] args = { prefix };
-                        method.invoke(fDocumentHandler, args);
-                    }
-                }
-                catch (NoSuchMethodException e) {
-                    // ignore
-                }
-                catch (InvocationTargetException e) {
-                    // ignore
-                }
-                catch (IllegalAccessException e) {
-                    // ignore
+                for (int i = dcount-1; i >= 0; i--) {
+                    String prefix = fNamespaceContext.getDeclaredPrefixAt(i);
+                    XercesBridge.getInstance().XMLDocumentHandler_endPrefixMapping(fDocumentHandler, prefix, augs);
                 }
             }
             

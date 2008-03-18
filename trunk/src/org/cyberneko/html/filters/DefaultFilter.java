@@ -20,6 +20,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 import org.cyberneko.html.HTMLComponent;
+import org.cyberneko.html.xercesbridge.XercesBridge;
 
 import org.apache.xerces.xni.Augmentations;
 import org.apache.xerces.xni.NamespaceContext;
@@ -94,56 +95,7 @@ public class DefaultFilter
                               NamespaceContext nscontext, Augmentations augs) 
         throws XNIException {
         if (fDocumentHandler != null) {
-            try {
-                // NOTE: Hack to allow the default filter to work with
-                //       old and new versions of the XNI document handler
-                //       interface. -Ac
-                Class cls = fDocumentHandler.getClass();
-                Class[] types = {
-                    XMLLocator.class, String.class,
-                    NamespaceContext.class, Augmentations.class
-                };
-                Method method = cls.getMethod("startDocument", types);
-                Object[] params = {
-                    locator, encoding, 
-                    nscontext, augs
-                };
-                method.invoke(fDocumentHandler, params);
-            } 
-            catch (IllegalAccessException e) {
-                throw new XNIException(e);
-            } 
-            catch (InvocationTargetException e) {
-                throw new XNIException(e);                
-            } 
-            catch (NoSuchMethodException e) {
-                try {
-                    // NOTE: Hack to allow the default filter to work with
-                    //       old and new versions of the XNI document handler
-                    //       interface. -Ac
-                    Class cls = fDocumentHandler.getClass();
-                    Class[] types = {
-                        XMLLocator.class, String.class, Augmentations.class
-                    };
-                    Method method = cls.getMethod("startDocument", types);
-                    Object[] params = {
-                        locator, encoding, augs
-                    };
-                    method.invoke(fDocumentHandler, params);
-                } 
-                catch (NoSuchMethodException ex) {
-                    // NOTE: Should not happen!
-                    throw new XNIException(ex);                
-                } 
-                catch (IllegalAccessException ex) {
-                    // NOTE: Should not happen!
-                    throw new XNIException(ex);                
-                } 
-                catch (InvocationTargetException ex) {
-                    // NOTE: Should not happen!
-                    throw new XNIException(ex);                
-                }
-            }
+        	XercesBridge.getInstance().XMLDocumentHandler_startDocument(fDocumentHandler, locator, encoding, nscontext, augs);
         }
     } // startDocument(XMLLocator,String,Augmentations)
 
@@ -278,22 +230,7 @@ public class DefaultFilter
     public void startPrefixMapping(String prefix, String uri, Augmentations augs)
         throws XNIException {
         if (fDocumentHandler != null) {
-            Class cls = fDocumentHandler.getClass();
-            Class[] types = { String.class, String.class, Augmentations.class };
-            try {
-                Method method = cls.getMethod("startPrefixMapping", types);
-                Object[] args = { prefix, uri, augs };
-                method.invoke(fDocumentHandler, args);
-            }
-            catch (NoSuchMethodException e) {
-                // ignore
-            }
-            catch (IllegalAccessException e) {
-                // ignore
-            }
-            catch (InvocationTargetException e) {
-                // ignore
-            }
+        	XercesBridge.getInstance().XMLDocumentHandler_startPrefixMapping(fDocumentHandler, prefix, uri, augs);
         }
     } // startPrefixMapping(String,String,Augmentations)
 
@@ -301,22 +238,7 @@ public class DefaultFilter
     public void endPrefixMapping(String prefix, Augmentations augs)
         throws XNIException {
         if (fDocumentHandler != null) {
-            Class cls = fDocumentHandler.getClass();
-            Class[] types = { String.class, Augmentations.class };
-            try {
-                Method method = cls.getMethod("endPrefixMapping", types);
-                Object[] args = { prefix, augs };
-                method.invoke(fDocumentHandler, args);
-            }
-            catch (NoSuchMethodException e) {
-                // ignore
-            }
-            catch (IllegalAccessException e) {
-                // ignore
-            }
-            catch (InvocationTargetException e) {
-                // ignore
-            }
+        	XercesBridge.getInstance().XMLDocumentHandler_endPrefixMapping(fDocumentHandler, prefix, augs);
         }
     } // endPrefixMapping(String,Augmentations)
 

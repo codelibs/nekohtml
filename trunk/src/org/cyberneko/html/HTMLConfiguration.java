@@ -17,8 +17,6 @@
 package org.cyberneko.html;
 
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.text.MessageFormat;
 import java.util.Locale;
 import java.util.MissingResourceException;
@@ -40,6 +38,7 @@ import org.apache.xerces.xni.parser.XMLInputSource;
 import org.apache.xerces.xni.parser.XMLParseException;
 import org.apache.xerces.xni.parser.XMLPullParserConfiguration;
 import org.cyberneko.html.filters.NamespaceBinder;
+import org.cyberneko.html.xercesbridge.XercesBridge;
                                       
 /**
  * An XNI-based parser configuration that can be used to parse HTML 
@@ -578,22 +577,7 @@ public class HTMLConfiguration
         if (filters != null) {
             for (int i = 0; i < filters.length; i++) {
                 XMLDocumentFilter filter = filters[i];
-                Class filterClass = filter.getClass();
-                try {
-                    Method filterMethod = filterClass.getMethod("setDocumentSource", DOCSOURCE);
-                    if (filterMethod != null) {
-                        filterMethod.invoke(filter, new Object[] { lastSource });
-                    }
-                }
-                catch (IllegalAccessException e) {
-                    // ignore
-                } 
-                catch (InvocationTargetException e) {
-                    // ignore
-                } 
-                catch (NoSuchMethodException e) {
-                    // ignore
-                }
+                XercesBridge.getInstance().XMLDocumentFilter_setDocumentSource(filter, lastSource);
                 lastSource.setDocumentHandler(filter);
                 lastSource = filter;
             }
