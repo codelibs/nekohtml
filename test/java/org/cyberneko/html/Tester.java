@@ -16,195 +16,218 @@
 
 package org.cyberneko.html;
 
-import org.cyberneko.html.HTMLConfiguration;
-
-import java.io.*;
-import java.util.*;
-
-import org.apache.tools.ant.BuildException;
-import org.apache.tools.ant.DirectoryScanner;
-import org.apache.tools.ant.Project;
-import org.apache.tools.ant.Task;
-import org.apache.tools.ant.types.FileSet;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.FilenameFilter;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.util.StringTokenizer;
 
 import org.apache.xerces.xni.parser.XMLDocumentFilter;
 import org.apache.xerces.xni.parser.XMLInputSource;
 import org.apache.xerces.xni.parser.XMLParserConfiguration;
 
 /**
- * A simple regression tester written as an Ant task. This task
- * generates canonical output using the <code>Writer</code> class
+ * A simple regression tester.<br/>
+ * This isn't written as Ant task anymore to avoid collision between the Xerces version used by Ant
+ * and the one we want to test NekoHTML with.<br/>
+ * It generates canonical output using the <code>Writer</code> class
  * and compares it against the expected canonical output. Simple
  * as that.
  *
  * @author Andy Clark
+ * @author Marc Guillemot
  */
 public class Tester
-    extends Task {
-
-    //
-    // Data
-    //
-
-    /** Canonical test directory. */
-    protected String fCanonicalDir;
-
-    /** Output directory for generated files. */
-    protected String fOutputDir;
-
-    /** List of test filesets. */
-    protected Vector fFileSets = new Vector();
+{
+    private File fCanonicalDir; // Canonical test directory.
+    private File fOutputDir; // Output directory for generated files. 
+    private File[] testFiles; // the files to run the tests on
+    private boolean fDebug = false;
 
     //
     // Public methods
     //
 
     /** Sets the canonical test directory. */
-    public void setCanonDir(String canondir) {
+    public void setCanonDir(final File canondir) {
         fCanonicalDir = canondir;
     } // setCanonDir(String)
 
     /** Sets the output directory for generated files. */
-    public void setOutputDir(String outdir) {
+    public void setOutputDir(final File outdir) {
         fOutputDir = outdir;
     } // setOutputDir(String)
-
-    /** Adds a fileset to the list of test filesets. */
-    public void addFileSet(FileSet fileset) {
-        fFileSets.addElement(fileset);
-    } // addFileSet(FileSet)
 
     //
     // Task methods
     //
+    
+    public static void main(String[] args) throws Exception
+    {
+		if (args.length < 3) {
+			throw new RuntimeException("Bad number of parameters!\n"
+					+ "Expected: input_dir outputDir canonicalDir\n" 
+					+ "Example:\n"
+					+ "data build/data/output data/canonical");
+		}
+		
+		final File inputDir = new File(args[0]);
+		final FilenameFilter filter = new FilenameFilter() {
+			public boolean accept(final File dir, final String name) {
+				// JDK1.3 doesn't know regular expressions!
+				return name.startsWith("test") && name.endsWith(".html");
+			}
+		};
+		
+		final Tester tester = new Tester();
+		tester.setInputFiles(inputDir.listFiles(filter));
+		tester.setOutputDir(new File(args[1]));
+		tester.setCanonDir(new File(args[2]));
+		if (args.length >= 4 && "true".equals(args[3]))
+			tester.setDebug(true);
+		
+		tester.execute();
+	}
 
-    /** Performs the test. */
-    public void execute() throws BuildException {
+    private void setDebug(boolean b) {
+		fDebug = b;
+	}
 
-        // check params
-        String canonicaldir = fCanonicalDir;
-        if (canonicaldir == null) {
-            canonicaldir = ".";
-            log("Canonical directory not specified. Assuming current directory.",
-                Project.MSG_WARN);
-        }
-        String outputdir = fOutputDir;
-        if (outputdir == null) {
-            outputdir = ".";
-            log("Output directory not specified. Assuming current directory.",
-                Project.MSG_WARN);
-        }
-        if (fFileSets.size() == 0) {
-            throw new BuildException("must specify at least one fileset");
-        }
+	private void setInputFiles(File[] listFiles) {
+		testFiles = listFiles;
+	}
+
+	/** Performs the test. */
+    public void execute() throws Exception {
 
         // parse input files and produce output files
-        log("Parsing test files and generating output...");
-        File outdir = new File(outputdir);
-        int size = fFileSets.size();
-        for (int i = 0; i < size; i++) {
-            FileSet fileset = (FileSet)fFileSets.elementAt(i);
-            DirectoryScanner dirscanner = fileset.getDirectoryScanner(getProject());
-            File indir = dirscanner.getBasedir();
-            String[] files = dirscanner.getIncludedFiles();
-            for (int j = 0; j < files.length; j++) {
-                File infile = new File(indir, files[j]);
-                File outfile = new File(outdir, files[j]);
-                log("  "+outfile, Project.MSG_VERBOSE);
-                OutputStream out = null;
-                try {
-                    // create filters
-                    out = new FileOutputStream(outfile);
-                    XMLDocumentFilter[] filters = { new Writer(out) };
-                    
-                    // create parser
-                    XMLParserConfiguration parser = new HTMLConfiguration();
-
-                    // parser settings
-                    parser.setProperty("http://cyberneko.org/html/properties/filters", filters);
-                    String infilename = infile.toString();
-                    File insettings = new File(infilename+".settings");
-                    if (insettings.exists()) {
-                        BufferedReader settings = new BufferedReader(new FileReader(insettings));
-                        String settingline;
-                        while ((settingline = settings.readLine()) != null) {
-                            StringTokenizer tokenizer = new StringTokenizer(settingline);
-                            String type = tokenizer.nextToken();
-                            String id = tokenizer.nextToken();
-                            String value = tokenizer.nextToken();
-                            if (type.equals("feature")) {
-                                parser.setFeature(id, value.equals("true"));
-                            }
-                            else {
-                                parser.setProperty(id, value);
-                            }
-                        }
-                        settings.close();
-                    }
-
-                    // parse
-                    parser.parse(new XMLInputSource(null, infilename, null));
-                }
-                catch (Exception e) {
-                    log("  error parsing input file, "+infile);
-                    throw new BuildException(e);
-                }
-                finally {
-                    try {
-                        out.close();
-                    }
-                    catch (Exception e) {
-                        log("  error closing output file, "+outfile);
-                        throw new BuildException(e);
-                    }
-                }
-            }
-        }
+        int size = testFiles.length;
+        info("Parsing " + size + " test files and generating output...");
+        parseFiles(testFiles);
 
         // compare against canonical output
         log("Comparing parsed output against canonical output...");
-        File canondir = new File(canonicaldir);
         int errors = 0;
-        for (int i = 0; i < size; i++) {
-            FileSet fileset = (FileSet)fFileSets.elementAt(i);
-            DirectoryScanner dirscanner = fileset.getDirectoryScanner(getProject());
-            String[] files = dirscanner.getIncludedFiles();
-            for (int j = 0; j < files.length; j++) {
-                File canonfile = new File(canondir, files[j]);
-                if (!canonfile.exists()) {
+        for (int i = 0; i < size; i++) 
+        {
+        	final File file = testFiles[i];
+        	final String fileName = file.getName();
+            final File canonfile = new File(fCanonicalDir, fileName);
+            if (!canonfile.exists()) {
+                errors++;
+                log("  canonical file missing, " + canonfile);
+                continue;
+            }
+            final File outfile = new File(fOutputDir, fileName);
+            if (!outfile.exists()) {
+                errors++;
+                log("  output file missing, " + outfile);
+                continue;
+            }
+            debug("  comparing "+canonfile+" and "+outfile);
+            try {
+                if (compare(canonfile, outfile)) {
                     errors++;
-                    log("  canonical file missing, "+canonfile);
-                    continue;
                 }
-                File outfile = new File(outdir, files[j]);
-                if (!outfile.exists()) {
-                    errors++;
-                    log("  output file missing, "+outfile);
-                    continue;
-                }
-                log("  comparing "+canonfile+" and "+outfile, Project.MSG_VERBOSE);
-                try {
-                    if (compare(canonfile, outfile)) {
-                        errors++;
-                    }
-                }
-                catch (IOException e) {
-                    errors++;
-                    log("i/o error");  
-                }
+            }
+            catch (IOException e) {
+                errors++;
+                log("i/o error");  
             }
         }
 
         // finished
         if (errors > 0) {
-            log("Finished with errors.");
-            throw new BuildException();
+        	final String msg = "Finished with " + errors + " errors.";
+            log(msg);
+            throw new Exception(msg);
         }
-        log("Done.");
+        info("Done ");
 
     } // execute()
 
-    //
+	private void info(String string) {
+		System.out.println(string);
+	}
+
+	private void debug(String string) {
+		if (fDebug)
+			log(string);
+	}
+
+	private void log(String string) {
+		if (fDebug)
+			System.out.println(string);
+	}
+
+	private void parseFiles(final File[] files) 
+	{
+		for (int i = 0; i < files.length; i++) 
+		{
+		    final File infile = files[i];
+		    final File outfile = new File(fOutputDir, infile.getName());
+		    parseFile(infile, outfile);
+		}
+	}
+
+	private void parseFile(final File infile, final File outfile) {
+		log("Parsing " + infile + " and generating " + outfile);
+		debug("  " + outfile);
+		OutputStream out = null;
+		try {
+		    // create filters
+		    out = new FileOutputStream(outfile);
+		    XMLDocumentFilter[] filters = { new Writer(out) };
+
+		    // create parser
+		    XMLParserConfiguration parser = new HTMLConfiguration();
+
+		    // parser settings
+		    parser.setProperty("http://cyberneko.org/html/properties/filters", filters);
+		    String infilename = infile.toString();
+		    File insettings = new File(infilename+".settings");
+		    if (insettings.exists()) {
+		        BufferedReader settings = new BufferedReader(new FileReader(insettings));
+		        String settingline;
+		        while ((settingline = settings.readLine()) != null) {
+		            StringTokenizer tokenizer = new StringTokenizer(settingline);
+		            String type = tokenizer.nextToken();
+		            String id = tokenizer.nextToken();
+		            String value = tokenizer.nextToken();
+		            if (type.equals("feature")) {
+		                parser.setFeature(id, value.equals("true"));
+		            }
+		            else {
+		                parser.setProperty(id, value);
+		            }
+		        }
+		        settings.close();
+		    }
+
+		    // parse
+		    parser.parse(new XMLInputSource(null, infilename, null));
+		}
+		catch (Exception e) {
+		    log("  error parsing input file, "+infile);
+		    throw new RuntimeException(e);
+		}
+		finally {
+		    try {
+		        out.close();
+		    }
+		    catch (Exception e) {
+		        log("  error closing output file, "+outfile);
+		        throw new RuntimeException(e);
+		    }
+		}
+	}
+
+	//
     // Protected methods
     //
 

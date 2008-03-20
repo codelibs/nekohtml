@@ -82,7 +82,8 @@
 </macrodef>
 	
 <target name='compile' depends='init,version' 
-		description="compiles many times to ensure compatibility with the different Xerces versions">
+		description="compiles many times to ensure compatibility with the different Xerces versions"
+		unless="compile.skip">
 	<mkdir dir="${build.classes.dir}"/>
 	
 	<compileWith xercesVersion="2.0.2" bridge="2_0"/>
@@ -260,28 +261,35 @@ public class Version {
 		<attribute name="xercesVersion" description="the name of the /lib subfolder containing Xerces"/>
 		<sequential>
 			<echo message="Testing with Xerces-@{xercesVersion}"/>
-			<taskdef name='tester' classname='org.cyberneko.html.Tester'>
+			<delete dir="${build.data.dir}"/>
+			<mkdir dir="${build.data.dir}"/>
+			<!-- 
+			We have to fork and can't use Ant to be sure that the Xerces version 
+			we specify and not an other one (for instance the one of Ant)
+			-->
+		 	<java classname="org.cyberneko.html.Tester" fork="true" failonerror="true">
 				<classpath>
 					<pathelement path='${build.test-classes.dir}'/>
 					<pathelement location='${build.classes.dir}' />
-					<fileset dir='${lib.dir}' includes='junit*.jar' />
-					<fileset dir='${lib.dir}' includes='lib/xerces-@{xercesVersion}/*.jar' />
+					<fileset dir='${lib.dir}' includes='xerces-@{xercesVersion}/*.jar' />
 				</classpath>
-			</taskdef>
-			<mkdir dir='${build.data.dir}' />
-			<tester canondir='${data.dir}/canonical' outputdir='${build.data.dir}'>
-				<fileset dir='${data.dir}' includes='test*.html'/>
-			</tester>
+		 		<arg value='${data.dir}' />
+		 		<arg value='${build.data.dir}' />
+		 		<arg value='${data.dir}/canonical' />
+		 		<arg value="${tester.debug}"/>
+		 	</java>
 		</sequential>
 	</macrodef>
 
 	<target name='test' depends='compile, compile.test'>
-		<testWith xercesVersion="2.0.2"/>
-		<testWith xercesVersion="2.1.0"/>
-		<testWith xercesVersion="2.2.1"/>
-		<testWith xercesVersion="2.3.0"/>
-		<testWith xercesVersion="2.8.1"/>
 		<testWith xercesVersion="2.9.1"/>
+		<testWith xercesVersion="2.8.1"/>
+		<testWith xercesVersion="2.3.0"/>
+		<testWith xercesVersion="2.2.1"/>
+		<!--
+		<testWith xercesVersion="2.1.0"/>
+		<testWith xercesVersion="2.0.2"/>
+		-->
 	</target>
 
 	<!-- ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->

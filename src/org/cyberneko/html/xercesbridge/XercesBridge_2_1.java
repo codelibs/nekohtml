@@ -9,7 +9,8 @@ import org.apache.xerces.xni.parser.XMLDocumentFilter;
 import org.apache.xerces.xni.parser.XMLDocumentSource;
 
 /**
- * Xerces bridge for use with Xerces 2.1.
+ * Xerces bridge for use with Xerces 2.1.<br/>
+ * This file won't compile with recent versions of Xerces, this is normal.
  * @author Marc Guillemot
  */
 public class XercesBridge_2_1 extends XercesBridge
