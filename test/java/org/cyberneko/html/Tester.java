@@ -214,7 +214,7 @@ public class Tester
 		}
 		catch (Exception e) {
 		    log("  error parsing input file, "+infile);
-		    throw new RuntimeException(e);
+		    throw new RuntimeException(e.getMessage());
 		}
 		finally {
 		    try {
@@ -222,7 +222,7 @@ public class Tester
 		    }
 		    catch (Exception e) {
 		        log("  error closing output file, "+outfile);
-		        throw new RuntimeException(e);
+		        throw new RuntimeException(e.getMessage());
 		    }
 		}
 	}
