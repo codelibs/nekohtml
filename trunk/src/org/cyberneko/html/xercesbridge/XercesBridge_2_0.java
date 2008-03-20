@@ -10,7 +10,8 @@ import org.apache.xerces.xni.XMLDocumentHandler;
 import org.apache.xerces.xni.XMLLocator;
 
 /**
- * Xerces bridge for use with Xerces 2.0.
+ * Xerces bridge for use with Xerces 2.0.<br/>
+ * This file won't compile with recent versions of Xerces, this is normal.
  * @author Marc Guillemot
  */
 public class XercesBridge_2_0 extends XercesBridge 

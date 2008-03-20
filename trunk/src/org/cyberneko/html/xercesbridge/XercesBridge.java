@@ -38,6 +38,7 @@ public abstract class XercesBridge
             final String className = classNames[i];
         	XercesBridge bridge = (XercesBridge) newInstanceOrNull(className);
             if (bridge != null) {
+            	System.out.println("Using bridge: " + bridge);
                 return bridge;
             }
         }
@@ -99,7 +100,11 @@ public abstract class XercesBridge
 
 	/**
 	 * Calls setDocumentSource (if available in the Xerces version used) on the {@link XMLDocumentFilter}.
+	 * This implementation does nothing.
 	 */
-	public abstract void XMLDocumentFilter_setDocumentSource(XMLDocumentFilter filter,
-			XMLDocumentSource lastSource);
+	public void XMLDocumentFilter_setDocumentSource(XMLDocumentFilter filter,
+			XMLDocumentSource lastSource)
+	{
+		// nothing, it didn't exist on old Xerces versions
+	}
 }
