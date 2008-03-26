@@ -63,6 +63,8 @@
 			<fileset dir='${build.classes.dir}'>
 				<include name="**/*"/>
 				<exclude name="**/xercesbridge/XercesBridge_*.*"/>
+			</fileset>
+			<fileset dir='${build.classes.dir}'>
 				<include name="**/xercesbridge/XercesBridge_@{bridge}.*"/>
 			</fileset>
 		</delete>
@@ -76,6 +78,15 @@
 			<src path='${build.src.dir}' />
 			<include name='**/*.java' />
 			<exclude name="**/xercesbridge/XercesBridge_*.java"/>
+		</javac>
+		<javac destdir='${build.classes.dir}' debug='true' encoding="ISO-8859-1" 
+			source='${compile.source}' target='${compile.target}'
+			includeAntRuntime='false'>
+			<classpath>
+				<fileset dir='${lib.dir}/xerces-@{xercesVersion}' includes='*.jar' />
+			</classpath>
+			<src path='${src.dir}' />
+			<src path='${build.src.dir}' />
 			<include name="**/xercesbridge/XercesBridge_@{bridge}.java"/>
 		</javac>
 	</sequential>
