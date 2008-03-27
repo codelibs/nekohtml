@@ -38,7 +38,6 @@ public abstract class XercesBridge
             final String className = classNames[i];
         	XercesBridge bridge = (XercesBridge) newInstanceOrNull(className);
             if (bridge != null) {
-            	System.out.println("Using bridge: " + bridge);
                 return bridge;
             }
         }
