@@ -1948,7 +1948,8 @@ public class HTMLScanner
                                 fSingleBoolean[0] = false;
                                 String ename = scanStartElement(fSingleBoolean);
                                 if (ename != null && !fSingleBoolean[0] &&
-                                    HTMLElements.getElement(ename).isSpecial()) {
+                                    HTMLElements.getElement(ename).isSpecial() &&
+                                    (!ename.equalsIgnoreCase("TITLE") || isEnded(ename))) {
                                     setScanner(fSpecialScanner.setElementName(ename));
                                     setScannerState(STATE_CONTENT);
                                     return true;
@@ -2730,6 +2731,20 @@ public class HTMLScanner
                 }
             }
         } // scanEndElement()
+
+        //
+        // Private methods
+        //
+
+        /**
+         * Returns true if the given element has an end-tag.
+         */
+        private boolean isEnded(String ename) {
+            String content = new String(fCurrentEntity.buffer, fCurrentEntity.offset,
+                fCurrentEntity.length - fCurrentEntity.offset);
+            return content.toLowerCase().indexOf("</" + ename.toLowerCase() + ">") != -1;
+        }
+
     } // class ContentScanner
 
     /**
@@ -2963,7 +2978,7 @@ public class HTMLScanner
                         buffer.append('\n');
                     }
                 }
-                else if (c == '\'' || c == '"') {
+                else if ((c == '\'' || c == '"') && fScript) {
                     buffer.append((char)c);
                     final int stringChar = c;
                     while (true) {
