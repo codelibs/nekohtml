@@ -243,7 +243,7 @@ public class Tester
             n++;
             if ((l2 = i2.readLine()) == null) {
                 errors++;
-                log("  file lengths don't match ("+f1+")");
+                info("  file lengths don't match ("+f1+")");
                 break;
             }
             if (compare(f1.getName(), n, l1, l2)) {
@@ -253,7 +253,7 @@ public class Tester
         }
         if (errors == 0 && (l2 = i2.readLine()) != null) {
             errors++;
-            log("  file lengths don't match ("+f1+")");
+            info("  file lengths don't match ("+f1+")");
         }
         i1.close();
         i2.close();
@@ -267,19 +267,19 @@ public class Tester
         boolean error = false;
         if (l1 < l2) {
             error = true;
-            log("  "+f+':'+n+" output string too long");
+            info("  "+f+':'+n+" output string too long");
         }
         else if (l1 > l2) {
             error = true;
-            log("  "+f+':'+n+" output string too short");
+            info("  "+f+':'+n+" output string too short");
         }
         else if (!s1.equals(s2)) {
             error = true;
-            log("  "+f+':'+n+" strings don't match");
+            info("  "+f+':'+n+" strings don't match");
         }
         if (error) {
-            log("    [in:  "+s1+']');
-            log("    [out: "+s2+']');
+        	info("    [in:  "+s1+']');
+        	info("    [out: "+s2+']');
         }
         return error;
     } // compare(String,long,String,String):boolean
