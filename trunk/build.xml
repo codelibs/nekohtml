@@ -345,8 +345,8 @@ public class Version {
 	 		<fileset dir="${build.doc.dir}"/>
 		</jar>
 	 	<jar destfile="${mvn.bundle.sources}">
-		    <include name='${src.dir}/**/*.*' />
-		    <include name='${build.src.dir}/**/*.*' />
+		    <fileset dir='${src.dir}' />
+		    <fileset dir='${build.src.dir}' />
 		</jar>
 		<copy file="${build.lib.dir}/${name}.jar" tofile="${mvn.bundle.jar}"/>
 		<jar destfile="${build.dir}/dist/nekohtml-${version}-bundle.jar">
