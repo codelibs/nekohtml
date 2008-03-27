@@ -264,9 +264,6 @@ public class Version {
 	  </javac>
 	 </target>
 
-	<target name='tests' depends='junit, test' description="Run all the tests"/>
-
-	
 	<!-- ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
 	<macrodef name="testWith" description="run the tests for the specified Xerces version">
 		<attribute name="xercesVersion" description="the name of the /lib subfolder containing Xerces"/>
@@ -274,25 +271,34 @@ public class Version {
 			<echo message="Testing with Xerces-@{xercesVersion}"/>
 			<delete dir="${build.data.dir}"/>
 			<mkdir dir="${build.data.dir}"/>
+			<mkdir dir="${build.dir}/junit/xerces-@{xercesVersion}"/>
 			<!-- 
 			We have to fork and can't use Ant to be sure that the Xerces version 
 			we specify and not an other one (for instance the one of Ant)
 			-->
-		 	<java classname="org.cyberneko.html.Tester" fork="true" failonerror="true">
+			<junit printsummary="yes" haltonfailure="false" fork="true" failureproperty="junitFailed">
 				<classpath>
-					<pathelement path='${build.test-classes.dir}'/>
-					<pathelement location='${build.classes.dir}' />
-					<fileset dir='${lib.dir}' includes='xerces-@{xercesVersion}/*.jar' />
+				    <pathelement path='${build.test-classes.dir}'/>
+				    <pathelement location='${build.classes.dir}' />
+			  		<fileset dir='${lib.dir}' includes='junit*.jar' />
+		  	  		<fileset dir='${lib.dir}/xerces-@{xercesVersion}' includes='*.jar' />
 				</classpath>
-		 		<arg value='${data.dir}' />
-		 		<arg value='${build.data.dir}' />
-		 		<arg value='${data.dir}/canonical' />
-		 		<arg value="${tester.debug}"/>
-		 	</java>
+	
+				<formatter type="xml"/>
+	
+				<batchtest fork="yes" todir="${build.dir}/junit/xerces-@{xercesVersion}">
+					<fileset dir="${src.test.dir}">
+						<include name="**/*Test.java"/>
+					</fileset>
+				</batchtest>
+			</junit>
 		</sequential>
 	</macrodef>
 
-	<target name='test' depends='compile, compile.test'>
+	<target name="test" depends="compile, compile.test" description="Runs the junit tests and generates a report (junit jar must be in ANT_HOME/lib)">
+		<delete dir="${build.dir}/junit"/>
+		<mkdir dir="${build.dir}/junit"/>
+
 		<testWith xercesVersion="2.9.1"/>
 		<testWith xercesVersion="2.8.1"/>
 		<testWith xercesVersion="2.3.0"/>
@@ -301,33 +307,10 @@ public class Version {
 		<testWith xercesVersion="2.1.0"/>
 		<testWith xercesVersion="2.0.2"/>
 		-->
-	</target>
-
-	<!-- ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
-	<target name="junit" depends="compile, compile.test" description="Runs the junit tests and generates a report (junit jar must be in ANT_HOME/lib)">
-		<delete dir="${build.dir}/junit"/>
-		<mkdir dir="${build.dir}/junit"/>
-
-		<junit printsummary="yes" haltonfailure="false" fork="true" failureproperty="junitFailed">
-			<classpath>
-			    <pathelement path='${build.test-classes.dir}'/>
-			    <pathelement location='${build.classes.dir}' />
-		  		<fileset dir='${lib.dir}' includes='junit*.jar' />
-	  	  		<fileset dir='${lib.dir}/${xerces.version}' includes='*.jar' />
-			</classpath>
-
-			<formatter type="xml"/>
-
-			<batchtest fork="yes" todir="${build.dir}/junit">
-				<fileset dir="${src.test.dir}">
-					<include name="**/*Test.java"/>
-				</fileset>
-			</batchtest>
-		</junit>
 
 		<junitreport todir="${build.dir}/junit">
 			<fileset dir="${build.dir}/junit">
-				<include name="TEST-*.xml"/>
+				<include name="**/TEST-*.xml"/>
 			</fileset>
 			<report format="frames" todir="${build.dir}/junit"/>
 		</junitreport>
