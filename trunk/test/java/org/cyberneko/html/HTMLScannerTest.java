@@ -36,16 +36,17 @@ public class HTMLScannerTest extends TestCase {
 		assertFalse(scanner.isEncodingCompatible("UTF-16","Cp1252"));
 	}
 
-   public void testPushInputSource() throws Exception {
-       String string = "<html><head><title>foo</title></head>"
-           + "<body>"
-           + "<script id='myscript'>"
-           + "  document.write('<style type=\"text/css\" id=\"myStyle\">');"
+	public void testEvaluateInputSource() throws Exception {
+	    String string = "<html><head><title>foo</title></head>"
+	        + "<body>"
+	        + "<script id='myscript'>"
+	        + "  document.write('<style type=\"text/css\" id=\"myStyle\">');"
             + "  document.write('  .nwr {white-space: nowrap;}');"
             + "  document.write('</style>');"
             + "  document.write('<div id=\"myDiv\">');"
             + "  document.write('</div>');"
             + "</script>"
+            + "<div><a/></div>"
             + "</body></html>";
         HTMLConfiguration parser = new HTMLConfiguration();
         EvaluateInputSourceFilter filter = new EvaluateInputSourceFilter(parser);
@@ -55,14 +56,14 @@ public class HTMLScannerTest extends TestCase {
         
         String[] expectedString = {"(HTML", "(HEAD", "(TITLE", ")TITLE", ")HEAD", "(BODY", "(SCRIPT",
             ")SCRIPT", "~inserting", "(STYLE", "~inserting", "~inserting", ")STYLE", "~inserting",
-            "(DIV", "~inserting", ")DIV", ")BODY", ")HTML"};
+            "(DIV", "~inserting", ")DIV", "(DIV", "(A", ")A", ")DIV", ")BODY", ")HTML"};
         assertEquals(Arrays.asList(expectedString), filter.collectedStrings);
     }
 
    private static class EvaluateInputSourceFilter extends DefaultFilter {
 
        private List collectedStrings = new ArrayList();
-        private static int counter = 1;
+       private static int counter = 1;
        protected HTMLConfiguration fConfiguration;
 
        public EvaluateInputSourceFilter(HTMLConfiguration config) {
