@@ -542,6 +542,9 @@ public class HTMLScanner
      * @see #pushInputSource(XMLInputSource)
      */
     public void evaluateInputSource(XMLInputSource inputSource) {
+        final Scanner previousScanner = fScanner;
+        final short previousScannerState = fScannerState;
+        final CurrentEntity previousEntity = fCurrentEntity;
         final Reader reader = getReader(inputSource);
 
         String encoding = inputSource.getEncoding();
@@ -560,6 +563,9 @@ public class HTMLScanner
         catch (final IOException e) {
             // ignore
         }
+        setScanner(previousScanner);
+        setScannerState(previousScannerState);
+        fCurrentEntity = previousEntity;
     } // evaluateInputSource(XMLInputSource)
 
     /**
