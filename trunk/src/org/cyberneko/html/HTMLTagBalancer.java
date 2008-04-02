@@ -60,6 +60,7 @@ import org.cyberneko.html.xercesbridge.XercesBridge;
  * @see HTMLElements
  *
  * @author Andy Clark
+ * @author Marc Guillemot
  *
  * @version $Id: HTMLTagBalancer.java,v 1.20 2005/02/14 04:06:22 andyc Exp $
  */
@@ -625,7 +626,10 @@ public class HTMLTagBalancer
     public void emptyElement(QName elem, XMLAttributes attrs, Augmentations augs)
         throws XNIException {
         startElement(elem, attrs, augs);
-        endElement(elem, augs);
+        // browser ignore the closing indication in <form .../>
+        if (!"FORM".equalsIgnoreCase(elem.rawname)) {
+        	endElement(elem, augs);
+        }
     } // emptyElement(QName,XMLAttributes,Augmentations)
 
     /** Start entity. */
