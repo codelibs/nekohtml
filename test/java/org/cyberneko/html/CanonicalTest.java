@@ -20,6 +20,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -93,7 +94,7 @@ public class CanonicalTest extends TestCase {
         catch (final AssertionFailedError e)
         {
         	final File output = new File(outputDir, dataFile.getName());
-        	final PrintWriter pw = new PrintWriter(output);
+        	final PrintWriter pw = new PrintWriter(new FileOutputStream(output));
         	for (final Iterator iter=dataLines.iterator(); iter.hasNext(); )
         	{
         		pw.println(iter.next());
