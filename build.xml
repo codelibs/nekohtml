@@ -269,8 +269,6 @@ public class Version {
 		<attribute name="xercesVersion" description="the name of the /lib subfolder containing Xerces"/>
 		<sequential>
 			<echo message="Testing with Xerces-@{xercesVersion}"/>
-			<delete dir="${build.data.dir}"/>
-			<mkdir dir="${build.data.dir}"/>
 			<mkdir dir="${build.dir}/junit/xerces-@{xercesVersion}"/>
 			<!-- 
 			We have to fork and can't use Ant to be sure that the Xerces version 

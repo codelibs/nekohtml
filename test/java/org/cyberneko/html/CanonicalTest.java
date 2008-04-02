@@ -23,12 +23,15 @@ import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.StringTokenizer;
 
+import junit.framework.AssertionFailedError;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
@@ -49,11 +52,13 @@ import org.cyberneko.html.xercesbridge.XercesBridge;
 public class CanonicalTest extends TestCase {
 
     private static final File canonicalDir = new File("data/canonical");
-    
+    private static final File outputDir = new File("build/data/output/" + XercesBridge.getInstance().getVersion());
     private File dataFile;
     
     public static Test suite() throws Exception {
-        TestSuite suite = new TestSuite();
+    	outputDir.mkdirs();
+
+    	TestSuite suite = new TestSuite();
         File dataDir = new File("data");
         File[] dataFiles = dataDir.listFiles(new FileFilter() {
             public boolean accept(File pathname) {
@@ -77,10 +82,25 @@ public class CanonicalTest extends TestCase {
     protected void runTest() throws Exception {
         List/*String*/ dataLines = getResult(dataFile);
         List/*String*/ canonicalLines = getCanonical(new File(canonicalDir, dataFile.getName()));
-    	assertEquals("file length", canonicalLines.size(), dataLines.size());
-
-    	for (int l=0; l < dataLines.size(); l++) {
-        	assertEquals("line " + (l + 1), canonicalLines.get(l), dataLines.get(l));
+        try
+        {
+	    	assertEquals("file length", canonicalLines.size(), dataLines.size());
+	
+	    	for (int l=0; l < dataLines.size(); l++) {
+	        	assertEquals("line " + (l + 1), canonicalLines.get(l), dataLines.get(l));
+	        }
+        }
+        catch (final AssertionFailedError e)
+        {
+        	final File output = new File(outputDir, dataFile.getName());
+        	final PrintWriter pw = new PrintWriter(output);
+        	for (final Iterator iter=dataLines.iterator(); iter.hasNext(); )
+        	{
+        		pw.println(iter.next());
+        	}
+        	pw.close();
+        	
+        	throw e;
         }
     }
 
