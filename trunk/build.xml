@@ -1,10 +1,10 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<project default='all' basedir='.'>
+<project default='all' basedir='.' xmlns:artifact="urn:maven-artifact-ant">
 
  <!-- PROPERTIES -->
  <property file='build-custom.properties' />
  
- <property name='version'   value='1.9.6.3-snapshot'/>
+ <property name='version'   value='1.9.7'/>
  <property name='name'      value='nekohtml'/>
  <property name='fullname'  value='${name}-${version}'/>
  <property name='Title'     value='NekoHTML'/>
@@ -45,7 +45,7 @@
  <!-- DEPENDENCIES -->
  <available property='bcel.available' file='${lib.dir}/bcel-5.2.jar' />
 
- <property name="xerces.version" value="xerces-2.8.1"/>
+ <property name="xerces.version" value="2.8.1"/>
 
  <!-- TARGETS --> 
  <target name='all' depends='zip,tgz'/>
@@ -226,7 +226,7 @@ public class Version {
  	</java>
  </target>
  <target name='x-minimal'>
- 	<unzip dest='${build.classes.dir}' src='${lib.dir}/xercesImpl.jar' />
+ 	<unzip dest='${build.classes.dir}' src='${lib.dir}/xerces-${xerces.version}/xercesImpl-${xerces.version}.jar' />
  	<classfileset id='minimal.classes' 
  				  dir="${build.classes.dir}" includes='org/apache/**' 
  				  rootclass='org.cyberneko.html.HTMLConfiguration' 
@@ -316,11 +316,9 @@ public class Version {
 		<fail message="JUnit test failed" if="junitFailed"/>
 	</target>
 	
-	<target name="create-mvn-upload-bundle" depends="doc, jar">
-		<property name="mvn.bundle.javadoc" value="${build.dir}/dist/nekohtml-${version}-javadoc.jar"/>
+	<target name="deploy-mvn" depends="jar, doc" description="Deploys a release to NekoHTML maven repository">
 		<property name="mvn.bundle.sources" value="${build.dir}/dist/nekohtml-${version}-sources.jar"/>
-		<property name="mvn.bundle.jar" value="${build.dir}/dist/nekohtml-${version}.jar"/>
-
+		<property name="mvn.bundle.javadoc" value="${build.dir}/dist/nekohtml-${version}-javadoc.jar"/>
 		<mkdir dir="${build.dir}/dist"/>
 	 	<jar destfile="${mvn.bundle.javadoc}">
 	 		<fileset dir="${build.doc.dir}"/>
@@ -329,16 +327,16 @@ public class Version {
 		    <fileset dir='${src.dir}' />
 		    <fileset dir='${build.src.dir}' />
 		</jar>
-		<copy file="${build.lib.dir}/${name}.jar" tofile="${mvn.bundle.jar}"/>
-		<jar destfile="${build.dir}/dist/nekohtml-${version}-bundle.jar">
-			<fileset dir="${build.dir}/dist">
-			    <include name="nekohtml-${version}-javadoc.jar" />
-			    <include name="nekohtml-${version}-sources.jar" />
-			    <include name="nekohtml-${version}.jar" />
-			</fileset>
-			<fileset dir=".">
-			    <include name='pom.xml' />
-			</fileset>
-		</jar>
+
+		<path id="maven-ant-tasks.classpath" path="lib/maven-ant-tasks-2.0.8.jar" />
+		<typedef resource="org/apache/maven/artifact/ant/antlib.xml" uri="urn:maven-artifact-ant"
+			classpathref="maven-ant-tasks.classpath" />
+		<artifact:pom id="maven.project" file="pom.xml" />
+		<artifact:install-provider artifactId="wagon-ssh" version="1.0-beta-2"/>
+		<artifact:deploy file="${build.lib.dir}/${name}.jar">
+			<pom refid="maven.project"/>
+			<attach file="${mvn.bundle.sources}" classifier="sources" /> 
+			<attach file="${mvn.bundle.javadoc}" classifier="javadoc" /> 
+		</artifact:deploy>
 	</target>
 </project>
