@@ -1,6 +1,6 @@
 <project>
   <modelVersion>4.0.0</modelVersion>
-  <groupId>nekohtml</groupId>
+  <groupId>net.sourceforge.nekohtml</groupId>
   <artifactId>nekohtml</artifactId>
   <name>Neko HTML</name>
   <version>1.9.7</version>
