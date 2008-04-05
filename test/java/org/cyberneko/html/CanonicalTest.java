@@ -82,9 +82,13 @@ public class CanonicalTest extends TestCase {
     
     protected void runTest() throws Exception {
         List/*String*/ dataLines = getResult(dataFile);
-        List/*String*/ canonicalLines = getCanonical(new File(canonicalDir, dataFile.getName()));
         try
         {
+        	final File canonicalFile = new File(canonicalDir, dataFile.getName());
+        	if (!canonicalFile.exists()) {
+        		fail("Canonical file not found: " + canonicalFile.getAbsolutePath());
+        	}
+            List/*String*/ canonicalLines = getCanonical(canonicalFile);
 	    	assertEquals("file length", canonicalLines.size(), dataLines.size());
 	
 	    	for (int l=0; l < dataLines.size(); l++) {
