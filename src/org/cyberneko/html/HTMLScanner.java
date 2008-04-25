@@ -1392,7 +1392,7 @@ public class HTMLScanner
         if (name.startsWith("#")) {
             int value = -1;
             try {
-                if (name.startsWith("#x")) {
+                if (name.startsWith("#x") || name.startsWith("#X")) {
                     value = Integer.parseInt(name.substring(2), 16);
                 }
                 else {
