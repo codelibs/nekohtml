@@ -85,6 +85,7 @@ import org.cyberneko.html.xercesbridge.XercesBridge;
  * @see HTMLEntities
  *
  * @author Andy Clark
+ * @author Marc Guillemot
  * @author Ahmed Ashour
  *
  * @version $Id: HTMLScanner.java,v 1.19 2005/06/14 05:52:37 andyc Exp $
@@ -2984,12 +2985,16 @@ public class HTMLScanner
                         buffer.append('\n');
                     }
                 }
-                else if ((c == '\'' || c == '"') && fScript) {
+                else if ((c == '\'' || c == '"') && fScript && !withinJavaScriptComment(buffer.toString())) {
                     buffer.append((char)c);
                     final int stringChar = c;
                     while (true) {
                         c = read();
-                        if (c == '\\') {
+                        if (c == -1) {
+                        	// end of stream reached, this surely denotes a problem but the most important is first to go outside this block
+                        	break;
+                        }
+                        else if (c == '\\') {
                             buffer.append((char)c);
                             //always consume next character
                             buffer.append((char)read());
@@ -3393,4 +3398,22 @@ public class HTMLScanner
 			return false;
 		}
     }
+    /**
+     * Indicates if a character that will be added to the string would be located within a JS comment
+     * TODO: improve it to handle //, /* and * / located in strings
+     */
+	static boolean withinJavaScriptComment(final String string) {
+		// single line comment with //
+		final int lastSlashSlash = string.lastIndexOf("//");
+		if (lastSlashSlash != -1 && lastSlashSlash > string.lastIndexOf('\n')) {
+			return true;
+		}
+		
+		// multiline comment with /*
+		final int lastSlashStar = string.lastIndexOf("/*");
+		if (lastSlashStar != -1 && lastSlashStar > string.lastIndexOf("*/")) {
+			return true;
+		}
+		return false;
+	}
 } // class HTMLScanner
