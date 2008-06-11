@@ -54,7 +54,7 @@ public class HTMLScannerTest extends TestCase {
 	        + "  document.write('<style type=\"text/css\" id=\"myStyle\">');"
             + "  document.write('  .nwr {white-space: nowrap;}');"
             + "  document.write('</style>');"
-            + "  document.write('<div id=\"myDiv\">');"
+            + "  document.write('<div id=\"myDiv\"><span></span>');"
             + "  document.write('</div>');"
             + "</script>"
             + "<div><a/></div>"
@@ -67,7 +67,7 @@ public class HTMLScannerTest extends TestCase {
         
         String[] expectedString = {"(HTML", "(HEAD", "(TITLE", ")TITLE", ")HEAD", "(BODY", "(SCRIPT",
             ")SCRIPT", "~inserting", "(STYLE", "~inserting", "~inserting", ")STYLE", "~inserting",
-            "(DIV", "~inserting", ")DIV", "(DIV", "(A", ")A", ")DIV", ")BODY", ")HTML"};
+            "(DIV", "(SPAN", ")SPAN", "~inserting", ")DIV", "(DIV", "(A", ")A", ")DIV", ")BODY", ")HTML"};
         assertEquals(Arrays.asList(expectedString), filter.collectedStrings);
     }
 
@@ -92,7 +92,7 @@ public class HTMLScannerTest extends TestCase {
                insert("<style type=\"text/css\" id=\"myStyle\">");
                insert("  .nwr {white-space: nowrap;}");
                insert("</style>");
-               insert("<div id=\"myDiv\">");
+               insert("<div id=\"myDiv\"><span></span>");
                insert("</div>");
            }
        }
