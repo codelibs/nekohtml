@@ -559,7 +559,9 @@ public class HTMLScanner
         setScanner(fContentScanner);
         setScannerState(STATE_CONTENT);
         try {
-            fScanner.scan(false);
+            do {
+                fScanner.scan(false);
+            } while (fScannerState != STATE_END_DOCUMENT);
         }
         catch (final IOException e) {
             // ignore
@@ -1988,7 +1990,7 @@ public class HTMLScanner
                             break;
                         }
                         case STATE_END_DOCUMENT: {
-                            if (fDocumentHandler != null && fElementCount >= fElementDepth) {
+                            if (fDocumentHandler != null && fElementCount >= fElementDepth && complete) {
                                 if (DEBUG_CALLBACKS) {
                                     System.out.println("endDocument()");
                                 }
