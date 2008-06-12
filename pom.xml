@@ -3,7 +3,7 @@
   <groupId>net.sourceforge.nekohtml</groupId>
   <artifactId>nekohtml</artifactId>
   <name>Neko HTML</name>
-  <version>1.9.7</version>
+  <version>1.9.8-SNAPSHOT</version>
   <url>http://nekohtml.sourceforge.net/</url>
   <licenses>
     <license>
@@ -30,5 +30,12 @@
             </url>
             <name>NekoHTML Maven 2 Repository</name>
         </repository>
+        <snapshotRepository>
+            <id>nekohtml-m2-repo-snapshots</id>
+            <url>
+                scp://shell.sourceforge.net/home/groups/n/ne/nekohtml/htdocs/m2-repo-snapshots
+            </url>
+            <name>NekoHTML Maven 2 Snapshots Repository</name>
+        </snapshotRepository>
     </distributionManagement>
 </project>
