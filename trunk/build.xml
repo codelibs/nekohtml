@@ -225,6 +225,7 @@ public class Version {
  		<arg value='x-minimal' />
  	</java>
  </target>
+
  <target name='x-minimal'>
  	<unzip dest='${build.classes.dir}' src='${lib.dir}/xerces-${xerces.version}/xercesImpl-${xerces.version}.jar' />
  	<classfileset id='minimal.classes' 
