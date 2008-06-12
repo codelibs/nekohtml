@@ -4,7 +4,7 @@
  <!-- PROPERTIES -->
  <property file='build-custom.properties' />
  
- <property name='version'   value='1.9.7'/>
+ <property name='version'   value='1.9.8-SNAPSHOT'/>
  <property name='name'      value='nekohtml'/>
  <property name='fullname'  value='${name}-${version}'/>
  <property name='Title'     value='NekoHTML'/>
