@@ -556,8 +556,10 @@ public class HTMLTagBalancer
         }
 
         // close previous elements
-        // all elements close a <script>
-        if (fElementStack.top > 1 && fElementStack.peek().element.code == HTMLElements.SCRIPT) {
+        // all elements close a <script> and an unknown element
+        if (fElementStack.top > 1 
+        		&& (fElementStack.peek().element.code == HTMLElements.SCRIPT
+        				|| fElementStack.peek().element == HTMLElements.NO_SUCH_ELEMENT)) {
             final Info info = fElementStack.pop();
             if (fDocumentHandler != null) {
                 callEndElement(info.qname, synthesizedAugs());
