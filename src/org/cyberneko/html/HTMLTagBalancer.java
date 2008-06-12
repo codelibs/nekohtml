@@ -508,7 +508,7 @@ public class HTMLTagBalancer
 
         // check proper parent
         if (element.parent != null) {
-            if (!fSeenRootElement && !fDocumentFragment) {
+        	if (!fSeenRootElement && !fDocumentFragment) {
                 String pname = element.parent[0].name;
                 pname = modifyName(pname, fNamesElems);
                 if (fReportErrors) {
@@ -518,7 +518,7 @@ public class HTMLTagBalancer
                 QName qname = new QName(null, pname, pname, null);
                 startElement(qname, null, synthesizedAugs());
             }
-            else {
+        	else {
                 HTMLElements.Element pelement = element.parent[0];
                 if (pelement.code != HTMLElements.HEAD || (!fSeenBodyElement && !fDocumentFragment)) {
                     int depth = getParentDepth(element.parent, element.bounds);
@@ -556,6 +556,13 @@ public class HTMLTagBalancer
         }
 
         // close previous elements
+        // all elements close a <script>
+        if (fElementStack.top > 1 && fElementStack.peek().element.code == HTMLElements.SCRIPT) {
+            final Info info = fElementStack.pop();
+            if (fDocumentHandler != null) {
+                callEndElement(info.qname, synthesizedAugs());
+            }
+        }
         if (element.closes != null) {
             int length = fElementStack.top;
             for (int i = length - 1; i >= 0; i--) {
@@ -623,16 +630,17 @@ public class HTMLTagBalancer
     } // startElement(QName,XMLAttributes,Augmentations)
 
 	/** Empty element. */
-    public void emptyElement(QName elem, XMLAttributes attrs, Augmentations augs)
+    public void emptyElement(final QName element, XMLAttributes attrs, Augmentations augs)
         throws XNIException {
-        startElement(elem, attrs, augs);
-        // browser ignore the closing indication in <form .../>
-        if (!"FORM".equalsIgnoreCase(elem.rawname)) {
-        	endElement(elem, augs);
+        startElement(element, attrs, augs);
+        // browser ignore the closing indication for non empty tags like <form .../>
+        final HTMLElements.Element elem = getElement(element.rawname);
+        if (elem.isEmpty()) {
+        	endElement(element, augs);
         }
     } // emptyElement(QName,XMLAttributes,Augmentations)
 
-    /** Start entity. */
+	/** Start entity. */
     public void startGeneralEntity(String name, 
                                    XMLResourceIdentifier id,
                                    String encoding,
