@@ -1118,7 +1118,7 @@ public class HTMLScanner
                 return -1;
             }
         }
-        int c = fCurrentEntity.buffer[fCurrentEntity.offset++];
+        char c = fCurrentEntity.buffer[fCurrentEntity.offset++];
         fCurrentEntity.columnNumber++;
         if (DEBUG_BUFFER) { 
             System.out.print(")read: ");
@@ -2969,9 +2969,32 @@ public class HTMLScanner
                             (fScript && fScriptStripCDATADelims) ||
                             (fStyle  && fStyleStripCommentDelims) ||
                             (fStyle  && fStyleStripCDATADelims);
+            
+            
             while (true) {
                 int c = read();
-                if (c == -1 || (delimiter == -1 && (c == '<' || c == '&'))) {
+                if (fScript && c == '>')  {
+                	final String s = buffer.toString();
+                	final int p = s.lastIndexOf("</");
+                	final int lastCommentOpening = s.lastIndexOf("<!--");
+                	final int lastCommentClosing = s.lastIndexOf("-->");
+                	if ((lastCommentOpening == -1 || lastCommentClosing > lastCommentOpening)
+                			&& p != -1 && p <= s.length() - 8)
+               		{
+                		String closing = s.substring(p, p+8);
+                		if ("</script".equalsIgnoreCase(closing) 
+                				&& (p+8 == s.length() || Character.isWhitespace(s.charAt(p+8))))
+                		{
+                			final int tooMuchScanned = s.length() - p + 1;
+                            fCurrentEntity.offset -= tooMuchScanned;
+                            fCurrentEntity.columnNumber -= tooMuchScanned;
+                            buffer.length = p;
+                            break;
+                		}
+               		}
+                }
+
+                if (c == -1 || (delimiter == -1 && ((c == '<' && (!fScript || strip)) || c == '&'))) {
                     if (c != -1) {
                         fCurrentEntity.offset--;
                         fCurrentEntity.columnNumber--;
@@ -2985,38 +3008,6 @@ public class HTMLScanner
                     int newlines = skipNewlines();
                     for (int i = 0; i < newlines; i++) {
                         buffer.append('\n');
-                    }
-                }
-                else if ((c == '\'' || c == '"') && fScript && !withinJavaScriptComment(buffer.toString())) {
-                    buffer.append((char)c);
-                    final int stringChar = c;
-                    while (true) {
-                        c = read();
-                        if (c == -1) {
-                        	// end of stream reached, this surely denotes a problem but the most important is first to go outside this block
-                        	break;
-                        }
-                        else if (c == '\\') {
-                            buffer.append((char)c);
-                            //always consume next character
-                            buffer.append((char)read());
-                        }
-                        else if (c == stringChar) {
-                            buffer.append((char)c);
-                            break;
-                        }
-                        else if (c == '\r' || c == '\n') {
-                            fCurrentEntity.offset--;
-                            fCurrentEntity.columnNumber--;
-                            int newlines = skipNewlines();
-                            for (int i = 0; i < newlines; i++) {
-                                buffer.append('\n');
-                            }
-                            break;
-                        }
-                        else {
-                            buffer.append((char)c);
-                        }
                     }
                 }
                 else if (delimiter != -1 && c == (char)delimiter) {
@@ -3400,22 +3391,4 @@ public class HTMLScanner
 			return false;
 		}
     }
-    /**
-     * Indicates if a character that will be added to the string would be located within a JS comment
-     * TODO: improve it to handle //, /* and * / located in strings
-     */
-	static boolean withinJavaScriptComment(final String string) {
-		// single line comment with //
-		final int lastSlashSlash = string.lastIndexOf("//");
-		if (lastSlashSlash != -1 && lastSlashSlash > string.lastIndexOf('\n')) {
-			return true;
-		}
-		
-		// multiline comment with /*
-		final int lastSlashStar = string.lastIndexOf("/*");
-		if (lastSlashStar != -1 && lastSlashStar > string.lastIndexOf("*/")) {
-			return true;
-		}
-		return false;
-	}
 } // class HTMLScanner
