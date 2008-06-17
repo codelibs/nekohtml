@@ -36,17 +36,6 @@ public class HTMLScannerTest extends TestCase {
 		assertFalse(scanner.isEncodingCompatible("UTF-16","Cp1252"));
 	}
 
-	public void testWithinJavaScriptComment() throws Exception {
-		assertTrue(HTMLScanner.withinJavaScriptComment("// foo"));
-		assertTrue(HTMLScanner.withinJavaScriptComment("var i;\n var j; // foo"));
-		assertFalse(HTMLScanner.withinJavaScriptComment("var i;\n var j; // foo\n var k;"));
-
-		assertTrue(HTMLScanner.withinJavaScriptComment("/* foo"));
-		assertTrue(HTMLScanner.withinJavaScriptComment("/* foo\nblabla"));
-		assertFalse(HTMLScanner.withinJavaScriptComment("/* foo\nblabla*/"));
-		assertFalse(HTMLScanner.withinJavaScriptComment("/* foo\nblabla*/\ndoIt()"));
-	}
-	
 	public void testEvaluateInputSource() throws Exception {
 	    String string = "<html><head><title>foo</title></head>"
 	        + "<body>"
