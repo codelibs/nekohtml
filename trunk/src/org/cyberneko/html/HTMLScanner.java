@@ -3035,7 +3035,7 @@ public class HTMLScanner
             while (true) {
                 int c = read();
 
-                if (c == -1 || (delimiter == -1 && ((c == '<' && strip) || c == '&'))) {
+                if (c == -1 || (delimiter == -1 && (c == '<' || c == '&'))) {
                     if (c != -1) {
                         fCurrentEntity.offset--;
                         fCurrentEntity.columnNumber--;
@@ -3432,9 +3432,6 @@ public class HTMLScanner
 		}
     }
 
-    /**
-     * Indicates if the buffer ends with the given string
-     */
     private boolean endsWith(final XMLStringBuffer buffer, final String string) {
 		final int l = string.length();
 		if (buffer.length < l) {
@@ -3447,7 +3444,7 @@ public class HTMLScanner
 	}
 
     /**
-     * Indicates if the end comment --> is availalbe, loading further data if needed, without to reset the buffer
+     * Indicates if the end comment --> is available, loading further data if needed, without to reset the buffer
      */
 	private boolean endCommentAvailable() throws IOException {
 		int nbCaret = 0;
