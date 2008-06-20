@@ -7,9 +7,11 @@ import java.util.List;
 
 import junit.framework.TestCase;
 
+import org.apache.xerces.util.XMLStringBuffer;
 import org.apache.xerces.xni.Augmentations;
 import org.apache.xerces.xni.QName;
 import org.apache.xerces.xni.XMLAttributes;
+import org.apache.xerces.xni.XMLString;
 import org.apache.xerces.xni.XNIException;
 import org.apache.xerces.xni.parser.XMLDocumentFilter;
 import org.apache.xerces.xni.parser.XMLInputSource;
@@ -94,4 +96,27 @@ public class HTMLScannerTest extends TestCase {
        }
 
    }
+
+	public void testReduceToContent() throws Exception {
+		XMLStringBuffer buffer = new XMLStringBuffer("<!-- hello-->");
+		
+		HTMLScanner.reduceToContent(buffer, "<!--", "-->");
+		assertEquals(" hello", buffer.toString());
+
+		buffer = new XMLStringBuffer("  \n <!-- hello-->\n");
+		HTMLScanner.reduceToContent(buffer, "<!--", "-->");
+		assertEquals(" hello", buffer.toString());
+
+		buffer = new XMLStringBuffer("hello");
+		HTMLScanner.reduceToContent(buffer, "<!--", "-->");
+		assertEquals("hello", buffer.toString());
+
+		buffer = new XMLStringBuffer("<!-- hello");
+		HTMLScanner.reduceToContent(buffer, "<!--", "-->");
+		assertEquals("<!-- hello", buffer.toString());
+
+		buffer = new XMLStringBuffer("<!--->");
+		HTMLScanner.reduceToContent(buffer, "<!--", "-->");
+		assertEquals("<!--->", buffer.toString());
+	}
 }
