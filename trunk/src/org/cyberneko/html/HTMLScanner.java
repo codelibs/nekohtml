@@ -2034,28 +2034,17 @@ public class HTMLScanner
             	{
             		waitForEndComment = endCommentAvailable();
             	}
-                else if (c == '>')  {
-                	if (endsWith(buffer, "--"))
-                	{
-                		waitForEndComment = false;
+                else if (!waitForEndComment && c == '<') {
+                	final String next = nextContent(8) + " ";
+                	if (next.length() >= 8 && "/script".equalsIgnoreCase(next.substring(0, 7))
+                			&& ('>' == next.charAt(7) || Character.isWhitespace(next.charAt(7)))) {
+                        fCurrentEntity.offset--;
+                        fCurrentEntity.columnNumber--;
+                        break;
                 	}
-                	else if (!waitForEndComment) {
-	                	final String s = buffer.toString();
-	                	final int p = s.lastIndexOf("</");
-	                	if (p != -1 && p <= s.length() - 8)
-	                	{
-	                		String closing = s.substring(p, p+8);
-	                		if ("</script".equalsIgnoreCase(closing) 
-	                				&& (p+8 == s.length() || Character.isWhitespace(s.charAt(p+8))))
-	                		{
-	                			final int tooMuchScanned = s.length() - p + 1;
-	                            fCurrentEntity.offset -= tooMuchScanned;
-	                            fCurrentEntity.columnNumber -= tooMuchScanned;
-	                            buffer.length = p;
-	                            break;
-	                		}
-                		}
-               		}
+                }
+                else if (c == '>' && endsWith(buffer, "--"))  {
+               		waitForEndComment = false;
                 }
 
                 if (c == '\r' || c == '\n') {
@@ -2089,6 +2078,42 @@ public class HTMLScanner
         }
 
         
+        /**
+         * Reads the next characters WITHOUT impacting the buffer content
+         * up to current offset.
+         * @param len the number of characters to read
+         * @return the read string (length may be smaller if EOF is encountered)
+         */
+        private String nextContent(int len) throws IOException {
+            final int originalOffset = fCurrentEntity.offset;
+            final int originalColumnNumber = fCurrentEntity.columnNumber;
+            
+            char[] buff = new char[len];
+            int nbRead = 0;
+            for (nbRead=0; nbRead<len; ++nbRead) {
+    			// read() should not clear the buffer
+    	        if (fCurrentEntity.offset == fCurrentEntity.length) {
+    	        	if (fCurrentEntity.length == fCurrentEntity.buffer.length) {
+    	        		load(fCurrentEntity.buffer.length);
+    	        	}
+    	        	else { // everything was already loaded
+    	        		break;
+    	        	}
+    	        }
+    	        
+    	        int c = read();
+    	        if (c == -1) {
+    	        	break;
+    	        }
+    	        else {
+    	        	buff[nbRead] = (char) c;
+    	        }
+    		}
+	        fCurrentEntity.offset = originalOffset;
+	        fCurrentEntity.columnNumber = originalColumnNumber;
+	        return new String(buff, 0, nbRead);
+    	}
+
 		//
         // Protected methods
         //
