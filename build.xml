@@ -318,6 +318,7 @@ public class Version {
 	</target>
 	
 	<target name="deploy-mvn" depends="jar, doc" description="Deploys a release to NekoHTML maven repository">
+		<property name="deploy-mvn.remoteRepository" value="scp://shell.sourceforge.net/home/groups/n/ne/nekohtml/htdocs/m2-repo-snapshots"/>
 		<property name="mvn.bundle.sources" value="${build.dir}/dist/nekohtml-${version}-sources.jar"/>
 		<property name="mvn.bundle.javadoc" value="${build.dir}/dist/nekohtml-${version}-javadoc.jar"/>
 		<mkdir dir="${build.dir}/dist"/>
@@ -335,6 +336,7 @@ public class Version {
 		<artifact:pom id="maven.project" file="pom.xml" />
 		<artifact:install-provider artifactId="wagon-ssh" version="1.0-beta-2"/>
 		<artifact:deploy file="${build.lib.dir}/${name}.jar">
+			<remoteRepository url="${deploy-mvn.remoteRepository}"/>
 			<pom refid="maven.project"/>
 			<attach file="${mvn.bundle.sources}" classifier="sources" /> 
 			<attach file="${mvn.bundle.javadoc}" classifier="javadoc" /> 
