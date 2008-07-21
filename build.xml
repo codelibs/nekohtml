@@ -317,8 +317,16 @@ public class Version {
 		<fail message="JUnit test failed" if="junitFailed"/>
 	</target>
 	
-	<target name="deploy-mvn" depends="jar, doc" description="Deploys a release to NekoHTML maven repository">
-		<property name="deploy-mvn.remoteRepository" value="scp://shell.sourceforge.net/home/groups/n/ne/nekohtml/htdocs/m2-repo-snapshots"/>
+	<target name="deploy-mvn" depends="mvn-bundle" description="Deploys a release to NekoHTML maven repository">
+		<artifact:install-provider artifactId="wagon-ssh" version="1.0-beta-2"/>
+		<artifact:deploy file="${build.lib.dir}/${name}.jar">
+			<pom refid="maven.project"/>
+			<attach file="${mvn.bundle.sources}" classifier="sources" /> 
+			<attach file="${mvn.bundle.javadoc}" classifier="javadoc" /> 
+		</artifact:deploy>
+	</target>
+	
+	<target name="mvn-bundle" depends="jar, doc">
 		<property name="mvn.bundle.sources" value="${build.dir}/dist/nekohtml-${version}-sources.jar"/>
 		<property name="mvn.bundle.javadoc" value="${build.dir}/dist/nekohtml-${version}-javadoc.jar"/>
 		<mkdir dir="${build.dir}/dist"/>
@@ -334,13 +342,18 @@ public class Version {
 		<typedef resource="org/apache/maven/artifact/ant/antlib.xml" uri="urn:maven-artifact-ant"
 			classpathref="maven-ant-tasks.classpath" />
 		<artifact:pom id="maven.project" file="pom.xml" />
-		<artifact:install-provider artifactId="wagon-ssh" version="1.0-beta-2"/>
-		<echo message="Deploying to ${deploy-mvn.remoteRepository}"/>
+	</target>
+
+	<target name="deploy-mvn-local" depends="mvn-bundle" description="Deploys jars to a local folder">
+		<property name="deploy-mvn-local.dir" location="${build.dir}/dist/m2-repo"/>
+		<echo message="Deploying locally to ${deploy-mvn-local.dir}"/>
+		<mkdir dir="${deploy-mvn-local.dir}"/>
 		<artifact:deploy file="${build.lib.dir}/${name}.jar">
-			<remoteRepository url="${deploy-mvn.remoteRepository}"/>
+			<remoteRepository url="file://${deploy-mvn-local.dir}"/>
 			<pom refid="maven.project"/>
 			<attach file="${mvn.bundle.sources}" classifier="sources" /> 
 			<attach file="${mvn.bundle.javadoc}" classifier="javadoc" /> 
 		</artifact:deploy>
 	</target>
+	
 </project>
