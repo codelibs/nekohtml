@@ -725,6 +725,12 @@ public class HTMLElements {
             return name.equals(o);
         } // equals(Object):boolean
 
+        /**
+         * Provides a simple representation to make debugging easier
+         */
+        public String toString() {
+        	return super.toString() + "(name=" + name + ")";
+        }
     } // class Element
 
     /** Unsynchronized list of elements. */

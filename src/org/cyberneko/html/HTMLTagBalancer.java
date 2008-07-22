@@ -601,6 +601,17 @@ public class HTMLTagBalancer
                 }
             }
         }
+        // TODO: investigate if only table is special here
+        // table closes all opened inline elements
+        else if (element.code == HTMLElements.TABLE) {
+            for (int i=fElementStack.top-1; i >= 0; i--) {
+                final Info info = fElementStack.data[i];
+                if (!info.element.isInline()) {
+                    break;
+                }
+                endElement(info.qname, synthesizedAugs());
+            }
+        }
 
         // call handler
         fSeenRootElement = true;
@@ -1156,6 +1167,12 @@ public class HTMLTagBalancer
             }
         } // <init>(HTMLElements.Element,QName,XMLAttributes)
 
+        /**
+         * Simple representation to make debugging easier
+         */
+        public String toString() {
+        	return super.toString() + qname;
+        }
     } // class Info
 
     /** Unsynchronized stack of element information. */
@@ -1194,6 +1211,21 @@ public class HTMLTagBalancer
         public Info pop() {
             return data[--top];
         } // pop():Info
+        
+        /**
+         * Simple representation to make debugging easier
+         */
+        public String toString() {
+        	final StringBuffer sb = new StringBuffer("InfoStack(");
+        	for (int i=top-1; i>=0; --i) {
+        		sb.append(data[i]);
+        		if (i != 0)
+        			sb.append(", ");
+        	}
+        	sb.append(")");
+        	return sb.toString();
+        }
+
 
     } // class InfoStack
 
