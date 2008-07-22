@@ -228,10 +228,10 @@ public class Version {
 
  <target name='x-minimal'>
  	<unzip dest='${build.classes.dir}' src='${lib.dir}/xerces-${xerces.version}/xercesImpl-${xerces.version}.jar' />
- 	<classfileset id='minimal.classes' 
- 				  dir="${build.classes.dir}" includes='org/apache/**' 
- 				  rootclass='org.cyberneko.html.HTMLConfiguration' 
- 	/>
+ 	<classfileset id='minimal.classes' dir="${build.classes.dir}" includes='org/apache/**'>
+ 		<root classname="org.cyberneko.html.HTMLConfiguration"/> 
+ 		<root classname="org.cyberneko.html.parsers.DOMFragmentParser"/> 
+ 	</classfileset>
  	<mkdir dir='${build.lib.dir}' />
  	<jar destfile='${build.lib.dir}/xercesMinimal.jar'>
  		<fileset refid='minimal.classes' />
