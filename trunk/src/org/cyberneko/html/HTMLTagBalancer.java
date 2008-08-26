@@ -556,10 +556,11 @@ public class HTMLTagBalancer
         }
 
         // close previous elements
-        // all elements close a <script> and an unknown element
-        if (fElementStack.top > 1 
-        		&& (fElementStack.peek().element.code == HTMLElements.SCRIPT
-        				|| fElementStack.peek().element == HTMLElements.NO_SUCH_ELEMENT)) {
+        // all elements close a <script>
+        // in head, no element has children
+        if ((fElementStack.top > 1 
+        		&& (fElementStack.peek().element.code == HTMLElements.SCRIPT))
+        		|| fElementStack.top > 2 && fElementStack.data[fElementStack.top-2].element.code == HTMLElements.HEAD) {
             final Info info = fElementStack.pop();
             if (fDocumentHandler != null) {
                 callEndElement(info.qname, synthesizedAugs());
@@ -646,9 +647,9 @@ public class HTMLTagBalancer
     public void emptyElement(final QName element, XMLAttributes attrs, Augmentations augs)
         throws XNIException {
         startElement(element, attrs, augs);
-        // browser ignore the closing indication for non empty tags like <form .../>
+        // browser ignore the closing indication for non empty tags like <form .../> but not for unknown element
         final HTMLElements.Element elem = getElement(element.rawname);
-        if (elem.isEmpty()) {
+        if (elem.isEmpty() || elem.code == HTMLElements.UNKNOWN) {
         	endElement(element, augs);
         }
     } // emptyElement(QName,XMLAttributes,Augmentations)
