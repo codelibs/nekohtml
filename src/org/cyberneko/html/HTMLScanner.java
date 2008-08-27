@@ -2326,14 +2326,14 @@ public class HTMLScanner
                 while (true) {
                     int c = read();
                     if (c == '\r' || c == '\n') {
-                        fCurrentEntity.lineNumber++;
-                        fCurrentEntity.columnNumber = 1;
                         if (c == '\r') {
                             c = read();
                             if (c != '\n') {
                                 fCurrentEntity.offset--;
                             }
                         }
+                        fCurrentEntity.lineNumber++;
+                        fCurrentEntity.columnNumber = 1;
                         continue;
                     }
                     if (c == -1) {
@@ -2363,14 +2363,14 @@ public class HTMLScanner
                     }
                     else if (c == '\r' || c == '\n') {
                         fStringBuffer.append('\n');
-                        fCurrentEntity.lineNumber++;
-                        fCurrentEntity.columnNumber = 1;
                         if (c == '\r') {
                             c = read();
                             if (c != '\n') {
                                 fCurrentEntity.offset--;
                             }
                         }
+                        fCurrentEntity.lineNumber++;
+                        fCurrentEntity.columnNumber = 1;
                         continue;
                     }
                     else if (c == -1) {
@@ -2747,8 +2747,6 @@ public class HTMLScanner
                         fNonNormAttr.append((char)c);
                     }
                     else if (c == '\r' || c == '\n') {
-                        fCurrentEntity.lineNumber++;
-                        fCurrentEntity.columnNumber = 0;
                         if (c == '\r') {
                             int c2 = read();
                             if (c2 != '\n') {
@@ -2763,6 +2761,8 @@ public class HTMLScanner
                         if (acceptSpace) {
 	                        fStringBuffer.append(fNormalizeAttributes ? ' ' : '\n');
 	                    }
+                        fCurrentEntity.lineNumber++;
+                        fCurrentEntity.columnNumber = 1;
                         fNonNormAttr.append((char)c);
                     }
                     else if (c != quote) {
