@@ -1486,6 +1486,7 @@ public class HTMLScanner
             }
             if (c0 != c1) {
                 fCurrentEntity.offset -= i + 1;
+                fCurrentEntity.columnNumber -= i + 1;
                 return false;
             }
         }
