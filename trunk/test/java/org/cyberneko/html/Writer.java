@@ -53,6 +53,37 @@ public class Writer
     /** String buffer for collecting text content. */
     private final XMLStringBuffer fStringBuffer = new XMLStringBuffer();
 
+    /** Are we currently in the middle of a block of characters? */
+    private boolean fInCharacters = false;
+
+    /**
+     * Beginning line number of the current block of characters (which may be
+     * reported in several characters chunks).  Will be -1 if the parser
+     * isn't producing HTML augmentations.
+     */
+    private int fCharactersBeginLine = -1;
+
+    /**
+     * Beginning column number of the current block of characters (which may be
+     * reported in several characters chunks).  Will be -1 if the parser
+     * isn't producing HTML augmentations.
+     */
+    private int fCharactersBeginColumn = -1;
+
+    /**
+     * Ending line number of the current block of characters (which may be
+     * reported in several characters chunks).  Will be -1 if the parser
+     * isn't producing HTML augmentations.
+     */
+    private int fCharactersEndLine = -1;
+
+    /**
+     * Ending column number of the current block of characters (which may be
+     * reported in several characters chunks).  Will be -1 if the parser
+     * isn't producing HTML augmentations.
+     */
+    private int fCharactersEndColumn = -1;
+
     //
     // Constructors
     //
@@ -110,6 +141,7 @@ public class Writer
     /** XML declaration. */
     public void xmlDecl(String version, String encoding, String standalone,
                         Augmentations augs) throws XNIException {
+        doAugs(augs);
         if (version!=null) {
             out.print("xversion ");
             out.println(version);
@@ -128,6 +160,7 @@ public class Writer
     /** Doctype declaration. */
     public void doctypeDecl(String root, String pubid, String sysid, Augmentations augs) throws XNIException {
         chars();
+        doAugs(augs);
         out.print('!');
         if (root != null) {
             out.print(root);
@@ -149,6 +182,7 @@ public class Writer
     /** Processing instruction. */
     public void processingInstruction(String target, XMLString data, Augmentations augs) throws XNIException {
         chars();
+        doAugs(augs);
         out.print('?');
         out.print(target);
         if (data != null && data.length > 0) {
@@ -162,6 +196,7 @@ public class Writer
     /** Comment. */
     public void comment(XMLString text, Augmentations augs) throws XNIException {
         chars();
+        doAugs(augs);
         out.print('#');
         print(text.toString());
         out.println();
@@ -171,6 +206,7 @@ public class Writer
     /** Start element. */
     public void startElement(QName element, XMLAttributes attrs, Augmentations augs) throws XNIException {
         chars();
+        doAugs(augs);
         out.print('(');
         out.print(element.rawname);
         int acount = attrs != null ? attrs.getLength() : 0;
@@ -200,6 +236,7 @@ public class Writer
     /** End element. */
     public void endElement(QName element, Augmentations augs) throws XNIException {
         chars();
+        doAugs(augs);
         out.print(')');
         out.print(element.rawname);
         out.println();
@@ -214,6 +251,11 @@ public class Writer
 
     /** Characters. */
     public void characters(XMLString text, Augmentations augs) throws XNIException {
+        storeCharactersEnd(augs);
+        if(!fInCharacters) {
+            storeCharactersStart(augs);
+        }
+        fInCharacters = true;
         fStringBuffer.append(text);
     } // characters(XMLString,Augmentations)
 
@@ -228,9 +270,11 @@ public class Writer
 
     /** Prints collected characters. */
     protected void chars() {
+        fInCharacters = false;
         if (fStringBuffer.length == 0) {
             return;
         }
+        doCharactersAugs();
         out.print('"');
         print(fStringBuffer.toString());
         out.println();
@@ -266,6 +310,78 @@ public class Writer
             }
         }
     } // print(String)
+
+    /**
+     * Print out the HTML augmentations for the given augs.  Prints nothing if
+     * there are no HTML augmentations available.
+     */
+    protected void doAugs(Augmentations augs) {
+        HTMLEventInfo evInfo = (augs == null) ? null : (HTMLEventInfo)augs
+                .getItem("http://cyberneko.org/html/features/augmentations");
+        if(evInfo != null) {
+            if(evInfo.isSynthesized()) {
+                out.print("[synth]");
+            }
+            else {
+                out.print('[');
+                out.print(evInfo.getBeginLineNumber());
+                out.print(',');
+                out.print(evInfo.getBeginColumnNumber());
+                out.print(';');
+                out.print(evInfo.getEndLineNumber());
+                out.print(',');
+                out.print(evInfo.getEndColumnNumber());
+                out.print(']');
+            }
+        }
+    } // doAugs(Augmentations)
+
+    /**
+     * Store the HTML augmentations for the given augs in temporary variables
+     * for the start of the current block of characters.  Does nothing if there
+     * are no HTML augmentations available.
+     */
+    protected void storeCharactersStart(Augmentations augs) {
+        HTMLEventInfo evInfo = (augs == null) ? null : (HTMLEventInfo)augs
+                .getItem("http://cyberneko.org/html/features/augmentations");
+        if(evInfo != null) {
+            fCharactersBeginLine = evInfo.getBeginLineNumber();
+            fCharactersBeginColumn = evInfo.getBeginColumnNumber();
+        }
+    } // storeCharactersStart(Augmentations)
+
+    /**
+     * Store the HTML augmentations for the given augs in temporary variables
+     * for the end of the current block of characters.  Does nothing if there
+     * are no HTML augmentations available.
+     */
+    protected void storeCharactersEnd(Augmentations augs) {
+        HTMLEventInfo evInfo = (augs == null) ? null : (HTMLEventInfo)augs
+                .getItem("http://cyberneko.org/html/features/augmentations");
+        if(evInfo != null) {
+            fCharactersEndLine = evInfo.getEndLineNumber();
+            fCharactersEndColumn = evInfo.getEndColumnNumber();
+        }
+    } // storeCharactersEnd(Augmentations)
+
+    /**
+     * Print out the HTML augmentation values for the current block of
+     * characters.  Prints nothing if there were no HTML augmentations
+     * available.
+     */
+    protected void doCharactersAugs() {
+        if(fCharactersBeginLine >= 0) {
+            out.print('[');
+            out.print(fCharactersBeginLine);
+            out.print(',');
+            out.print(fCharactersBeginColumn);
+            out.print(';');
+            out.print(fCharactersEndLine);
+            out.print(',');
+            out.print(fCharactersEndColumn);
+            out.print(']');
+        }
+    } // doCharactersAugs()
 
     //
     // Protected static methods
