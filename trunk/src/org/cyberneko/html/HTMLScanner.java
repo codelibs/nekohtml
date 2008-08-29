@@ -69,6 +69,7 @@ import org.cyberneko.html.xercesbridge.XercesBridge;
  * <li>http://cyberneko.org/html/features/scanner/cdata-sections
  * <li>http://cyberneko.org/html/features/override-doctype
  * <li>http://cyberneko.org/html/features/insert-doctype
+ * <li>http://cyberneko.org/html/features/parse-noscript-content
  * </ul>
  * <p>
  * This component recognizes the following properties:
@@ -197,6 +198,9 @@ public class HTMLScanner
 
     /** Insert document type declaration. */
     public static final String INSERT_DOCTYPE = "http://cyberneko.org/html/features/insert-doctype";
+    
+    /** Parse &lt;noscript&gt;...&lt;/noscript&gt; content */
+    public static final String PARSE_NOSCRIPT_CONTENT = "http://cyberneko.org/html/features/parse-noscript-content";
 
     /** Normalize attribute values. */
     protected static final String NORMALIZE_ATTRIBUTES = "http://cyberneko.org/html/features/scanner/normalize-attrs";
@@ -218,6 +222,7 @@ public class HTMLScanner
         OVERRIDE_DOCTYPE,
         INSERT_DOCTYPE,
         NORMALIZE_ATTRIBUTES,
+        PARSE_NOSCRIPT_CONTENT,
     };
 
     /** Recognized features defaults. */
@@ -237,6 +242,7 @@ public class HTMLScanner
         Boolean.FALSE,
         Boolean.FALSE,
         Boolean.FALSE,
+        Boolean.TRUE,
     };
 
     // properties
@@ -382,6 +388,9 @@ public class HTMLScanner
 
     /** Normalize attribute values. */
     protected boolean fNormalizeAttributes;
+    
+    /** Parse noscript content. */
+    protected boolean fParseNoScriptContent;
 
     // properties
 
@@ -723,6 +732,7 @@ public class HTMLScanner
         fOverrideDoctype = manager.getFeature(OVERRIDE_DOCTYPE);
         fInsertDoctype = manager.getFeature(INSERT_DOCTYPE);
         fNormalizeAttributes = manager.getFeature(NORMALIZE_ATTRIBUTES);
+        fParseNoScriptContent = manager.getFeature(PARSE_NOSCRIPT_CONTENT);
 
         // get properties
         fNamesElems = getNamesValue(String.valueOf(manager.getProperty(NAMES_ELEMS)));
@@ -770,6 +780,9 @@ public class HTMLScanner
         }
         else if (featureId.equals(IGNORE_SPECIFIED_CHARSET)) { 
             fIgnoreSpecifiedCharset = state; 
+        }
+        else if (featureId.equals(PARSE_NOSCRIPT_CONTENT)) { 
+            fParseNoScriptContent = state; 
         }
 
     } // setFeature(String,boolean)
@@ -1960,6 +1973,9 @@ public class HTMLScanner
                                 if ("script".equalsIgnoreCase(ename)) {
                                 	scanScriptContent();
                                 }
+                                else if (!fParseNoScriptContent && "noscript".equalsIgnoreCase(ename)) {
+                                	scanNoScriptContent();
+                                }
                                 else if (ename != null && !fSingleBoolean[0] 
                                     && HTMLElements.getElement(ename).isSpecial() 
                                     && (!ename.equalsIgnoreCase("TITLE") || isEnded(ename))) {
@@ -2022,6 +2038,47 @@ public class HTMLScanner
             return true;
         } // scan(boolean):boolean
 
+        /**
+         * Scans the content of <noscript>: it doesn't get parsed but is considered as plain text
+         * when feature {@link HTMLScanner#PARSE_NOSCRIPT_CONTENT} is set to false.
+         * @throws IOException
+         */
+        private void scanNoScriptContent() throws IOException {
+        	final XMLStringBuffer buffer = new XMLStringBuffer();
+        	
+            while (true) {
+                int c = read();
+                if (c == -1) {
+                    break;
+                }
+                if (c == '<') {
+                	final String next = nextContent(10) + " ";
+                	if (next.length() >= 10 && "/noscript".equalsIgnoreCase(next.substring(0, 9))
+            			&& ('>' == next.charAt(9) || Character.isWhitespace(next.charAt(9)))) {
+	                    fCurrentEntity.offset--;
+	                    fCurrentEntity.columnNumber--;
+	                    break;
+                	}
+            	}
+            	if (c == '\r' || c == '\n') {
+                    fCurrentEntity.offset--;
+                    fCurrentEntity.columnNumber--;
+                    int newlines = skipNewlines();
+                    for (int i = 0; i < newlines; i++) {
+                        buffer.append('\n');
+                    }
+                }
+                else {
+                    buffer.append((char)c);
+                }
+            }
+            if (buffer.length > 0 && fDocumentHandler != null) {
+                fEndLineNumber = fCurrentEntity.lineNumber;
+                fEndColumnNumber = fCurrentEntity.columnNumber;
+                fDocumentHandler.characters(buffer, locationAugs());
+            }
+        }
+        
         private void scanScriptContent() throws IOException {
 
         	final XMLStringBuffer buffer = new XMLStringBuffer();
