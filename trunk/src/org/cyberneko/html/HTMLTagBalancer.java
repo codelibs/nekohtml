@@ -831,6 +831,7 @@ public class HTMLTagBalancer
     /** End element. */
     public void endElement(final QName element, final Augmentations augs) throws XNIException {
         // is there anything to do?
+System.out.println("end: " + element.localpart);
         if (fSeenRootElementEnd) {
         	notifyDiscardedEndElement(element, augs);
             return;
@@ -869,12 +870,12 @@ public class HTMLTagBalancer
 
         // find unbalanced inline elements
         if (depth > 1 && elem.isInline()) {
-            int size = fElementStack.top;
+            final int size = fElementStack.top;
             fInlineStack.top = 0;
             for (int i = 0; i < depth - 1; i++) {
-                Info info = fElementStack.data[size - i - 1];
-                HTMLElements.Element pelem = info.element;
-                if (pelem.isInline()) {
+                final Info info = fElementStack.data[size - i - 1];
+                final HTMLElements.Element pelem = info.element;
+                if (pelem.isInline() || pelem.code == HTMLElements.FONT) { // TODO: investigate if only FONT
                     // NOTE: I don't have to make a copy of the info because
                     //       it will just be popped off of the element stack
                     //       as soon as we close it, anyway.
