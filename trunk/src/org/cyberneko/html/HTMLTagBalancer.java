@@ -831,7 +831,6 @@ public class HTMLTagBalancer
     /** End element. */
     public void endElement(final QName element, final Augmentations augs) throws XNIException {
         // is there anything to do?
-System.out.println("end: " + element.localpart);
         if (fSeenRootElementEnd) {
         	notifyDiscardedEndElement(element, augs);
             return;
