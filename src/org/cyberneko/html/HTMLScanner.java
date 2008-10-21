@@ -420,11 +420,17 @@ public class HTMLScanner
     /** Beginning column number. */
     protected int fBeginColumnNumber;
 
+    /** Beginning character offset in the file. */
+    protected int fBeginCharacterOffset;
+
     /** Ending line number. */
     protected int fEndLineNumber;
 
     /** Ending column number. */
     protected int fEndColumnNumber;
+
+    /** Ending character offset in the file. */
+    protected int fEndCharacterOffset;
 
     // state
 
@@ -669,7 +675,7 @@ public class HTMLScanner
     
     /** Returns the character offset. */
     public int getCharacterOffset() {
-		return fCurrentEntity != null ? fCurrentEntity.charOffset : -1; 
+		return fCurrentEntity != null ? fCurrentEntity.characterOffset : -1; 
     } // getCharacterOffset():int
 
     //
@@ -823,8 +829,10 @@ public class HTMLScanner
 
         fBeginLineNumber = 1;
         fBeginColumnNumber = 1;
+        fBeginCharacterOffset = 0;
         fEndLineNumber = fBeginLineNumber;
         fEndColumnNumber = fBeginColumnNumber;
+        fEndCharacterOffset = fBeginCharacterOffset;
 
         // reset encoding information
         fIANAEncoding = fDefaultIANAEncoding;
@@ -1132,6 +1140,7 @@ public class HTMLScanner
             }
         }
         char c = fCurrentEntity.buffer[fCurrentEntity.offset++];
+        fCurrentEntity.characterOffset++;
         fCurrentEntity.columnNumber++;
         if (DEBUG_BUFFER) { 
             System.out.print(")read: ");
@@ -1239,6 +1248,7 @@ public class HTMLScanner
         while ((c = read()) != -1) {
             if (c == '<') {
                 fCurrentEntity.offset--;
+                fCurrentEntity.characterOffset--;
                 fCurrentEntity.columnNumber--;
                 break;
             }
@@ -1258,6 +1268,7 @@ public class HTMLScanner
             }
             fEndLineNumber = fCurrentEntity.lineNumber;
             fEndColumnNumber = fCurrentEntity.columnNumber;
+            fEndCharacterOffset = fCurrentEntity.characterOffset;
             fDocumentHandler.doctypeDecl(root, pubid, sysid, locationAugs());
         }
 
@@ -1275,6 +1286,7 @@ public class HTMLScanner
                 }
                 if (c == '\r' || c == '\n') {
                     fCurrentEntity.offset--;
+                    fCurrentEntity.characterOffset--;
                     fCurrentEntity.columnNumber--;
                     // NOTE: This collapses newlines to a single space.
                     //       [Q] Is this the right thing to do here? -Ac
@@ -1283,6 +1295,7 @@ public class HTMLScanner
                 }
                 else if (c == '<') {
                     fCurrentEntity.offset--;
+                    fCurrentEntity.characterOffset--;
                     fCurrentEntity.columnNumber--;
                     break;
                 }
@@ -1300,6 +1313,7 @@ public class HTMLScanner
         }
         else {
             fCurrentEntity.offset--;
+            fCurrentEntity.characterOffset--;
             fCurrentEntity.columnNumber--;
         }
         return null;
@@ -1331,6 +1345,7 @@ public class HTMLScanner
                     break;
                 }
                 fCurrentEntity.offset++;
+                fCurrentEntity.characterOffset++;
                 fCurrentEntity.columnNumber++;
             }
             if (fCurrentEntity.offset == fCurrentEntity.length) {
@@ -1376,6 +1391,7 @@ public class HTMLScanner
                 if (content && fDocumentHandler != null && fElementCount >= fElementDepth) {
                     fEndLineNumber = fCurrentEntity.lineNumber;
                     fEndColumnNumber = fCurrentEntity.columnNumber;
+                    fEndCharacterOffset = fCurrentEntity.characterOffset;
                     fDocumentHandler.characters(str, locationAugs());
                 }
                 return -1;
@@ -1385,10 +1401,12 @@ public class HTMLScanner
                     fErrorReporter.reportWarning("HTML1004", null);
                 }
                 fCurrentEntity.offset--;
+                fCurrentEntity.characterOffset--;
                 fCurrentEntity.columnNumber--;
                 if (content && fDocumentHandler != null && fElementCount >= fElementDepth) {
                     fEndLineNumber = fCurrentEntity.lineNumber;
                     fEndColumnNumber = fCurrentEntity.columnNumber;
+                    fEndCharacterOffset = fCurrentEntity.characterOffset;
                     fDocumentHandler.characters(str, locationAugs());
                 }
                 return -1;
@@ -1399,6 +1417,7 @@ public class HTMLScanner
             if (content && fDocumentHandler != null && fElementCount >= fElementDepth) {
                 fEndLineNumber = fCurrentEntity.lineNumber;
                 fEndColumnNumber = fCurrentEntity.columnNumber;
+                fEndCharacterOffset = fCurrentEntity.characterOffset;
                 fDocumentHandler.characters(str, locationAugs());
             }
             return -1;
@@ -1421,6 +1440,7 @@ public class HTMLScanner
                 if (content && fDocumentHandler != null && fElementCount >= fElementDepth) {
                     fEndLineNumber = fCurrentEntity.lineNumber;
                     fEndColumnNumber = fCurrentEntity.columnNumber;
+                    fEndCharacterOffset = fCurrentEntity.characterOffset;
                     if (fNotifyCharRefs) {
                         XMLResourceIdentifier id = resourceId();
                         String encoding = null;
@@ -1441,6 +1461,7 @@ public class HTMLScanner
                 if (content && fDocumentHandler != null && fElementCount >= fElementDepth) {
                     fEndLineNumber = fCurrentEntity.lineNumber;
                     fEndColumnNumber = fCurrentEntity.columnNumber;
+                    fEndCharacterOffset = fCurrentEntity.characterOffset;
                     fDocumentHandler.characters(str, locationAugs());
                 }
             }
@@ -1455,6 +1476,7 @@ public class HTMLScanner
             if (content && fDocumentHandler != null && fElementCount >= fElementDepth) {
                 fEndLineNumber = fCurrentEntity.lineNumber;
                 fEndColumnNumber = fCurrentEntity.columnNumber;
+                fEndCharacterOffset = fCurrentEntity.characterOffset;
                 fDocumentHandler.characters(str, locationAugs());
             }
             return -1;
@@ -1462,6 +1484,7 @@ public class HTMLScanner
         if (content && fDocumentHandler != null && fElementCount >= fElementDepth) {
             fEndLineNumber = fCurrentEntity.lineNumber;
             fEndColumnNumber = fCurrentEntity.columnNumber;
+            fEndCharacterOffset = fCurrentEntity.characterOffset;
             boolean notify = fNotifyHtmlBuiltinRefs || (fNotifyXmlBuiltinRefs && builtinXmlRef(name));
             if (notify) {
                 XMLResourceIdentifier id = resourceId();
@@ -1492,6 +1515,7 @@ public class HTMLScanner
             }
             char c0 = s.charAt(i);
             char c1 = fCurrentEntity.buffer[fCurrentEntity.offset++];
+            fCurrentEntity.characterOffset++;
             fCurrentEntity.columnNumber++;
             if (!caseSensitive) {
                 c0 = Character.toUpperCase(c0);
@@ -1499,6 +1523,7 @@ public class HTMLScanner
             }
             if (c0 != c1) {
                 fCurrentEntity.offset -= i + 1;
+                fCurrentEntity.characterOffset -= i + 1;
                 fCurrentEntity.columnNumber -= i + 1;
                 return false;
             }
@@ -1523,6 +1548,7 @@ public class HTMLScanner
             }
             while (fCurrentEntity.offset < fCurrentEntity.length) {
                 char c = fCurrentEntity.buffer[fCurrentEntity.offset++];
+                fCurrentEntity.characterOffset++;
                 fCurrentEntity.columnNumber++;
                 if (balance && c == '<') {
                     depth++;
@@ -1540,6 +1566,7 @@ public class HTMLScanner
                         }
                     }
                     c = fCurrentEntity.buffer[fCurrentEntity.offset++];
+                    fCurrentEntity.characterOffset++;
                     fCurrentEntity.columnNumber++;
                     if (c == '>') {
                         slashgt = true;
@@ -1550,6 +1577,7 @@ public class HTMLScanner
                     }
                     else {
                         fCurrentEntity.offset--;
+                        fCurrentEntity.characterOffset--;
                         fCurrentEntity.columnNumber--;
                     }
                 }
@@ -1591,6 +1619,7 @@ public class HTMLScanner
                 continue;
             }
             fCurrentEntity.offset++;
+            fCurrentEntity.characterOffset++;
             fCurrentEntity.columnNumber++;
         }
         if (DEBUG_BUFFER) {
@@ -1631,6 +1660,7 @@ public class HTMLScanner
         if (c == '\n' || c == '\r') {
             do {
                 c = fCurrentEntity.buffer[fCurrentEntity.offset++];
+                fCurrentEntity.characterOffset++;
                 if (c == '\r') {
                     newlines++;
                     if (fCurrentEntity.offset == fCurrentEntity.length) {
@@ -1642,6 +1672,7 @@ public class HTMLScanner
                     }
                     if (fCurrentEntity.buffer[fCurrentEntity.offset] == '\n') {
                         fCurrentEntity.offset++;
+                        fCurrentEntity.characterOffset++;
                         offset++;
                     }
                 }
@@ -1657,6 +1688,7 @@ public class HTMLScanner
                 }
                 else {
                     fCurrentEntity.offset--;
+                    fCurrentEntity.characterOffset--;
                     break;
                 }
             } while (newlines < maxlines &&
@@ -1681,7 +1713,8 @@ public class HTMLScanner
         HTMLAugmentations augs = null;
         if (fAugmentations) {
             fLocationItem.setValues(fBeginLineNumber, fBeginColumnNumber, 
-                                    fEndLineNumber, fEndColumnNumber);
+                                    fBeginCharacterOffset, fEndLineNumber,
+                                    fEndColumnNumber, fEndCharacterOffset);
             augs = fInfosetAugs;
             augs.removeAllItems();
             augs.putItem(AUGMENTATIONS, fLocationItem);
@@ -1844,8 +1877,8 @@ public class HTMLScanner
         /** Column number. */
         public int columnNumber = 1;
         
-        /** Character offset. */
-        public int charOffset = -1;
+        /** Character offset in the file. */
+        public int characterOffset = 0;
 
         // buffer
 
@@ -1910,6 +1943,7 @@ public class HTMLScanner
                         case STATE_CONTENT: {
                             fBeginLineNumber = fCurrentEntity.lineNumber;
                             fBeginColumnNumber = fCurrentEntity.columnNumber;
+                            fBeginCharacterOffset = fCurrentEntity.characterOffset;
                             int c = read();
                             if (c == '<') {
                                 setScannerState(STATE_MARKUP_BRACKET);
@@ -1923,6 +1957,7 @@ public class HTMLScanner
                             }
                             else {
                                 fCurrentEntity.offset--;
+                                fCurrentEntity.characterOffset--;
                                 fCurrentEntity.columnNumber--;
                                 scanCharacters();
                             }
@@ -1966,6 +2001,7 @@ public class HTMLScanner
                             }
                             else {
                                 fCurrentEntity.offset--;
+                                fCurrentEntity.characterOffset--;
                                 fCurrentEntity.columnNumber--;
                                 fElementCount++;
                                 fSingleBoolean[0] = false;
@@ -2016,6 +2052,7 @@ public class HTMLScanner
                                 }
                                 fEndLineNumber = fCurrentEntity.lineNumber;
                                 fEndColumnNumber = fCurrentEntity.columnNumber;
+                                fEndCharacterOffset = fCurrentEntity.characterOffset;
                                 fDocumentHandler.endDocument(locationAugs());
                             }
                             return false;
@@ -2056,12 +2093,14 @@ public class HTMLScanner
                 	if (next.length() >= 10 && "/noscript".equalsIgnoreCase(next.substring(0, 9))
             			&& ('>' == next.charAt(9) || Character.isWhitespace(next.charAt(9)))) {
 	                    fCurrentEntity.offset--;
+                            fCurrentEntity.characterOffset--;
 	                    fCurrentEntity.columnNumber--;
 	                    break;
                 	}
             	}
             	if (c == '\r' || c == '\n') {
                     fCurrentEntity.offset--;
+                    fCurrentEntity.characterOffset--;
                     fCurrentEntity.columnNumber--;
                     int newlines = skipNewlines();
                     for (int i = 0; i < newlines; i++) {
@@ -2075,6 +2114,7 @@ public class HTMLScanner
             if (buffer.length > 0 && fDocumentHandler != null) {
                 fEndLineNumber = fCurrentEntity.lineNumber;
                 fEndColumnNumber = fCurrentEntity.columnNumber;
+                fEndCharacterOffset = fCurrentEntity.characterOffset;
                 fDocumentHandler.characters(buffer, locationAugs());
             }
         }
@@ -2097,6 +2137,7 @@ public class HTMLScanner
                 	if (next.length() >= 8 && "/script".equalsIgnoreCase(next.substring(0, 7))
                 			&& ('>' == next.charAt(7) || Character.isWhitespace(next.charAt(7)))) {
                         fCurrentEntity.offset--;
+                        fCurrentEntity.characterOffset--;
                         fCurrentEntity.columnNumber--;
                         break;
                 	}
@@ -2107,6 +2148,7 @@ public class HTMLScanner
 
                 if (c == '\r' || c == '\n') {
                     fCurrentEntity.offset--;
+                    fCurrentEntity.characterOffset--;
                     fCurrentEntity.columnNumber--;
                     int newlines = skipNewlines();
                     for (int i = 0; i < newlines; i++) {
@@ -2131,6 +2173,7 @@ public class HTMLScanner
                 }
                 fEndLineNumber = fCurrentEntity.lineNumber;
                 fEndColumnNumber = fCurrentEntity.columnNumber;
+                fEndCharacterOffset = fCurrentEntity.characterOffset;
                 fDocumentHandler.characters(buffer, locationAugs());
             }
         }
@@ -2145,6 +2188,7 @@ public class HTMLScanner
         private String nextContent(int len) throws IOException {
             final int originalOffset = fCurrentEntity.offset;
             final int originalColumnNumber = fCurrentEntity.columnNumber;
+            final int originalCharacterOffset = fCurrentEntity.characterOffset;
             
             char[] buff = new char[len];
             int nbRead = 0;
@@ -2169,6 +2213,7 @@ public class HTMLScanner
     		}
 	        fCurrentEntity.offset = originalOffset;
 	        fCurrentEntity.columnNumber = originalColumnNumber;
+	        fCurrentEntity.characterOffset = originalCharacterOffset;
 	        return new String(buff, 0, nbRead);
     	}
 
@@ -2203,6 +2248,7 @@ public class HTMLScanner
                     break;
                 }
                 fCurrentEntity.offset++;
+                fCurrentEntity.characterOffset++;
                 fCurrentEntity.columnNumber++;
             }
             if (fCurrentEntity.offset > offset && 
@@ -2213,6 +2259,7 @@ public class HTMLScanner
                 }
                 fEndLineNumber = fCurrentEntity.lineNumber;
                 fEndColumnNumber = fCurrentEntity.columnNumber;
+                fEndCharacterOffset = fCurrentEntity.characterOffset;
                 fDocumentHandler.characters(fString, locationAugs());
             }
             if (DEBUG_BUFFER) {
@@ -2234,6 +2281,7 @@ public class HTMLScanner
                 if (fDocumentHandler != null && fElementCount >= fElementDepth) {
                     fEndLineNumber = fCurrentEntity.lineNumber;
                     fEndColumnNumber = fCurrentEntity.columnNumber;
+                    fEndCharacterOffset = fCurrentEntity.characterOffset;
                     if (DEBUG_CALLBACKS) {
                         System.out.println("startCDATA()");
                     }
@@ -2250,6 +2298,7 @@ public class HTMLScanner
             if (fDocumentHandler != null && fElementCount >= fElementDepth) {
                 fEndLineNumber = fCurrentEntity.lineNumber;
                 fEndColumnNumber = fCurrentEntity.columnNumber;
+                fEndCharacterOffset = fCurrentEntity.characterOffset;
                 if (fCDATASections) {
                     if (DEBUG_CALLBACKS) {
                         System.out.println("characters("+fStringBuffer+")");
@@ -2292,6 +2341,7 @@ public class HTMLScanner
                 }
                 fEndLineNumber = fCurrentEntity.lineNumber;
                 fEndColumnNumber = fCurrentEntity.columnNumber;
+                fEndCharacterOffset = fCurrentEntity.characterOffset;
                 fDocumentHandler.comment(fStringBuffer, locationAugs());
             }
             if (DEBUG_BUFFER) {
@@ -2330,6 +2380,7 @@ public class HTMLScanner
                         buffer.append(cend);
                         //if (c != -1) {
                         fCurrentEntity.offset--;
+                        fCurrentEntity.characterOffset--;
                         fCurrentEntity.columnNumber--;
                         //}
                         continue;
@@ -2339,6 +2390,7 @@ public class HTMLScanner
                             buffer.append(cend);
                         }
                         fCurrentEntity.offset--;
+                        fCurrentEntity.characterOffset--;
                         fCurrentEntity.columnNumber--;
                         continue;
                     }
@@ -2349,6 +2401,7 @@ public class HTMLScanner
                 }
                 else if (c == '\n' || c == '\r') {
                     fCurrentEntity.offset--;
+                    fCurrentEntity.characterOffset--;
                     fCurrentEntity.columnNumber--;
                     int newlines = skipNewlines();
                     for (int i = 0; i < newlines; i++) {
@@ -2388,6 +2441,7 @@ public class HTMLScanner
                             c = read();
                             if (c != '\n') {
                                 fCurrentEntity.offset--;
+                                fCurrentEntity.characterOffset--;
                             }
                         }
                         fCurrentEntity.lineNumber++;
@@ -2399,6 +2453,7 @@ public class HTMLScanner
                     }
                     if (c != ' ' && c != '\t') {
                         fCurrentEntity.offset--;
+                        fCurrentEntity.characterOffset--;
                         fCurrentEntity.columnNumber--;
                         break;
                     }
@@ -2415,6 +2470,7 @@ public class HTMLScanner
                         else {
                             fStringBuffer.append(c0);
                             fCurrentEntity.offset--;
+                            fCurrentEntity.characterOffset--;
                             fCurrentEntity.columnNumber--;
                             continue;
                         }
@@ -2425,6 +2481,7 @@ public class HTMLScanner
                             c = read();
                             if (c != '\n') {
                                 fCurrentEntity.offset--;
+                                fCurrentEntity.characterOffset--;
                             }
                         }
                         fCurrentEntity.lineNumber++;
@@ -2442,6 +2499,7 @@ public class HTMLScanner
                 if (fDocumentHandler != null) {
                     fEndLineNumber = fCurrentEntity.lineNumber;
                     fEndColumnNumber = fCurrentEntity.columnNumber;
+                    fEndCharacterOffset = fCurrentEntity.characterOffset;
                     fDocumentHandler.processingInstruction(target, data, locationAugs());
                 }
             }
@@ -2450,6 +2508,7 @@ public class HTMLScanner
             else {
                 int beginLineNumber = fBeginLineNumber;
                 int beginColumnNumber = fBeginColumnNumber;
+                int beginCharacterOffset = fBeginCharacterOffset;
                 fAttributes.removeAllAttributes();
                 int aindex = 0;
                 while (scanPseudoAttribute(fAttributes)) {
@@ -2465,8 +2524,10 @@ public class HTMLScanner
 
                     fBeginLineNumber = beginLineNumber;
                     fBeginColumnNumber = beginColumnNumber;
+                    fBeginCharacterOffset = beginCharacterOffset;
                     fEndLineNumber = fCurrentEntity.lineNumber;
                     fEndColumnNumber = fCurrentEntity.columnNumber;
+                    fEndCharacterOffset = fCurrentEntity.characterOffset;
                     fDocumentHandler.xmlDecl(version, encoding, standalone,
                                              locationAugs());
                 }
@@ -2507,11 +2568,13 @@ public class HTMLScanner
             fAttributes.removeAllAttributes();
             int beginLineNumber = fBeginLineNumber;
             int beginColumnNumber = fBeginColumnNumber;
+            int beginCharacterOffset = fBeginCharacterOffset;
             while (scanAttribute(fAttributes, empty)) {
                 // do nothing
             }
             fBeginLineNumber = beginLineNumber;
             fBeginColumnNumber = beginColumnNumber;
+            fBeginCharacterOffset = beginCharacterOffset;
             if (fByteStream != null && fElementDepth == -1) {
                 if (ename.equalsIgnoreCase("META")) {
                     if (DEBUG_CHARSET) {
@@ -2559,6 +2622,7 @@ public class HTMLScanner
  				                        fCurrentEntity.offset = fCurrentEntity.length = 0;
  				                        fCurrentEntity.lineNumber = 1;
  				                        fCurrentEntity.columnNumber = 1;
+                                                        fCurrentEntity.characterOffset = 0;
                                  	}
                                  }
                             }
@@ -2596,6 +2660,7 @@ public class HTMLScanner
                 }
                 fEndLineNumber = fCurrentEntity.lineNumber;
                 fEndColumnNumber = fCurrentEntity.columnNumber;
+                fEndCharacterOffset = fCurrentEntity.characterOffset;
                 if (empty[0]) {
                     fDocumentHandler.emptyElement(fQName, fAttributes, locationAugs());
                 }
@@ -2646,6 +2711,7 @@ public class HTMLScanner
             boolean skippedSpaces = skipSpaces();
             fBeginLineNumber = fCurrentEntity.lineNumber;
             fBeginColumnNumber = fCurrentEntity.columnNumber;
+            fBeginCharacterOffset = fCurrentEntity.characterOffset;
             int c = read();
             if (c == -1) {
                 if (fReportErrors) {
@@ -2657,6 +2723,7 @@ public class HTMLScanner
                 return false;
             }
             fCurrentEntity.offset--;
+            fCurrentEntity.characterOffset--;
             fCurrentEntity.columnNumber--;
             String aname = scanName();
             if (aname == null) {
@@ -2687,6 +2754,7 @@ public class HTMLScanner
                 }
                 if (c == '/') {
                     fCurrentEntity.offset--;
+                    fCurrentEntity.characterOffset--;
                     fCurrentEntity.columnNumber--;
                     empty[0] = skipMarkup(false);
                 }
@@ -2732,6 +2800,7 @@ public class HTMLScanner
                 fNonNormAttr.clear();
                 if (c != '\'' && c != '"') {
                     fCurrentEntity.offset--;
+                    fCurrentEntity.characterOffset--;
                     fCurrentEntity.columnNumber--;
                     while (true) {
                         c = read();
@@ -2739,6 +2808,7 @@ public class HTMLScanner
                         if (Character.isSpace((char)c) || c == '>') {
                             //fCharOffset--;
                             fCurrentEntity.offset--;
+                            fCurrentEntity.characterOffset--;
                             fCurrentEntity.columnNumber--;
                             break;
                         }
@@ -2809,6 +2879,7 @@ public class HTMLScanner
                             int c2 = read();
                             if (c2 != '\n') {
                                 fCurrentEntity.offset--;
+                                fCurrentEntity.characterOffset--;
                                 fCurrentEntity.columnNumber--;
                             }
                             else {
@@ -2855,6 +2926,7 @@ public class HTMLScanner
                 attributes.addAttribute(fQName, "CDATA", "");
                 attributes.setSpecified(attributes.getLength()-1, true);
                 fCurrentEntity.offset--;
+                fCurrentEntity.characterOffset--;
                 fCurrentEntity.columnNumber--;
                 if (fAugmentations) {
                     addLocationItem(attributes, attributes.getLength() - 1);
@@ -2867,9 +2939,11 @@ public class HTMLScanner
         protected void addLocationItem(XMLAttributes attributes, int index) {
             fEndLineNumber = fCurrentEntity.lineNumber;
             fEndColumnNumber = fCurrentEntity.columnNumber;
+            fEndCharacterOffset = fCurrentEntity.characterOffset;
             LocationItem locationItem = new LocationItem();
             locationItem.setValues(fBeginLineNumber, fBeginColumnNumber,
-                                   fEndLineNumber, fEndColumnNumber);
+                                   fBeginCharacterOffset, fEndLineNumber,
+                                   fEndColumnNumber, fEndCharacterOffset);
             Augmentations augs = attributes.getAugmentations(index);
             augs.putItem(AUGMENTATIONS, locationItem);
         } // addLocationItem(XMLAttributes,int)
@@ -2890,6 +2964,7 @@ public class HTMLScanner
                     }
                     fEndLineNumber = fCurrentEntity.lineNumber;
                     fEndColumnNumber = fCurrentEntity.columnNumber;
+                    fEndCharacterOffset = fCurrentEntity.characterOffset;
                     fDocumentHandler.endElement(fQName, locationAugs());
                 }
             }
@@ -2971,6 +3046,7 @@ public class HTMLScanner
                         case STATE_CONTENT: {
                             fBeginLineNumber = fCurrentEntity.lineNumber;
                             fBeginColumnNumber = fCurrentEntity.columnNumber;
+                            fBeginCharacterOffset = fCurrentEntity.characterOffset;
                             int c = read();
                             if (c == '<') {
                                 setScannerState(STATE_MARKUP_BRACKET);
@@ -2992,6 +3068,7 @@ public class HTMLScanner
                             }
                             else {
                                 fCurrentEntity.offset--;
+                                fCurrentEntity.characterOffset--;
                                 fCurrentEntity.columnNumber--;
                                 fStringBuffer.clear();
                             }
@@ -3011,6 +3088,7 @@ public class HTMLScanner
                                             if (c == '\r' || c == '\n') {
                                                 fCurrentEntity.columnNumber--;
                                                 fCurrentEntity.offset--;
+                                                fCurrentEntity.characterOffset--;
                                                 break;
                                             }
                                         } while (c != -1);
@@ -3030,6 +3108,7 @@ public class HTMLScanner
                                             if (c == '\r' || c == '\n') {
                                                 fCurrentEntity.columnNumber--;
                                                 fCurrentEntity.offset--;
+                                                fCurrentEntity.characterOffset--;
                                                 break;
                                             }
                                         } while (c != -1);
@@ -3054,6 +3133,7 @@ public class HTMLScanner
                                                 }
                                                 fEndLineNumber = fCurrentEntity.lineNumber;
                                                 fEndColumnNumber = fCurrentEntity.columnNumber;
+                                                fEndCharacterOffset = fCurrentEntity.characterOffset;
                                                 fDocumentHandler.endElement(fQName, locationAugs());
                                             }
                                             setScanner(fContentScanner);
@@ -3062,6 +3142,7 @@ public class HTMLScanner
                                         }
                                         else {
                                             fCurrentEntity.offset--;
+                                            fCurrentEntity.characterOffset--;
                                             fCurrentEntity.columnNumber--;
                                         }
                                     }
@@ -3121,6 +3202,7 @@ public class HTMLScanner
                 if (c == -1 || (delimiter == -1 && (c == '<' || c == '&'))) {
                     if (c != -1) {
                         fCurrentEntity.offset--;
+                        fCurrentEntity.characterOffset--;
                         fCurrentEntity.columnNumber--;
                     }
                     break;
@@ -3128,6 +3210,7 @@ public class HTMLScanner
                 // Patch supplied by Jonathan Baxter
                 else if (c == '\r' || c == '\n') {
                     fCurrentEntity.offset--;
+                    fCurrentEntity.characterOffset--;
                     fCurrentEntity.columnNumber--;
                     int newlines = skipNewlines();
                     for (int i = 0; i < newlines; i++) {
@@ -3150,6 +3233,7 @@ public class HTMLScanner
                         break;
                     }
                     fCurrentEntity.offset--;
+                    fCurrentEntity.characterOffset--;
                     fCurrentEntity.columnNumber--;
                 }
                 else {
@@ -3166,6 +3250,7 @@ public class HTMLScanner
                 }
                 fEndLineNumber = fCurrentEntity.lineNumber;
                 fEndColumnNumber = fCurrentEntity.columnNumber;
+                fEndCharacterOffset = fCurrentEntity.characterOffset;
                 fDocumentHandler.characters(buffer, locationAugs());
             }
             if (DEBUG_BUFFER) {
@@ -3427,23 +3512,44 @@ public class HTMLScanner
         /** Beginning column number. */
         protected int fBeginColumnNumber;
 
+        /** Beginning character offset. */
+        protected int fBeginCharacterOffset;
+
         /** Ending line number. */
         protected int fEndLineNumber;
 
         /** Ending column number. */
         protected int fEndColumnNumber;
 
+        /** Ending character offset. */
+        protected int fEndCharacterOffset;
+
         //
         // Public methods
         //
 
-        /** Sets the values of this item. */
+        /** 
+         * Sets the values of this item.
+         * @deprecated after 1.9.9. Use {@link #setValues(int, int, int, int, int, int)}. 
+         **/
         public void setValues(int beginLine, int beginColumn,
                               int endLine, int endColumn) {
+        	setValues(beginLine, beginColumn, 0, endLine, endColumn, 0);
             fBeginLineNumber = beginLine;
             fBeginColumnNumber = beginColumn;
             fEndLineNumber = endLine;
             fEndColumnNumber = endColumn;
+        } // setValues(int,int,int,int)
+
+        /** Sets the values of this item. */
+        public void setValues(int beginLine, int beginColumn, int beginOffset,
+                              int endLine, int endColumn, int endOffset) {
+            fBeginLineNumber = beginLine;
+            fBeginColumnNumber = beginColumn;
+            fBeginCharacterOffset = beginOffset;
+            fEndLineNumber = endLine;
+            fEndColumnNumber = endColumn;
+            fEndCharacterOffset = endOffset;
         } // setValues(int,int,int,int)
 
         //
@@ -3462,6 +3568,11 @@ public class HTMLScanner
             return fBeginColumnNumber;
         } // getBeginColumnNumber():int
 
+        /** Returns the character offset of the beginning of this event.*/
+        public int getBeginCharacterOffset() { 
+            return fBeginCharacterOffset;
+        } // getBeginCharacterOffset():int
+
         /** Returns the line number of the end of this event.*/
         public int getEndLineNumber() {
             return fEndLineNumber;
@@ -3471,6 +3582,11 @@ public class HTMLScanner
         public int getEndColumnNumber() {
             return fEndColumnNumber;
         } // getEndColumnNumber():int
+
+        /** Returns the character offset of the end of this event.*/
+        public int getEndCharacterOffset() { 
+            return fEndCharacterOffset;
+        } // getEndCharacterOffset():int
 
         // other information
 
@@ -3490,9 +3606,13 @@ public class HTMLScanner
             str.append(':');
             str.append(fBeginColumnNumber);
             str.append(':');
+            str.append(fBeginCharacterOffset);
+            str.append(':');
             str.append(fEndLineNumber);
             str.append(':');
             str.append(fEndColumnNumber);
+            str.append(':');
+            str.append(fEndCharacterOffset);
             return str.toString();
         } // toString():String
 
@@ -3533,6 +3653,7 @@ public class HTMLScanner
 		int nbCaret = 0;
         final int originalOffset = fCurrentEntity.offset;
         final int originalColumnNumber = fCurrentEntity.columnNumber;
+        final int originalCharacterOffset = fCurrentEntity.characterOffset;
 
 		while (true) {
 			// read() should not clear the buffer
@@ -3543,6 +3664,7 @@ public class HTMLScanner
 	        	else { // everything was already loaded
 			        fCurrentEntity.offset = originalOffset;
 			        fCurrentEntity.columnNumber = originalColumnNumber;
+			        fCurrentEntity.characterOffset = originalCharacterOffset;
 	        		return false;
 	        	}
 	        }
@@ -3551,11 +3673,13 @@ public class HTMLScanner
 	        if (c == -1) {
 		        fCurrentEntity.offset = originalOffset;
 		        fCurrentEntity.columnNumber = originalColumnNumber;
+                        fCurrentEntity.characterOffset = originalCharacterOffset;
 	        	return false;
 	        }
 	        else if (c == '>' && nbCaret >= 2) {
 		        fCurrentEntity.offset = originalOffset;
 		        fCurrentEntity.columnNumber = originalColumnNumber;
+                        fCurrentEntity.characterOffset = originalCharacterOffset;
 	        	return true;
 	        }
 	        else if (c == '-') {

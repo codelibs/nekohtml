@@ -71,6 +71,13 @@ public class Writer
     private int fCharactersBeginColumn = -1;
 
     /**
+     * Beginning character offset of the current block of characters (which may
+     * be reported in several characters chunks).  Will be -1 if the parser
+     * isn't producing HTML augmentations.
+     */
+    private int fCharactersBeginCharacterOffset = -1;
+
+    /**
      * Ending line number of the current block of characters (which may be
      * reported in several characters chunks).  Will be -1 if the parser
      * isn't producing HTML augmentations.
@@ -83,6 +90,13 @@ public class Writer
      * isn't producing HTML augmentations.
      */
     private int fCharactersEndColumn = -1;
+
+    /**
+     * Ending character offset of the current block of characters (which may be
+     * reported in several characters chunks).  Will be -1 if the parser isn't
+     * producing HTML augmentations.
+     */
+    private int fCharactersEndCharacterOffset = -1;
 
     //
     // Constructors
@@ -327,10 +341,14 @@ public class Writer
                 out.print(evInfo.getBeginLineNumber());
                 out.print(',');
                 out.print(evInfo.getBeginColumnNumber());
+                out.print(',');
+                out.print(evInfo.getBeginCharacterOffset());
                 out.print(';');
                 out.print(evInfo.getEndLineNumber());
                 out.print(',');
                 out.print(evInfo.getEndColumnNumber());
+                out.print(',');
+                out.print(evInfo.getEndCharacterOffset());
                 out.print(']');
             }
         }
@@ -347,6 +365,7 @@ public class Writer
         if(evInfo != null) {
             fCharactersBeginLine = evInfo.getBeginLineNumber();
             fCharactersBeginColumn = evInfo.getBeginColumnNumber();
+            fCharactersBeginCharacterOffset = evInfo.getBeginCharacterOffset();
         }
     } // storeCharactersStart(Augmentations)
 
@@ -361,6 +380,7 @@ public class Writer
         if(evInfo != null) {
             fCharactersEndLine = evInfo.getEndLineNumber();
             fCharactersEndColumn = evInfo.getEndColumnNumber();
+            fCharactersEndCharacterOffset = evInfo.getEndCharacterOffset();
         }
     } // storeCharactersEnd(Augmentations)
 
@@ -375,10 +395,14 @@ public class Writer
             out.print(fCharactersBeginLine);
             out.print(',');
             out.print(fCharactersBeginColumn);
+            out.print(',');
+            out.print(fCharactersBeginCharacterOffset);
             out.print(';');
             out.print(fCharactersEndLine);
             out.print(',');
             out.print(fCharactersEndColumn);
+            out.print(',');
+            out.print(fCharactersEndCharacterOffset);
             out.print(']');
         }
     } // doCharactersAugs()
