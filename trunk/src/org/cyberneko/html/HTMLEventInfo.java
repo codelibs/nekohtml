@@ -38,11 +38,17 @@ public interface HTMLEventInfo {
     /** Returns the column number of the beginning of this event.*/
     public int getBeginColumnNumber();
 
+    /** Returns the character offset of the beginning of this event.*/
+    public int getBeginCharacterOffset();
+
     /** Returns the line number of the end of this event.*/
     public int getEndLineNumber();
 
     /** Returns the column number of the end of this event.*/
     public int getEndColumnNumber();
+
+    /** Returns the character offset of the end of this event.*/
+    public int getEndCharacterOffset();
 
     // other information
 
@@ -73,6 +79,11 @@ public interface HTMLEventInfo {
             return -1;
         } // getBeginColumnNumber():int
 
+        /** Returns the character offset of the beginning of this event.*/
+        public int getBeginCharacterOffset() { 
+            return -1;
+        } // getBeginCharacterOffset():int
+
         /** Returns the line number of the end of this event.*/
         public int getEndLineNumber() {
             return -1;
@@ -82,6 +93,11 @@ public interface HTMLEventInfo {
         public int getEndColumnNumber() {
             return -1;
         } // getEndColumnNumber():int
+
+        /** Returns the character offset of the end of this event.*/
+        public int getEndCharacterOffset() { 
+            return -1;
+        } // getEndCharacterOffset():int
 
         // other information
 
