@@ -21,6 +21,7 @@ package org.cyberneko.html;
  *
  * @author Andy Clark
  * @author Ahmed Ashour
+ * @author Marc Guillemot
  *
  * @version $Id: HTMLElements.java,v 1.12 2005/02/14 07:16:59 andyc Exp $
  */
@@ -400,7 +401,7 @@ public class HTMLElements {
             // SCRIPT - - %Script;
             new Element(SCRIPT, "SCRIPT", Element.SPECIAL, new short[]{HEAD,BODY}, null),
             // SELECT - - (OPTGROUP|OPTION)+
-            new Element(SELECT, "SELECT", 0, BODY, new short[]{SELECT}),
+            new Element(SELECT, "SELECT", Element.CONTAINER, BODY, new short[]{SELECT}),
             // SMALL - - (%inline;)*
             new Element(SMALL, "SMALL", Element.INLINE, BODY, null),
             // SOUND
