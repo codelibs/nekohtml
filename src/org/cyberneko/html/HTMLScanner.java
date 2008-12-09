@@ -2185,7 +2185,7 @@ public class HTMLScanner
          * @param len the number of characters to read
          * @return the read string (length may be smaller if EOF is encountered)
          */
-        private String nextContent(int len) throws IOException {
+        protected String nextContent(int len) throws IOException {
             final int originalOffset = fCurrentEntity.offset;
             final int originalColumnNumber = fCurrentEntity.columnNumber;
             final int originalCharacterOffset = fCurrentEntity.characterOffset;
