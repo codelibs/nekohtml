@@ -167,9 +167,9 @@ public class HTMLConfiguration
     // pipeline
 
     /** Document scanner. */
-    protected final HTMLScanner fDocumentScanner = new HTMLScanner();
+    protected final HTMLScanner fDocumentScanner = createDocumentScanner();
 
-    /** HTML tag balancer. */
+	/** HTML tag balancer. */
     protected final HTMLTagBalancer fTagBalancer = new HTMLTagBalancer();
 
     /** Namespace binder. */
@@ -301,6 +301,10 @@ public class HTMLConfiguration
         }
 
     } // <init>()
+
+	protected HTMLScanner createDocumentScanner() {
+		return new HTMLScanner();
+	}
 
     //
     // Public methods
