@@ -2522,14 +2522,18 @@ public class HTMLScanner
                     String encoding = fAttributes.getValue("encoding");
                     String standalone = fAttributes.getValue("standalone");
 
-                    fBeginLineNumber = beginLineNumber;
-                    fBeginColumnNumber = beginColumnNumber;
-                    fBeginCharacterOffset = beginCharacterOffset;
-                    fEndLineNumber = fCurrentEntity.lineNumber;
-                    fEndColumnNumber = fCurrentEntity.columnNumber;
-                    fEndCharacterOffset = fCurrentEntity.characterOffset;
-                    fDocumentHandler.xmlDecl(version, encoding, standalone,
-                                             locationAugs());
+                    // if the encoding is successfully changed, the stream will be processed again
+                    // with the right encoding an we will come here again but without need to change the encoding
+                    if (!changeEncoding(encoding)) {
+	                    fBeginLineNumber = beginLineNumber;
+	                    fBeginColumnNumber = beginColumnNumber;
+	                    fBeginCharacterOffset = beginCharacterOffset;
+	                    fEndLineNumber = fCurrentEntity.lineNumber;
+	                    fEndColumnNumber = fCurrentEntity.columnNumber;
+	                    fEndCharacterOffset = fCurrentEntity.characterOffset;
+	                    fDocumentHandler.xmlDecl(version, encoding, standalone,
+	                                             locationAugs());
+                    }
                 }
             }
 
@@ -2588,54 +2592,9 @@ public class HTMLScanner
                         String content = getValue(fAttributes, "content");
                         int index1 = content != null ? content.toLowerCase().indexOf("charset=") : -1;
                         if (index1 != -1 && !fIgnoreSpecifiedCharset) {
-                            int index2 = content.indexOf(';', index1);
-                            String charset = index2 != -1 ? content.substring(index1+8, index2) : content.substring(index1+8);
-                            try {
-                                String ianaEncoding = charset;
-                                String javaEncoding = EncodingMap.getIANA2JavaMapping(ianaEncoding.toUpperCase());
-                                if (DEBUG_CHARSET) {
-                                    System.out.println("+++ ianaEncoding: "+ianaEncoding);
-                                    System.out.println("+++ javaEncoding: "+javaEncoding);
-                                }
-                                if (javaEncoding == null) {
-                                    javaEncoding = ianaEncoding;
-                                    if (fReportErrors) {
-                                        fErrorReporter.reportError("HTML1001", new Object[]{ianaEncoding});
-                                    }
-                                }
-                                // patch: Marc Guillemot
-                                if (!javaEncoding.equals(fJavaEncoding)) { 
-                                  	if (!isEncodingCompatible(javaEncoding, fJavaEncoding)) {
-                                        if (fReportErrors) {
-                                            fErrorReporter.reportError("HTML1015", new Object[]{javaEncoding,fJavaEncoding});
-                                        }
-                                 	}
-                              		// change the charset
-                                 	else {
-                                         fIso8859Encoding = ianaEncoding == null 
- 		                                        || ianaEncoding.toUpperCase().startsWith("ISO-8859")
- 		                                        || ianaEncoding.equalsIgnoreCase(fDefaultIANAEncoding);
- 				                        fCurrentEntity.stream = new InputStreamReader(fByteStream, javaEncoding);
- 				                        fByteStream.playback();
- 				                        fElementDepth = fElementCount;
- 				                        fElementCount = 0;
- 				                        fCurrentEntity.offset = fCurrentEntity.length = 0;
- 				                        fCurrentEntity.lineNumber = 1;
- 				                        fCurrentEntity.columnNumber = 1;
-                                                        fCurrentEntity.characterOffset = 0;
-                                 	}
-                                 }
-                            }
-                            catch (UnsupportedEncodingException e) {
-                                if (fReportErrors) {
-                                    fErrorReporter.reportError("HTML1010", new Object[]{charset});
-                                }
-                                // NOTE: If the encoding change doesn't work, 
-                                //       then there's no point in continuing to 
-                                //       buffer the input stream.
-                                fByteStream.clear();
-                                fByteStream = null;
-                            }
+                            final int index2 = content.indexOf(';', index1);
+                            final String charset = index2 != -1 ? content.substring(index1+8, index2) : content.substring(index1+8);
+                            changeEncoding(charset);
                         }
                     }
                 }
@@ -2670,6 +2629,67 @@ public class HTMLScanner
             }
             return ename;
         } // scanStartElement():ename
+
+        /**
+         * Tries to change the encoding used to read the input stream to the specified one
+         * @param charset the charset that should be used
+         * @return <code>true</code> when the encoding has been changed
+         */
+		private boolean changeEncoding(String charset) {
+			if (charset == null) {
+				return false;
+			}
+			boolean encodingChanged = false;
+			try {
+			    String ianaEncoding = charset;
+			    String javaEncoding = EncodingMap.getIANA2JavaMapping(ianaEncoding.toUpperCase());
+			    if (DEBUG_CHARSET) {
+			        System.out.println("+++ ianaEncoding: "+ianaEncoding);
+			        System.out.println("+++ javaEncoding: "+javaEncoding);
+			    }
+			    if (javaEncoding == null) {
+			        javaEncoding = ianaEncoding;
+			        if (fReportErrors) {
+			            fErrorReporter.reportError("HTML1001", new Object[]{ianaEncoding});
+			        }
+			    }
+			    // patch: Marc Guillemot
+			    if (!javaEncoding.equals(fJavaEncoding)) { 
+			      	if (!isEncodingCompatible(javaEncoding, fJavaEncoding)) {
+			            if (fReportErrors) {
+			                fErrorReporter.reportError("HTML1015", new Object[]{javaEncoding,fJavaEncoding});
+			            }
+			     	}
+			  		// change the charset
+			     	else {
+			            fIso8859Encoding = ianaEncoding == null 
+			                    || ianaEncoding.toUpperCase().startsWith("ISO-8859")
+			                    || ianaEncoding.equalsIgnoreCase(fDefaultIANAEncoding);
+			            fJavaEncoding = javaEncoding;
+			            fCurrentEntity.stream = new InputStreamReader(fByteStream, javaEncoding);
+			            fByteStream.playback();
+			            fElementDepth = fElementCount;
+			            fElementCount = 0;
+			            fCurrentEntity.offset = fCurrentEntity.length = 0;
+			            fCurrentEntity.lineNumber = 1;
+			            fCurrentEntity.columnNumber = 1;
+			            fCurrentEntity.characterOffset = 0;
+	                    encodingChanged = true;
+			     	}
+			     }
+			}
+			catch (UnsupportedEncodingException e) {
+			    if (fReportErrors) {
+			        fErrorReporter.reportError("HTML1010", new Object[]{charset});
+			    }
+			    // NOTE: If the encoding change doesn't work, 
+			    //       then there's no point in continuing to 
+			    //       buffer the input stream.
+			    fByteStream.clear();
+			    fByteStream = null;
+			}
+			return encodingChanged;
+		}
 
         /** 
          * Scans a real attribute. 
