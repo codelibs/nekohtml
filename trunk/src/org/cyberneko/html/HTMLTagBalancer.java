@@ -613,6 +613,16 @@ public class HTMLTagBalancer
                 endElement(info.qname, synthesizedAugs());
             }
         }
+        // TODO: investigate if only LI closes
+        else if (element.code == HTMLElements.LI) {
+            for (int i=fElementStack.top-1; i >= 0; i--) {
+                final Info info = fElementStack.data[i];
+                if (element.isParent(info.element)) {
+                    break;
+                }
+                endElement(info.qname, synthesizedAugs());
+            }
+        }
 
         // call handler
         fSeenRootElement = true;

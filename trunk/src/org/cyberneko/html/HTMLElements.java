@@ -323,7 +323,7 @@ public class HTMLElements {
             // LEGEND - - (%inline;)*
             new Element(LEGEND, "LEGEND", Element.INLINE, FIELDSET, null),
             // LI - O (%flow;)*
-            new Element(LI, "LI", 0, new short[]{BODY,UL,OL}, new short[]{LI}),
+            new Element(LI, "LI", 0, new short[]{BODY,UL,OL}, null),//new short[]{LI}),
             // LINK - O EMPTY
             new Element(LINK, "LINK", Element.EMPTY, HEAD, null),
             // LISTING
@@ -367,7 +367,7 @@ public class HTMLElements {
         };
         ELEMENTS_ARRAY['P'-'A'] = new Element[] {
             // P - O (%inline;)*
-            new Element(P, "P", 0, BODY, new short[]{P}),
+            new Element(P, "P", Element.CONTAINER, BODY, new short[]{P}),
             // PARAM - O EMPTY
             new Element(PARAM, "PARAM", Element.EMPTY, new short[]{OBJECT,APPLET}, null),
             // PLAINTEXT
@@ -732,6 +732,23 @@ public class HTMLElements {
         public String toString() {
         	return super.toString() + "(name=" + name + ")";
         }
+
+        /**
+         * Indicates if the provided element is an accepted parent of current element
+         * @param element the element to test for "paternity"
+         * @return <code>true</code> if <code>element</code> belongs to the {@link #parent}
+         */
+		public boolean isParent(final Element element) {
+			if (parent == null)
+				return false;
+			else {
+				for (int i=0; i<parent.length; ++i) {
+					if (element.code == parent[i].code)
+						return true;
+				}
+			}
+			return false;
+		}
     } // class Element
 
     /** Unsynchronized list of elements. */
