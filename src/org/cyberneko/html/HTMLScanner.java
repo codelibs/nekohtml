@@ -2516,10 +2516,16 @@ public class HTMLScanner
                 fAttributes.removeAllAttributes();
                 int aindex = 0;
                 while (scanPseudoAttribute(fAttributes)) {
-                    fAttributes.getName(aindex,fQName);
-                    fQName.rawname = fQName.rawname.toLowerCase();
-                    fAttributes.setName(aindex,fQName);
-                    aindex++;
+                	// if we haven't scanned a value, remove the entry as values have special signification
+                	if (fAttributes.getValue(aindex).length() == 0) {
+                		fAttributes.removeAttributeAt(aindex); 
+                	}
+                	else {
+	                    fAttributes.getName(aindex,fQName);
+	                    fQName.rawname = fQName.rawname.toLowerCase();
+	                    fAttributes.setName(aindex,fQName);
+	                    aindex++;
+                	}
                 }
                 if (fDocumentHandler != null) {
                     String version = fAttributes.getValue("version");
