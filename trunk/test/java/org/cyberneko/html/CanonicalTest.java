@@ -27,9 +27,6 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.StringReader;
 import java.io.StringWriter;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
 import java.util.StringTokenizer;
 
 import junit.framework.AssertionFailedError;
@@ -81,48 +78,41 @@ public class CanonicalTest extends TestCase {
     
     
     protected void runTest() throws Exception {
-        List/*String*/ dataLines = getResult(dataFile);
+        final String dataLines = getResult(dataFile);
         try
         {
         	final File canonicalFile = new File(canonicalDir, dataFile.getName());
         	if (!canonicalFile.exists()) {
         		fail("Canonical file not found: " + canonicalFile.getAbsolutePath());
         	}
-            List/*String*/ canonicalLines = getCanonical(canonicalFile);
-	    	assertEquals("file length", canonicalLines.size(), dataLines.size());
-	
-	    	for (int l=0; l < dataLines.size(); l++) {
-	        	assertEquals("line " + (l + 1), canonicalLines.get(l), dataLines.get(l));
-	        }
+            final String canonicalLines = getCanonical(canonicalFile);
+            
+            assertEquals(canonicalLines, dataLines);
         }
         catch (final AssertionFailedError e)
         {
         	final File output = new File(outputDir, dataFile.getName());
         	final PrintWriter pw = new PrintWriter(new FileOutputStream(output));
-        	for (final Iterator iter=dataLines.iterator(); iter.hasNext(); )
-        	{
-        		pw.println(iter.next());
-        	}
+        	pw.print(dataLines);
         	pw.close();
         	
         	throw e;
         }
     }
 
-    private List/*String*/ getCanonical(File infile) throws IOException {
-        List/*String*/ lines = new ArrayList/*String*/();
-        BufferedReader reader = new BufferedReader(new InputStreamReader(
+    private String getCanonical(final File infile) throws IOException {
+        final BufferedReader reader = new BufferedReader(new InputStreamReader(
                 new UTF8BOMSkipper(new FileInputStream(infile)), "UTF-8"));
+        final StringBuffer sb = new StringBuffer();
         String line;
         while ((line = reader.readLine()) != null) {
-            lines.add(line);
+            sb.append(line).append("\n");
         }
         reader.close();
-        return lines;
+        return sb.toString();
     }
 
-    private List/*String*/ getResult(final File infile) throws IOException {
-        List/*String*/ lines = new ArrayList/*String*/();
+    private String getResult(final File infile) throws IOException {
         StringWriter out = new StringWriter();
         try {
             // create filters
@@ -159,11 +149,12 @@ public class CanonicalTest extends TestCase {
         finally {
             out.close();
         }
-        BufferedReader reader = new BufferedReader(new StringReader(out.toString()));
+        final BufferedReader reader = new BufferedReader(new StringReader(out.toString()));
+        final StringBuffer sb = new StringBuffer();
         String line;
         while ((line = reader.readLine()) != null) {
-            lines.add(line);
+            sb.append(line).append("\n");
         }
-        return lines;
+        return sb.toString();
     }
 }
