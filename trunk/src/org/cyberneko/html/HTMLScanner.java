@@ -24,6 +24,7 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
+import java.util.BitSet;
 import java.util.Stack;
 
 import org.apache.xerces.util.EncodingMap;
@@ -338,6 +339,14 @@ public class HTMLScanner
     protected static final HTMLEventInfo SYNTHESIZED_ITEM = 
         new HTMLEventInfo.SynthesizedItem();
         
+    private final static BitSet ENTITY_CHARS = new BitSet();
+    static {
+    	final String str = "-.0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz";
+    	for (int i = 0; i < str.length(); ++i) {
+    		char c = str.charAt(i);
+    		ENTITY_CHARS.set(c);
+    	}
+    }
     //
     // Data
     //
@@ -1374,44 +1383,34 @@ public class HTMLScanner
     } // scanName():String
 
     /** Scans an entity reference. */
-    protected int scanEntityRef(XMLStringBuffer str, boolean content) 
+    protected int scanEntityRef(final XMLStringBuffer str, final boolean content) 
         throws IOException {
         str.clear();
         str.append('&');
+        boolean endsWithSemicolon = false;
         while (true) {
             int c = read();
             if (c == ';') {
                 str.append(';');
+                endsWithSemicolon = true;
                 break;
             }
-            if (c == -1) {
-                if (fReportErrors) {
-                    fErrorReporter.reportWarning("HTML1004", null);
-                }
-                if (content && fDocumentHandler != null && fElementCount >= fElementDepth) {
-                    fEndLineNumber = fCurrentEntity.lineNumber;
-                    fEndColumnNumber = fCurrentEntity.columnNumber;
-                    fEndCharacterOffset = fCurrentEntity.characterOffset;
-                    fDocumentHandler.characters(str, locationAugs());
-                }
-                return -1;
+            else if (c == -1) {
+            	break;
             }
-            if (!Character.isLetterOrDigit((char)c) && c != '#') {
-                if (fReportErrors) {
-                    fErrorReporter.reportWarning("HTML1004", null);
-                }
+            else if (!ENTITY_CHARS.get(c) && c != '#') {
                 fCurrentEntity.offset--;
                 fCurrentEntity.characterOffset--;
                 fCurrentEntity.columnNumber--;
-                if (content && fDocumentHandler != null && fElementCount >= fElementDepth) {
-                    fEndLineNumber = fCurrentEntity.lineNumber;
-                    fEndColumnNumber = fCurrentEntity.columnNumber;
-                    fEndCharacterOffset = fCurrentEntity.characterOffset;
-                    fDocumentHandler.characters(str, locationAugs());
-                }
-                return -1;
+                break;
             }
             str.append((char)c);
+        }
+
+        if (!endsWithSemicolon) {
+            if (fReportErrors) {
+                fErrorReporter.reportWarning("HTML1004", null);
+            }
         }
         if (str.length == 1) {
             if (content && fDocumentHandler != null && fElementCount >= fElementDepth) {
@@ -1423,7 +1422,12 @@ public class HTMLScanner
             return -1;
         }
 
-        String name = str.toString().substring(1, str.length-1);
+        final String name;
+        if (endsWithSemicolon)
+        	name = str.toString().substring(1, str.length -1);
+        else
+        	name = str.toString().substring(1);
+
         if (name.startsWith("#")) {
             int value = -1;
             try {
