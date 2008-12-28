@@ -272,7 +272,7 @@ public class HTMLElements {
             // FONT
             new Element(FONT, "FONT", Element.CONTAINER, BODY, null),
             // FORM - - (%block;|SCRIPT)+ -(FORM)
-            new Element(FORM, "FORM", Element.CONTAINER, new short[]{BODY,TD,P,DIV}, new short[]{BUTTON}),
+            new Element(FORM, "FORM", Element.CONTAINER, new short[]{BODY,TD,DIV}, new short[]{BUTTON,P}),
             // FRAME - O EMPTY
             new Element(FRAME, "FRAME", Element.EMPTY, FRAMESET, null),
             // FRAMESET - - ((FRAMESET|FRAME)+ & NOFRAMES?)
@@ -323,7 +323,7 @@ public class HTMLElements {
             // LEGEND - - (%inline;)*
             new Element(LEGEND, "LEGEND", Element.INLINE, FIELDSET, null),
             // LI - O (%flow;)*
-            new Element(LI, "LI", 0, new short[]{BODY,UL,OL}, null),//new short[]{LI}),
+            new Element(LI, "LI", 0, new short[]{BODY,UL,OL}, new short[]{LI}),
             // LINK - O EMPTY
             new Element(LINK, "LINK", Element.EMPTY, HEAD, null),
             // LISTING
