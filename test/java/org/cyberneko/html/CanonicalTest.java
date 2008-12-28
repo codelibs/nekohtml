@@ -83,7 +83,7 @@ public class CanonicalTest extends TestCase {
         {
         	final File canonicalFile = new File(canonicalDir, dataFile.getName());
         	if (!canonicalFile.exists()) {
-        		fail("Canonical file not found: " + canonicalFile.getAbsolutePath());
+        		fail("Canonical file not found: " + canonicalFile.getAbsolutePath() + ": " + dataLines);
         	}
             final String canonicalLines = getCanonical(canonicalFile);
             
