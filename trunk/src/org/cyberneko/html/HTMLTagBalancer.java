@@ -590,15 +590,8 @@ public class HTMLTagBalancer
                 }
                 
                 // should we stop searching?
-                boolean container = info.element.isContainer();
-                boolean parent = false;
-                if (!container) {
-                    for (int j = 0; j < element.parent.length; j++) {
-                        parent = parent || info.element.code == element.parent[j].code;
-                    }
-                }
-                if (container || parent) {
-                    break;
+                if (info.element.isBlock() || element.isParent(info.element)) {
+                	break;
                 }
             }
         }
@@ -608,16 +601,6 @@ public class HTMLTagBalancer
             for (int i=fElementStack.top-1; i >= 0; i--) {
                 final Info info = fElementStack.data[i];
                 if (!info.element.isInline()) {
-                    break;
-                }
-                endElement(info.qname, synthesizedAugs());
-            }
-        }
-        // TODO: investigate if only LI closes
-        else if (element.code == HTMLElements.LI) {
-            for (int i=fElementStack.top-1; i >= 0; i--) {
-                final Info info = fElementStack.data[i];
-                if (element.isParent(info.element)) {
                     break;
                 }
                 endElement(info.qname, synthesizedAugs());
