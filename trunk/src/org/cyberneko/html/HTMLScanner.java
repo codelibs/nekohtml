@@ -2646,7 +2646,7 @@ public class HTMLScanner
          * @return <code>true</code> when the encoding has been changed
          */
 		private boolean changeEncoding(String charset) {
-			if (charset == null) {
+			if (charset == null || fByteStream == null) {
 				return false;
 			}
 			boolean encodingChanged = false;
