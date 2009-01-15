@@ -11,7 +11,6 @@ import org.apache.xerces.util.XMLStringBuffer;
 import org.apache.xerces.xni.Augmentations;
 import org.apache.xerces.xni.QName;
 import org.apache.xerces.xni.XMLAttributes;
-import org.apache.xerces.xni.XMLString;
 import org.apache.xerces.xni.XNIException;
 import org.apache.xerces.xni.parser.XMLDocumentFilter;
 import org.apache.xerces.xni.parser.XMLInputSource;
@@ -62,7 +61,21 @@ public class HTMLScannerTest extends TestCase {
         assertEquals(Arrays.asList(expectedString), filter.collectedStrings);
     }
 
-   private static class EvaluateInputSourceFilter extends DefaultFilter {
+	/**
+	 * Tests handling of xml declaration when used with Reader.
+	 * Following test caused NPE with release 1.9.11.
+	 * Regression test for [ 2503982 ] NPE when parsing from a CharacterStream
+	 */
+	public void testChangeEncodingWithReader() throws Exception {
+	    String string = "<?xml version='1.0' encoding='UTF-8'?><html><head><title>foo</title></head>"
+            + "</body></html>";
+
+        XMLInputSource source = new XMLInputSource(null, "myTest", null, new StringReader(string), "ISO8859-1");
+	    HTMLConfiguration parser = new HTMLConfiguration();
+        parser.parse(source);
+    }
+
+	private static class EvaluateInputSourceFilter extends DefaultFilter {
 
        private List collectedStrings = new ArrayList();
        private static int counter = 1;
