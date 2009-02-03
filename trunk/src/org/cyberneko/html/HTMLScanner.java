@@ -2010,6 +2010,9 @@ public class HTMLScanner
                                 fElementCount++;
                                 fSingleBoolean[0] = false;
                                 final String ename = scanStartElement(fSingleBoolean);
+                                fBeginLineNumber = fCurrentEntity.lineNumber;
+                                fBeginColumnNumber = fCurrentEntity.columnNumber;
+                                fBeginCharacterOffset = fCurrentEntity.characterOffset;
                                 if ("script".equalsIgnoreCase(ename)) {
                                 	scanScriptContent();
                                 }
