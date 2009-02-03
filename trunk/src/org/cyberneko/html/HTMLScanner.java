@@ -2337,16 +2337,55 @@ public class HTMLScanner
                 printBuffer();
                 System.out.println();
             }
-            fStringBuffer.clear();
-            boolean eof = scanMarkupContent(fStringBuffer, '-');
+            fEndLineNumber = fCurrentEntity.lineNumber;
+            fEndColumnNumber = fCurrentEntity.columnNumber;
+            fEndCharacterOffset = fCurrentEntity.characterOffset;
+        	XMLStringBuffer buffer = new XMLStringBuffer();
+            boolean eof = scanMarkupContent(buffer, '-');
+            // no --> found, comment with end only with >
+            if (eof) {
+            	fCurrentEntity.lineNumber = fEndLineNumber;
+            	fCurrentEntity.columnNumber = fEndColumnNumber;
+            	fCurrentEntity.characterOffset = fEndCharacterOffset;
+            	fCurrentEntity.buffer = buffer.ch;
+            	fCurrentEntity.offset = buffer.offset;
+            	fCurrentEntity.length = buffer.length;
+            	buffer = new XMLStringBuffer(); // take a new one to avoid interactions
+            	while (true) {
+            		int c = read();
+                    if (c == -1) {
+                        if (fReportErrors) {
+                            fErrorReporter.reportError("HTML1007", null);
+                        }
+                        eof = true;
+                        break;
+                    }
+                    else if (c != '>') {
+            			buffer.append((char)c);
+                        continue;
+            		}
+            		else if (c == '\n' || c == '\r') {
+	                    fCurrentEntity.offset--;
+	                    fCurrentEntity.characterOffset--;
+	                    fCurrentEntity.columnNumber--;
+	                    int newlines = skipNewlines();
+	                    for (int i = 0; i < newlines; i++) {
+	                    	buffer.append('\n');
+	                    }
+	                    continue;
+	                }
+                    eof = false;
+            		break;
+            	}
+            }
             if (fDocumentHandler != null && fElementCount >= fElementDepth) {
                 if (DEBUG_CALLBACKS) {
-                    System.out.println("comment("+fStringBuffer+")");
+                    System.out.println("comment(" + buffer + ")");
                 }
                 fEndLineNumber = fCurrentEntity.lineNumber;
                 fEndColumnNumber = fCurrentEntity.columnNumber;
                 fEndCharacterOffset = fCurrentEntity.characterOffset;
-                fDocumentHandler.comment(fStringBuffer, locationAugs());
+                fDocumentHandler.comment(buffer, locationAugs());
             }
             if (DEBUG_BUFFER) {
                 System.out.print(")scanComment: ");
