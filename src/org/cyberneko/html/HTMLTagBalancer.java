@@ -30,6 +30,7 @@ import org.apache.xerces.xni.parser.XMLComponentManager;
 import org.apache.xerces.xni.parser.XMLConfigurationException;
 import org.apache.xerces.xni.parser.XMLDocumentFilter;
 import org.apache.xerces.xni.parser.XMLDocumentSource;
+import org.cyberneko.html.filters.NamespaceBinder;
 import org.cyberneko.html.xercesbridge.XercesBridge;
                       
 /**
@@ -477,7 +478,7 @@ public class HTMLTagBalancer
         }
 
         // get element information
-        HTMLElements.Element element = getElement(elem.rawname);
+        HTMLElements.Element element = getElement(elem);
 
         // ignore multiple html, head, body elements
         if (fSeenRootElement && element.code == HTMLElements.HTML) {
@@ -581,7 +582,7 @@ public class HTMLTagBalancer
                     for (int j = length - 1; j >= i; j--) {
                         info = fElementStack.pop();
                         if (fDocumentHandler != null) {
-                            // PATCH: Marc-André Morissette
+                            // PATCH: Marc-Andrï¿½ Morissette
                             callEndElement(info.qname, synthesizedAugs());
                         }
                     }
@@ -641,7 +642,7 @@ public class HTMLTagBalancer
         throws XNIException {
         startElement(element, attrs, augs);
         // browser ignore the closing indication for non empty tags like <form .../> but not for unknown element
-        final HTMLElements.Element elem = getElement(element.rawname);
+        final HTMLElements.Element elem = getElement(element);
         if (elem.isEmpty() || elem.code == HTMLElements.UNKNOWN) {
         	endElement(element, augs);
         }
@@ -830,7 +831,7 @@ public class HTMLTagBalancer
         }
         
         // get element information
-        HTMLElements.Element elem = getElement(element.rawname);
+        HTMLElements.Element elem = getElement(element);
 
         // do we ignore outside content?
         if (!fIgnoreOutsideContent &&
@@ -885,7 +886,7 @@ public class HTMLTagBalancer
                 fErrorReporter.reportWarning("HTML2007", new Object[]{ename,iname});
             }
             if (fDocumentHandler != null) {
-                // PATCH: Marc-André Morissette
+                // PATCH: Marc-Andrï¿½ Morissette
                 callEndElement(info.qname, i < depth - 1 ? synthesizedAugs() : augs);
             }
         }
@@ -963,8 +964,9 @@ public class HTMLTagBalancer
     //
 
     /** Returns an HTML element. */
-    protected HTMLElements.Element getElement(String name) {
-        if (fNamespaces) {
+    protected HTMLElements.Element getElement(final QName elementName) {
+    	String name = elementName.rawname;
+        if (fNamespaces && NamespaceBinder.XHTML_1_0_URI.equals(elementName.uri)) {
             int index = name.indexOf(':');
             if (index != -1) {
                 name = name.substring(index+1);

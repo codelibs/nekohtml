@@ -567,15 +567,15 @@ public class HTMLConfiguration
 
         // configure pipeline
         XMLDocumentSource lastSource = fDocumentScanner;
-        if (getFeature(BALANCE_TAGS)) {
-            lastSource.setDocumentHandler(fTagBalancer);
-            fTagBalancer.setDocumentSource(fDocumentScanner);
-            lastSource = fTagBalancer;
-        }
         if (getFeature(NAMESPACES)) {
             lastSource.setDocumentHandler(fNamespaceBinder);
             fNamespaceBinder.setDocumentSource(fTagBalancer);
             lastSource = fNamespaceBinder;
+        }
+        if (getFeature(BALANCE_TAGS)) {
+            lastSource.setDocumentHandler(fTagBalancer);
+            fTagBalancer.setDocumentSource(fDocumentScanner);
+            lastSource = fTagBalancer;
         }
         XMLDocumentFilter[] filters = (XMLDocumentFilter[])getProperty(FILTERS);
         if (filters != null) {
