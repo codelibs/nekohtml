@@ -16,12 +16,6 @@
 
 package org.cyberneko.html.filters;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-
-import org.cyberneko.html.HTMLComponent;
-import org.cyberneko.html.xercesbridge.XercesBridge;
-
 import org.apache.xerces.xni.Augmentations;
 import org.apache.xerces.xni.NamespaceContext;
 import org.apache.xerces.xni.QName;
@@ -35,6 +29,8 @@ import org.apache.xerces.xni.parser.XMLComponentManager;
 import org.apache.xerces.xni.parser.XMLConfigurationException;
 import org.apache.xerces.xni.parser.XMLDocumentFilter;
 import org.apache.xerces.xni.parser.XMLDocumentSource;
+import org.cyberneko.html.HTMLComponent;
+import org.cyberneko.html.xercesbridge.XercesBridge;
 
 /**
  * This class implements a filter that simply passes document
