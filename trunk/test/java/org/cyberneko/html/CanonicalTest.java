@@ -27,6 +27,7 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.util.Arrays;
 import java.util.StringTokenizer;
 
 import junit.framework.AssertionFailedError;
@@ -64,6 +65,7 @@ public class CanonicalTest extends TestCase {
                 return name.startsWith("test") && name.endsWith(".html");
             }
         });
+        Arrays.sort(dataFiles);
 
         for (int i=0; i < dataFiles.length; i++) {
             suite.addTest(new CanonicalTest(dataFiles[i]));
