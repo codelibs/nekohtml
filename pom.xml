@@ -3,7 +3,7 @@
   <groupId>net.sourceforge.nekohtml</groupId>
   <artifactId>nekohtml</artifactId>
   <name>Neko HTML</name>
-  <version>1.9.11</version>
+  <version>1.9.12-SNAPSHOT</version>
   <url>http://nekohtml.sourceforge.net/</url>
   <licenses>
     <license>
