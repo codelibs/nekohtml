@@ -419,10 +419,15 @@ public class HTMLTagBalancer
             if (fReportErrors) {
                 fErrorReporter.reportError("HTML2000", null);
             }
-            String ename = modifyName("html", fNamesElems);
-            fQName.setValues(null, ename, ename, null);
             if (fDocumentHandler != null) {
-                callStartElement(fQName, emptyAttributes(), synthesizedAugs());
+            	fSeenRootElementEnd = false;
+                forceStartBody(); // will force <html> and <head></head>
+                final String body = modifyName("body", fNamesElems);
+                fQName.setValues(null, body, body, null);
+                callEndElement(fQName, synthesizedAugs());
+
+                final String ename = modifyName("html", fNamesElems);
+                fQName.setValues(null, ename, ename, null);
                 callEndElement(fQName, synthesizedAugs());
             }
         }
@@ -678,12 +683,7 @@ public class HTMLTagBalancer
                 }
             }
             if (insertBody) {
-                String ename = modifyName("body", fNamesElems);
-                fQName.setValues(null, ename, ename, null);
-                if (fReportErrors) {
-                    fErrorReporter.reportWarning("HTML2006", new Object[]{ename});
-                }
-                startElement(fQName, null, synthesizedAugs());
+                forceStartBody();
             }
         }
         
@@ -693,6 +693,26 @@ public class HTMLTagBalancer
         }
 
     } // startGeneralEntity(String,XMLResourceIdentifier,String,Augmentations)
+
+    /**
+     * Generates a missing <body>
+     */
+	private void forceStartBody() {
+		// create <head></head> if none was present
+		if (!fSeenHeadElement) {
+			final String tagName = modifyName("head", fNamesElems);
+			fQName.setValues(null, tagName, tagName, null);
+			startElement(fQName, null, synthesizedAugs());
+			endElement(fQName, synthesizedAugs());
+		}
+		
+		final String ename = modifyName("body", fNamesElems);
+		fQName.setValues(null, ename, ename, null);
+		if (fReportErrors) {
+		    fErrorReporter.reportWarning("HTML2006", new Object[]{ename});
+		}
+		startElement(fQName, null, synthesizedAugs());
+	}
 
     /** Text declaration. */
     public void textDecl(String version, String encoding, Augmentations augs)
@@ -780,16 +800,11 @@ public class HTMLTagBalancer
                 if (whitespace) {
                     return;
                 }
-                String ename = modifyName("body", fNamesElems);
-                fQName.setValues(null, ename, ename, null);
-                if (fReportErrors) {
-                    fErrorReporter.reportWarning("HTML2006", new Object[]{ename});
-                }
-                startElement(fQName, null, synthesizedAugs());
+                forceStartBody();
             }
 
             // handle character content in head
-            // NOTE: This fequently happens when the document looks like:
+            // NOTE: This frequently happens when the document looks like:
             //       <title>Title</title>
             //       And here's some text.
             else if (!whitespace) {
@@ -801,10 +816,7 @@ public class HTMLTagBalancer
                     if (fReportErrors) {
                         fErrorReporter.reportWarning("HTML2009", new Object[]{hname,bname});
                     }
-                    fQName.setValues(null, hname, hname, null);
-                    endElement(fQName, synthesizedAugs());
-                    fQName.setValues(null, bname, bname, null);
-                    startElement(fQName, null, synthesizedAugs());
+                    forceStartBody();
                 }
             }
         }
