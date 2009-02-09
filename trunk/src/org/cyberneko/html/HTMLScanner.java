@@ -3572,8 +3572,7 @@ public class HTMLScanner
      *
      * @author Andy Clark
      */
-    protected static class LocationItem 
-        implements HTMLEventInfo {
+    protected static class LocationItem implements HTMLEventInfo, Cloneable {
 
         //
         // Data
@@ -3600,8 +3599,16 @@ public class HTMLScanner
         //
         // Public methods
         //
+        public LocationItem() {
+        	// nothing
+        }
 
-        /** 
+        LocationItem(final LocationItem other) {
+			setValues(other.fBeginLineNumber, other.fBeginColumnNumber, other.fBeginCharacterOffset,
+					other.fEndLineNumber, other.fEndColumnNumber, other.fEndCharacterOffset);
+		}
+
+		/** 
          * Sets the values of this item.
          * @deprecated after 1.9.9. Use {@link #setValues(int, int, int, int, int, int)}. 
          **/
