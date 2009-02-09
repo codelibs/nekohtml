@@ -150,7 +150,7 @@
     <zipfileset prefix='${fullname}' dir='.' includes='${src.test.dir}/**' />
     <zipfileset prefix='${fullname}' dir='.' includes='${doc.dir}/**' excludes='${doc.dir}/javadoc/**' />
     <zipfileset prefix='${fullname}' dir='.' includes='${data.dir}/**' />
-    <zipfileset prefix='${fullname}' dir='.' includes='${lib.dir}/xercesMinimal.jar' />
+    <zipfileset prefix='${fullname}' dir='.' includes='${lib.dir}/**/*.jar' />
     <zipfileset prefix='${fullname}' dir='${build.dir}' includes='doc/**' />
     <zipfileset prefix='${fullname}' dir='${build.lib.dir}' includes='**' />
   </zip>
