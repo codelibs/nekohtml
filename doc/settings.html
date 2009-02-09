@@ -238,7 +238,8 @@ The NekoHTML parser supports the following features:
    <br>
    Specifies whether to ignore the character encoding specified within the 
    &lt;meta http-equiv='Content-Type' content='text/html;charset=...'&gt; 
-   tag. By default, NekoHTML checks this tag for a charset and changes the 
+   tag or in the &lt;?xml &hellip; encoding='&hellip;'&gt; processing instruction.
+   By default, NekoHTML checks META tags for a charset and changes the 
    character encoding of the scanning reader object. Setting this feature 
    to <code>true</code> allows the application to override this behavior.
    <p class='see'>

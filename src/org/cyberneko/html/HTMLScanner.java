@@ -187,7 +187,7 @@ public class HTMLScanner
 
     /**
      * Ignore specified charset found in the &lt;meta equiv='Content-Type'
-     * content='text/html;charset=&hellip;'&gt; tag.
+     * content='text/html;charset=&hellip;'&gt; tag or in the &lt;?xml &hellip; encoding='&hellip;'&gt; processing instruction
      */
     public static final String IGNORE_SPECIFIED_CHARSET = "http://cyberneko.org/html/features/scanner/ignore-specified-charset";
 
@@ -2576,7 +2576,8 @@ public class HTMLScanner
 
                     // if the encoding is successfully changed, the stream will be processed again
                     // with the right encoding an we will come here again but without need to change the encoding
-                    if (!changeEncoding(encoding)) {
+                    final boolean xmlDeclNow = fIgnoreSpecifiedCharset || !changeEncoding(encoding);
+                    if (xmlDeclNow) {
 	                    fBeginLineNumber = beginLineNumber;
 	                    fBeginColumnNumber = beginColumnNumber;
 	                    fBeginCharacterOffset = beginCharacterOffset;
