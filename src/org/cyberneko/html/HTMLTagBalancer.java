@@ -244,6 +244,8 @@ public class HTMLTagBalancer
     private final HTMLAugmentations fInfosetAugs = new HTMLAugmentations();
 
     protected HTMLTagBalancingListener tagBalancingListener;
+    private LostText lostText_ = new LostText();
+
     //
     // HTMLComponent methods
     //
@@ -457,15 +459,26 @@ public class HTMLTagBalancer
     /** Comment. */
     public void comment(XMLString text, Augmentations augs) throws XNIException {
         fSeenAnything = true;
+        consumeEarlyTextIfNeeded();
         if (fDocumentHandler != null) {
             fDocumentHandler.comment(text, augs);
         }
     } // comment(XMLString,Augmentations)
 
+	private void consumeEarlyTextIfNeeded() {
+		if (!lostText_.isEmpty()) {
+        	if (!fSeenBodyElement) {
+        		forceStartBody();
+        	}
+            lostText_.refeed(this);
+        }
+	}
+
     /** Processing instruction. */
     public void processingInstruction(String target, XMLString data,
                                       Augmentations augs) throws XNIException {
         fSeenAnything = true;
+        consumeEarlyTextIfNeeded();
         if (fDocumentHandler != null) {
             fDocumentHandler.processingInstruction(target, data, augs);
         }
@@ -646,6 +659,9 @@ public class HTMLTagBalancer
             startElement(info.qname, info.attributes, synthesizedAugs());
         }
 
+        if (element.code == HTMLElements.BODY) {
+        	lostText_.refeed(this);
+        }
     } // startElement(QName,XMLAttributes,Augmentations)
 
 	private QName createQName(String tagName) {
@@ -752,6 +768,8 @@ public class HTMLTagBalancer
     public void startCDATA(Augmentations augs) throws XNIException {
         fSeenAnything = true;
         
+        consumeEarlyTextIfNeeded();
+
         // check for end of document
         if (fSeenRootElementEnd) {
             return;
@@ -781,11 +799,16 @@ public class HTMLTagBalancer
 
     /** Characters. */
     public void characters(final XMLString text, final Augmentations augs) throws XNIException {
-
         // check for end of document
         if (fSeenRootElementEnd) {
             return;
         }
+
+    	if (fElementStack.top == 0) {
+    		// character before first opening tag
+    		lostText_.add(text, augs);
+    		return;
+    	}
 
         // is this text whitespace?
         boolean whitespace = true;

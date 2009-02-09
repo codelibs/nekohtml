@@ -36,19 +36,36 @@ import java.util.Hashtable;
  * 
  * @author Andy Clark
  */
-public class HTMLAugmentations
-    implements Augmentations {
+public class HTMLAugmentations implements Augmentations {
 
     //
     // Data
     //
 
     /** Augmentation items. */
-    protected Hashtable fItems = new Hashtable();
+    protected final Hashtable fItems = new Hashtable();
 
     //
     // Public methods
     //
+    public HTMLAugmentations() {
+    	// nothing
+    }
+
+    /**
+     * Copy constructor
+     * @param augs the object to copy
+     */
+    HTMLAugmentations(final Augmentations augs) {
+    	for (final Enumeration keys=augs.keys(); keys.hasMoreElements(); ) {
+    		final String key = (String) keys.nextElement();
+    		Object value = augs.getItem(key);
+    		if (value instanceof HTMLScanner.LocationItem) {
+    			value = new HTMLScanner.LocationItem((HTMLScanner.LocationItem) value);
+    		}
+        	fItems.put(key, value);
+    	}
+    }
 
     // since Xerces 2.3.0
 
