@@ -498,6 +498,12 @@ public class HTMLTagBalancer
             fSeenHeadElement = true;
         }
         else if (element.code == HTMLElements.BODY) {
+    		// create <head></head> if none was present
+    		if (!fSeenHeadElement) {
+    			final QName head = createQName("head");
+    			startElement(head, null, synthesizedAugs());
+    			endElement(head, synthesizedAugs());
+    		}
             if (fSeenBodyElement) {
             	notifyDiscardedStartElement(elem, attrs, augs);
                 return;
@@ -642,6 +648,11 @@ public class HTMLTagBalancer
 
     } // startElement(QName,XMLAttributes,Augmentations)
 
+	private QName createQName(String tagName) {
+		tagName = modifyName(tagName, fNamesElems);
+		return new QName(null, tagName, tagName, null);
+	}
+
 	/** Empty element. */
     public void emptyElement(final QName element, XMLAttributes attrs, Augmentations augs)
         throws XNIException {
@@ -695,23 +706,14 @@ public class HTMLTagBalancer
     } // startGeneralEntity(String,XMLResourceIdentifier,String,Augmentations)
 
     /**
-     * Generates a missing <body>
+     * Generates a missing <body> (which creates missing <head> when needed)
      */
 	private void forceStartBody() {
-		// create <head></head> if none was present
-		if (!fSeenHeadElement) {
-			final String tagName = modifyName("head", fNamesElems);
-			fQName.setValues(null, tagName, tagName, null);
-			startElement(fQName, null, synthesizedAugs());
-			endElement(fQName, synthesizedAugs());
-		}
-		
-		final String ename = modifyName("body", fNamesElems);
-		fQName.setValues(null, ename, ename, null);
+		final QName body = createQName("body");
 		if (fReportErrors) {
-		    fErrorReporter.reportWarning("HTML2006", new Object[]{ename});
+		    fErrorReporter.reportWarning("HTML2006", new Object[]{body.localpart});
 		}
-		startElement(fQName, null, synthesizedAugs());
+		startElement(body, null, synthesizedAugs());
 	}
 
     /** Text declaration. */
@@ -778,7 +780,7 @@ public class HTMLTagBalancer
     } // endCDATA(Augmentations)
 
     /** Characters. */
-    public void characters(XMLString text, Augmentations augs) throws XNIException {
+    public void characters(final XMLString text, final Augmentations augs) throws XNIException {
 
         // check for end of document
         if (fSeenRootElementEnd) {
