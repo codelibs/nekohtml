@@ -145,13 +145,17 @@ public class Writer
         fStringBuffer.clear();
     } // startDocument(XMLLocator,String,NamespaceContext,Augmentations)
 
+    /** End document. */
+    public void endDocument(Augmentations augs) throws XNIException {
+        chars();
+    }
     // old methods
 
     /** Start document. */
     public void startDocument(XMLLocator locator, String encoding, Augmentations augs) throws XNIException {
         startDocument(locator, encoding, null, augs);
     } // startDocument(XMLLocator,String,Augmentations)
-
+    
     /** XML declaration. */
     public void xmlDecl(String version, String encoding, String standalone,
                         Augmentations augs) throws XNIException {
@@ -278,6 +282,19 @@ public class Writer
         characters(text, augs);
     } // ignorableWhitespace(XMLString,Augmentations)
 
+    
+    public void startCDATA(Augmentations augs) throws XNIException {
+        chars();
+        doAugs(augs);
+        out.println("((CDATA");
+    }
+    
+    public void endCDATA(Augmentations augs) throws XNIException {
+        chars();
+        doAugs(augs);
+        out.println("))CDATA");
+        out.flush();
+    }
     //
     // Protected methods
     //

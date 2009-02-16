@@ -804,7 +804,7 @@ public class HTMLTagBalancer
             return;
         }
 
-    	if (fElementStack.top == 0) {
+    	if (fElementStack.top == 0 && !fDocumentFragment) {
     		// character before first opening tag
     		lostText_.add(text, augs);
     		return;
