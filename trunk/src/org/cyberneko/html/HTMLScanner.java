@@ -2170,7 +2170,7 @@ public class HTMLScanner
             if (fScriptStripCommentDelims) {
             	reduceToContent(buffer, "<!--", "-->");
             }
-            else if (fScriptStripCDATADelims) {
+            if (fScriptStripCDATADelims) {
             	reduceToContent(buffer, "<![CDATA[", "]]>");
             }
 
@@ -3786,7 +3786,7 @@ public class HTMLScanner
 			}
 			else if (c == startMarker.charAt(0)
 				&& startMarker.equals(new String(buffer.ch, buffer.offset+i, l1))) {
-				startContent = i + l1;
+				startContent = buffer.offset + i + l1;
 				break;
 			}
 			else {
@@ -3804,7 +3804,7 @@ public class HTMLScanner
 			else if (c == endMarker.charAt(l2-1)
 				&& endMarker.equals(new String(buffer.ch, buffer.offset+i-l2+1, l2))) {
 				
-				buffer.length = i - startContent - 2;
+				buffer.length = buffer.offset + i - startContent - 2;
 				buffer.offset = startContent;
 				return;
 			}
