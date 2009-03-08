@@ -3726,7 +3726,35 @@ public class HTMLScanner
 		}
 	}
 
-    /**
+     /** Reads a single character, preserving the old buffer content */
+     protected int readPreservingBufferContent() throws IOException {
+         if (DEBUG_BUFFER) { 
+             System.out.print("(read: ");
+             printBuffer();
+             System.out.println();
+         }
+         if (fCurrentEntity.offset == fCurrentEntity.length) {
+             if (load(fCurrentEntity.length) < 1) {
+                 if (DEBUG_BUFFER) { 
+                     System.out.println(")read: -> -1");
+                 }
+                 return -1;
+             }
+         }
+         char c = fCurrentEntity.buffer[fCurrentEntity.offset++];
+         fCurrentEntity.characterOffset++;
+         fCurrentEntity.columnNumber++;
+         if (DEBUG_BUFFER) { 
+             System.out.print(")read: ");
+             printBuffer();
+             System.out.print(" -> ");
+             System.out.print(c);
+             System.out.println();
+         }
+         return c;
+     } // readPreservingBufferContent():int
+
+     /**
      * Indicates if the end comment --> is available, loading further data if needed, without to reset the buffer
      */
 	private boolean endCommentAvailable() throws IOException {
@@ -3736,20 +3764,7 @@ public class HTMLScanner
         final int originalCharacterOffset = fCurrentEntity.characterOffset;
 
 		while (true) {
-			// read() should not clear the buffer
-	        if (fCurrentEntity.offset == fCurrentEntity.length) {
-	        	if (fCurrentEntity.length == fCurrentEntity.buffer.length) {
-	        		load(fCurrentEntity.buffer.length);
-	        	}
-	        	else { // everything was already loaded
-			        fCurrentEntity.offset = originalOffset;
-			        fCurrentEntity.columnNumber = originalColumnNumber;
-			        fCurrentEntity.characterOffset = originalCharacterOffset;
-	        		return false;
-	        	}
-	        }
-	        
-	        int c = read();
+	        int c = readPreservingBufferContent();
 	        if (c == -1) {
 		        fCurrentEntity.offset = originalOffset;
 		        fCurrentEntity.columnNumber = originalColumnNumber;
