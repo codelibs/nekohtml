@@ -34,7 +34,8 @@ Changes
  ignore encoding specified in xml declaration if feature <code>http://cyberneko.org/html/features/scanner/ignore-specified-charset</code>
  is set to <code>true</code> (#2529933),
  hold text found before HTML to feed it first once BODY is opened,
- when strip-cdata-delims and strip-comment-delims are on, CDATA delimiters should be trimmed even if CDATA is located within a comment (#2671917)
+ when strip-cdata-delims and strip-comment-delims are on, CDATA delimiters should be trimmed even if CDATA is located within a comment (#2671917),
+ fixed infinite loop while searching end comment signs (patch provided by H. J. Hill, #2671480)
  
 
  <dt>Version 1.9.11 (29 Dec 2008)
