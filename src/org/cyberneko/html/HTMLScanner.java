@@ -3151,49 +3151,7 @@ public class HTMLScanner
                         case STATE_MARKUP_BRACKET: {
                             int delimiter = -1;
                             int c = read();
-                            if (c == '!') {
-                                if (skip("--", false)) {
-                                    fStringBuffer.clear();
-                                    boolean strip = (fStyle && fStyleStripCommentDelims);
-                                    if (strip) {
-                                        do {
-                                            c = read();
-                                            if (c == '\r' || c == '\n') {
-                                                fCurrentEntity.columnNumber--;
-                                                fCurrentEntity.offset--;
-                                                fCurrentEntity.characterOffset--;
-                                                break;
-                                            }
-                                        } while (c != -1);
-                                        skipNewlines(1);
-                                        delimiter = '-';
-                                    }
-                                    else {
-                                        fStringBuffer.append("<!--");
-                                    }
-                                }
-                                else if (skip("[CDATA[", false)) {
-                                    fStringBuffer.clear();
-                                    boolean strip = (fStyle  && fStyleStripCDATADelims);
-                                    if (strip) {
-                                        do {
-                                            c = read();
-                                            if (c == '\r' || c == '\n') {
-                                                fCurrentEntity.columnNumber--;
-                                                fCurrentEntity.offset--;
-                                                fCurrentEntity.characterOffset--;
-                                                break;
-                                            }
-                                        } while (c != -1);
-                                        skipNewlines(1);
-                                        delimiter = ']';
-                                    }
-                                    else {
-                                        fStringBuffer.append("<![CDATA[");
-                                    }
-                                }
-                            }
-                            else if (c == '/') {
+                            if (c == '/') {
                                 String ename = scanName();
                                 if (ename != null) {
                                     if (ename.equalsIgnoreCase(fElementName)) {
@@ -3267,12 +3225,11 @@ public class HTMLScanner
                 printBuffer();
                 System.out.println();
             }
-            boolean strip = (fStyle && (fStyleStripCommentDelims || fStyleStripCDATADelims));
             
             while (true) {
                 int c = read();
 
-                if (c == -1 || (delimiter == -1 && (c == '<' || c == '&'))) {
+                if (c == -1 || (c == '<' || c == '&')) {
                     if (c != -1) {
                         fCurrentEntity.offset--;
                         fCurrentEntity.characterOffset--;
@@ -3290,25 +3247,6 @@ public class HTMLScanner
                         buffer.append('\n');
                     }
                 }
-                else if (delimiter != -1 && c == (char)delimiter) {
-                    int count = 0;
-                    do {
-                        count++;
-                        c = read();
-                    } while (c == (char)delimiter);
-                    for (int i = strip && c == '>' ? 2 : 0; i < count; i++) {
-                        buffer.append((char)delimiter);
-                    }
-                    if (c == -1 || (count >= 2 && c == '>')) {
-                        if (!strip) {
-                            buffer.append((char)c);
-                        }
-                        break;
-                    }
-                    fCurrentEntity.offset--;
-                    fCurrentEntity.characterOffset--;
-                    fCurrentEntity.columnNumber--;
-                }
                 else {
                     buffer.append((char)c);
                     if (c == '\n') {
@@ -3317,6 +3255,16 @@ public class HTMLScanner
                     }
                 }
             }
+
+            if (fStyle) {
+            	if (fStyleStripCommentDelims) {
+            		reduceToContent(buffer, "<!--", "-->");
+            	}
+            	if (fStyleStripCDATADelims) {
+                	reduceToContent(buffer, "<![CDATA[", "]]>");
+            	}
+            }
+
             if (buffer.length > 0 && fDocumentHandler != null && fElementCount >= fElementDepth) {
                 if (DEBUG_CALLBACKS) {
                     System.out.println("characters("+buffer+")");
