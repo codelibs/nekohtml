@@ -192,7 +192,7 @@ public class HTMLElements {
         // initialize array of element information
         ELEMENTS_ARRAY['A'-'A'] = new Element[] {
             // A - - (%inline;)* -(A)
-            new Element(A, "A", Element.INLINE, BODY, null),
+            new Element(A, "A", Element.INLINE, BODY, new short[] {A}),
             // ABBR - - (%inline;)*
             new Element(ABBR, "ABBR", Element.INLINE, BODY, null),
             // ACRONYM - - (%inline;)*
