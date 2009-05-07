@@ -1473,7 +1473,11 @@ public class HTMLScanner
         }
 
         int c = HTMLEntities.get(name);
-        if (c == -1) {
+        // in attributes, some incomplete entities should be recognized, not all
+        // TODO: investigate to find which ones (there are differences between browsers)
+        // in a first time, consider only those that behave the same in FF and IE 
+        final boolean invalidEntityInAttribute = !content && !endsWithSemicolon && c > 256;
+        if (c == -1 || invalidEntityInAttribute) {
             if (fReportErrors) {
                 fErrorReporter.reportWarning("HTML1006", new Object[]{name});
             }
