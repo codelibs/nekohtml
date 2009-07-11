@@ -544,21 +544,17 @@ public class HTMLTagBalancer
                 startElement(qname, null, synthesizedAugs());
             }
         	else {
-                HTMLElements.Element pelement = element.parent[0];
-                if (pelement.code != HTMLElements.HEAD || (!fSeenBodyElement && !fDocumentFragment)) {
+                HTMLElements.Element preferedParent = element.parent[0];
+                if (preferedParent.code != HTMLElements.HEAD || (!fSeenBodyElement && !fDocumentFragment)) {
                     int depth = getParentDepth(element.parent, element.bounds);
-                    if (depth == -1) {
-                        String pname = pelement.name;
-                        pname = modifyName(pname, fNamesElems);
-                        int pdepth = getParentDepth(pelement.parent, pelement.bounds);
-                        if (pdepth != -1) {
-                            QName qname = new QName(null, pname, pname, null);
-                            if (fReportErrors) {
-                                String ename = elem.rawname;
-                                fErrorReporter.reportWarning("HTML2004", new Object[]{ename,pname});
-                            }
-                            startElement(qname, null, synthesizedAugs());
+                    if (depth == -1) { // no parent found
+                        final String pname = modifyName(preferedParent.name, fNamesElems);
+                        QName qname = new QName(null, pname, pname, null);
+                        if (fReportErrors) {
+                            String ename = elem.rawname;
+                            fErrorReporter.reportWarning("HTML2004", new Object[]{ename,pname});
                         }
+                        startElement(qname, null, synthesizedAugs());
                     }
                 }
             }
