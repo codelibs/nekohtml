@@ -31,7 +31,9 @@ Changes
  <dd>A <code>A</code> tag should close opened <code>A</code> tag (fixes OutOfMemoryException reported in #2780607),
  not all entities with missing semicolon should be recognized as entities (different browsers behave differently therefore
  until we have something like "browser profiles", NekoHTML will only recognized incomplete entities with code less than 256),
- automatically add <code>TBODY</code> around <TR> nested directly within <code>TABLE</code> 
+ automatically add <code>TBODY</code> around <TR> nested directly within <code>TABLE</code>,
+ <code>TD</code> and <code>TH</code> are container and should force closing of nested tags like <code>DIV</code>  
+ 
 
  <dt>Version 1.9.12 (20 Apr 2009)
      [<a href='http://downloads.sourceforge.net/nekohtml/nekohtml-1.9.12.zip'>zip</a>]
