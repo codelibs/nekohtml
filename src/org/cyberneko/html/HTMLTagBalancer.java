@@ -919,7 +919,7 @@ public class HTMLTagBalancer
                 fErrorReporter.reportWarning("HTML2007", new Object[]{ename,iname});
             }
             if (fDocumentHandler != null) {
-                // PATCH: Marc-Andrï¿½ Morissette
+                // PATCH: Marc-André Morissette
                 callEndElement(info.qname, i < depth - 1 ? synthesizedAugs() : augs);
             }
         }
