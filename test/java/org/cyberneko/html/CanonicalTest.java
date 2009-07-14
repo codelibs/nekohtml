@@ -141,6 +141,9 @@ public class CanonicalTest extends TestCase {
                     String value = tokenizer.nextToken();
                     if (type.equals("feature")) {
                         parser.setFeature(id, value.equals("true"));
+                        if (HTMLScanner.REPORT_ERRORS.equals(id)) {
+                        	parser.setErrorHandler(new HTMLErrorHandler(out));
+                        }
                     }
                     else {
                         parser.setProperty(id, value);

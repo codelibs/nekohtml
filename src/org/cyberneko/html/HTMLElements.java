@@ -222,7 +222,7 @@ public class HTMLElements {
             // BLOCKQUOTE - - (%block;|SCRIPT)+
             new Element(BLOCKQUOTE, "BLOCKQUOTE", Element.BLOCK, BODY, new short[]{P}),
             // BODY O O (%block;|SCRIPT)+ +(INS|DEL)
-            new Element(BODY, "BODY", 0, HTML, new short[]{HEAD}),
+            new Element(BODY, "BODY", Element.CONTAINER, HTML, new short[]{HEAD}),
             // BR - O EMPTY
             new Element(BR, "BR", Element.EMPTY, BODY, null),
             // BUTTON - - (%flow;)* -(A|%formctrl;|FORM|FIELDSET)

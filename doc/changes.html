@@ -32,7 +32,8 @@ Changes
  not all entities with missing semicolon should be recognized as entities (different browsers behave differently therefore
  until we have something like "browser profiles", NekoHTML will only recognized incomplete entities with code less than 256),
  automatically add <code>TBODY</code> around <TR> nested directly within <code>TABLE</code>,
- <code>TD</code> and <code>TH</code> are container and should force closing of nested tags like <code>DIV</code>  
+ <code>TD</code> and <code>TH</code> are container and should force closing of nested tags like <code>DIV</code>,
+ don't generate incorrect warnings about missing closing <code>BODY</code> and <code>HTML</code> tags when feature <code>http://cyberneko.org/html/features/balance-tags/ignore-outside-content</code> is off
  
 
  <dt>Version 1.9.12 (20 Apr 2009)
