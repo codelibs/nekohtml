@@ -27,7 +27,10 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.StringTokenizer;
 
 import junit.framework.AssertionFailedError;
@@ -58,17 +61,24 @@ public class CanonicalTest extends TestCase {
     	outputDir.mkdirs();
 
     	TestSuite suite = new TestSuite();
+    	final List/*File*/ dataFiles = new ArrayList();
         File dataDir = new File("data");
-        File[] dataFiles = dataDir.listFiles(new FileFilter() {
-            public boolean accept(File pathname) {
-                String name = pathname.getName();
-                return name.startsWith("test") && name.endsWith(".html");
+        dataDir.listFiles(new FileFilter() {
+            public boolean accept(final File file) {
+                String name = file.getName();
+                if (file.isDirectory() && !"canonical".equals(name)) {
+                	file.listFiles(this);
+                }
+                else if (name.startsWith("test") && name.endsWith(".html")) {
+                	dataFiles.add(file);
+                }
+                return false; // we don't care to listFiles' result
             }
         });
-        Arrays.sort(dataFiles);
+        Collections.sort(dataFiles);
 
-        for (int i=0; i < dataFiles.length; i++) {
-            suite.addTest(new CanonicalTest(dataFiles[i]));
+        for (int i=0; i < dataFiles.size(); i++) {
+            suite.addTest(new CanonicalTest((File) dataFiles.get(i)));
         }
         return suite;
     }
