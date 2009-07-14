@@ -434,8 +434,21 @@ The NekoHTML parser supports the following properties:
    valid according to the XHTML specification.
    <p class='see'>
    See:&nbsp;<a href='#override-namespaces'>http://cyberneko.org/html/features/override-namespaces</a>
-  <td align='center'>String
-  <td align='center'>XHTML 1.0 namespaces URI
+  <td align='center'>String</td>
+  <td align='center'>XHTML 1.0 namespaces URI</td>
+ </tr>
+ <tr>
+  <td>
+   <a name='fragment-context-stack'></a>
+   <font color="red">Experimental</font>
+   <span class='id'>http://cyberneko.org/html/properties/balance-tags/fragment-context-stack</span>
+   <br>
+   Specifies the stack of elements that should be considered as ancestors while parsing an HTML fragment.
+   For instance when the last item of the context stack is a TABLE (or a TBODY, THEAD, TFOOT) following fragment will be parsed as a new row: &lt;tr&gt;&lt;td&gt;hello&lt;/td&gt;&lt;/tr&gt;.
+   When the context doesn't indicate that we are already within a table, TR and TD tags will be discarded.
+   </td>
+  <td align='center'>QName[]</td>
+  <td align='center'>null</td>
 </table>
 
 <div class='copyright'>
