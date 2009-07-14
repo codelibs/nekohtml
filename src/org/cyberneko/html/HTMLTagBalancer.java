@@ -32,6 +32,7 @@ import org.apache.xerces.xni.parser.XMLComponentManager;
 import org.apache.xerces.xni.parser.XMLConfigurationException;
 import org.apache.xerces.xni.parser.XMLDocumentFilter;
 import org.apache.xerces.xni.parser.XMLDocumentSource;
+import org.cyberneko.html.HTMLElements.Element;
 import org.cyberneko.html.filters.NamespaceBinder;
 import org.cyberneko.html.xercesbridge.XercesBridge;
                       
@@ -58,6 +59,7 @@ import org.cyberneko.html.xercesbridge.XercesBridge;
  * <li>http://cyberneko.org/html/properties/names/elems
  * <li>http://cyberneko.org/html/properties/names/attrs
  * <li>http://cyberneko.org/html/properties/error-reporter
+ * <li>http://cyberneko.org/html/properties/balance-tags/current-stack
  * </ul>
  *
  * @see HTMLElements
@@ -125,15 +127,23 @@ public class HTMLTagBalancer
     /** Error reporter. */
     protected static final String ERROR_REPORTER = "http://cyberneko.org/html/properties/error-reporter";
 
+    /**
+     * <font color="red">EXPERIMENTAL: may change in next release</font><br/>
+     * Name of the property holding the stack of elements in which context a document fragment should be parsed.
+     **/
+    public static final String FRAGMENT_CONTEXT_STACK = "http://cyberneko.org/html/properties/balance-tags/fragment-context-stack";
+
     /** Recognized properties. */
     private static final String[] RECOGNIZED_PROPERTIES = {
         NAMES_ELEMS,
         NAMES_ATTRS,
         ERROR_REPORTER,
+        FRAGMENT_CONTEXT_STACK,
     };
 
     /** Recognized properties defaults. */
     private static final Object[] RECOGNIZED_PROPERTIES_DEFAULTS = {
+        null,
         null,
         null,
         null,
@@ -248,6 +258,17 @@ public class HTMLTagBalancer
     protected HTMLTagBalancingListener tagBalancingListener;
     private LostText lostText_ = new LostText();
 
+    private boolean forcedStartElement_ = false;
+    private boolean forcedEndElement_ = false;
+
+    /**
+     * Stack of elements determining the context in which a document fragment should be parsed
+     */
+	private QName[] fragmentContextStack_ = null;
+	private int fragmentContextStackSize_ = 0; // not 0 only when a fragment is parsed and fragmentContextStack_ is set
+
+    private List/*ElementEntry*/ endElementsBuffer_ = new ArrayList(); 
+
     //
     // HTMLComponent methods
     //
@@ -304,6 +325,8 @@ public class HTMLTagBalancer
         fNamesElems = getNamesValue(String.valueOf(manager.getProperty(NAMES_ELEMS)));
         fNamesAttrs = getNamesValue(String.valueOf(manager.getProperty(NAMES_ATTRS)));
         fErrorReporter = (HTMLErrorReporter)manager.getProperty(ERROR_REPORTER);
+        
+        fragmentContextStack_ = (QName[]) manager.getProperty(FRAGMENT_CONTEXT_STACK);
 
     } // reset(XMLComponentManager)
 
@@ -371,12 +394,25 @@ public class HTMLTagBalancer
 
         // reset state
         fElementStack.top = 0;
+        if (fragmentContextStack_ != null) {
+        	fragmentContextStackSize_ = fragmentContextStack_.length;
+        	for (int i=0; i<fragmentContextStack_.length; ++i) {
+        		final QName name = fragmentContextStack_[i];
+            	final Element elt = HTMLElements.getElement(name.localpart);
+            	fElementStack.push(new Info(elt, name));
+        	}
+        	
+        }
+        else {
+        	fragmentContextStackSize_ = 0;
+        }
         fSeenAnything = false;
         fSeenDoctype = false;
         fSeenRootElement = false;
         fSeenRootElementEnd = false;
         fSeenHeadElement = false;
         fSeenBodyElement = false;
+        
 
         // pass on event
         if (fDocumentHandler != null) {
@@ -420,10 +456,7 @@ public class HTMLTagBalancer
 
     	// </body> and </html> have been buffered to consider outside content
     	fIgnoreOutsideContent = true; // endElement should not ignore the elements passed from buffer
-    	for (int i=0; i<endElementsBuffer.size(); ++i) {
-    		final EndElementEntry entry = (EndElementEntry) endElementsBuffer.get(i);
-        	endElement(entry.name_, entry.augs_);
-    	}
+    	consumeBufferedEndElements();
     	
         // handle empty document
         if (!fSeenRootElement && !fDocumentFragment) {
@@ -445,7 +478,7 @@ public class HTMLTagBalancer
 
         // pop all remaining elements
         else {
-            int length = fElementStack.top;
+            int length = fElementStack.top - fragmentContextStackSize_;
             for (int i = 0; i < length; i++) {
                 Info info = fElementStack.pop();
                 if (fReportErrors) {
@@ -464,6 +497,19 @@ public class HTMLTagBalancer
         }
 
     } // endDocument(Augmentations)
+
+    /**
+     * Consume elements that have been buffered, like </body></html> that are first consumed
+     * at the end of document
+     */
+	private void consumeBufferedEndElements() {
+		for (int i=0; i<endElementsBuffer_.size(); ++i) {
+    		final ElementEntry entry = (ElementEntry) endElementsBuffer_.get(i);
+    		forcedEndElement_ = true;
+        	endElement(entry.name_, entry.augs_);
+    	}
+		endElementsBuffer_.clear();
+	}
 
     /** Comment. */
     public void comment(XMLString text, Augmentations augs) throws XNIException {
@@ -498,6 +544,9 @@ public class HTMLTagBalancer
         throws XNIException {
         fSeenAnything = true;
         
+        final boolean isForcedCreation = forcedStartElement_;
+        forcedStartElement_ = false;
+
         // check for end of document
         if (fSeenRootElementEnd) {
         	notifyDiscardedStartElement(elem, attrs, augs);
@@ -505,39 +554,53 @@ public class HTMLTagBalancer
         }
 
         // get element information
-        HTMLElements.Element element = getElement(elem);
+        final HTMLElements.Element element = getElement(elem);
+        final short elementCode = element.code;
+
+        // the creation of some elements like TABLE or SELECT can't be forced. Any others? 
+        if (isForcedCreation && (elementCode == HTMLElements.TABLE || elementCode == HTMLElements.SELECT)) {
+        	return; // don't accept creation
+        }
 
         // ignore multiple html, head, body elements
-        if (fSeenRootElement && element.code == HTMLElements.HTML) {
+		if (fSeenRootElement && elementCode == HTMLElements.HTML) {
         	notifyDiscardedStartElement(elem, attrs, augs);
             return;
         }
-        if (element.code == HTMLElements.HEAD) {
+        if (elementCode == HTMLElements.HEAD) {
             if (fSeenHeadElement) {
             	notifyDiscardedStartElement(elem, attrs, augs);
                 return;
             }
             fSeenHeadElement = true;
         }
-        else if (element.code == HTMLElements.BODY) {
+        else if (elementCode == HTMLElements.FRAMESET) {
+        	consumeBufferedEndElements(); // </head> (if any) has been buffered
+        }
+        else if (elementCode == HTMLElements.BODY) {
     		// create <head></head> if none was present
     		if (!fSeenHeadElement) {
     			final QName head = createQName("head");
-    			startElement(head, null, synthesizedAugs());
+    			forceStartElement(head, null, synthesizedAugs());
     			endElement(head, synthesizedAugs());
     		}
+        	consumeBufferedEndElements(); // </head> (if any) has been buffered
+    		
             if (fSeenBodyElement) {
             	notifyDiscardedStartElement(elem, attrs, augs);
                 return;
             }
             fSeenBodyElement = true;
         }
-        else if (element.code == HTMLElements.FORM) {
+        else if (elementCode == HTMLElements.FORM) {
         	if (fOpenedForm) {
             	notifyDiscardedStartElement(elem, attrs, augs);
         		return;
         	}
         	fOpenedForm = true;
+        }
+        else if (elementCode == HTMLElements.UNKNOWN) {
+        	consumeBufferedEndElements();
         }
 
         // check proper parent
@@ -549,8 +612,14 @@ public class HTMLTagBalancer
                     String ename = elem.rawname;
                     fErrorReporter.reportWarning("HTML2002", new Object[]{ename,pname});
                 }
-                QName qname = new QName(null, pname, pname, null);
-                startElement(qname, null, synthesizedAugs());
+                final QName qname = new QName(null, pname, pname, null);
+                final boolean parentCreated = forceStartElement(qname, null, synthesizedAugs());
+                if (!parentCreated) {
+                	if (!isForcedCreation) {
+                		notifyDiscardedStartElement(elem, attrs, augs);
+                	}
+            		return;
+                }
             }
         	else {
                 HTMLElements.Element preferedParent = element.parent[0];
@@ -558,12 +627,18 @@ public class HTMLTagBalancer
                     int depth = getParentDepth(element.parent, element.bounds);
                     if (depth == -1) { // no parent found
                         final String pname = modifyName(preferedParent.name, fNamesElems);
-                        QName qname = new QName(null, pname, pname, null);
+                        final QName qname = new QName(null, pname, pname, null);
                         if (fReportErrors) {
                             String ename = elem.rawname;
                             fErrorReporter.reportWarning("HTML2004", new Object[]{ename,pname});
                         }
-                        startElement(qname, null, synthesizedAugs());
+                        final boolean parentCreated = forceStartElement(qname, null, synthesizedAugs());
+                        if (!parentCreated) {
+                        	if (!isForcedCreation) {
+                        		notifyDiscardedStartElement(elem, attrs, augs);
+                        	}
+                    		return;
+                        }
                     }
                 }
             }
@@ -627,7 +702,7 @@ public class HTMLTagBalancer
         }
         // TODO: investigate if only table is special here
         // table closes all opened inline elements
-        else if (element.code == HTMLElements.TABLE) {
+        else if (elementCode == HTMLElements.TABLE) {
             for (int i=fElementStack.top-1; i >= 0; i--) {
                 final Info info = fElementStack.data[i];
                 if (!info.element.isInline()) {
@@ -661,15 +736,29 @@ public class HTMLTagBalancer
         // re-open inline elements
         for (int i = 0; i < depth; i++) {
             Info info = fInlineStack.pop();
-            startElement(info.qname, info.attributes, synthesizedAugs());
+            forceStartElement(info.qname, info.attributes, synthesizedAugs());
         }
 
-        if (element.code == HTMLElements.BODY) {
+        if (elementCode == HTMLElements.BODY) {
         	lostText_.refeed(this);
         }
     } // startElement(QName,XMLAttributes,Augmentations)
 
-	private QName createQName(String tagName) {
+    /**
+     * Forces an element start, taking care to set the information to allow startElement to "see" that's
+     * the element has been forced.
+     * @return <code>true</code> if creation could be done (TABLE's creation for instance can't be forced)
+     */
+    private boolean forceStartElement(final QName elem, XMLAttributes attrs, final Augmentations augs)
+    throws XNIException {
+    	
+    	forcedStartElement_ = true;
+    	startElement(elem, attrs, augs);
+    	
+    	return fElementStack.top > 0 && elem.equals(fElementStack.peek().qname);
+    }
+
+    private QName createQName(String tagName) {
 		tagName = modifyName(tagName, fNamesElems);
 		return new QName(null, tagName, tagName, null);
 	}
@@ -677,7 +766,7 @@ public class HTMLTagBalancer
 	/** Empty element. */
     public void emptyElement(final QName element, XMLAttributes attrs, Augmentations augs)
         throws XNIException {
-        startElement(element, attrs, augs);
+    	startElement(element, attrs, augs);
         // browser ignore the closing indication for non empty tags like <form .../> but not for unknown element
         final HTMLElements.Element elem = getElement(element);
         if (elem.isEmpty() || elem.code == HTMLElements.UNKNOWN) {
@@ -734,7 +823,7 @@ public class HTMLTagBalancer
 		if (fReportErrors) {
 		    fErrorReporter.reportWarning("HTML2006", new Object[]{body.localpart});
 		}
-		startElement(body, null, synthesizedAugs());
+		forceStartElement(body, null, synthesizedAugs());
 	}
 
     /** Text declaration. */
@@ -832,6 +921,11 @@ public class HTMLTagBalancer
                 }
                 forceStartBody();
             }
+            
+            if (whitespace && (fElementStack.top < 2 || endElementsBuffer_.size() == 1)) {
+            	// ignore spaces directly within <html>
+            	return;
+            }
 
             // handle character content in head
             // NOTE: This frequently happens when the document looks like:
@@ -863,19 +957,10 @@ public class HTMLTagBalancer
         throws XNIException {
         characters(text, augs);
     } // ignorableWhitespace(XMLString,Augmentations)
-
-    static class EndElementEntry {
-    	private final QName name_;
-    	private final Augmentations augs_;
-    	EndElementEntry(final QName element, final Augmentations augs) {
-    		name_ = new QName(element);
-    		augs_ = (augs == null) ? null : new HTMLAugmentations(augs);
-    	}
-    }
-    private List/*EndElementEntry*/ endElementsBuffer = new ArrayList(); 
     
     /** End element. */
     public void endElement(final QName element, final Augmentations augs) throws XNIException {
+    	final boolean forcedEndElement = forcedEndElement_;
         // is there anything to do?
         if (fSeenRootElementEnd) {
         	notifyDiscardedEndElement(element, augs);
@@ -888,7 +973,7 @@ public class HTMLTagBalancer
         // if we consider outside content, just buffer </body> and </html> to consider them at the very end
         if (!fIgnoreOutsideContent &&
             (elem.code == HTMLElements.BODY || elem.code == HTMLElements.HTML)) {
-        	endElementsBuffer.add(new EndElementEntry(element, augs));
+        	endElementsBuffer_.add(new ElementEntry(element, augs));
             return;
         }
 
@@ -899,12 +984,17 @@ public class HTMLTagBalancer
         else if (elem.code == HTMLElements.FORM) {
         	fOpenedForm = false;
         }
+        else if (elem.code == HTMLElements.HEAD && !forcedEndElement) {
+        	// consume </head> first when <body> is reached to retrieve content lost between </head> and <body>
+        	endElementsBuffer_.add(new ElementEntry(element, augs));
+        	return;
+        }
 
         // empty element
         int depth = getElementDepth(elem);
         if (depth == -1) {
         	if (elem.code == HTMLElements.P) {
-	            startElement(element, emptyAttributes(), synthesizedAugs());
+        		forceStartElement(element, emptyAttributes(), synthesizedAugs());
 	            endElement(element, augs);
         	}
         	else if (!elem.isEmpty()) {
@@ -953,7 +1043,7 @@ public class HTMLTagBalancer
                     String iname = info.qname.rawname;
                     fErrorReporter.reportWarning("HTML2008", new Object[]{iname});
                 }
-                startElement(info.qname, attributes, synthesizedAugs());
+                forceStartElement(info.qname, attributes, synthesizedAugs());
             }
         }
 
@@ -1049,7 +1139,7 @@ public class HTMLTagBalancer
     protected final int getElementDepth(HTMLElements.Element element) {
         final boolean container = element.isContainer();
         int depth = -1;
-        for (int i = fElementStack.top - 1; i >= 0; i--) {
+        for (int i = fElementStack.top - 1; i >=fragmentContextStackSize_; i--) {
             Info info = fElementStack.data[i];
             if (info.element.code == element.code) {
                 depth = fElementStack.top - i;
@@ -1298,4 +1388,15 @@ public class HTMLTagBalancer
     		tagBalancingListener.ignoredEndElement(element, augs);
 	}
 
+    /**
+     * Structure to hold information about an element placed in buffer to be comsumed later
+     */
+    static class ElementEntry {
+    	private final QName name_;
+    	private final Augmentations augs_;
+    	ElementEntry(final QName element, final Augmentations augs) {
+    		name_ = new QName(element);
+    		augs_ = (augs == null) ? null : new HTMLAugmentations(augs);
+    	}
+    }
 } // class HTMLTagBalancer
