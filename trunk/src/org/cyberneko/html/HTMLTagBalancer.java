@@ -16,6 +16,8 @@
 
 package org.cyberneko.html;
 
+import java.util.ArrayList;
+import java.util.List;
 import org.apache.xerces.util.XMLAttributesImpl;
 import org.apache.xerces.xni.Augmentations;
 import org.apache.xerces.xni.NamespaceContext;
@@ -416,6 +418,13 @@ public class HTMLTagBalancer
     /** End document. */
     public void endDocument(Augmentations augs) throws XNIException {
 
+    	// </body> and </html> have been buffered to consider outside content
+    	fIgnoreOutsideContent = true; // endElement should not ignore the elements passed from buffer
+    	for (int i=0; i<endElementsBuffer.size(); ++i) {
+    		final EndElementEntry entry = (EndElementEntry) endElementsBuffer.get(i);
+        	endElement(entry.name_, entry.augs_);
+    	}
+    	
         // handle empty document
         if (!fSeenRootElement && !fDocumentFragment) {
             if (fReportErrors) {
@@ -855,6 +864,16 @@ public class HTMLTagBalancer
         characters(text, augs);
     } // ignorableWhitespace(XMLString,Augmentations)
 
+    static class EndElementEntry {
+    	private final QName name_;
+    	private final Augmentations augs_;
+    	EndElementEntry(final QName element, final Augmentations augs) {
+    		name_ = new QName(element);
+    		augs_ = (augs == null) ? null : new HTMLAugmentations(augs);
+    	}
+    }
+    private List/*EndElementEntry*/ endElementsBuffer = new ArrayList(); 
+    
     /** End element. */
     public void endElement(final QName element, final Augmentations augs) throws XNIException {
         // is there anything to do?
@@ -866,10 +885,10 @@ public class HTMLTagBalancer
         // get element information
         HTMLElements.Element elem = getElement(element);
 
-        // do we ignore outside content?
+        // if we consider outside content, just buffer </body> and </html> to consider them at the very end
         if (!fIgnoreOutsideContent &&
             (elem.code == HTMLElements.BODY || elem.code == HTMLElements.HTML)) {
-        	notifyDiscardedEndElement(element, augs);
+        	endElementsBuffer.add(new EndElementEntry(element, augs));
             return;
         }
 

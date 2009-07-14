@@ -16,13 +16,12 @@
 
 package org.cyberneko.html;
 
-import org.cyberneko.html.filters.DefaultFilter;
-
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 
+import org.apache.xerces.util.DefaultErrorHandler;
 import org.apache.xerces.util.XMLStringBuffer;
 import org.apache.xerces.xni.Augmentations;
 import org.apache.xerces.xni.NamespaceContext;
@@ -31,6 +30,8 @@ import org.apache.xerces.xni.XMLAttributes;
 import org.apache.xerces.xni.XMLLocator;
 import org.apache.xerces.xni.XMLString;
 import org.apache.xerces.xni.XNIException;
+import org.apache.xerces.xni.parser.XMLParseException;
+import org.cyberneko.html.filters.DefaultFilter;
 
 /**
  * This class implements an filter to output "canonical" files for
@@ -474,3 +475,4 @@ public class Writer
     } // main(String[])
 
 } // class Writer
+
