@@ -385,7 +385,7 @@ public class Writer
         fPrinter.flush();
 
         // return original META[@http-equiv]/@content value
-        if (contentIndex != -1) {
+        if (contentIndex != -1 && originalContent != null) {
             attributes.setValue(contentIndex, originalContent);
         }
 
