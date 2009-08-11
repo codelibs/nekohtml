@@ -12,6 +12,7 @@ import org.xml.sax.helpers.DefaultHandler;
 
 /**
  * Unit test for <a href="http://sourceforge.net/support/tracker.php?aid=2799585">Bug 2799585</a>.
+ * @author Charles Yates
  * @author Marc Guillemot
  *
  */
