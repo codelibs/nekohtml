@@ -503,8 +503,10 @@ public class HTMLTagBalancer
      * at the end of document
      */
 	private void consumeBufferedEndElements() {
-		for (int i=0; i<endElementsBuffer_.size(); ++i) {
-    		final ElementEntry entry = (ElementEntry) endElementsBuffer_.get(i);
+		final List toConsume = new ArrayList(endElementsBuffer_);
+		endElementsBuffer_.clear();
+		for (int i=0; i<toConsume.size(); ++i) {
+    		final ElementEntry entry = (ElementEntry) toConsume.get(i);
     		forcedEndElement_ = true;
         	endElement(entry.name_, entry.augs_);
     	}
