@@ -25,6 +25,7 @@ import java.io.Reader;
 
 import org.apache.xerces.impl.Constants;
 import org.apache.xerces.util.ErrorHandlerWrapper;
+import org.apache.xerces.util.XMLChar;
 import org.apache.xerces.xni.Augmentations;
 import org.apache.xerces.xni.NamespaceContext;
 import org.apache.xerces.xni.QName;
@@ -397,12 +398,15 @@ public class DOMFragmentParser
     } // doctypeDecl(String,String,String,Augmentations)
 
     /** Processing instruction. */
-    public void processingInstruction(String target, XMLString data,
-                                      Augmentations augs)
+    public void processingInstruction(final String target, final XMLString data,
+    		final Augmentations augs)
         throws XNIException {
-        ProcessingInstruction pi = 
-            fDocument.createProcessingInstruction(target, data.toString());
-        fCurrentNode.appendChild(pi);
+    	
+    	final String s = data.toString();
+    	if (XMLChar.isValidName(s)) {
+            final ProcessingInstruction pi = fDocument.createProcessingInstruction(target, s);
+            fCurrentNode.appendChild(pi);
+    	}
     } // processingInstruction(String,XMLString,Augmentations)
 
     /** Comment. */
@@ -430,7 +434,9 @@ public class DOMFragmentParser
         for (int i = 0; i < count; i++) {
             String aname = attrs.getQName(i);
             String avalue = attrs.getValue(i);
-            elementNode.setAttribute(aname, avalue);
+            if (XMLChar.isValidName(aname)) {
+            	elementNode.setAttribute(aname, avalue);
+            }
         }
         fCurrentNode.appendChild(elementNode);
         fCurrentNode = elementNode;
