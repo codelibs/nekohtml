@@ -353,6 +353,7 @@ public class Version {
 			<pom refid="maven.project"/>
 			<attach file="${mvn.bundle.sources}" classifier="sources" /> 
 			<attach file="${mvn.bundle.javadoc}" classifier="javadoc" /> 
+			<localrepository path="${build.dir}/mvn"/>
 		</artifact:deploy>
 	</target>
 	
