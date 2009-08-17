@@ -165,7 +165,7 @@ public class HTMLElements {
     protected static final ElementList ELEMENTS = new ElementList();
 
     /** No such element. */
-    public static final Element NO_SUCH_ELEMENT = new Element(UNKNOWN, "",  Element.BLOCK, new short[]{BODY,HEAD}/*HTML*/, null);
+    public static final Element NO_SUCH_ELEMENT = new Element(UNKNOWN, "",  Element.CONTAINER, new short[]{BODY,HEAD}/*HTML*/, null);
 
     //
     // Static initializer
