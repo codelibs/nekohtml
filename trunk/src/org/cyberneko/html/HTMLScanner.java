@@ -490,9 +490,6 @@ public class HTMLScanner
 
     // temp vars
 
-    /** String. */
-    protected final XMLString fString = new XMLString();
-
     /** String buffer. */
     protected final XMLStringBuffer fStringBuffer = new XMLStringBuffer(1024);
 
@@ -2239,45 +2236,61 @@ public class HTMLScanner
                 printBuffer();
                 System.out.println();
             }
-            int newlines = skipNewlines();
-            if (newlines == 0 && fCurrentEntity.offset == fCurrentEntity.length) {
+            fStringBuffer.clear();  
+            while(true) { 
+               int newlines = skipNewlines();
+               if (newlines == 0 && fCurrentEntity.offset == fCurrentEntity.length) {
+                   if (DEBUG_BUFFER) {
+                       System.out.print(")scanCharacters: ");
+                       printBuffer();
+                       System.out.println();
+                    }
+                    break;
+                }
+                char c;
+                int offset = fCurrentEntity.offset - newlines;
+                for (int i = offset; i < fCurrentEntity.offset; i++) {
+                    fCurrentEntity.buffer[i] = '\n';
+                }
+                while (fCurrentEntity.offset < fCurrentEntity.length) {
+                    c = fCurrentEntity.buffer[fCurrentEntity.offset];
+                    if (c == '<' || c == '&' || c == '\n' || c == '\r') {
+                        break;
+                    }
+                    fCurrentEntity.offset++;
+                    fCurrentEntity.characterOffset++;
+                    fCurrentEntity.columnNumber++;
+                }
+                if (fCurrentEntity.offset > offset && 
+                    fDocumentHandler != null && fElementCount >= fElementDepth) {
+                    if (DEBUG_CALLBACKS) {
+                    	final XMLString xmlString = new XMLString(fCurrentEntity.buffer, offset, fCurrentEntity.offset - offset);
+                        System.out.println("characters(" + xmlString + ")");
+                    }
+                    fEndLineNumber = fCurrentEntity.lineNumber;
+                    fEndColumnNumber = fCurrentEntity.columnNumber;
+                    fEndCharacterOffset = fCurrentEntity.characterOffset;
+                    fStringBuffer.append(fCurrentEntity.buffer, offset, fCurrentEntity.offset - offset);
+                }
                 if (DEBUG_BUFFER) {
                     System.out.print(")scanCharacters: ");
                     printBuffer();
                     System.out.println();
                 }
-                return;
+
+                boolean hasNext = fCurrentEntity.offset  < fCurrentEntity.buffer.length;
+                int next = hasNext ? fCurrentEntity.buffer[fCurrentEntity.offset] : -1; 
+                
+                if(next == '&' || next == '<' || next == -1) {
+                     break;
+                 }
+
+            } //end while
+
+            if(fStringBuffer.length != 0) {
+                fDocumentHandler.characters(fStringBuffer, locationAugs());
             }
-            char c;
-            int offset = fCurrentEntity.offset - newlines;
-            for (int i = offset; i < fCurrentEntity.offset; i++) {
-                fCurrentEntity.buffer[i] = '\n';
-            }
-            while (fCurrentEntity.offset < fCurrentEntity.length) {
-                c = fCurrentEntity.buffer[fCurrentEntity.offset];
-                if (c == '<' || c == '&' || c == '\n' || c == '\r') {
-                    break;
-                }
-                fCurrentEntity.offset++;
-                fCurrentEntity.characterOffset++;
-                fCurrentEntity.columnNumber++;
-            }
-            if (fCurrentEntity.offset > offset && 
-                fDocumentHandler != null && fElementCount >= fElementDepth) {
-                fString.setValues(fCurrentEntity.buffer, offset, fCurrentEntity.offset - offset);
-                if (DEBUG_CALLBACKS) {
-                    System.out.println("characters("+fString+")");
-                }
-                fEndLineNumber = fCurrentEntity.lineNumber;
-                fEndColumnNumber = fCurrentEntity.columnNumber;
-                fEndCharacterOffset = fCurrentEntity.characterOffset;
-                fDocumentHandler.characters(fString, locationAugs());
-            }
-            if (DEBUG_BUFFER) {
-                System.out.print(")scanCharacters: ");
-                printBuffer();
-                System.out.println();
-            }
+
         } // scanCharacters()
 
         /** Scans a CDATA section. */

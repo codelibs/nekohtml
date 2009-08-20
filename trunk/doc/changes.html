@@ -41,7 +41,8 @@ Changes
  use <code>http://www.w3.org/1999/xhtml</code> namespace for automatically inserted tags (#2799585),
  <code>DOMFragmentParser</code> ignores invalid processing instruction and attribute name (#2828553, #2828534),
  define latest Xerces version (2.9.1) as dependency in the published Maven POM,
- end of parent element forces closing of unknown elements (#2816091)
+ end of parent element forces closing of unknown elements (#2816091),
+ handle new lines directly in HTMLScanner.scanCharacters to avoid multiple calls (patch provided by Sean Bridges, #2829319)
  
  
 
