@@ -3755,11 +3755,12 @@ public class HTMLScanner
      * Reduces the buffer to the content between start and end marker when
      * only whitespaces are found before the startMarker as well as after the end marker
      */
-	static void reduceToContent(XMLStringBuffer buffer, String startMarker, String endMarker) {
+	static void reduceToContent(final XMLStringBuffer buffer, final String startMarker, final String endMarker) {
 		int i = 0;
 		int startContent = -1;
 		final int l1 = startMarker.length();
-		while (i < buffer.length - l1) {
+		final int l2 = endMarker.length();
+		while (i < buffer.length - l1 - l2) {
 			final char c = buffer.ch[buffer.offset+i];
 			if (Character.isWhitespace(c)) {
 				++i;
@@ -3773,8 +3774,10 @@ public class HTMLScanner
 				return; // start marker not found
 			}
 		}
+		if (startContent == -1) { // start marker not found
+			return;
+		}
 		
-		final int l2 = endMarker.length();
 		i = buffer.length - 1;
 		while (i > startContent + l2) {
 			final char c = buffer.ch[buffer.offset+i];
