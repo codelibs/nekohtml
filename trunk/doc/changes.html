@@ -27,23 +27,25 @@ Changes
 
 <h2>Releases</h2>
 <dl>
- <dt>Future version
+ <dt>Version 1.9.13 (2 Sept 2009)
+     [<a href='http://downloads.sourceforge.net/nekohtml/nekohtml-1.9.13.zip'>zip</a>]
+     [<a href='http://downloads.sourceforge.net/nekohtml/nekohtml-1.9.13.tar.gz'>tgz</a>]
  <dd>A <code>A</code> tag should close opened <code>A</code> tag (fixes OutOfMemoryException reported in #2780607),
  not all entities with missing semicolon should be recognized as entities (different browsers behave differently therefore
  until we have something like "browser profiles", NekoHTML will only recognized incomplete entities with code less than 256),
- automatically add <code>TBODY</code> around <TR> nested directly within <code>TABLE</code>,
+ automatically add <code>TBODY</code> around <code>TR</code> nested directly within <code>TABLE</code>,
  <code>TD</code> and <code>TH</code> are container and should force closing of nested tags like <code>DIV</code>,
  don't generate incorrect warnings about missing closing <code>BODY</code> and <code>HTML</code> tags when feature <code>http://cyberneko.org/html/features/balance-tags/ignore-outside-content</code> is off,
  don't generate opening <code>TABLE</code> or <code>SELECT</code> tag when it's missing (therefore discard child nodes),
- added <font color='red'>experimental</font> tag balancer property <code>http://cyberneko.org/html/properties/balance-tags/fragment-context-stack</code> allowing to to specify the tag possibility to immediately evaluate a new input source during parsing,
- ignore whitespace that are direct children of <code>HTML</code>,
- org.cyberneko.html.filters.Writer wrongly change attribute value of some <code>META</code> tags (#2815779),
+ added <font color='red'>experimental</font> tag balancer property <code>http://cyberneko.org/html/properties/balance-tags/fragment-context-stack</code> allowing to to specify the current tag stack when evaluating a new input source during parsing,
+ ignore whitespaces that are direct children of <code>HTML</code>,
+ <code>org.cyberneko.html.filters.Writer</code> wrongly changes attribute value of some <code>META</code> tags (#2815779),
  use <code>http://www.w3.org/1999/xhtml</code> namespace for automatically inserted tags (#2799585),
  <code>DOMFragmentParser</code> ignores invalid processing instruction and attribute name (#2828553, #2828534),
  define latest Xerces version (2.9.1) as dependency in the published Maven POM,
  end of parent element forces closing of unknown elements (#2816091),
  handle new lines directly in HTMLScanner.scanCharacters to avoid multiple calls (patch provided by Sean Bridges, #2829319),
- fix ArrayIndexOutOfBoundsException occurring using <code>strip-comment-delims</code> feature (#2837555) 
+ fix ArrayIndexOutOfBoundsException occurring using <code>strip-comment-delims</code> feature (#2837555).
  
  
 
