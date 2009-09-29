@@ -349,7 +349,7 @@ public class HTMLElements {
             // NOEMBED
             new Element(NOEMBED, "NOEMBED", 0, BODY, null),
             // NOFRAMES - - (BODY) -(NOFRAMES)
-            new Element(NOFRAMES, "NOFRAMES", 0, FRAMESET, null),
+            new Element(NOFRAMES, "NOFRAMES", 0, null, null),
             // NOLAYER
             new Element(NOLAYER, "NOLAYER", 0, BODY, null),
             // NOSCRIPT - - (%block;)+
