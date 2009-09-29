@@ -401,6 +401,9 @@ public class HTMLScanner
     /** Parse noscript content. */
     protected boolean fParseNoScriptContent;
 
+    /** Parse noframes content. */
+    protected boolean fParseNoFramesContent;
+
     // properties
 
     /** Modify HTML element names. */
@@ -2018,7 +2021,10 @@ public class HTMLScanner
                                 	scanScriptContent();
                                 }
                                 else if (!fParseNoScriptContent && "noscript".equalsIgnoreCase(ename)) {
-                                	scanNoScriptContent();
+                                	scanNoXxxContent("noscript");
+                                }
+                                else if (!fParseNoFramesContent && "noframes".equalsIgnoreCase(ename)) {
+                                	scanNoXxxContent("noframes");
                                 }
                                 else if (ename != null && !fSingleBoolean[0] 
                                     && HTMLElements.getElement(ename).isSpecial() 
@@ -2086,10 +2092,12 @@ public class HTMLScanner
         /**
          * Scans the content of <noscript>: it doesn't get parsed but is considered as plain text
          * when feature {@link HTMLScanner#PARSE_NOSCRIPT_CONTENT} is set to false.
+         * @param the tag for which content is scanned (one of "noscript" or "noframes")
          * @throws IOException
          */
-        private void scanNoScriptContent() throws IOException {
+        private void scanNoXxxContent(final String tagName) throws IOException {
         	final XMLStringBuffer buffer = new XMLStringBuffer();
+        	final String end = "/" + tagName;
         	
             while (true) {
                 int c = read();
@@ -2098,7 +2106,7 @@ public class HTMLScanner
                 }
                 if (c == '<') {
                 	final String next = nextContent(10) + " ";
-                	if (next.length() >= 10 && "/noscript".equalsIgnoreCase(next.substring(0, 9))
+                	if (next.length() >= 10 && end.equalsIgnoreCase(next.substring(0, end.length()))
             			&& ('>' == next.charAt(9) || Character.isWhitespace(next.charAt(9)))) {
 	                    fCurrentEntity.offset--;
                             fCurrentEntity.characterOffset--;
