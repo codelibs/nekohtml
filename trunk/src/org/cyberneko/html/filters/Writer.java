@@ -21,11 +21,6 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 
-import org.cyberneko.html.HTMLConfiguration;
-import org.cyberneko.html.HTMLElements;
-import org.cyberneko.html.HTMLEntities;
-import org.cyberneko.html.filters.DefaultFilter;
-
 import org.apache.xerces.xni.Augmentations;
 import org.apache.xerces.xni.NamespaceContext;
 import org.apache.xerces.xni.QName;
@@ -37,6 +32,9 @@ import org.apache.xerces.xni.XNIException;
 import org.apache.xerces.xni.parser.XMLDocumentFilter;
 import org.apache.xerces.xni.parser.XMLInputSource;
 import org.apache.xerces.xni.parser.XMLParserConfiguration;
+import org.cyberneko.html.HTMLConfiguration;
+import org.cyberneko.html.HTMLElements;
+import org.cyberneko.html.HTMLEntities;
 
 /**
  * An HTML writer written as a filter. Besides serializing the HTML

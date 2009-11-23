@@ -16,10 +16,10 @@
 
 package org.cyberneko.html;
 
-import org.apache.xerces.xni.Augmentations;
-
 import java.util.Enumeration;
 import java.util.Hashtable;
+
+import org.apache.xerces.xni.Augmentations;
 
 /**
  * This class is here to overcome the XNI changes to the 

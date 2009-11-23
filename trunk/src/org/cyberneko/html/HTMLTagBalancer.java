@@ -18,6 +18,7 @@ package org.cyberneko.html;
 
 import java.util.ArrayList;
 import java.util.List;
+
 import org.apache.xerces.util.XMLAttributesImpl;
 import org.apache.xerces.xni.Augmentations;
 import org.apache.xerces.xni.NamespaceContext;
