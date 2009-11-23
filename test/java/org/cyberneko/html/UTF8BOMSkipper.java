@@ -16,7 +16,9 @@
 
 package org.cyberneko.html;
 
-import java.io.*;
+import java.io.FilterInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 
 /**
  * This class is an input stream filter that skips the first

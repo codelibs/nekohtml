@@ -16,8 +16,14 @@
 
 package org.cyberneko.html;
 
-import java.security.*;
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
+import java.security.PrivilegedActionException;
+import java.security.PrivilegedExceptionAction;
 
 /**
  * This class is duplicated for each JAXP subpackage so keep it in sync.
