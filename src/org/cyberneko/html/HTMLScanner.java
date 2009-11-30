@@ -2668,11 +2668,14 @@ public class HTMLScanner
                             System.out.println("+++ @content-type: \""+httpEquiv+'"');
                         }
                         String content = getValue(fAttributes, "content");
-                        int index1 = content != null ? content.toLowerCase().indexOf("charset=") : -1;
-                        if (index1 != -1 && !fIgnoreSpecifiedCharset) {
-                            final int index2 = content.indexOf(';', index1);
-                            final String charset = index2 != -1 ? content.substring(index1+8, index2) : content.substring(index1+8);
-                            changeEncoding(charset);
+                        if (content != null) {
+                        	content = removeSpaces(content);
+                            int index1 = content.toLowerCase().indexOf("charset=");
+                            if (index1 != -1 && !fIgnoreSpecifiedCharset) {
+                                final int index2 = content.indexOf(';', index1);
+                                final String charset = index2 != -1 ? content.substring(index1+8, index2) : content.substring(index1+8);
+                                changeEncoding(charset);
+                            }
                         }
                     }
                 }
@@ -2709,6 +2712,22 @@ public class HTMLScanner
         } // scanStartElement():ename
 
         /**
+         * Removes all spaces for the string (remember: JDK 1.3!)
+         */
+        private String removeSpaces(final String content) {
+        	StringBuffer sb = null;
+        	for (int i=content.length()-1; i>=0; --i) {
+        		if (Character.isWhitespace(content.charAt(i))) {
+        			if (sb == null) {
+        				sb = new StringBuffer(content);
+        			}
+        			sb.deleteCharAt(i);
+        		}
+        	}
+			return (sb == null) ? content : sb.toString();
+		}
+
+		/**
          * Tries to change the encoding used to read the input stream to the specified one
          * @param charset the charset that should be used
          * @return <code>true</code> when the encoding has been changed
@@ -2717,6 +2736,7 @@ public class HTMLScanner
 			if (charset == null || fByteStream == null) {
 				return false;
 			}
+			charset = charset.trim();
 			boolean encodingChanged = false;
 			try {
 			    String ianaEncoding = charset;
