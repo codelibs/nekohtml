@@ -3021,7 +3021,7 @@ public class HTMLScanner
                     isStart = isStart && prevSpace;
                 } while (c != quote);
                 
-                if (fNormalizeAttributes) {
+                if (fNormalizeAttributes && fStringBuffer.length > 0) {
                 	// trailing whitespace already normalized to single space
        	        	if (fStringBuffer.ch[fStringBuffer.length - 1] == ' ') {
            	    		fStringBuffer.length--;
