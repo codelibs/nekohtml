@@ -1256,9 +1256,7 @@ public class HTMLScanner
         int c;
         while ((c = read()) != -1) {
             if (c == '<') {
-                fCurrentEntity.offset--;
-                fCurrentEntity.characterOffset--;
-                fCurrentEntity.columnNumber--;
+            	rewind();
                 break;
             }
             if (c == '>') {
@@ -1294,18 +1292,14 @@ public class HTMLScanner
                     break;
                 }
                 if (c == '\r' || c == '\n') {
-                    fCurrentEntity.offset--;
-                    fCurrentEntity.characterOffset--;
-                    fCurrentEntity.columnNumber--;
+                	rewind();
                     // NOTE: This collapses newlines to a single space.
                     //       [Q] Is this the right thing to do here? -Ac
                     skipNewlines();
                     str.append(' ');
                 }
                 else if (c == '<') {
-                    fCurrentEntity.offset--;
-                    fCurrentEntity.characterOffset--;
-                    fCurrentEntity.columnNumber--;
+                	rewind();
                     break;
                 }
                 else {
@@ -1321,9 +1315,7 @@ public class HTMLScanner
             return str.toString();
         }
         else {
-            fCurrentEntity.offset--;
-            fCurrentEntity.characterOffset--;
-            fCurrentEntity.columnNumber--;
+        	rewind();
         }
         return null;
     } // scanLiteral():String
@@ -1399,9 +1391,7 @@ public class HTMLScanner
             	break;
             }
             else if (!ENTITY_CHARS.get(c) && c != '#') {
-                fCurrentEntity.offset--;
-                fCurrentEntity.characterOffset--;
-                fCurrentEntity.columnNumber--;
+            	rewind();
                 break;
             }
             str.append((char)c);
@@ -1584,9 +1574,7 @@ public class HTMLScanner
                         }
                     }
                     else {
-                        fCurrentEntity.offset--;
-                        fCurrentEntity.characterOffset--;
-                        fCurrentEntity.columnNumber--;
+                    	rewind();
                     }
                 }
                 else if (c == '\r' || c == '\n') {
@@ -1964,9 +1952,7 @@ public class HTMLScanner
                                 throw new EOFException();
                             }
                             else {
-                                fCurrentEntity.offset--;
-                                fCurrentEntity.characterOffset--;
-                                fCurrentEntity.columnNumber--;
+                            	rewind();
                                 scanCharacters();
                             }
                             break;
@@ -2008,9 +1994,7 @@ public class HTMLScanner
                                 throw new EOFException();
                             }
                             else {
-                                fCurrentEntity.offset--;
-                                fCurrentEntity.characterOffset--;
-                                fCurrentEntity.columnNumber--;
+                            	rewind();
                                 fElementCount++;
                                 fSingleBoolean[0] = false;
                                 final String ename = scanStartElement(fSingleBoolean);
@@ -2108,16 +2092,12 @@ public class HTMLScanner
                 	final String next = nextContent(10) + " ";
                 	if (next.length() >= 10 && end.equalsIgnoreCase(next.substring(0, end.length()))
             			&& ('>' == next.charAt(9) || Character.isWhitespace(next.charAt(9)))) {
-	                    fCurrentEntity.offset--;
-                            fCurrentEntity.characterOffset--;
-	                    fCurrentEntity.columnNumber--;
+                    	rewind();
 	                    break;
                 	}
             	}
             	if (c == '\r' || c == '\n') {
-                    fCurrentEntity.offset--;
-                    fCurrentEntity.characterOffset--;
-                    fCurrentEntity.columnNumber--;
+                	rewind();
                     int newlines = skipNewlines();
                     for (int i = 0; i < newlines; i++) {
                         buffer.append('\n');
@@ -2152,9 +2132,7 @@ public class HTMLScanner
                 	final String next = nextContent(8) + " ";
                 	if (next.length() >= 8 && "/script".equalsIgnoreCase(next.substring(0, 7))
                 			&& ('>' == next.charAt(7) || Character.isWhitespace(next.charAt(7)))) {
-                        fCurrentEntity.offset--;
-                        fCurrentEntity.characterOffset--;
-                        fCurrentEntity.columnNumber--;
+                    	rewind();
                         break;
                 	}
                 }
@@ -2163,9 +2141,7 @@ public class HTMLScanner
                 }
 
                 if (c == '\r' || c == '\n') {
-                    fCurrentEntity.offset--;
-                    fCurrentEntity.characterOffset--;
-                    fCurrentEntity.columnNumber--;
+                	rewind();
                     int newlines = skipNewlines();
                     for (int i = 0; i < newlines; i++) {
                         buffer.append('\n');
@@ -2393,9 +2369,7 @@ public class HTMLScanner
                         continue;
             		}
             		else if (c == '\n' || c == '\r') {
-	                    fCurrentEntity.offset--;
-	                    fCurrentEntity.characterOffset--;
-	                    fCurrentEntity.columnNumber--;
+                    	rewind();
 	                    int newlines = skipNewlines();
 	                    for (int i = 0; i < newlines; i++) {
 	                    	buffer.append('\n');
@@ -2450,9 +2424,7 @@ public class HTMLScanner
                     if (count < 2) {
                         buffer.append(cend);
                         //if (c != -1) {
-                        fCurrentEntity.offset--;
-                        fCurrentEntity.characterOffset--;
-                        fCurrentEntity.columnNumber--;
+                    	rewind();
                         //}
                         continue;
                     }
@@ -2460,9 +2432,7 @@ public class HTMLScanner
                         for (int i = 0; i < count; i++) {
                             buffer.append(cend);
                         }
-                        fCurrentEntity.offset--;
-                        fCurrentEntity.characterOffset--;
-                        fCurrentEntity.columnNumber--;
+                    	rewind();
                         continue;
                     }
                     for (int i = 0; i < count - 2; i++) {
@@ -2471,9 +2441,7 @@ public class HTMLScanner
                     break;
                 }
                 else if (c == '\n' || c == '\r') {
-                    fCurrentEntity.offset--;
-                    fCurrentEntity.characterOffset--;
-                    fCurrentEntity.columnNumber--;
+                	rewind();
                     int newlines = skipNewlines();
                     for (int i = 0; i < newlines; i++) {
                         buffer.append('\n');
@@ -2523,9 +2491,7 @@ public class HTMLScanner
                         break;
                     }
                     if (c != ' ' && c != '\t') {
-                        fCurrentEntity.offset--;
-                        fCurrentEntity.characterOffset--;
-                        fCurrentEntity.columnNumber--;
+                    	rewind();
                         break;
                     }
                 }
@@ -2540,9 +2506,7 @@ public class HTMLScanner
                         }
                         else {
                             fStringBuffer.append(c0);
-                            fCurrentEntity.offset--;
-                            fCurrentEntity.characterOffset--;
-                            fCurrentEntity.columnNumber--;
+                        	rewind();
                             continue;
                         }
                     }
@@ -2835,14 +2799,16 @@ public class HTMLScanner
                 if (fReportErrors) {
                     fErrorReporter.reportError("HTML1007", null);
                 }
-                throw new EOFException();
-            }
-            if (c == '>') {
                 return false;
             }
-            fCurrentEntity.offset--;
-            fCurrentEntity.characterOffset--;
-            fCurrentEntity.columnNumber--;
+            else if (c == '>') {
+                return false;
+            }
+            else if (c == '<') {
+            	rewind();
+            	return false;
+            }
+        	rewind();
             String aname = scanName();
             if (aname == null) {
                 if (fReportErrors) {
@@ -2871,9 +2837,7 @@ public class HTMLScanner
                     addLocationItem(attributes, attributes.getLength() - 1);
                 }
                 if (c == '/') {
-                    fCurrentEntity.offset--;
-                    fCurrentEntity.characterOffset--;
-                    fCurrentEntity.columnNumber--;
+                	rewind();
                     empty[0] = skipMarkup(false);
                 }
                 return false;
@@ -2917,17 +2881,13 @@ public class HTMLScanner
                 fStringBuffer.clear();
                 fNonNormAttr.clear();
                 if (c != '\'' && c != '"') {
-                    fCurrentEntity.offset--;
-                    fCurrentEntity.characterOffset--;
-                    fCurrentEntity.columnNumber--;
+                	rewind();
                     while (true) {
                         c = read();
                         // Xiaowei/Ac: Fix for <a href=/broken/>...</a>
                         if (Character.isSpace((char)c) || c == '>') {
                             //fCharOffset--;
-                            fCurrentEntity.offset--;
-                            fCurrentEntity.characterOffset--;
-                            fCurrentEntity.columnNumber--;
+                        	rewind();
                             break;
                         }
                         if (c == -1) {
@@ -2973,7 +2933,8 @@ public class HTMLScanner
                         if (fReportErrors) {
                             fErrorReporter.reportError("HTML1007", null);
                         }
-                        throw new EOFException();
+                        break;
+//                        throw new EOFException();
                     }
                     if (c == '&') {
                     	isStart = false;
@@ -2996,9 +2957,7 @@ public class HTMLScanner
                         if (c == '\r') {
                             int c2 = read();
                             if (c2 != '\n') {
-                                fCurrentEntity.offset--;
-                                fCurrentEntity.characterOffset--;
-                                fCurrentEntity.columnNumber--;
+                            	rewind();
                             }
                             else {
                                 fNonNormAttr.append('\r');
@@ -3043,9 +3002,7 @@ public class HTMLScanner
                 fQName.setValues(null, aname, aname, null);
                 attributes.addAttribute(fQName, "CDATA", "");
                 attributes.setSpecified(attributes.getLength()-1, true);
-                fCurrentEntity.offset--;
-                fCurrentEntity.characterOffset--;
-                fCurrentEntity.columnNumber--;
+            	rewind();
                 if (fAugmentations) {
                     addLocationItem(attributes, attributes.getLength() - 1);
                 }
@@ -3185,9 +3142,7 @@ public class HTMLScanner
                                 throw new EOFException();
                             }
                             else {
-                                fCurrentEntity.offset--;
-                                fCurrentEntity.characterOffset--;
-                                fCurrentEntity.columnNumber--;
+                            	rewind();
                                 fStringBuffer.clear();
                             }
                             scanCharacters(fStringBuffer, -1);
@@ -3217,9 +3172,7 @@ public class HTMLScanner
                                             return true;
                                         }
                                         else {
-                                            fCurrentEntity.offset--;
-                                            fCurrentEntity.characterOffset--;
-                                            fCurrentEntity.columnNumber--;
+                                        	rewind();
                                         }
                                     }
                                     fStringBuffer.clear();
@@ -3276,17 +3229,13 @@ public class HTMLScanner
 
                 if (c == -1 || (c == '<' || c == '&')) {
                     if (c != -1) {
-                        fCurrentEntity.offset--;
-                        fCurrentEntity.characterOffset--;
-                        fCurrentEntity.columnNumber--;
+                    	rewind();
                     }
                     break;
                 }
                 // Patch supplied by Jonathan Baxter
                 else if (c == '\r' || c == '\n') {
-                    fCurrentEntity.offset--;
-                    fCurrentEntity.characterOffset--;
-                    fCurrentEntity.columnNumber--;
+                	rewind();
                     int newlines = skipNewlines();
                     for (int i = 0; i < newlines; i++) {
                         buffer.append('\n');
@@ -3823,5 +3772,14 @@ public class HTMLScanner
 				return; // start marker not found
 			}
 		}
+	}
+	
+	/**
+	 * Goes back, cancelling the effect of the previous read() call.
+	 */
+	private void rewind() {
+        fCurrentEntity.offset--;
+        fCurrentEntity.characterOffset--;
+        fCurrentEntity.columnNumber--;
 	}
 } // class HTMLScanner
