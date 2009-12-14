@@ -608,8 +608,12 @@ public class HTMLTagBalancer
 
         // check proper parent
         if (element.parent != null) {
-        	if (!fSeenRootElement && !fDocumentFragment) {
-                String pname = element.parent[0].name;
+            final HTMLElements.Element preferedParent = element.parent[0];
+        	if (fDocumentFragment && preferedParent.code == HTMLElements.HEAD || preferedParent.code == HTMLElements.BODY) {
+        		// nothing, don't force HEAD or BODY creation for a document fragment
+        	}
+        	else if (!fSeenRootElement && !fDocumentFragment) {
+                String pname = preferedParent.name;
                 pname = modifyName(pname, fNamesElems);
                 if (fReportErrors) {
                     String ename = elem.rawname;
@@ -625,7 +629,6 @@ public class HTMLTagBalancer
                 }
             }
         	else {
-                HTMLElements.Element preferedParent = element.parent[0];
                 if (preferedParent.code != HTMLElements.HEAD || (!fSeenBodyElement && !fDocumentFragment)) {
                     int depth = getParentDepth(element.parent, element.bounds);
                     if (depth == -1) { // no parent found
