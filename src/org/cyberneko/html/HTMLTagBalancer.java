@@ -609,7 +609,7 @@ public class HTMLTagBalancer
         // check proper parent
         if (element.parent != null) {
             final HTMLElements.Element preferedParent = element.parent[0];
-        	if (fDocumentFragment && preferedParent.code == HTMLElements.HEAD || preferedParent.code == HTMLElements.BODY) {
+        	if (fDocumentFragment && (preferedParent.code == HTMLElements.HEAD || preferedParent.code == HTMLElements.BODY)) {
         		// nothing, don't force HEAD or BODY creation for a document fragment
         	}
         	else if (!fSeenRootElement && !fDocumentFragment) {
