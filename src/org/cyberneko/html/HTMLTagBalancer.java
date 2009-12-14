@@ -1141,6 +1141,9 @@ public class HTMLTagBalancer
      */
     protected final int getElementDepth(HTMLElements.Element element) {
         final boolean container = element.isContainer();
+        final short elementCode = element.code;
+        final boolean tableBodyOrHtml = (elementCode == HTMLElements.TABLE)
+			|| (elementCode == HTMLElements.BODY) || (elementCode == HTMLElements.HTML);
         int depth = -1;
         for (int i = fElementStack.top - 1; i >=fragmentContextStackSize_; i--) {
             Info info = fElementStack.data[i];
@@ -1150,6 +1153,9 @@ public class HTMLTagBalancer
             }
             if (!container && info.element.isBlock()) {
                 break;
+            }
+            if (info.element.code == HTMLElements.TABLE && !tableBodyOrHtml) {
+            	return -1; // current element not allowed to close a table
             }
         }
         return depth;
