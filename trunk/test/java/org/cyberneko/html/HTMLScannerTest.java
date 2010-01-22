@@ -1,5 +1,6 @@
 package org.cyberneko.html;
 
+import java.io.IOException;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -14,6 +15,7 @@ import org.apache.xerces.xni.XMLAttributes;
 import org.apache.xerces.xni.XNIException;
 import org.apache.xerces.xni.parser.XMLDocumentFilter;
 import org.apache.xerces.xni.parser.XMLInputSource;
+import org.apache.xerces.xni.parser.XMLParserConfiguration;
 import org.cyberneko.html.filters.DefaultFilter;
 
 /**
@@ -132,4 +134,42 @@ public class HTMLScannerTest extends TestCase {
 		HTMLScanner.reduceToContent(buffer, "<!--", "-->");
 		assertEquals("<!--->", buffer.toString());
 	}
+
+	/**
+	 * Regression test for bug 2933989.
+	 * @throws Exception
+	 */
+    public void testInfiniteLoop() throws Exception {
+        StringBuffer buffer = new StringBuffer();
+        buffer.append("<html>\n");
+        for (int x = 0; x <= 2005; x++) {
+            buffer.append((char) (x % 10 + '0'));
+        }
+        
+        buffer.append("\n<noframes>- Generated in 1<1ms -->");
+
+        XMLParserConfiguration parser = new HTMLConfiguration() {
+            protected HTMLScanner createDocumentScanner() {
+                return new InfiniteLoopScanner();
+            }
+        };
+        XMLInputSource source = new XMLInputSource(null, "myTest", null, new StringReader(buffer.toString()), "UTF-8");
+        parser.parse(source);
+    }
+
+    class InfiniteLoopScanner extends HTMLScanner {
+        InfiniteLoopScanner() {
+            fContentScanner = new MyContentScanner();
+        }
+
+        class MyContentScanner extends HTMLScanner.ContentScanner {
+
+            protected void scanComment() throws IOException {
+            	// bug was here: calling nextContent() at the end of the buffer/input
+            	nextContent(30);
+            	super.scanComment();
+            }
+        }
+    }
+
 }
