@@ -27,16 +27,8 @@ public class FragmentContextStackTest extends TestCase {
 			+ ")DIV\n";
 		doTest("<div><span>hello</span>", new String[] { "html", "body" }, expected);
 
-		expected = "(HEAD\n"
-			+ ")HEAD\n"
-			+ "(BODY\n"
-			+ expected
-			+ ")BODY\n";
 		doTest("<div><span>hello</span>", new String[] { "html" }, expected);
 
-		expected = "(HTML\n"
-			+ expected
-			+ ")HTML\n";
 		doTest("<div><span>hello</span>", new String[]{}, expected);
 		doTest("<div><span>hello</span>", null, expected);
 	}
