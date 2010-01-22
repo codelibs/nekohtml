@@ -610,31 +610,16 @@ public class HTMLScanner
         if (size > 0) {
             // current entity is not the original, so close it
             if (fCurrentEntity != null) {
-                try {
-                    fCurrentEntity.stream.close();
-                }
-                catch (IOException e) {
-                    // ignore
-                }
+            	fCurrentEntity.closeQuietly();
             }
             // close remaining streams
             for (int i = closeall ? 0 : 1; i < size; i++) {
-                fCurrentEntity = (CurrentEntity)fCurrentEntityStack.pop();
-                try {
-                    fCurrentEntity.stream.close();
-                }
-                catch (IOException e) {
-                    // ignore
-                }
+                fCurrentEntity = (CurrentEntity) fCurrentEntityStack.pop();
+                fCurrentEntity.closeQuietly();
             }
         }
         else if (closeall && fCurrentEntity != null) {
-            try {
-                fCurrentEntity.stream.close();
-            }
-            catch (IOException e) {
-                // ignore
-            }
+        	fCurrentEntity.closeQuietly();
         }
     } // cleanup(boolean)
 
@@ -669,12 +654,12 @@ public class HTMLScanner
 
     /** Returns the current line number. */
     public int getLineNumber() { 
-        return fCurrentEntity != null ? fCurrentEntity.lineNumber : -1; 
+        return fCurrentEntity != null ? fCurrentEntity.getLineNumber() : -1; 
     } // getLineNumber():int
 
     /** Returns the current column number. */
     public int getColumnNumber() { 
-        return fCurrentEntity != null ? fCurrentEntity.columnNumber : -1; 
+        return fCurrentEntity != null ? fCurrentEntity.getColumnNumber() : -1; 
     } // getColumnNumber():int
     
     /** Returns the XML version. */
@@ -684,7 +669,7 @@ public class HTMLScanner
     
     /** Returns the character offset. */
     public int getCharacterOffset() {
-		return fCurrentEntity != null ? fCurrentEntity.characterOffset : -1; 
+		return fCurrentEntity != null ? fCurrentEntity.getCharacterOffset() : -1; 
     } // getCharacterOffset():int
 
     //
@@ -1133,66 +1118,7 @@ public class HTMLScanner
 
     // i/o
 
-    /** Reads a single character. */
-    protected int read() throws IOException {
-        if (DEBUG_BUFFER) { 
-            System.out.print("(read: ");
-            printBuffer();
-            System.out.println();
-        }
-        if (fCurrentEntity.offset == fCurrentEntity.length) {
-            if (load(0) == -1) {
-                if (DEBUG_BUFFER) { 
-                    System.out.println(")read: -> -1");
-                }
-                return -1;
-            }
-        }
-        char c = fCurrentEntity.buffer[fCurrentEntity.offset++];
-        fCurrentEntity.characterOffset++;
-        fCurrentEntity.columnNumber++;
-        if (DEBUG_BUFFER) { 
-            System.out.print(")read: ");
-            printBuffer();
-            System.out.print(" -> ");
-            System.out.print(c);
-            System.out.println();
-        }
-        return c;
-    } // read():int
 
-    /** 
-     * Loads a new chunk of data into the buffer and returns the number of
-     * characters loaded or -1 if no additional characters were loaded.
-     *
-     * @param offset The offset at which new characters should be loaded.
-     */
-    protected int load(int offset) throws IOException {
-        if (DEBUG_BUFFER) { 
-            System.out.print("(load: ");
-            printBuffer();
-            System.out.println();
-        }
-        // resize buffer, if needed
-        if (offset == fCurrentEntity.buffer.length) {
-            int adjust = fCurrentEntity.buffer.length / 4;
-            char[] array = new char[fCurrentEntity.buffer.length + adjust];
-            System.arraycopy(fCurrentEntity.buffer, 0, array, 0, fCurrentEntity.length);
-            fCurrentEntity.buffer = array;
-        }
-        // read a block of characters
-        int count = fCurrentEntity.stream.read(fCurrentEntity.buffer, offset, fCurrentEntity.buffer.length - offset);
-        fCurrentEntity.length = count != -1 ? count + offset : offset;
-        fCurrentEntity.offset = offset;
-        if (DEBUG_BUFFER) { 
-            System.out.print(")load: ");
-            printBuffer();
-            System.out.print(" -> ");
-            System.out.print(count);
-            System.out.println();
-        }
-        return count;
-    } // load():int
 
     // debugging
 
@@ -1254,9 +1180,9 @@ public class HTMLScanner
             }
         }
         int c;
-        while ((c = read()) != -1) {
+        while ((c = fCurrentEntity.read()) != -1) {
             if (c == '<') {
-            	rewind();
+            	fCurrentEntity.rewind();
                 break;
             }
             if (c == '>') {
@@ -1273,9 +1199,9 @@ public class HTMLScanner
                 pubid = fDoctypePubid;
                 sysid = fDoctypeSysid;
             }
-            fEndLineNumber = fCurrentEntity.lineNumber;
-            fEndColumnNumber = fCurrentEntity.columnNumber;
-            fEndCharacterOffset = fCurrentEntity.characterOffset;
+            fEndLineNumber = fCurrentEntity.getLineNumber();
+            fEndColumnNumber = fCurrentEntity.getColumnNumber();
+            fEndCharacterOffset = fCurrentEntity.getCharacterOffset();
             fDocumentHandler.doctypeDecl(root, pubid, sysid, locationAugs());
         }
 
@@ -1283,23 +1209,23 @@ public class HTMLScanner
 
     /** Scans a quoted literal. */
     protected String scanLiteral() throws IOException {
-        int quote = read();
+        int quote = fCurrentEntity.read();
         if (quote == '\'' || quote == '"') {
             StringBuffer str = new StringBuffer();
             int c;
-            while ((c = read()) != -1) {
+            while ((c = fCurrentEntity.read()) != -1) {
                 if (c == quote) {
                     break;
                 }
                 if (c == '\r' || c == '\n') {
-                	rewind();
+                	fCurrentEntity.rewind();
                     // NOTE: This collapses newlines to a single space.
                     //       [Q] Is this the right thing to do here? -Ac
                     skipNewlines();
                     str.append(' ');
                 }
                 else if (c == '<') {
-                	rewind();
+                	fCurrentEntity.rewind();
                     break;
                 }
                 else {
@@ -1315,44 +1241,34 @@ public class HTMLScanner
             return str.toString();
         }
         else {
-        	rewind();
+        	fCurrentEntity.rewind();
         }
         return null;
     } // scanLiteral():String
 
     /** Scans a name. */
     protected String scanName() throws IOException {
-        if (DEBUG_BUFFER) {
-            System.out.print("(scanName: ");
-            printBuffer();
-            System.out.println();
-        }
+        fCurrentEntity.debugBufferIfNeeded("(scanName: ");
         if (fCurrentEntity.offset == fCurrentEntity.length) {
-            if (load(0) == -1) {
-                if (DEBUG_BUFFER) {
-                    System.out.print(")scanName: ");
-                    printBuffer();
-                    System.out.println(" -> null");
-                }
+            if (fCurrentEntity.load(0) == -1) {
+                fCurrentEntity.debugBufferIfNeeded(")scanName: ");
                 return null;
             }
         }
         int offset = fCurrentEntity.offset;
         while (true) {
-            while (fCurrentEntity.offset < fCurrentEntity.length) {
-                char c = fCurrentEntity.buffer[fCurrentEntity.offset];
+            while (fCurrentEntity.hasNext()) {
+                char c = fCurrentEntity.getNextChar();
                 if (!Character.isLetterOrDigit(c) &&
                     !(c == '-' || c == '.' || c == ':' || c == '_')) {
+                	fCurrentEntity.rewind();
                     break;
                 }
-                fCurrentEntity.offset++;
-                fCurrentEntity.characterOffset++;
-                fCurrentEntity.columnNumber++;
             }
             if (fCurrentEntity.offset == fCurrentEntity.length) {
                 int length = fCurrentEntity.length - offset;
                 System.arraycopy(fCurrentEntity.buffer, offset, fCurrentEntity.buffer, 0, length);
-                int count = load(length);
+                int count = fCurrentEntity.load(length);
                 offset = 0;
                 if (count == -1) {
                     break;
@@ -1364,13 +1280,7 @@ public class HTMLScanner
         }
         int length = fCurrentEntity.offset - offset;
         String name = length > 0 ? new String(fCurrentEntity.buffer, offset, length) : null;
-        if (DEBUG_BUFFER) {
-            System.out.print(")scanName: ");
-            printBuffer();
-            System.out.print(" -> \"");
-            System.out.print(name);
-            System.out.println('"');
-        }
+        fCurrentEntity.debugBufferIfNeeded(")scanName: ", " -> \"" + name + '"');
         return name;
     } // scanName():String
 
@@ -1381,7 +1291,7 @@ public class HTMLScanner
         str.append('&');
         boolean endsWithSemicolon = false;
         while (true) {
-            int c = read();
+            int c = fCurrentEntity.read();
             if (c == ';') {
                 str.append(';');
                 endsWithSemicolon = true;
@@ -1391,7 +1301,7 @@ public class HTMLScanner
             	break;
             }
             else if (!ENTITY_CHARS.get(c) && c != '#') {
-            	rewind();
+            	fCurrentEntity.rewind();
                 break;
             }
             str.append((char)c);
@@ -1404,9 +1314,9 @@ public class HTMLScanner
         }
         if (str.length == 1) {
             if (content && fDocumentHandler != null && fElementCount >= fElementDepth) {
-                fEndLineNumber = fCurrentEntity.lineNumber;
-                fEndColumnNumber = fCurrentEntity.columnNumber;
-                fEndCharacterOffset = fCurrentEntity.characterOffset;
+                fEndLineNumber = fCurrentEntity.getLineNumber();
+                fEndColumnNumber = fCurrentEntity.getColumnNumber();
+                fEndCharacterOffset = fCurrentEntity.getCharacterOffset();
                 fDocumentHandler.characters(str, locationAugs());
             }
             return -1;
@@ -1432,9 +1342,9 @@ public class HTMLScanner
                     value = fixWindowsCharacter(value);
                 }
                 if (content && fDocumentHandler != null && fElementCount >= fElementDepth) {
-                    fEndLineNumber = fCurrentEntity.lineNumber;
-                    fEndColumnNumber = fCurrentEntity.columnNumber;
-                    fEndCharacterOffset = fCurrentEntity.characterOffset;
+                    fEndLineNumber = fCurrentEntity.getLineNumber();
+                    fEndColumnNumber = fCurrentEntity.getColumnNumber();
+                    fEndCharacterOffset = fCurrentEntity.getCharacterOffset();
                     if (fNotifyCharRefs) {
                         XMLResourceIdentifier id = resourceId();
                         String encoding = null;
@@ -1453,9 +1363,9 @@ public class HTMLScanner
                     fErrorReporter.reportError("HTML1005", new Object[]{name});
                 }
                 if (content && fDocumentHandler != null && fElementCount >= fElementDepth) {
-                    fEndLineNumber = fCurrentEntity.lineNumber;
-                    fEndColumnNumber = fCurrentEntity.columnNumber;
-                    fEndCharacterOffset = fCurrentEntity.characterOffset;
+                    fEndLineNumber = fCurrentEntity.getLineNumber();
+                    fEndColumnNumber = fCurrentEntity.getColumnNumber();
+                    fEndCharacterOffset = fCurrentEntity.getCharacterOffset();
                     fDocumentHandler.characters(str, locationAugs());
                 }
             }
@@ -1472,17 +1382,17 @@ public class HTMLScanner
                 fErrorReporter.reportWarning("HTML1006", new Object[]{name});
             }
             if (content && fDocumentHandler != null && fElementCount >= fElementDepth) {
-                fEndLineNumber = fCurrentEntity.lineNumber;
-                fEndColumnNumber = fCurrentEntity.columnNumber;
-                fEndCharacterOffset = fCurrentEntity.characterOffset;
+                fEndLineNumber = fCurrentEntity.getLineNumber();
+                fEndColumnNumber = fCurrentEntity.getColumnNumber();
+                fEndCharacterOffset = fCurrentEntity.getCharacterOffset();
                 fDocumentHandler.characters(str, locationAugs());
             }
             return -1;
         }
         if (content && fDocumentHandler != null && fElementCount >= fElementDepth) {
-            fEndLineNumber = fCurrentEntity.lineNumber;
-            fEndColumnNumber = fCurrentEntity.columnNumber;
-            fEndCharacterOffset = fCurrentEntity.characterOffset;
+            fEndLineNumber = fCurrentEntity.getLineNumber();
+            fEndColumnNumber = fCurrentEntity.getColumnNumber();
+            fEndCharacterOffset = fCurrentEntity.getCharacterOffset();
             boolean notify = fNotifyHtmlBuiltinRefs || (fNotifyXmlBuiltinRefs && builtinXmlRef(name));
             if (notify) {
                 XMLResourceIdentifier id = resourceId();
@@ -1506,23 +1416,19 @@ public class HTMLScanner
         for (int i = 0; i < length; i++) {
             if (fCurrentEntity.offset == fCurrentEntity.length) {
                 System.arraycopy(fCurrentEntity.buffer, fCurrentEntity.offset - i, fCurrentEntity.buffer, 0, i);
-                if (load(i) == -1) {
+                if (fCurrentEntity.load(i) == -1) {
                     fCurrentEntity.offset = 0;
                     return false;
                 }
             }
             char c0 = s.charAt(i);
-            char c1 = fCurrentEntity.buffer[fCurrentEntity.offset++];
-            fCurrentEntity.characterOffset++;
-            fCurrentEntity.columnNumber++;
+            char c1 = fCurrentEntity.getNextChar();
             if (!caseSensitive) {
                 c0 = Character.toUpperCase(c0);
                 c1 = Character.toUpperCase(c1);
             }
             if (c0 != c1) {
-                fCurrentEntity.offset -= i + 1;
-                fCurrentEntity.characterOffset -= i + 1;
-                fCurrentEntity.columnNumber -= i + 1;
+            	fCurrentEntity.rewind(i + 1);
                 return false;
             }
         }
@@ -1531,23 +1437,17 @@ public class HTMLScanner
 
     /** Skips markup. */
     protected boolean skipMarkup(boolean balance) throws IOException {
-        if (DEBUG_BUFFER) {
-            System.out.print("(skipMarkup: ");
-            printBuffer();
-            System.out.println();
-        }
+        fCurrentEntity.debugBufferIfNeeded("(skipMarkup: ");
         int depth = 1;
         boolean slashgt = false;
         OUTER: while (true) {
             if (fCurrentEntity.offset == fCurrentEntity.length) {
-                if (load(0) == -1) {
+                if (fCurrentEntity.load(0) == -1) {
                     break OUTER;
                 }
             }
-            while (fCurrentEntity.offset < fCurrentEntity.length) {
-                char c = fCurrentEntity.buffer[fCurrentEntity.offset++];
-                fCurrentEntity.characterOffset++;
-                fCurrentEntity.columnNumber++;
+            while (fCurrentEntity.hasNext()) {
+                char c = fCurrentEntity.getNextChar();
                 if (balance && c == '<') {
                     depth++;
                 }
@@ -1559,13 +1459,11 @@ public class HTMLScanner
                 }
                 else if (c == '/') {
                     if (fCurrentEntity.offset == fCurrentEntity.length) {
-                        if (load(0) == -1) {
+                        if (fCurrentEntity.load(0) == -1) {
                             break OUTER;
                         }
                     }
-                    c = fCurrentEntity.buffer[fCurrentEntity.offset++];
-                    fCurrentEntity.characterOffset++;
-                    fCurrentEntity.columnNumber++;
+                    c = fCurrentEntity.getNextChar();
                     if (c == '>') {
                         slashgt = true;
                         depth--;
@@ -1574,101 +1472,73 @@ public class HTMLScanner
                         }
                     }
                     else {
-                    	rewind();
+                    	fCurrentEntity.rewind();
                     }
                 }
                 else if (c == '\r' || c == '\n') {
+                	fCurrentEntity.rewind();
                     skipNewlines();
                 }
             }
         }
-        if (DEBUG_BUFFER) {
-            System.out.print(")skipMarkup: ");
-            printBuffer();
-            System.out.print(" -> "+slashgt);
-            System.out.println();
-        }
+        fCurrentEntity.debugBufferIfNeeded(")skipMarkup: ", " -> "+slashgt);
         return slashgt;
     } // skipMarkup():boolean
 
     /** Skips whitespace. */
     protected boolean skipSpaces() throws IOException {
-        if (DEBUG_BUFFER) {
-            System.out.print("(skipSpaces: ");
-            printBuffer();
-            System.out.println();
-        }
+        fCurrentEntity.debugBufferIfNeeded("(skipSpaces: ");
         boolean spaces = false;
         while (true) {
             if (fCurrentEntity.offset == fCurrentEntity.length) {
-                if (load(0) == -1) {
+                if (fCurrentEntity.load(0) == -1) {
                     break;
                 }
             }
-            char c = fCurrentEntity.buffer[fCurrentEntity.offset];
-            if (!Character.isSpace(c)) {
+            char c = fCurrentEntity.getNextChar();
+            if (!Character.isWhitespace(c)) {
+            	fCurrentEntity.rewind();
                 break;
             }
             spaces = true;
             if (c == '\r' || c == '\n') {
+            	fCurrentEntity.rewind();
                 skipNewlines();
                 continue;
             }
-            fCurrentEntity.offset++;
-            fCurrentEntity.characterOffset++;
-            fCurrentEntity.columnNumber++;
         }
-        if (DEBUG_BUFFER) {
-            System.out.print(")skipSpaces: ");
-            printBuffer();
-            System.out.print(" -> ");
-            System.out.print(spaces);
-            System.out.println();
-        }
+        fCurrentEntity.debugBufferIfNeeded(")skipSpaces: ", " -> " + spaces);
         return spaces;
     } // skipSpaces()
 
     /** Skips newlines and returns the number of newlines skipped. */
     protected int skipNewlines() throws IOException {
-        return skipNewlines(Integer.MAX_VALUE);
-    } // skipNewlines():int
+        fCurrentEntity.debugBufferIfNeeded("(skipNewlines: ");
 
-    /** Skips newlines and returns the number of newlines skipped. */
-    protected int skipNewlines(int maxlines) throws IOException {
-        if (DEBUG_BUFFER) {
-            System.out.print("(skipNewlines: ");
-            printBuffer();
-            System.out.println();
-        }
-        if (fCurrentEntity.offset == fCurrentEntity.length) {
-            if (load(0) == -1) {
-                if (DEBUG_BUFFER) {
-                    System.out.print(")skipNewlines: ");
-                    printBuffer();
-                    System.out.println();
-                }
+        if (!fCurrentEntity.hasNext()) {
+            if (fCurrentEntity.load(0) == -1) {
+                fCurrentEntity.debugBufferIfNeeded(")skipNewlines: ");
                 return 0;
             }
         }
-        char c = fCurrentEntity.buffer[fCurrentEntity.offset];
+        char c = fCurrentEntity.getCurrentChar();
         int newlines = 0;
         int offset = fCurrentEntity.offset;
         if (c == '\n' || c == '\r') {
             do {
-                c = fCurrentEntity.buffer[fCurrentEntity.offset++];
-                fCurrentEntity.characterOffset++;
+                c = fCurrentEntity.getNextChar();
                 if (c == '\r') {
                     newlines++;
                     if (fCurrentEntity.offset == fCurrentEntity.length) {
                         offset = 0;
                         fCurrentEntity.offset = newlines;
-                        if (load(newlines) == -1) {
+                        if (fCurrentEntity.load(newlines) == -1) {
                             break;
                         }
                     }
-                    if (fCurrentEntity.buffer[fCurrentEntity.offset] == '\n') {
+                    if (fCurrentEntity.getCurrentChar() == '\n') {
                         fCurrentEntity.offset++;
-                        fCurrentEntity.characterOffset++;
+                        fCurrentEntity.characterOffset_++;
                         offset++;
                     }
                 }
@@ -1677,28 +1547,19 @@ public class HTMLScanner
                     if (fCurrentEntity.offset == fCurrentEntity.length) {
                         offset = 0;
                         fCurrentEntity.offset = newlines;
-                        if (load(newlines) == -1) {
+                        if (fCurrentEntity.load(newlines) == -1) {
                             break;
                         }
                     }
                 }
                 else {
-                    fCurrentEntity.offset--;
-                    fCurrentEntity.characterOffset--;
+                    fCurrentEntity.rewind();
                     break;
                 }
-            } while (newlines < maxlines &&
-                     fCurrentEntity.offset < fCurrentEntity.length - 1);
-            fCurrentEntity.lineNumber += newlines;
-            fCurrentEntity.columnNumber = 1;
+            } while (fCurrentEntity.offset < fCurrentEntity.length - 1);
+            fCurrentEntity.incLine(newlines);
         }
-        if (DEBUG_BUFFER) {
-            System.out.print(")skipNewlines: ");
-            printBuffer();
-            System.out.print(" -> ");
-            System.out.print(newlines);
-            System.out.println();
-        }
+        fCurrentEntity.debugBufferIfNeeded(")skipNewlines: ", " -> " + newlines);
         return newlines;
     } // skipNewlines(int):int
 
@@ -1756,51 +1617,6 @@ public class HTMLScanner
     // Private methods
     //
 
-    /** Prints the contents of the character buffer to standard out. */
-    private void printBuffer() {
-        if (DEBUG_BUFFER) {
-            System.out.print('[');
-            System.out.print(fCurrentEntity.length);
-            System.out.print(' ');
-            System.out.print(fCurrentEntity.offset);
-            if (fCurrentEntity.length > 0) {
-                System.out.print(" \"");
-                for (int i = 0; i < fCurrentEntity.length; i++) {
-                    if (i == fCurrentEntity.offset) {
-                        System.out.print('^');
-                    }
-                    char c = fCurrentEntity.buffer[i];
-                    switch (c) {
-                        case '\r': {
-                            System.out.print("\\r");
-                            break;
-                        }
-                        case '\n': {
-                            System.out.print("\\n");
-                            break;
-                        }
-                        case '\t': {
-                            System.out.print("\\t");
-                            break;
-                        }
-                        case '"': {
-                            System.out.print("\\\"");
-                            break;
-                        }
-                        default: {
-                            System.out.print(c);
-                        }
-                    }
-                }
-                if (fCurrentEntity.offset == fCurrentEntity.length) {
-                    System.out.print('^');
-                }
-                System.out.print('"');
-            }
-            System.out.print(']');
-        }
-    } // printBuffer()
-
     //
     // Interfaces
     //
@@ -1847,34 +1663,34 @@ public class HTMLScanner
         //
 
         /** Character stream. */
-        public Reader stream;
+        private Reader stream_;
 
         /** Encoding. */
-        public String encoding;
+        public final String encoding;
 
         /** Public identifier. */
-        public String publicId;
+        public final String publicId;
 
         /** Base system identifier. */
-        public String baseSystemId;
+        public final String baseSystemId;
 
         /** Literal system identifier. */
-        public String literalSystemId;
+        public final String literalSystemId;
 
         /** Expanded system identifier. */
-        public String expandedSystemId;
+        public final String expandedSystemId;
 
 		/** XML version. */
-		public String version = "1.0";
+		public final String version = "1.0";
 
         /** Line number. */
-        public int lineNumber = 1;
+        private int lineNumber_ = 1;
 
         /** Column number. */
-        public int columnNumber = 1;
+        private int columnNumber_ = 1;
         
         /** Character offset in the file. */
-        public int characterOffset = 0;
+        public int characterOffset_ = 0;
 
         // buffer
 
@@ -1886,6 +1702,8 @@ public class HTMLScanner
 
         /** Length of characters read into character buffer. */
         public int length = 0;
+        
+        private boolean endReached_ = false;
 
         //
         // Constructors
@@ -1895,7 +1713,7 @@ public class HTMLScanner
         public CurrentEntity(Reader stream, String encoding, 
                              String publicId, String baseSystemId,
                              String literalSystemId, String expandedSystemId) {
-            this.stream = stream;
+            stream_ = stream;
             this.encoding = encoding;
             this.publicId = publicId;
             this.baseSystemId = baseSystemId;
@@ -1903,6 +1721,193 @@ public class HTMLScanner
             this.expandedSystemId = expandedSystemId;
         } // <init>(Reader,String,String,String,String)
 
+		private char getCurrentChar() {
+        	return buffer[offset];
+        }
+
+        /**
+         * Gets the current character and moves to next one.
+         * @return
+         */
+        private char getNextChar() {
+	        characterOffset_++;
+	        columnNumber_++;
+        	return buffer[offset++];
+        }
+        private void closeQuietly() {
+            try {
+                stream_.close();
+            }
+            catch (IOException e) {
+                // ignore
+            }
+		}
+
+		/**
+         * Indicates if there are characters left.
+         */
+        boolean hasNext() {
+        	return offset < length;        	
+        }
+
+        /** 
+         * Loads a new chunk of data into the buffer and returns the number of
+         * characters loaded or -1 if no additional characters were loaded.
+         *
+         * @param offset The offset at which new characters should be loaded.
+         */
+        protected int load(int offset) throws IOException {
+            debugBufferIfNeeded("(load: ");
+            // resize buffer, if needed
+            if (offset == buffer.length) {
+                int adjust = buffer.length / 4;
+                char[] array = new char[buffer.length + adjust];
+                System.arraycopy(buffer, 0, array, 0, length);
+                buffer = array;
+            }
+            // read a block of characters
+            int count = stream_.read(buffer, offset, buffer.length - offset);
+            if (count == -1) {
+            	endReached_ = true;
+            }
+            length = count != -1 ? count + offset : offset;
+            this.offset = offset;
+            debugBufferIfNeeded(")load: ", " -> " + count);
+            return count;
+        } // load():int
+
+        /** Reads a single character. */
+        protected int read() throws IOException {
+            debugBufferIfNeeded("(read: ");
+            if (offset == length) {
+                if (endReached_) {
+                	return -1;
+                }
+                if (load(0) == -1) {
+                    if (DEBUG_BUFFER) { 
+                        System.out.println(")read: -> -1");
+                    }
+                    return -1;
+                }
+            }
+            final char c = buffer[offset++];
+	        characterOffset_++;
+	        columnNumber_++;
+
+        	debugBufferIfNeeded(")read: ", " -> " + c);
+            return c;
+        } // read():int
+
+        /** Prints the contents of the character buffer to standard out. */
+        private void debugBufferIfNeeded(final String prefix) {
+        	debugBufferIfNeeded(prefix, "");
+        }
+        /** Prints the contents of the character buffer to standard out. */
+        private void debugBufferIfNeeded(final String prefix, final String suffix) {
+            if (DEBUG_BUFFER) {
+                System.out.print(prefix);
+                System.out.print('[');
+                System.out.print(length);
+                System.out.print(' ');
+                System.out.print(offset);
+                if (length > 0) {
+                    System.out.print(" \"");
+                    for (int i = 0; i < length; i++) {
+                        if (i == offset) {
+                            System.out.print('^');
+                        }
+                        char c = buffer[i];
+                        switch (c) {
+                            case '\r': {
+                                System.out.print("\\r");
+                                break;
+                            }
+                            case '\n': {
+                                System.out.print("\\n");
+                                break;
+                            }
+                            case '\t': {
+                                System.out.print("\\t");
+                                break;
+                            }
+                            case '"': {
+                                System.out.print("\\\"");
+                                break;
+                            }
+                            default: {
+                                System.out.print(c);
+                            }
+                        }
+                    }
+                    if (offset == length) {
+                        System.out.print('^');
+                    }
+                    System.out.print('"');
+                }
+                System.out.print(']');
+                System.out.print(suffix);
+                System.out.println();
+            }
+        } // printBuffer()
+
+		private void setStream(final InputStreamReader inputStreamReader) {
+            stream_ = inputStreamReader;
+            offset = length = characterOffset_ = 0;
+            lineNumber_ = columnNumber_ = 1;
+		}
+		
+		/**
+		 * Goes back, cancelling the effect of the previous read() call.
+		 */
+		private void rewind() {
+	        offset--;
+	        characterOffset_--;
+	        columnNumber_--;
+		}
+        private void rewind(int i) {
+            offset -= i;
+            characterOffset_ -= i;
+            columnNumber_ -= i;
+		}
+
+		private void incLine() {
+            lineNumber_++;
+            columnNumber_ = 1;
+		}
+
+		private void incLine(int nbLines) {
+            lineNumber_ += nbLines;
+            columnNumber_ = 1;
+		}
+
+		public int getLineNumber() {
+			return lineNumber_;
+		}
+
+		private void resetBuffer(final XMLStringBuffer buffer, final int lineNumber,
+				final int columnNumber, final int characterOffset) {
+        	lineNumber_ = lineNumber;
+        	columnNumber_ = columnNumber;
+        	this.characterOffset_ = characterOffset;
+        	this.buffer = buffer.ch;
+        	this.offset = buffer.offset;
+        	this.length = buffer.length;
+		}
+
+		private int getColumnNumber() {
+			return columnNumber_;
+		}
+
+		private void restorePosition(int originalOffset,
+				int originalColumnNumber, int originalCharacterOffset) {
+	        this.offset = originalOffset;
+	        this.columnNumber_ = originalColumnNumber;
+	        this.characterOffset_ = originalCharacterOffset;
+		}
+
+		private int getCharacterOffset() {
+			return characterOffset_;
+		}
     } // class CurrentEntity
 
     /**
@@ -1937,10 +1942,10 @@ public class HTMLScanner
                     next = false;
                     switch (fScannerState) {
                         case STATE_CONTENT: {
-                            fBeginLineNumber = fCurrentEntity.lineNumber;
-                            fBeginColumnNumber = fCurrentEntity.columnNumber;
-                            fBeginCharacterOffset = fCurrentEntity.characterOffset;
-                            int c = read();
+                            fBeginLineNumber = fCurrentEntity.getLineNumber();
+                            fBeginColumnNumber = fCurrentEntity.getColumnNumber();
+                            fBeginCharacterOffset = fCurrentEntity.getCharacterOffset();
+                            int c = fCurrentEntity.read();
                             if (c == '<') {
                                 setScannerState(STATE_MARKUP_BRACKET);
                                 next = true;
@@ -1952,13 +1957,13 @@ public class HTMLScanner
                                 throw new EOFException();
                             }
                             else {
-                            	rewind();
+                            	fCurrentEntity.rewind();
                                 scanCharacters();
                             }
                             break;
                         }
                         case STATE_MARKUP_BRACKET: {
-                            int c = read();
+                            int c = fCurrentEntity.read();
                             if (c == '!') {
                                 if (skip("--", false)) {
                                     scanComment();
@@ -1994,13 +1999,13 @@ public class HTMLScanner
                                 throw new EOFException();
                             }
                             else {
-                            	rewind();
+                            	fCurrentEntity.rewind();
                                 fElementCount++;
                                 fSingleBoolean[0] = false;
                                 final String ename = scanStartElement(fSingleBoolean);
-                                fBeginLineNumber = fCurrentEntity.lineNumber;
-                                fBeginColumnNumber = fCurrentEntity.columnNumber;
-                                fBeginCharacterOffset = fCurrentEntity.characterOffset;
+                                fBeginLineNumber = fCurrentEntity.getLineNumber();
+                                fBeginColumnNumber = fCurrentEntity.getColumnNumber();
+                                fBeginCharacterOffset = fCurrentEntity.getCharacterOffset();
                                 if ("script".equalsIgnoreCase(ename)) {
                                 	scanScriptContent();
                                 }
@@ -2048,9 +2053,9 @@ public class HTMLScanner
                                 if (DEBUG_CALLBACKS) {
                                     System.out.println("endDocument()");
                                 }
-                                fEndLineNumber = fCurrentEntity.lineNumber;
-                                fEndColumnNumber = fCurrentEntity.columnNumber;
-                                fEndCharacterOffset = fCurrentEntity.characterOffset;
+                                fEndLineNumber = fCurrentEntity.getLineNumber();
+                                fEndColumnNumber = fCurrentEntity.getColumnNumber();
+                                fEndCharacterOffset = fCurrentEntity.getCharacterOffset();
                                 fDocumentHandler.endDocument(locationAugs());
                             }
                             return false;
@@ -2084,7 +2089,7 @@ public class HTMLScanner
         	final String end = "/" + tagName;
         	
             while (true) {
-                int c = read();
+                int c = fCurrentEntity.read();
                 if (c == -1) {
                     break;
                 }
@@ -2092,12 +2097,12 @@ public class HTMLScanner
                 	final String next = nextContent(10) + " ";
                 	if (next.length() >= 10 && end.equalsIgnoreCase(next.substring(0, end.length()))
             			&& ('>' == next.charAt(9) || Character.isWhitespace(next.charAt(9)))) {
-                    	rewind();
+                		fCurrentEntity.rewind();
 	                    break;
                 	}
             	}
             	if (c == '\r' || c == '\n') {
-                	rewind();
+            		fCurrentEntity.rewind();
                     int newlines = skipNewlines();
                     for (int i = 0; i < newlines; i++) {
                         buffer.append('\n');
@@ -2108,9 +2113,9 @@ public class HTMLScanner
                 }
             }
             if (buffer.length > 0 && fDocumentHandler != null) {
-                fEndLineNumber = fCurrentEntity.lineNumber;
-                fEndColumnNumber = fCurrentEntity.columnNumber;
-                fEndCharacterOffset = fCurrentEntity.characterOffset;
+                fEndLineNumber = fCurrentEntity.getLineNumber();
+                fEndColumnNumber = fCurrentEntity.getColumnNumber();
+                fEndCharacterOffset = fCurrentEntity.getCharacterOffset();
                 fDocumentHandler.characters(buffer, locationAugs());
             }
         }
@@ -2120,7 +2125,7 @@ public class HTMLScanner
         	final XMLStringBuffer buffer = new XMLStringBuffer();
             boolean waitForEndComment = false;
             while (true) {
-                int c = read();
+                int c = fCurrentEntity.read();
                 if (c == -1) {
                     break;
                 }
@@ -2132,7 +2137,7 @@ public class HTMLScanner
                 	final String next = nextContent(8) + " ";
                 	if (next.length() >= 8 && "/script".equalsIgnoreCase(next.substring(0, 7))
                 			&& ('>' == next.charAt(7) || Character.isWhitespace(next.charAt(7)))) {
-                    	rewind();
+                		fCurrentEntity.rewind();
                         break;
                 	}
                 }
@@ -2141,7 +2146,7 @@ public class HTMLScanner
                 }
 
                 if (c == '\r' || c == '\n') {
-                	rewind();
+                	fCurrentEntity.rewind();
                     int newlines = skipNewlines();
                     for (int i = 0; i < newlines; i++) {
                         buffer.append('\n');
@@ -2163,9 +2168,9 @@ public class HTMLScanner
                 if (DEBUG_CALLBACKS) {
                     System.out.println("characters("+buffer+")");
                 }
-                fEndLineNumber = fCurrentEntity.lineNumber;
-                fEndColumnNumber = fCurrentEntity.columnNumber;
-                fEndCharacterOffset = fCurrentEntity.characterOffset;
+                fEndLineNumber = fCurrentEntity.getLineNumber();
+                fEndColumnNumber = fCurrentEntity.getColumnNumber();
+                fEndCharacterOffset = fCurrentEntity.getCharacterOffset();
                 fDocumentHandler.characters(buffer, locationAugs());
             }
         }
@@ -2179,8 +2184,8 @@ public class HTMLScanner
          */
         protected String nextContent(int len) throws IOException {
             final int originalOffset = fCurrentEntity.offset;
-            final int originalColumnNumber = fCurrentEntity.columnNumber;
-            final int originalCharacterOffset = fCurrentEntity.characterOffset;
+            final int originalColumnNumber = fCurrentEntity.getColumnNumber();
+            final int originalCharacterOffset = fCurrentEntity.getCharacterOffset();
             
             char[] buff = new char[len];
             int nbRead = 0;
@@ -2188,14 +2193,14 @@ public class HTMLScanner
     			// read() should not clear the buffer
     	        if (fCurrentEntity.offset == fCurrentEntity.length) {
     	        	if (fCurrentEntity.length == fCurrentEntity.buffer.length) {
-    	        		load(fCurrentEntity.buffer.length);
+    	        		fCurrentEntity.load(fCurrentEntity.buffer.length);
     	        	}
     	        	else { // everything was already loaded
     	        		break;
     	        	}
     	        }
     	        
-    	        int c = read();
+    	        int c = fCurrentEntity.read();
     	        if (c == -1) {
     	        	break;
     	        }
@@ -2203,9 +2208,7 @@ public class HTMLScanner
     	        	buff[nbRead] = (char) c;
     	        }
     		}
-	        fCurrentEntity.offset = originalOffset;
-	        fCurrentEntity.columnNumber = originalColumnNumber;
-	        fCurrentEntity.characterOffset = originalCharacterOffset;
+	        fCurrentEntity.restorePosition(originalOffset, originalColumnNumber, originalCharacterOffset);
 	        return new String(buff, 0, nbRead);
     	}
 
@@ -2215,20 +2218,12 @@ public class HTMLScanner
 
         /** Scans characters. */
         protected void scanCharacters() throws IOException {
-            if (DEBUG_BUFFER) {
-                System.out.print("(scanCharacters: ");
-                printBuffer();
-                System.out.println();
-            }
+            fCurrentEntity.debugBufferIfNeeded("(scanCharacters: ");
             fStringBuffer.clear();  
             while(true) { 
                int newlines = skipNewlines();
                if (newlines == 0 && fCurrentEntity.offset == fCurrentEntity.length) {
-                   if (DEBUG_BUFFER) {
-                       System.out.print(")scanCharacters: ");
-                       printBuffer();
-                       System.out.println();
-                    }
+                    fCurrentEntity.debugBufferIfNeeded(")scanCharacters: ");
                     break;
                 }
                 char c;
@@ -2236,14 +2231,12 @@ public class HTMLScanner
                 for (int i = offset; i < fCurrentEntity.offset; i++) {
                     fCurrentEntity.buffer[i] = '\n';
                 }
-                while (fCurrentEntity.offset < fCurrentEntity.length) {
-                    c = fCurrentEntity.buffer[fCurrentEntity.offset];
+                while (fCurrentEntity.hasNext()) {
+                    c = fCurrentEntity.getNextChar();
                     if (c == '<' || c == '&' || c == '\n' || c == '\r') {
+                    	fCurrentEntity.rewind();
                         break;
                     }
-                    fCurrentEntity.offset++;
-                    fCurrentEntity.characterOffset++;
-                    fCurrentEntity.columnNumber++;
                 }
                 if (fCurrentEntity.offset > offset && 
                     fDocumentHandler != null && fElementCount >= fElementDepth) {
@@ -2251,19 +2244,15 @@ public class HTMLScanner
                     	final XMLString xmlString = new XMLString(fCurrentEntity.buffer, offset, fCurrentEntity.offset - offset);
                         System.out.println("characters(" + xmlString + ")");
                     }
-                    fEndLineNumber = fCurrentEntity.lineNumber;
-                    fEndColumnNumber = fCurrentEntity.columnNumber;
-                    fEndCharacterOffset = fCurrentEntity.characterOffset;
+                    fEndLineNumber = fCurrentEntity.getLineNumber();
+                    fEndColumnNumber = fCurrentEntity.getColumnNumber();
+                    fEndCharacterOffset = fCurrentEntity.getCharacterOffset();
                     fStringBuffer.append(fCurrentEntity.buffer, offset, fCurrentEntity.offset - offset);
                 }
-                if (DEBUG_BUFFER) {
-                    System.out.print(")scanCharacters: ");
-                    printBuffer();
-                    System.out.println();
-                }
+                fCurrentEntity.debugBufferIfNeeded(")scanCharacters: ");
 
                 boolean hasNext = fCurrentEntity.offset  < fCurrentEntity.buffer.length;
-                int next = hasNext ? fCurrentEntity.buffer[fCurrentEntity.offset] : -1; 
+                int next = hasNext ? fCurrentEntity.getCurrentChar() : -1; 
                 
                 if(next == '&' || next == '<' || next == -1) {
                      break;
@@ -2279,17 +2268,13 @@ public class HTMLScanner
 
         /** Scans a CDATA section. */
         protected void scanCDATA() throws IOException {
-            if (DEBUG_BUFFER) {
-                System.out.print("(scanCDATA: ");
-                printBuffer();
-                System.out.println();
-            }
+            fCurrentEntity.debugBufferIfNeeded("(scanCDATA: ");
             fStringBuffer.clear();
             if (fCDATASections) {
                 if (fDocumentHandler != null && fElementCount >= fElementDepth) {
-                    fEndLineNumber = fCurrentEntity.lineNumber;
-                    fEndColumnNumber = fCurrentEntity.columnNumber;
-                    fEndCharacterOffset = fCurrentEntity.characterOffset;
+                    fEndLineNumber = fCurrentEntity.getLineNumber();
+                    fEndColumnNumber = fCurrentEntity.getColumnNumber();
+                    fEndCharacterOffset = fCurrentEntity.getCharacterOffset();
                     if (DEBUG_CALLBACKS) {
                         System.out.println("startCDATA()");
                     }
@@ -2304,9 +2289,9 @@ public class HTMLScanner
                 fStringBuffer.append("]]");
             }
             if (fDocumentHandler != null && fElementCount >= fElementDepth) {
-                fEndLineNumber = fCurrentEntity.lineNumber;
-                fEndColumnNumber = fCurrentEntity.columnNumber;
-                fEndCharacterOffset = fCurrentEntity.characterOffset;
+                fEndLineNumber = fCurrentEntity.getLineNumber();
+                fEndColumnNumber = fCurrentEntity.getColumnNumber();
+                fEndCharacterOffset = fCurrentEntity.getCharacterOffset();
                 if (fCDATASections) {
                     if (DEBUG_CALLBACKS) {
                         System.out.println("characters("+fStringBuffer+")");
@@ -2324,11 +2309,7 @@ public class HTMLScanner
                     fDocumentHandler.comment(fStringBuffer, locationAugs());
                 }
             }
-            if (DEBUG_BUFFER) {
-                System.out.print(")scanCDATA: ");
-                printBuffer();
-                System.out.println();
-            }
+            fCurrentEntity.debugBufferIfNeeded(")scanCDATA: ");
             if (eof) {
                 throw new EOFException();
             }
@@ -2336,27 +2317,18 @@ public class HTMLScanner
         
         /** Scans a comment. */
         protected void scanComment() throws IOException {
-            if (DEBUG_BUFFER) {
-                System.out.print("(scanComment: ");
-                printBuffer();
-                System.out.println();
-            }
-            fEndLineNumber = fCurrentEntity.lineNumber;
-            fEndColumnNumber = fCurrentEntity.columnNumber;
-            fEndCharacterOffset = fCurrentEntity.characterOffset;
+            fCurrentEntity.debugBufferIfNeeded("(scanComment: ");
+            fEndLineNumber = fCurrentEntity.getLineNumber();
+            fEndColumnNumber = fCurrentEntity.getColumnNumber();
+            fEndCharacterOffset = fCurrentEntity.getCharacterOffset();
         	XMLStringBuffer buffer = new XMLStringBuffer();
             boolean eof = scanMarkupContent(buffer, '-');
             // no --> found, comment with end only with >
             if (eof) {
-            	fCurrentEntity.lineNumber = fEndLineNumber;
-            	fCurrentEntity.columnNumber = fEndColumnNumber;
-            	fCurrentEntity.characterOffset = fEndCharacterOffset;
-            	fCurrentEntity.buffer = buffer.ch;
-            	fCurrentEntity.offset = buffer.offset;
-            	fCurrentEntity.length = buffer.length;
+            	fCurrentEntity.resetBuffer(buffer, fEndLineNumber, fEndColumnNumber, fEndCharacterOffset);
             	buffer = new XMLStringBuffer(); // take a new one to avoid interactions
             	while (true) {
-            		int c = read();
+            		int c = fCurrentEntity.read();
                     if (c == -1) {
                         if (fReportErrors) {
                             fErrorReporter.reportError("HTML1007", null);
@@ -2369,7 +2341,7 @@ public class HTMLScanner
                         continue;
             		}
             		else if (c == '\n' || c == '\r') {
-                    	rewind();
+            			fCurrentEntity.rewind();
 	                    int newlines = skipNewlines();
 	                    for (int i = 0; i < newlines; i++) {
 	                    	buffer.append('\n');
@@ -2384,16 +2356,12 @@ public class HTMLScanner
                 if (DEBUG_CALLBACKS) {
                     System.out.println("comment(" + buffer + ")");
                 }
-                fEndLineNumber = fCurrentEntity.lineNumber;
-                fEndColumnNumber = fCurrentEntity.columnNumber;
-                fEndCharacterOffset = fCurrentEntity.characterOffset;
+                fEndLineNumber = fCurrentEntity.getLineNumber();
+                fEndColumnNumber = fCurrentEntity.getColumnNumber();
+                fEndCharacterOffset = fCurrentEntity.getCharacterOffset();
                 fDocumentHandler.comment(buffer, locationAugs());
             }
-            if (DEBUG_BUFFER) {
-                System.out.print(")scanComment: ");
-                printBuffer();
-                System.out.println();
-            }
+            fCurrentEntity.debugBufferIfNeeded(")scanComment: ");
             if (eof) {
                 throw new EOFException();
             }
@@ -2404,11 +2372,11 @@ public class HTMLScanner
                                             char cend) throws IOException {
             int c = -1;
             OUTER: while (true) {
-                c = read();
+                c = fCurrentEntity.read();
                 if (c == cend) {
                     int count = 1;
                     while (true) {
-                        c = read();
+                        c = fCurrentEntity.read();
                         if (c == cend) {
                             count++;
                             continue;
@@ -2424,7 +2392,7 @@ public class HTMLScanner
                     if (count < 2) {
                         buffer.append(cend);
                         //if (c != -1) {
-                    	rewind();
+                        fCurrentEntity.rewind();
                         //}
                         continue;
                     }
@@ -2432,7 +2400,7 @@ public class HTMLScanner
                         for (int i = 0; i < count; i++) {
                             buffer.append(cend);
                         }
-                    	rewind();
+                        fCurrentEntity.rewind();
                         continue;
                     }
                     for (int i = 0; i < count - 2; i++) {
@@ -2441,7 +2409,7 @@ public class HTMLScanner
                     break;
                 }
                 else if (c == '\n' || c == '\r') {
-                	rewind();
+                	fCurrentEntity.rewind();
                     int newlines = skipNewlines();
                     for (int i = 0; i < newlines; i++) {
                         buffer.append('\n');
@@ -2461,11 +2429,7 @@ public class HTMLScanner
 
         /** Scans a processing instruction. */
         protected void scanPI() throws IOException {
-            if (DEBUG_BUFFER) {
-                System.out.print("(scanPI: ");
-                printBuffer();
-                System.out.println();
-            }
+            fCurrentEntity.debugBufferIfNeeded("(scanPI: ");
             if (fReportErrors) {
                 fErrorReporter.reportWarning("HTML1008", null);
             }
@@ -2474,53 +2438,51 @@ public class HTMLScanner
             String target = scanName();
             if (target != null && !target.equalsIgnoreCase("xml")) {
                 while (true) {
-                    int c = read();
+                    int c = fCurrentEntity.read();
                     if (c == '\r' || c == '\n') {
                         if (c == '\r') {
-                            c = read();
+                            c = fCurrentEntity.read();
                             if (c != '\n') {
                                 fCurrentEntity.offset--;
-                                fCurrentEntity.characterOffset--;
+                                fCurrentEntity.characterOffset_--;
                             }
                         }
-                        fCurrentEntity.lineNumber++;
-                        fCurrentEntity.columnNumber = 1;
+                        fCurrentEntity.incLine();
                         continue;
                     }
                     if (c == -1) {
                         break;
                     }
                     if (c != ' ' && c != '\t') {
-                    	rewind();
+                    	fCurrentEntity.rewind();
                         break;
                     }
                 }
                 fStringBuffer.clear();
                 while (true) {
-                    int c = read();
+                    int c = fCurrentEntity.read();
                     if (c == '?' || c == '/') {
                         char c0 = (char)c;
-                        c = read();
+                        c = fCurrentEntity.read();
                         if (c == '>') {
                             break;
                         }
                         else {
                             fStringBuffer.append(c0);
-                        	rewind();
+                            fCurrentEntity.rewind();
                             continue;
                         }
                     }
                     else if (c == '\r' || c == '\n') {
                         fStringBuffer.append('\n');
                         if (c == '\r') {
-                            c = read();
+                            c = fCurrentEntity.read();
                             if (c != '\n') {
                                 fCurrentEntity.offset--;
-                                fCurrentEntity.characterOffset--;
+                                fCurrentEntity.characterOffset_--;
                             }
                         }
-                        fCurrentEntity.lineNumber++;
-                        fCurrentEntity.columnNumber = 1;
+                        fCurrentEntity.incLine();
                         continue;
                     }
                     else if (c == -1) {
@@ -2532,9 +2494,9 @@ public class HTMLScanner
                 }
                 XMLString data = fStringBuffer;
                 if (fDocumentHandler != null) {
-                    fEndLineNumber = fCurrentEntity.lineNumber;
-                    fEndColumnNumber = fCurrentEntity.columnNumber;
-                    fEndCharacterOffset = fCurrentEntity.characterOffset;
+                    fEndLineNumber = fCurrentEntity.getLineNumber();
+                    fEndColumnNumber = fCurrentEntity.getColumnNumber();
+                    fEndCharacterOffset = fCurrentEntity.getCharacterOffset();
                     fDocumentHandler.processingInstruction(target, data, locationAugs());
                 }
             }
@@ -2570,20 +2532,16 @@ public class HTMLScanner
 	                    fBeginLineNumber = beginLineNumber;
 	                    fBeginColumnNumber = beginColumnNumber;
 	                    fBeginCharacterOffset = beginCharacterOffset;
-	                    fEndLineNumber = fCurrentEntity.lineNumber;
-	                    fEndColumnNumber = fCurrentEntity.columnNumber;
-	                    fEndCharacterOffset = fCurrentEntity.characterOffset;
+	                    fEndLineNumber = fCurrentEntity.getLineNumber();
+	                    fEndColumnNumber = fCurrentEntity.getColumnNumber();
+	                    fEndCharacterOffset = fCurrentEntity.getCharacterOffset();
 	                    fDocumentHandler.xmlDecl(version, encoding, standalone,
 	                                             locationAugs());
                     }
                 }
             }
 
-            if (DEBUG_BUFFER) {
-                System.out.print(")scanPI: ");
-                printBuffer();
-                System.out.println();
-            }
+            fCurrentEntity.debugBufferIfNeeded(")scanPI: ");
         } // scanPI()
 
         /** 
@@ -2662,9 +2620,9 @@ public class HTMLScanner
                 if (DEBUG_CALLBACKS) {
                     System.out.println("startElement("+fQName+','+fAttributes+")");
                 }
-                fEndLineNumber = fCurrentEntity.lineNumber;
-                fEndColumnNumber = fCurrentEntity.columnNumber;
-                fEndCharacterOffset = fCurrentEntity.characterOffset;
+                fEndLineNumber = fCurrentEntity.getLineNumber();
+                fEndColumnNumber = fCurrentEntity.getColumnNumber();
+                fEndCharacterOffset = fCurrentEntity.getCharacterOffset();
                 if (empty[0]) {
                     fDocumentHandler.emptyElement(fQName, fAttributes, locationAugs());
                 }
@@ -2728,14 +2686,10 @@ public class HTMLScanner
 			                    || ianaEncoding.toUpperCase().startsWith("ISO-8859")
 			                    || ianaEncoding.equalsIgnoreCase(fDefaultIANAEncoding);
 			            fJavaEncoding = javaEncoding;
-			            fCurrentEntity.stream = new InputStreamReader(fByteStream, javaEncoding);
+			            fCurrentEntity.setStream(new InputStreamReader(fByteStream, javaEncoding));
 			            fByteStream.playback();
 			            fElementDepth = fElementCount;
 			            fElementCount = 0;
-			            fCurrentEntity.offset = fCurrentEntity.length = 0;
-			            fCurrentEntity.lineNumber = 1;
-			            fCurrentEntity.columnNumber = 1;
-			            fCurrentEntity.characterOffset = 0;
 	                    encodingChanged = true;
 			     	}
 			     }
@@ -2791,10 +2745,10 @@ public class HTMLScanner
                                         boolean[] empty, char endc)
             throws IOException {
             boolean skippedSpaces = skipSpaces();
-            fBeginLineNumber = fCurrentEntity.lineNumber;
-            fBeginColumnNumber = fCurrentEntity.columnNumber;
-            fBeginCharacterOffset = fCurrentEntity.characterOffset;
-            int c = read();
+            fBeginLineNumber = fCurrentEntity.getLineNumber();
+            fBeginColumnNumber = fCurrentEntity.getColumnNumber();
+            fBeginCharacterOffset = fCurrentEntity.getCharacterOffset();
+            int c = fCurrentEntity.read();
             if (c == -1) {
                 if (fReportErrors) {
                     fErrorReporter.reportError("HTML1007", null);
@@ -2805,10 +2759,10 @@ public class HTMLScanner
                 return false;
             }
             else if (c == '<') {
-            	rewind();
+            	fCurrentEntity.rewind();
             	return false;
             }
-        	rewind();
+            fCurrentEntity.rewind();
             String aname = scanName();
             if (aname == null) {
                 if (fReportErrors) {
@@ -2822,7 +2776,7 @@ public class HTMLScanner
             }
             aname = modifyName(aname, fNamesAttrs);
             skipSpaces();
-            c = read();
+            c = fCurrentEntity.read();
             if (c == -1) {
                 if (fReportErrors) {
                     fErrorReporter.reportError("HTML1007", null);
@@ -2837,7 +2791,7 @@ public class HTMLScanner
                     addLocationItem(attributes, attributes.getLength() - 1);
                 }
                 if (c == '/') {
-                	rewind();
+                	fCurrentEntity.rewind();
                     empty[0] = skipMarkup(false);
                 }
                 return false;
@@ -2861,7 +2815,7 @@ public class HTMLScanner
             /***/
             if (c == '=') {
                 skipSpaces();
-                c = read();
+                c = fCurrentEntity.read();
                 if (c == -1) {
                     if (fReportErrors) {
                         fErrorReporter.reportError("HTML1007", null);
@@ -2881,13 +2835,13 @@ public class HTMLScanner
                 fStringBuffer.clear();
                 fNonNormAttr.clear();
                 if (c != '\'' && c != '"') {
-                	rewind();
+                	fCurrentEntity.rewind();
                     while (true) {
-                        c = read();
+                        c = fCurrentEntity.read();
                         // Xiaowei/Ac: Fix for <a href=/broken/>...</a>
-                        if (Character.isSpace((char)c) || c == '>') {
+                        if (Character.isWhitespace((char)c) || c == '>') {
                             //fCharOffset--;
-                        	rewind();
+                        	fCurrentEntity.rewind();
                             break;
                         }
                         if (c == -1) {
@@ -2928,7 +2882,7 @@ public class HTMLScanner
                 boolean prevSpace = false;
                 do {
                 	boolean acceptSpace = !fNormalizeAttributes || (!isStart && !prevSpace);
-                    c = read();
+                    c = fCurrentEntity.read();
                     if (c == -1) {
                         if (fReportErrors) {
                             fErrorReporter.reportError("HTML1007", null);
@@ -2955,9 +2909,9 @@ public class HTMLScanner
                     }
                     else if (c == '\r' || c == '\n') {
                         if (c == '\r') {
-                            int c2 = read();
+                            int c2 = fCurrentEntity.read();
                             if (c2 != '\n') {
-                            	rewind();
+                            	fCurrentEntity.rewind();
                             }
                             else {
                                 fNonNormAttr.append('\r');
@@ -2967,8 +2921,7 @@ public class HTMLScanner
                         if (acceptSpace) {
 	                        fStringBuffer.append(fNormalizeAttributes ? ' ' : '\n');
 	                    }
-                        fCurrentEntity.lineNumber++;
-                        fCurrentEntity.columnNumber = 1;
+                        fCurrentEntity.incLine();
                         fNonNormAttr.append((char)c);
                     }
                     else if (c != quote) {
@@ -3002,7 +2955,7 @@ public class HTMLScanner
                 fQName.setValues(null, aname, aname, null);
                 attributes.addAttribute(fQName, "CDATA", "");
                 attributes.setSpecified(attributes.getLength()-1, true);
-            	rewind();
+                fCurrentEntity.rewind();
                 if (fAugmentations) {
                     addLocationItem(attributes, attributes.getLength() - 1);
                 }
@@ -3012,9 +2965,9 @@ public class HTMLScanner
 
         /** Adds location augmentations to the specified attribute. */
         protected void addLocationItem(XMLAttributes attributes, int index) {
-            fEndLineNumber = fCurrentEntity.lineNumber;
-            fEndColumnNumber = fCurrentEntity.columnNumber;
-            fEndCharacterOffset = fCurrentEntity.characterOffset;
+            fEndLineNumber = fCurrentEntity.getLineNumber();
+            fEndColumnNumber = fCurrentEntity.getColumnNumber();
+            fEndCharacterOffset = fCurrentEntity.getCharacterOffset();
             LocationItem locationItem = new LocationItem();
             locationItem.setValues(fBeginLineNumber, fBeginColumnNumber,
                                    fBeginCharacterOffset, fEndLineNumber,
@@ -3037,9 +2990,9 @@ public class HTMLScanner
                     if (DEBUG_CALLBACKS) {
                         System.out.println("endElement("+fQName+")");
                     }
-                    fEndLineNumber = fCurrentEntity.lineNumber;
-                    fEndColumnNumber = fCurrentEntity.columnNumber;
-                    fEndCharacterOffset = fCurrentEntity.characterOffset;
+                    fEndLineNumber = fCurrentEntity.getLineNumber();
+                    fEndColumnNumber = fCurrentEntity.getColumnNumber();
+                    fEndCharacterOffset = fCurrentEntity.getCharacterOffset();
                     fDocumentHandler.endElement(fQName, locationAugs());
                 }
             }
@@ -3119,10 +3072,10 @@ public class HTMLScanner
                     next = false;
                     switch (fScannerState) {
                         case STATE_CONTENT: {
-                            fBeginLineNumber = fCurrentEntity.lineNumber;
-                            fBeginColumnNumber = fCurrentEntity.columnNumber;
-                            fBeginCharacterOffset = fCurrentEntity.characterOffset;
-                            int c = read();
+                            fBeginLineNumber = fCurrentEntity.getLineNumber();
+                            fBeginColumnNumber = fCurrentEntity.getColumnNumber();
+                            fBeginCharacterOffset = fCurrentEntity.getCharacterOffset();
+                            int c = fCurrentEntity.read();
                             if (c == '<') {
                                 setScannerState(STATE_MARKUP_BRACKET);
                                 continue;
@@ -3142,7 +3095,7 @@ public class HTMLScanner
                                 throw new EOFException();
                             }
                             else {
-                            	rewind();
+                            	fCurrentEntity.rewind();
                                 fStringBuffer.clear();
                             }
                             scanCharacters(fStringBuffer, -1);
@@ -3150,21 +3103,21 @@ public class HTMLScanner
                         } // case STATE_CONTENT
                         case STATE_MARKUP_BRACKET: {
                             int delimiter = -1;
-                            int c = read();
+                            int c = fCurrentEntity.read();
                             if (c == '/') {
                                 String ename = scanName();
                                 if (ename != null) {
                                     if (ename.equalsIgnoreCase(fElementName)) {
-                                        if (read() == '>') {
+                                        if (fCurrentEntity.read() == '>') {
                                             ename = modifyName(ename, fNamesElems);
                                             if (fDocumentHandler != null && fElementCount >= fElementDepth) {
                                                 fQName.setValues(null, ename, ename, null);
                                                 if (DEBUG_CALLBACKS) {
                                                     System.out.println("endElement("+fQName+")");
                                                 }
-                                                fEndLineNumber = fCurrentEntity.lineNumber;
-                                                fEndColumnNumber = fCurrentEntity.columnNumber;
-                                                fEndCharacterOffset = fCurrentEntity.characterOffset;
+                                                fEndLineNumber = fCurrentEntity.getLineNumber();
+                                                fEndColumnNumber = fCurrentEntity.getColumnNumber();
+                                                fEndCharacterOffset = fCurrentEntity.getCharacterOffset();
                                                 fDocumentHandler.endElement(fQName, locationAugs());
                                             }
                                             setScanner(fContentScanner);
@@ -3172,7 +3125,7 @@ public class HTMLScanner
                                             return true;
                                         }
                                         else {
-                                        	rewind();
+                                        	fCurrentEntity.rewind();
                                         }
                                     }
                                     fStringBuffer.clear();
@@ -3218,24 +3171,20 @@ public class HTMLScanner
         /** Scan characters. */
         protected void scanCharacters(XMLStringBuffer buffer,
                                       int delimiter) throws IOException {
-            if (DEBUG_BUFFER) {
-                System.out.print("(scanCharacters, delimiter="+delimiter+": ");
-                printBuffer();
-                System.out.println();
-            }
+            fCurrentEntity.debugBufferIfNeeded("(scanCharacters, delimiter="+delimiter+": ");
             
             while (true) {
-                int c = read();
+                int c = fCurrentEntity.read();
 
                 if (c == -1 || (c == '<' || c == '&')) {
                     if (c != -1) {
-                    	rewind();
+                    	fCurrentEntity.rewind();
                     }
                     break;
                 }
                 // Patch supplied by Jonathan Baxter
                 else if (c == '\r' || c == '\n') {
-                	rewind();
+                	fCurrentEntity.rewind();
                     int newlines = skipNewlines();
                     for (int i = 0; i < newlines; i++) {
                         buffer.append('\n');
@@ -3244,8 +3193,7 @@ public class HTMLScanner
                 else {
                     buffer.append((char)c);
                     if (c == '\n') {
-                        fCurrentEntity.columnNumber = 1;
-                        fCurrentEntity.lineNumber++;
+                        fCurrentEntity.incLine();
                     }
                 }
             }
@@ -3263,16 +3211,12 @@ public class HTMLScanner
                 if (DEBUG_CALLBACKS) {
                     System.out.println("characters("+buffer+")");
                 }
-                fEndLineNumber = fCurrentEntity.lineNumber;
-                fEndColumnNumber = fCurrentEntity.columnNumber;
-                fEndCharacterOffset = fCurrentEntity.characterOffset;
+                fEndLineNumber = fCurrentEntity.getLineNumber();
+                fEndColumnNumber = fCurrentEntity.getColumnNumber();
+                fEndCharacterOffset = fCurrentEntity.getCharacterOffset();
                 fDocumentHandler.characters(buffer, locationAugs());
             }
-            if (DEBUG_BUFFER) {
-                System.out.print(")scanCharacters: ");
-                printBuffer();
-                System.out.println();
-            }
+            fCurrentEntity.debugBufferIfNeeded(")scanCharacters: ");
         } // scanCharacters(StringBuffer)
     } // class SpecialScanner
 
@@ -3550,19 +3494,6 @@ public class HTMLScanner
 					other.fEndLineNumber, other.fEndColumnNumber, other.fEndCharacterOffset);
 		}
 
-		/** 
-         * Sets the values of this item.
-         * @deprecated after 1.9.9. Use {@link #setValues(int, int, int, int, int, int)}. 
-         **/
-        public void setValues(int beginLine, int beginColumn,
-                              int endLine, int endColumn) {
-        	setValues(beginLine, beginColumn, 0, endLine, endColumn, 0);
-            fBeginLineNumber = beginLine;
-            fBeginColumnNumber = beginColumn;
-            fEndLineNumber = endLine;
-            fEndColumnNumber = endColumn;
-        } // setValues(int,int,int,int)
-
         /** Sets the values of this item. */
         public void setValues(int beginLine, int beginColumn, int beginOffset,
                               int endLine, int endColumn, int endOffset) {
@@ -3670,29 +3601,17 @@ public class HTMLScanner
 
      /** Reads a single character, preserving the old buffer content */
      protected int readPreservingBufferContent() throws IOException {
-         if (DEBUG_BUFFER) { 
-             System.out.print("(read: ");
-             printBuffer();
-             System.out.println();
-         }
+         fCurrentEntity.debugBufferIfNeeded("(read: ");
          if (fCurrentEntity.offset == fCurrentEntity.length) {
-             if (load(fCurrentEntity.length) < 1) {
+             if (fCurrentEntity.load(fCurrentEntity.length) < 1) {
                  if (DEBUG_BUFFER) { 
                      System.out.println(")read: -> -1");
                  }
                  return -1;
              }
          }
-         char c = fCurrentEntity.buffer[fCurrentEntity.offset++];
-         fCurrentEntity.characterOffset++;
-         fCurrentEntity.columnNumber++;
-         if (DEBUG_BUFFER) { 
-             System.out.print(")read: ");
-             printBuffer();
-             System.out.print(" -> ");
-             System.out.print(c);
-             System.out.println();
-         }
+         final char c = fCurrentEntity.getNextChar();
+         fCurrentEntity.debugBufferIfNeeded(")read: ", " -> " + c);
          return c;
      } // readPreservingBufferContent():int
 
@@ -3702,21 +3621,17 @@ public class HTMLScanner
 	private boolean endCommentAvailable() throws IOException {
 		int nbCaret = 0;
         final int originalOffset = fCurrentEntity.offset;
-        final int originalColumnNumber = fCurrentEntity.columnNumber;
-        final int originalCharacterOffset = fCurrentEntity.characterOffset;
+        final int originalColumnNumber = fCurrentEntity.getColumnNumber();
+        final int originalCharacterOffset = fCurrentEntity.getCharacterOffset();
 
 		while (true) {
 	        int c = readPreservingBufferContent();
 	        if (c == -1) {
-		        fCurrentEntity.offset = originalOffset;
-		        fCurrentEntity.columnNumber = originalColumnNumber;
-                        fCurrentEntity.characterOffset = originalCharacterOffset;
+		        fCurrentEntity.restorePosition(originalOffset, originalColumnNumber, originalCharacterOffset);
 	        	return false;
 	        }
 	        else if (c == '>' && nbCaret >= 2) {
-		        fCurrentEntity.offset = originalOffset;
-		        fCurrentEntity.columnNumber = originalColumnNumber;
-                        fCurrentEntity.characterOffset = originalCharacterOffset;
+		        fCurrentEntity.restorePosition(originalOffset, originalColumnNumber, originalCharacterOffset);
 	        	return true;
 	        }
 	        else if (c == '-') {
@@ -3772,14 +3687,5 @@ public class HTMLScanner
 				return; // start marker not found
 			}
 		}
-	}
-	
-	/**
-	 * Goes back, cancelling the effect of the previous read() call.
-	 */
-	private void rewind() {
-        fCurrentEntity.offset--;
-        fCurrentEntity.characterOffset--;
-        fCurrentEntity.columnNumber--;
 	}
 } // class HTMLScanner
