@@ -45,7 +45,7 @@
  <!-- DEPENDENCIES -->
  <available property='bcel.available' file='${lib.dir}/bcel-5.2.jar' />
 
- <property name="xerces.version" value="2.8.1"/>
+ <property name="xerces.version" value="2.9.1"/>
 
  <!-- TARGETS --> 
  <target name='all' depends='zip,tgz'/>
@@ -231,6 +231,9 @@ public class Version {
  	<classfileset id='minimal.classes' dir="${build.classes.dir}" includes='org/apache/**'>
  		<root classname="org.cyberneko.html.HTMLConfiguration"/> 
  		<root classname="org.cyberneko.html.parsers.DOMFragmentParser"/> 
+ 		<root classname="org.apache.xerces.parsers.DOMParser"/>
+ 		<root classname="org.apache.html.dom.HTMLDocumentImpl"/>
+ 		<root classname="org.apache.xerces.impl.Version"/>
  	</classfileset>
  	<mkdir dir='${build.lib.dir}' />
  	<jar destfile='${build.lib.dir}/xercesMinimal.jar'>
@@ -302,6 +305,7 @@ public class Version {
 		<testWith xercesVersion="2.8.1"/>
 		<testWith xercesVersion="2.3.0"/>
 		<testWith xercesVersion="2.2.1"/>
+		<testWith xercesVersion="minimal"/>
 		<!--
 		<testWith xercesVersion="2.1.0"/>
 		<testWith xercesVersion="2.0.2"/>
