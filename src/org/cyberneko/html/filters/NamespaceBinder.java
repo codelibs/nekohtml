@@ -440,7 +440,7 @@ public class NamespaceBinder
         }
 
         // do we need to insert namespace bindings?
-        if (fInsertNamespaces && 
+        if (fInsertNamespaces && attrs != null &&
             HTMLElements.getElement(element.localpart,null) != null) {
             if (element.prefix == null || 
                 fNamespaceContext.getURI(element.prefix) == null) {
