@@ -17,7 +17,10 @@
 package org.cyberneko.html;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
                            
 /**
@@ -34,7 +37,7 @@ public class HTMLEntities {
     //
 
     /** Entities. */
-    protected static final Properties ENTITIES = new Properties();
+    protected static final Map ENTITIES;
 
     /** Reverse mapping from characters to names. */
     protected static final IntProperties SEITITNE = new IntProperties();
@@ -44,22 +47,25 @@ public class HTMLEntities {
     //
 
     static {
+    	final Properties props = new Properties();
         // load entities
-        load0("res/HTMLlat1.properties");
-        load0("res/HTMLspecial.properties");
-        load0("res/HTMLsymbol.properties");
-        load0("res/XMLbuiltin.properties");
+        load0(props, "res/HTMLlat1.properties");
+        load0(props, "res/HTMLspecial.properties");
+        load0(props, "res/HTMLsymbol.properties");
+        load0(props, "res/XMLbuiltin.properties");
 
         // store reverse mappings
-        Enumeration keys = ENTITIES.propertyNames();
+        final Enumeration keys = props.propertyNames();
         while (keys.hasMoreElements()) {
-            String key = (String)keys.nextElement();
-            String value = ENTITIES.getProperty(key);
+        	final String key = (String)keys.nextElement();
+        	final String value = props.getProperty(key);
             if (value.length() == 1) {
-                int ivalue = value.charAt(0);
+            	final int ivalue = value.charAt(0);
                 SEITITNE.put(ivalue, key);
             }
         }
+        
+        ENTITIES = Collections.unmodifiableMap(new HashMap(props));
     }
 
     //
@@ -88,11 +94,11 @@ public class HTMLEntities {
     //
 
     /** Loads the entity values in the specified resource. */
-    private static void load0(String filename) {
+    private static void load0(final Properties props, final String filename) {
         try {
-            ENTITIES.load(HTMLEntities.class.getResourceAsStream(filename));
+        	props.load(HTMLEntities.class.getResourceAsStream(filename));
         }
-        catch (IOException e) {
+        catch (final IOException e) {
             System.err.println("error: unable to load resource \""+filename+"\"");
         }
     } // load0(String)
