@@ -305,7 +305,7 @@ public class HTMLElements {
             // INPUT - O EMPTY
             new Element(INPUT, "INPUT", Element.EMPTY, BODY, null),
             // INS - - (%flow;)*
-            new Element(INS, "INS", 0, BODY, null),
+            new Element(INS, "INS", Element.INLINE, BODY, null),
             // ISINDEX
             new Element(ISINDEX, "ISINDEX", 0, HEAD, null),
         };
@@ -499,7 +499,7 @@ public class HTMLElements {
      *
      * @param code The element code.
      */
-    public static final Element getElement(short code) {
+    public static final Element getElement(final short code) {
         return ELEMENTS.data[code];
     } // getElement(short):Element
 
@@ -508,7 +508,7 @@ public class HTMLElements {
      *
      * @param ename The element name.
      */
-    public static final Element getElement(String ename) {
+    public static final Element getElement(final String ename) {
         return getElement(ename, NO_SUCH_ELEMENT);
     } // getElement(String):Element
 
@@ -518,7 +518,7 @@ public class HTMLElements {
      * @param ename The element name.
      * @param element The default element to return if not found.
      */
-    public static final Element getElement(String ename, Element element) {
+    public static final Element getElement(final String ename, final Element element) {
 
         if (ename.length() > 0) {
             int c = ename.charAt(0);
@@ -609,8 +609,8 @@ public class HTMLElements {
          * @param parent Natural closing parent name.
          * @param closes List of elements this element can close.
          */
-        public Element(short code, String name, int flags, 
-                       short parent, short[] closes) {
+        public Element(final short code, final String name, final int flags, 
+        		final short parent, final short[] closes) {
             this(code, name, flags, new short[]{parent}, (short)-1, closes);
         } // <init>(short,String,int,short,short[]);
 
@@ -623,8 +623,8 @@ public class HTMLElements {
          * @param parent Natural closing parent name.
          * @param closes List of elements this element can close.
          */
-        public Element(short code, String name, int flags, 
-                       short parent, short bounds, short[] closes) {
+        public Element(final short code, final String name, final int flags, 
+        		final short parent, final short bounds, final short[] closes) {
             this(code, name, flags, new short[]{parent}, bounds, closes);
         } // <init>(short,String,int,short,short,short[])
 
@@ -637,8 +637,8 @@ public class HTMLElements {
          * @param parents Natural closing parent names.
          * @param closes List of elements this element can close.
          */
-        public Element(short code, String name, int flags, 
-                       short[] parents, short[] closes) {
+        public Element(final short code, final String name, final int flags, 
+        		final short[] parents, final short[] closes) {
             this(code, name, flags, parents, (short)-1, closes);
         } // <init>(short,String,int,short[],short[])
 
@@ -651,8 +651,8 @@ public class HTMLElements {
          * @param parents Natural closing parent names.
          * @param closes List of elements this element can close.
          */
-        public Element(short code, String name, int flags, 
-                       short[] parents, short bounds, short[] closes) {
+        public Element(final short code, final String name, final int flags, 
+        		final short[] parents, final short bounds, final short[] closes) {
             this.code = code;
             this.name = name;
             this.flags = flags;
@@ -699,7 +699,7 @@ public class HTMLElements {
          *
          * @param tag The element.
          */
-        public boolean closes(short tag) {
+        public boolean closes(final short tag) {
 
             if (closes != null) {
                 for (int i = 0; i < closes.length; i++) {
@@ -722,7 +722,7 @@ public class HTMLElements {
         } // hashCode():int
 
         /** Returns true if the objects are equal. */
-        public boolean equals(Object o) {
+        public boolean equals(final Object o) {
             return name.equals(o);
         } // equals(Object):boolean
 
@@ -769,7 +769,7 @@ public class HTMLElements {
         //
 
         /** Adds an element to list, resizing if necessary. */
-        public void addElement(Element element) {
+        public void addElement(final Element element) {
             if (size == data.length) {
                 Element[] newarray = new Element[size + 20];
                 System.arraycopy(data, 0, newarray, 0, size);
