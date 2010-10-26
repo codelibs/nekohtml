@@ -226,7 +226,7 @@ public class HTMLElements {
             // BR - O EMPTY
             new Element(BR, "BR", Element.EMPTY, BODY, null),
             // BUTTON - - (%flow;)* -(A|%formctrl;|FORM|FIELDSET)
-            new Element(BUTTON, "BUTTON", 0, BODY, null),
+            new Element(BUTTON, "BUTTON", Element.INLINE, BODY, null),
         };
         ELEMENTS_ARRAY['C'-'A'] = new Element[] {
             // CAPTION - - (%inline;)*
