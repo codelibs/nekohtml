@@ -191,6 +191,9 @@ public class HTMLTagBalancer
     /** Ignore outside content. */
     protected boolean fIgnoreOutsideContent;
 
+    /** Allows self closing iframe tags. */
+    protected boolean fAllowSelfclosingIframe;
+
     // properties
 
     /** Modify HTML element names. */
@@ -311,7 +314,7 @@ public class HTMLTagBalancer
     } // getRecognizedProperties():String[]
 
     /** Resets the component. */
-    public void reset(XMLComponentManager manager)
+    public void reset(final XMLComponentManager manager)
         throws XMLConfigurationException {
 
         // get features
@@ -321,6 +324,7 @@ public class HTMLTagBalancer
         fDocumentFragment = manager.getFeature(DOCUMENT_FRAGMENT) ||
                             manager.getFeature(DOCUMENT_FRAGMENT_DEPRECATED);
         fIgnoreOutsideContent = manager.getFeature(IGNORE_OUTSIDE_CONTENT);
+        fAllowSelfclosingIframe = manager.getFeature(HTMLScanner.ALLOW_SELFCLOSING_IFRAME);
 
         // get properties
         fNamesElems = getNamesValue(String.valueOf(manager.getProperty(NAMES_ELEMS)));
@@ -775,7 +779,9 @@ public class HTMLTagBalancer
     	startElement(element, attrs, augs);
         // browser ignore the closing indication for non empty tags like <form .../> but not for unknown element
         final HTMLElements.Element elem = getElement(element);
-        if (elem.isEmpty() || elem.code == HTMLElements.UNKNOWN) {
+        if (elem.isEmpty() 
+        		|| elem.code == HTMLElements.UNKNOWN
+        		|| (elem.code == HTMLElements.IFRAME && fAllowSelfclosingIframe)) {
         	endElement(element, augs);
         }
     } // emptyElement(QName,XMLAttributes,Augmentations)

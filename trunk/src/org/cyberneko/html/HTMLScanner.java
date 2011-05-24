@@ -71,6 +71,7 @@ import org.cyberneko.html.xercesbridge.XercesBridge;
  * <li>http://cyberneko.org/html/features/override-doctype
  * <li>http://cyberneko.org/html/features/insert-doctype
  * <li>http://cyberneko.org/html/features/parse-noscript-content
+ * <li>http://cyberneko.org/html/features/scanner/allow-selfclosing-iframe
  * </ul>
  * <p>
  * This component recognizes the following properties:
@@ -203,6 +204,9 @@ public class HTMLScanner
     /** Parse &lt;noscript&gt;...&lt;/noscript&gt; content */
     public static final String PARSE_NOSCRIPT_CONTENT = "http://cyberneko.org/html/features/parse-noscript-content";
 
+    /** Allows self closing &lt;iframe/&gt; tag */
+    public static final String ALLOW_SELFCLOSING_IFRAME = "http://cyberneko.org/html/features/scanner/allow-selfclosing-iframe";
+    
     /** Normalize attribute values. */
     protected static final String NORMALIZE_ATTRIBUTES = "http://cyberneko.org/html/features/scanner/normalize-attrs";
 
@@ -224,6 +228,7 @@ public class HTMLScanner
         INSERT_DOCTYPE,
         NORMALIZE_ATTRIBUTES,
         PARSE_NOSCRIPT_CONTENT,
+        ALLOW_SELFCLOSING_IFRAME,
     };
 
     /** Recognized features defaults. */
@@ -244,6 +249,7 @@ public class HTMLScanner
         Boolean.FALSE,
         Boolean.FALSE,
         Boolean.TRUE,
+        Boolean.FALSE,
     };
 
     // properties
@@ -403,6 +409,9 @@ public class HTMLScanner
 
     /** Parse noframes content. */
     protected boolean fParseNoFramesContent;
+    
+    /** Allows self closing iframe tags. */
+    protected boolean fAllowSelfclosingIframe;
 
     // properties
 
@@ -733,6 +742,7 @@ public class HTMLScanner
         fInsertDoctype = manager.getFeature(INSERT_DOCTYPE);
         fNormalizeAttributes = manager.getFeature(NORMALIZE_ATTRIBUTES);
         fParseNoScriptContent = manager.getFeature(PARSE_NOSCRIPT_CONTENT);
+        fAllowSelfclosingIframe = manager.getFeature(ALLOW_SELFCLOSING_IFRAME);
 
         // get properties
         fNamesElems = getNamesValue(String.valueOf(manager.getProperty(NAMES_ELEMS)));
@@ -783,6 +793,9 @@ public class HTMLScanner
         }
         else if (featureId.equals(PARSE_NOSCRIPT_CONTENT)) { 
             fParseNoScriptContent = state; 
+        }
+        else if (featureId.equals(ALLOW_SELFCLOSING_IFRAME)) { 
+            fAllowSelfclosingIframe = state; 
         }
 
     } // setFeature(String,boolean)
@@ -2006,21 +2019,25 @@ public class HTMLScanner
                                 fElementCount++;
                                 fSingleBoolean[0] = false;
                                 final String ename = scanStartElement(fSingleBoolean);
+                                final String enameLC = ename == null ? null : ename.toLowerCase();
                                 fBeginLineNumber = fCurrentEntity.getLineNumber();
                                 fBeginColumnNumber = fCurrentEntity.getColumnNumber();
                                 fBeginCharacterOffset = fCurrentEntity.getCharacterOffset();
-                                if ("script".equalsIgnoreCase(ename)) {
+                                if ("script".equals(enameLC)) {
                                 	scanScriptContent();
                                 }
-                                else if (!fParseNoScriptContent && "noscript".equalsIgnoreCase(ename)) {
-                                	scanNoXxxContent("noscript");
+                                else if (!fAllowSelfclosingIframe && "iframe".equals(enameLC)) {
+                                	scanUntilEndTag("iframe");
                                 }
-                                else if (!fParseNoFramesContent && "noframes".equalsIgnoreCase(ename)) {
-                                	scanNoXxxContent("noframes");
+                                else if (!fParseNoScriptContent && "noscript".equals(enameLC)) {
+                                	scanUntilEndTag("noscript");
+                                }
+                                else if (!fParseNoFramesContent && "noframes".equals(enameLC)) {
+                                	scanUntilEndTag("noframes");
                                 }
                                 else if (ename != null && !fSingleBoolean[0] 
-                                    && HTMLElements.getElement(ename).isSpecial() 
-                                    && (!ename.equalsIgnoreCase("TITLE") || isEnded(ename))) {
+                                    && HTMLElements.getElement(enameLC).isSpecial() 
+                                    && (!ename.equalsIgnoreCase("TITLE") || isEnded(enameLC))) {
                                     setScanner(fSpecialScanner.setElementName(ename));
                                     setScannerState(STATE_CONTENT);
                                     return true;
@@ -2087,7 +2104,7 @@ public class HTMLScanner
          * @param the tag for which content is scanned (one of "noscript" or "noframes")
          * @throws IOException
          */
-        private void scanNoXxxContent(final String tagName) throws IOException {
+        private void scanUntilEndTag(final String tagName) throws IOException {
         	final XMLStringBuffer buffer = new XMLStringBuffer();
         	final String end = "/" + tagName;
         	
