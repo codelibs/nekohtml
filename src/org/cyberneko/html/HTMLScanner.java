@@ -2101,12 +2101,13 @@ public class HTMLScanner
         /**
          * Scans the content of <noscript>: it doesn't get parsed but is considered as plain text
          * when feature {@link HTMLScanner#PARSE_NOSCRIPT_CONTENT} is set to false.
-         * @param the tag for which content is scanned (one of "noscript" or "noframes")
+         * @param the tag for which content is scanned (one of "noscript", "noframes", "iframe")
          * @throws IOException
          */
         private void scanUntilEndTag(final String tagName) throws IOException {
         	final XMLStringBuffer buffer = new XMLStringBuffer();
         	final String end = "/" + tagName;
+        	final int lengthToScan = tagName.length() + 2;
         	
             while (true) {
                 int c = fCurrentEntity.read();
@@ -2114,9 +2115,9 @@ public class HTMLScanner
                     break;
                 }
                 if (c == '<') {
-                	final String next = nextContent(10) + " ";
-                	if (next.length() >= 10 && end.equalsIgnoreCase(next.substring(0, end.length()))
-            			&& ('>' == next.charAt(9) || Character.isWhitespace(next.charAt(9)))) {
+                	final String next = nextContent(lengthToScan) + " ";
+                	if (next.length() >= lengthToScan && end.equalsIgnoreCase(next.substring(0, end.length()))
+            			&& ('>' == next.charAt(lengthToScan - 1) || Character.isWhitespace(next.charAt(lengthToScan - 1)))) {
                 		fCurrentEntity.rewind();
 	                    break;
                 	}
