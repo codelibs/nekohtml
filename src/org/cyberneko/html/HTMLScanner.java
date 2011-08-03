@@ -1682,7 +1682,7 @@ public class HTMLScanner
         private Reader stream_;
 
         /** Encoding. */
-        public final String encoding;
+        private String encoding;
 
         /** Public identifier. */
         public final String publicId;
@@ -1870,6 +1870,7 @@ public class HTMLScanner
             stream_ = inputStreamReader;
             offset = length = characterOffset_ = 0;
             lineNumber_ = columnNumber_ = 1;
+            encoding = inputStreamReader.getEncoding();
 		}
 		
 		/**
