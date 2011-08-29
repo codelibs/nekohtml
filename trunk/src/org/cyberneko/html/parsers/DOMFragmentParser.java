@@ -248,9 +248,7 @@ public class DOMFragmentParser
             if (e.getType() == XMLConfigurationException.NOT_RECOGNIZED) {
                 throw new SAXNotRecognizedException(message);
             }
-            else {
-                throw new SAXNotSupportedException(message);
-            }
+            throw new SAXNotSupportedException(message);
         }
 
     } // setFeature(String,boolean)
@@ -280,9 +278,7 @@ public class DOMFragmentParser
             if (e.getType() == XMLConfigurationException.NOT_RECOGNIZED) {
                 throw new SAXNotRecognizedException(message);
             }
-            else {
-                throw new SAXNotSupportedException(message);
-            }
+            throw new SAXNotSupportedException(message);
         }
 
     } // getFeature(String):boolean
@@ -313,9 +309,7 @@ public class DOMFragmentParser
             if (e.getType() == XMLConfigurationException.NOT_RECOGNIZED) {
                 throw new SAXNotRecognizedException(message);
             }
-            else {
-                throw new SAXNotSupportedException(message);
-            }
+            throw new SAXNotSupportedException(message);
         }
 
     } // setProperty(String,Object)
@@ -350,9 +344,7 @@ public class DOMFragmentParser
             if (e.getType() == XMLConfigurationException.NOT_RECOGNIZED) {
                 throw new SAXNotRecognizedException(message);
             }
-            else {
-                throw new SAXNotSupportedException(message);
-            }
+            throw new SAXNotSupportedException(message);
         }
 
     } // getProperty(String):Object
