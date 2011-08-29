@@ -3,7 +3,8 @@
   <groupId>net.sourceforge.nekohtml</groupId>
   <artifactId>nekohtml</artifactId>
   <name>Neko HTML</name>
-  <version>1.9.15</version>
+  <description>An HTML parser and tag balancer.</description>
+  <version>1.9.16-SNAPSHOT</version>
   <url>http://nekohtml.sourceforge.net/</url>
   <licenses>
     <license>
@@ -38,4 +39,16 @@
             <name>NekoHTML Maven 2 Snapshots Repository</name>
         </snapshotRepository>
     </distributionManagement>
+    <developers>
+        <developer>
+            <name>Andy Clarck</name>
+        </developer>
+        <developer>
+            <name>Marc Guillemot</name>
+            <id>mguillem</id>
+            <email>mguillem@users.sourceforge.net</email>
+            <url>http://mguillem.wordpress.com/</url>
+            <timezone>+1</timezone>
+        </developer>
+    </developers>
 </project>
