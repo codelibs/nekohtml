@@ -194,6 +194,9 @@ public class HTMLTagBalancer
     /** Allows self closing iframe tags. */
     protected boolean fAllowSelfclosingIframe;
 
+    /** Allows self closing tags. */
+    protected boolean fAllowSelfclosingTags;
+
     // properties
 
     /** Modify HTML element names. */
@@ -325,6 +328,7 @@ public class HTMLTagBalancer
                             manager.getFeature(DOCUMENT_FRAGMENT_DEPRECATED);
         fIgnoreOutsideContent = manager.getFeature(IGNORE_OUTSIDE_CONTENT);
         fAllowSelfclosingIframe = manager.getFeature(HTMLScanner.ALLOW_SELFCLOSING_IFRAME);
+        fAllowSelfclosingTags = manager.getFeature(HTMLScanner.ALLOW_SELFCLOSING_TAGS);
 
         // get properties
         fNamesElems = getNamesValue(String.valueOf(manager.getProperty(NAMES_ELEMS)));
@@ -779,7 +783,8 @@ public class HTMLTagBalancer
     	startElement(element, attrs, augs);
         // browser ignore the closing indication for non empty tags like <form .../> but not for unknown element
         final HTMLElements.Element elem = getElement(element);
-        if (elem.isEmpty() 
+        if (elem.isEmpty()
+        		|| fAllowSelfclosingTags
         		|| elem.code == HTMLElements.UNKNOWN
         		|| (elem.code == HTMLElements.IFRAME && fAllowSelfclosingIframe)) {
         	endElement(element, augs);

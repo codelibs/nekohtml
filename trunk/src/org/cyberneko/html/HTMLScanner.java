@@ -72,6 +72,7 @@ import org.cyberneko.html.xercesbridge.XercesBridge;
  * <li>http://cyberneko.org/html/features/insert-doctype
  * <li>http://cyberneko.org/html/features/parse-noscript-content
  * <li>http://cyberneko.org/html/features/scanner/allow-selfclosing-iframe
+ * <li>http://cyberneko.org/html/features/scanner/allow-selfclosing-tags
  * </ul>
  * <p>
  * This component recognizes the following properties:
@@ -207,6 +208,9 @@ public class HTMLScanner
     /** Allows self closing &lt;iframe/&gt; tag */
     public static final String ALLOW_SELFCLOSING_IFRAME = "http://cyberneko.org/html/features/scanner/allow-selfclosing-iframe";
     
+    /** Allows self closing tags e.g. &lt;div/&gt; (XHTML) */
+    public static final String ALLOW_SELFCLOSING_TAGS = "http://cyberneko.org/html/features/scanner/allow-selfclosing-tags";
+
     /** Normalize attribute values. */
     protected static final String NORMALIZE_ATTRIBUTES = "http://cyberneko.org/html/features/scanner/normalize-attrs";
 
@@ -229,6 +233,7 @@ public class HTMLScanner
         NORMALIZE_ATTRIBUTES,
         PARSE_NOSCRIPT_CONTENT,
         ALLOW_SELFCLOSING_IFRAME,
+        ALLOW_SELFCLOSING_TAGS,
     };
 
     /** Recognized features defaults. */
@@ -249,6 +254,7 @@ public class HTMLScanner
         Boolean.FALSE,
         Boolean.FALSE,
         Boolean.TRUE,
+        Boolean.FALSE,
         Boolean.FALSE,
     };
 
@@ -412,6 +418,9 @@ public class HTMLScanner
     
     /** Allows self closing iframe tags. */
     protected boolean fAllowSelfclosingIframe;
+
+    /** Allows self closing tags. */
+    protected boolean fAllowSelfclosingTags;
 
     // properties
 
@@ -743,6 +752,7 @@ public class HTMLScanner
         fNormalizeAttributes = manager.getFeature(NORMALIZE_ATTRIBUTES);
         fParseNoScriptContent = manager.getFeature(PARSE_NOSCRIPT_CONTENT);
         fAllowSelfclosingIframe = manager.getFeature(ALLOW_SELFCLOSING_IFRAME);
+        fAllowSelfclosingTags = manager.getFeature(ALLOW_SELFCLOSING_TAGS);
 
         // get properties
         fNamesElems = getNamesValue(String.valueOf(manager.getProperty(NAMES_ELEMS)));
@@ -755,8 +765,7 @@ public class HTMLScanner
     } // reset(XMLComponentManager)
 
     /** Sets a feature. */
-    public void setFeature(String featureId, boolean state)
-        throws XMLConfigurationException {
+    public void setFeature(final String featureId, final boolean state) {
 
         if (featureId.equals(AUGMENTATIONS)) { 
             fAugmentations = state; 
@@ -796,6 +805,9 @@ public class HTMLScanner
         }
         else if (featureId.equals(ALLOW_SELFCLOSING_IFRAME)) { 
             fAllowSelfclosingIframe = state; 
+        }
+        else if (featureId.equals(ALLOW_SELFCLOSING_TAGS)) { 
+            fAllowSelfclosingTags = state; 
         }
 
     } // setFeature(String,boolean)
@@ -2053,7 +2065,7 @@ public class HTMLScanner
                                 if ("script".equals(enameLC)) {
                                 	scanScriptContent();
                                 }
-                                else if (!fAllowSelfclosingIframe && "iframe".equals(enameLC)) {
+                                else if (!fAllowSelfclosingTags && !fAllowSelfclosingIframe && "iframe".equals(enameLC)) {
                                 	scanUntilEndTag("iframe");
                                 }
                                 else if (!fParseNoScriptContent && "noscript".equals(enameLC)) {
