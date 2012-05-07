@@ -226,7 +226,7 @@ public class HTMLElements {
             // BR - O EMPTY
             new Element(BR, "BR", Element.EMPTY, BODY, null),
             // BUTTON - - (%flow;)* -(A|%formctrl;|FORM|FIELDSET)
-            new Element(BUTTON, "BUTTON", Element.INLINE, BODY, null),
+            new Element(BUTTON, "BUTTON", Element.INLINE | Element.BLOCK, BODY, null),
         };
         ELEMENTS_ARRAY['C'-'A'] = new Element[] {
             // CAPTION - - (%inline;)*
@@ -700,7 +700,6 @@ public class HTMLElements {
          * @param tag The element.
          */
         public boolean closes(final short tag) {
-
             if (closes != null) {
                 for (int i = 0; i < closes.length; i++) {
                     if (closes[i] == tag) {
