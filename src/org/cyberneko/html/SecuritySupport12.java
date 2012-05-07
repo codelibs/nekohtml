@@ -121,7 +121,7 @@ class SecuritySupport12 extends SecuritySupport {
     return ((Boolean)
             AccessController.doPrivileged(new PrivilegedAction() {
                 public Object run() {
-                    return new Boolean(f.exists());
+                    return Boolean.valueOf(f.exists());
                 }
             })).booleanValue();
     }
@@ -130,7 +130,7 @@ class SecuritySupport12 extends SecuritySupport {
     return ((Long)
             AccessController.doPrivileged(new PrivilegedAction() {
                 public Object run() {
-                    return new Long(f.lastModified());
+                    return Long.valueOf(f.lastModified());
                 }
             })).longValue();
     }
