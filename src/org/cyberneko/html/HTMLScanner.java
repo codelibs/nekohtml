@@ -797,9 +797,6 @@ public class HTMLScanner
         else if (featureId.equals(STYLE_STRIP_COMMENT_DELIMS)) { 
             fStyleStripCommentDelims = state; 
         }
-        else if (featureId.equals(IGNORE_SPECIFIED_CHARSET)) { 
-            fIgnoreSpecifiedCharset = state; 
-        }
         else if (featureId.equals(PARSE_NOSCRIPT_CONTENT)) { 
             fParseNoScriptContent = state; 
         }
