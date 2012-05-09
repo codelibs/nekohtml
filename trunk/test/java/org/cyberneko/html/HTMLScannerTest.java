@@ -157,7 +157,7 @@ public class HTMLScannerTest extends TestCase {
         parser.parse(source);
     }
 
-    class InfiniteLoopScanner extends HTMLScanner {
+    static class InfiniteLoopScanner extends HTMLScanner {
         InfiniteLoopScanner() {
             fContentScanner = new MyContentScanner();
         }

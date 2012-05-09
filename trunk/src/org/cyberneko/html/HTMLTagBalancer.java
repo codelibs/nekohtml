@@ -1054,7 +1054,7 @@ public class HTMLTagBalancer
         if (depth > 1) {
             int size = fInlineStack.top;
             for (int i = 0; i < size; i++) {
-                Info info = (Info)fInlineStack.pop();
+                final Info info = fInlineStack.pop();
                 XMLAttributes attributes = info.attributes;
                 if (fReportErrors) {
                     String iname = info.qname.rawname;

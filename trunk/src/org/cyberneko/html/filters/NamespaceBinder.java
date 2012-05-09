@@ -519,7 +519,7 @@ public class NamespaceBinder
         /** Get URI. */
         public String getURI(String prefix) {
             for (int i = fLevels[fTop]-1; i >= 0; i--) {
-                Entry entry = (Entry)fEntries[i];
+                final Entry entry = fEntries[i];
                 if (entry.prefix.equals(prefix)) {
                     return entry.uri;
                 }
@@ -588,7 +588,7 @@ public class NamespaceBinder
         /** Get prefix. */
         public String getPrefix(String uri) {
             for (int i = fLevels[fTop]-1; i >= 0; i--) {
-                Entry entry = (Entry)fEntries[i];
+                final Entry entry = fEntries[i];
                 if (entry.uri.equals(uri)) {
                     return entry.prefix;
                 }

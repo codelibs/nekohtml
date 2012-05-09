@@ -51,7 +51,7 @@ public abstract class XercesBridge
 
         for (int i = 0; i != classNames.length; ++i) {
             final String className = classNames[i];
-        	XercesBridge bridge = (XercesBridge) newInstanceOrNull(className);
+        	final XercesBridge bridge = newInstanceOrNull(className);
             if (bridge != null) {
                 return bridge;
             }
