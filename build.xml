@@ -4,7 +4,7 @@
  <!-- PROPERTIES -->
  <property file='build-custom.properties' />
  
- <property name='version'   value='1.9.15'/>
+ <property name='version'   value='1.9.16-SNAPSHOT'/>
  <property name='name'      value='nekohtml'/>
  <property name='fullname'  value='${name}-${version}'/>
  <property name='Title'     value='NekoHTML'/>
@@ -42,6 +42,12 @@
  <property name='version.java.dir' value='${build.src.dir}/org/cyberneko/html'/>
  <property name='version.java'     value='${version.java.dir}/Version.java'/>
  
+ <!-- defined maven snapshots and staging repository id and url -->
+ <property name="maven-snapshots-repository-id" value="sonatype-nexus-snapshots" />
+ <property name="maven-snapshots-repository-url" value="https://oss.sonatype.org/content/repositories/snapshots/" />
+ <property name="maven-staging-repository-id" value="sonatype-nexus-staging" />
+ <property name="maven-staging-repository-url" value="https://oss.sonatype.org/service/local/staging/deploy/maven2/" />
+
  <!-- DEPENDENCIES -->
  <available property='bcel.available' file='${lib.dir}/bcel-5.2.jar' />
 
@@ -329,6 +335,20 @@ public class Version {
 			<attach file="${mvn.bundle.javadoc}" classifier="javadoc" /> 
 		</artifact:deploy>
 	</target>
+
+	<target name="mvn-deploy-oss.sonatype" depends="jar" description="Deploys a snapshot to Sonatype snapshot repository">
+		<path id="maven-ant-tasks.classpath" path="lib/maven-ant-tasks-2.1.3.jar" />
+		<typedef resource="org/apache/maven/artifact/ant/antlib.xml" uri="urn:maven-artifact-ant"
+			classpathref="maven-ant-tasks.classpath" />
+
+		<artifact:mvn>
+			<arg value="org.apache.maven.plugins:maven-deploy-plugin:2.6:deploy-file" />
+			<arg value="-Durl=${maven-snapshots-repository-url}" />
+			<arg value="-DrepositoryId=${maven-snapshots-repository-id}" />
+			<arg value="-DpomFile=pom.xml" />
+			<arg value="-Dfile=${jar.file}" />
+		</artifact:mvn>
+	</target>
 	
 	<target name="mvn-bundle" depends="jar, doc">
 		<property name="mvn.bundle.sources" value="${build.dir}/dist/nekohtml-${version}-sources.jar"/>
@@ -342,7 +362,7 @@ public class Version {
 		    <fileset dir='${build.src.dir}' />
 		</jar>
 
-		<path id="maven-ant-tasks.classpath" path="lib/maven-ant-tasks-2.0.8.jar" />
+		<path id="maven-ant-tasks.classpath" path="lib/maven-ant-tasks-2.1.3.jar" />
 		<typedef resource="org/apache/maven/artifact/ant/antlib.xml" uri="urn:maven-artifact-ant"
 			classpathref="maven-ant-tasks.classpath" />
 		<artifact:pom id="maven.project" file="pom.xml" />
