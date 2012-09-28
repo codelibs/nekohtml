@@ -16,6 +16,8 @@
 
 package org.cyberneko.html.filters;
 
+import java.util.Locale;
+
 import org.apache.xerces.util.XMLChar;
 import org.apache.xerces.util.XMLStringBuffer;
 import org.apache.xerces.xni.Augmentations;
@@ -464,7 +466,7 @@ public class Purifier
         for (int i = 0; i < len; i++) {
             str.insert(0, '0');
         }
-        return str.toString().toUpperCase();
+        return str.toString().toUpperCase(Locale.ENGLISH);
     } // toHexString(int,int):String
 
 } // class Purifier

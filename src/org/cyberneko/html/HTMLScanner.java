@@ -25,6 +25,7 @@ import java.io.Reader;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.util.BitSet;
+import java.util.Locale;
 import java.util.Stack;
 
 import org.apache.xerces.util.EncodingMap;
@@ -884,7 +885,7 @@ public class HTMLScanner
                 }
             }
             if (encodings[1] == null) {
-                encodings[1] = EncodingMap.getIANA2JavaMapping(encodings[0].toUpperCase());
+                encodings[1] = EncodingMap.getIANA2JavaMapping(encodings[0].toUpperCase(Locale.ENGLISH));
                 if (encodings[1] == null) {
                     encodings[1] = encodings[0];
                     if (fReportErrors) {
@@ -896,7 +897,7 @@ public class HTMLScanner
             fJavaEncoding = encodings[1];
             /* PATCH: Asgeir Asgeirsson */
             fIso8859Encoding = fIANAEncoding == null 
-                            || fIANAEncoding.toUpperCase().startsWith("ISO-8859")
+                            || fIANAEncoding.toUpperCase(Locale.ENGLISH).startsWith("ISO-8859")
                             || fIANAEncoding.equalsIgnoreCase(fDefaultIANAEncoding);
             encoding = fIANAEncoding;
             reader = new InputStreamReader(fByteStream, fJavaEncoding);
@@ -1055,7 +1056,7 @@ public class HTMLScanner
             char ch1 = str.charAt(1);
             // change "C:blah" to "/C:blah"
             if (ch1 == ':') {
-                char ch0 = Character.toUpperCase(str.charAt(0));
+                final char ch0 = String.valueOf(str.charAt(0)).toUpperCase(Locale.ENGLISH).charAt(0);
                 if (ch0 >= 'A' && ch0 <= 'Z') {
                     str = "/" + str;
                 }
@@ -1074,8 +1075,8 @@ public class HTMLScanner
     /** Modifies the given name based on the specified mode. */
     protected static final String modifyName(String name, short mode) {
         switch (mode) {
-            case NAMES_UPPERCASE: return name.toUpperCase();
-            case NAMES_LOWERCASE: return name.toLowerCase();
+            case NAMES_UPPERCASE: return name.toUpperCase(Locale.ENGLISH);
+            case NAMES_LOWERCASE: return name.toLowerCase(Locale.ENGLISH);
         }
         return name;
     } // modifyName(String,short):String
@@ -1453,8 +1454,8 @@ public class HTMLScanner
             char c0 = s.charAt(i);
             char c1 = fCurrentEntity.getNextChar();
             if (!caseSensitive) {
-                c0 = Character.toUpperCase(c0);
-                c1 = Character.toUpperCase(c1);
+                c0 = String.valueOf(c0).toUpperCase(Locale.ENGLISH).charAt(0);
+                c1 = String.valueOf(c1).toUpperCase(Locale.ENGLISH).charAt(0);
             }
             if (c0 != c1) {
             	fCurrentEntity.rewind(i + 1);
@@ -2733,7 +2734,7 @@ public class HTMLScanner
 			boolean encodingChanged = false;
 			try {
 			    String ianaEncoding = charset;
-			    String javaEncoding = EncodingMap.getIANA2JavaMapping(ianaEncoding.toUpperCase());
+			    String javaEncoding = EncodingMap.getIANA2JavaMapping(ianaEncoding.toUpperCase(Locale.ENGLISH));
 			    if (DEBUG_CHARSET) {
 			        System.out.println("+++ ianaEncoding: "+ianaEncoding);
 			        System.out.println("+++ javaEncoding: "+javaEncoding);
@@ -2754,7 +2755,7 @@ public class HTMLScanner
 			  		// change the charset
 			     	else {
 			            fIso8859Encoding = ianaEncoding == null 
-			                    || ianaEncoding.toUpperCase().startsWith("ISO-8859")
+			                    || ianaEncoding.toUpperCase(Locale.ENGLISH).startsWith("ISO-8859")
 			                    || ianaEncoding.equalsIgnoreCase(fDefaultIANAEncoding);
 			            fJavaEncoding = javaEncoding;
 			            fCurrentEntity.setStream(new InputStreamReader(fByteStream, javaEncoding));

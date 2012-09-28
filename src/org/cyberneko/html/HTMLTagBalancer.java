@@ -18,6 +18,7 @@ package org.cyberneko.html;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import org.apache.xerces.util.XMLAttributesImpl;
 import org.apache.xerces.xni.Augmentations;
@@ -1222,8 +1223,8 @@ public class HTMLTagBalancer
     /** Modifies the given name based on the specified mode. */
     protected static final String modifyName(String name, short mode) {
         switch (mode) {
-            case NAMES_UPPERCASE: return name.toUpperCase();
-            case NAMES_LOWERCASE: return name.toLowerCase();
+            case NAMES_UPPERCASE: return name.toUpperCase(Locale.ENGLISH);
+            case NAMES_LOWERCASE: return name.toLowerCase(Locale.ENGLISH);
         }
         return name;
     } // modifyName(String,short):String
