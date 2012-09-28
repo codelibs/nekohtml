@@ -5,6 +5,7 @@ import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 
 import junit.framework.TestCase;
 
@@ -61,6 +62,32 @@ public class HTMLScannerTest extends TestCase {
             ")SCRIPT", "~inserting", "(STYLE", "~inserting", "~inserting", ")STYLE", "~inserting",
             "(DIV", "(SPAN", ")SPAN", "~inserting", ")DIV", "(DIV", "(A", ")A", ")DIV", ")BODY", ")HTML"};
         assertEquals(Arrays.asList(expectedString), filter.collectedStrings);
+    }
+
+	/**
+	 * Ensure that the current locale doesn't affect the HTML tags.
+	 * see issue https://sourceforge.net/tracker/?func=detail&atid=952178&aid=3544334&group_id=195122
+	 * @throws Exception
+	 */
+	public void testLocale() throws Exception {
+		final Locale originalLocale = Locale.getDefault();
+		try {
+			Locale.setDefault(new Locale("tr", "TR"));
+		    String string = "<html><head><title>foo</title></head>"
+		        + "<body>"
+	            + "</body></html>";
+	        HTMLConfiguration parser = new HTMLConfiguration();
+	        EvaluateInputSourceFilter filter = new EvaluateInputSourceFilter(parser);
+	        parser.setProperty("http://cyberneko.org/html/properties/filters", new XMLDocumentFilter[] {filter});
+	        XMLInputSource source = new XMLInputSource(null, "myTest", null, new StringReader(string), "UTF-8");
+	        parser.parse(source);
+	        
+	        String[] expectedString = {"(HTML", "(HEAD", "(TITLE", ")TITLE", ")HEAD", "(BODY", ")BODY", ")HTML"};
+	        assertEquals(Arrays.asList(expectedString).toString(), filter.collectedStrings.toString());
+		}
+		finally {
+			Locale.setDefault(originalLocale);
+		}
     }
 
 	/**
@@ -171,5 +198,4 @@ public class HTMLScannerTest extends TestCase {
             }
         }
     }
-
 }

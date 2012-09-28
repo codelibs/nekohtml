@@ -17,6 +17,7 @@
 package org.cyberneko.html.filters;
 
 import java.util.Enumeration;
+import java.util.Locale;
 import java.util.Vector;
 
 import org.apache.xerces.xni.Augmentations;
@@ -372,8 +373,8 @@ public class NamespaceBinder
     /** Modifies the given name based on the specified mode. */
     protected static final String modifyName(String name, short mode) {
         switch (mode) {
-            case NAMES_UPPERCASE: return name.toUpperCase();
-            case NAMES_LOWERCASE: return name.toLowerCase();
+            case NAMES_UPPERCASE: return name.toUpperCase(Locale.ENGLISH);
+            case NAMES_LOWERCASE: return name.toLowerCase(Locale.ENGLISH);
         }
         return name;
     } // modifyName(String,short):String
@@ -393,7 +394,7 @@ public class NamespaceBinder
         for (int i = attrCount - 1; i >= 0; i--) {
             attrs.getName(i, fQName);
             String aname = fQName.rawname;
-            String ANAME = aname.toUpperCase();
+            String ANAME = aname.toUpperCase(Locale.ENGLISH);
             if (ANAME.startsWith("XMLNS:") || ANAME.equals("XMLNS")) {
                 int anamelen = aname.length();
 
