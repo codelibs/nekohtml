@@ -2652,7 +2652,7 @@ public class HTMLScanner
             fBeginColumnNumber = beginColumnNumber;
             fBeginCharacterOffset = beginCharacterOffset;
             if (fByteStream != null && fElementDepth == -1) {
-                if (ename.equalsIgnoreCase("META")) {
+                if (ename.equalsIgnoreCase("META") && !fIgnoreSpecifiedCharset) {
                     if (DEBUG_CHARSET) {
                         System.out.println("+++ <META>");
                     }
@@ -2665,11 +2665,17 @@ public class HTMLScanner
                         if (content != null) {
                         	content = removeSpaces(content);
                             int index1 = content.toLowerCase().indexOf("charset=");
-                            if (index1 != -1 && !fIgnoreSpecifiedCharset) {
+                            if (index1 != -1) {
                                 final int index2 = content.indexOf(';', index1);
                                 final String charset = index2 != -1 ? content.substring(index1+8, index2) : content.substring(index1+8);
                                 changeEncoding(charset);
                             }
+                        }
+                    }
+                    else {
+                        final String metaCharset = getValue(fAttributes, "charset");
+                        if (metaCharset != null) {
+                            changeEncoding(metaCharset);
                         }
                     }
                 }
