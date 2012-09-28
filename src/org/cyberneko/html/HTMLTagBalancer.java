@@ -249,6 +249,9 @@ public class HTMLTagBalancer
     /** True if seen &lt;body&lt; element. */
     protected boolean fSeenBodyElement;
 
+    /** True if seen &lt;frameset&lt; element. */
+    private boolean fSeenFramesetElement;
+
     /** True if a form is in the stack (allow to discard opening of nested forms) */
     protected boolean fOpenedForm;
 
@@ -579,7 +582,13 @@ public class HTMLTagBalancer
         	notifyDiscardedStartElement(elem, attrs, augs);
             return;
         }
-        if (elementCode == HTMLElements.HEAD) {
+		// accept only frame and frameset within frameset
+		if (fSeenFramesetElement && elementCode != HTMLElements.FRAME && elementCode != HTMLElements.FRAMESET) {
+        	notifyDiscardedStartElement(elem, attrs, augs);
+            return;
+		}
+
+		if (elementCode == HTMLElements.HEAD) {
             if (fSeenHeadElement) {
             	notifyDiscardedStartElement(elem, attrs, augs);
                 return;
@@ -587,7 +596,14 @@ public class HTMLTagBalancer
             fSeenHeadElement = true;
         }
         else if (elementCode == HTMLElements.FRAMESET) {
+    		// create <head></head> if none was present
+    		if (!fSeenHeadElement) {
+    			final QName head = createQName("head");
+    			forceStartElement(head, null, synthesizedAugs());
+    			endElement(head, synthesizedAugs());
+    		}
         	consumeBufferedEndElements(); // </head> (if any) has been buffered
+            fSeenFramesetElement = true;
         }
         else if (elementCode == HTMLElements.BODY) {
     		// create <head></head> if none was present
@@ -995,7 +1011,13 @@ public class HTMLTagBalancer
             return;
         }
 
-        // check for end of document
+		// accept only frame and frameset within frameset
+		if (fSeenFramesetElement && elem.code != HTMLElements.FRAME && elem.code != HTMLElements.FRAMESET) {
+        	notifyDiscardedEndElement(element, augs);
+            return;
+		}
+
+		// check for end of document
         if (elem.code == HTMLElements.HTML) {
             fSeenRootElementEnd = true;
         }

@@ -28,7 +28,9 @@ Changes
 <h2>Releases</h2>
 <dl>
  <dt>Future version</dt>
- <dd>Don't rely on default locale for lowercase/uppercase conversion of tag and attribute names (#3544334, based on patch provided by Ronald Brill).
+ <dd>Don't rely on default locale for lowercase/uppercase conversion of tag and attribute names (#3544334, based on patch provided by Ronald Brill),
+ accept only <code>FRAME</code> and <code>FRAMESET</code> within <code>FRAMESET</code> (fix StackOverflowError #3555034),
+ add <code>HEAD</code> before <code>FRAMESET</code> when missing.
  </dd>
 
  <dt>Version 1.9.16 (18 Jul 2012)</dt>
