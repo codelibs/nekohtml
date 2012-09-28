@@ -248,6 +248,7 @@ public class HTMLTagBalancer
 
     /** True if seen &lt;body&lt; element. */
     protected boolean fSeenBodyElement;
+    private boolean fSeenBodyElementEnd;
 
     /** True if seen &lt;frameset&lt; element. */
     private boolean fSeenFramesetElement;
@@ -928,7 +929,7 @@ public class HTMLTagBalancer
     /** Characters. */
     public void characters(final XMLString text, final Augmentations augs) throws XNIException {
         // check for end of document
-        if (fSeenRootElementEnd) {
+        if (fSeenRootElementEnd || fSeenBodyElementEnd) {
             return;
         }
 
@@ -1021,6 +1022,15 @@ public class HTMLTagBalancer
         if (elem.code == HTMLElements.HTML) {
             fSeenRootElementEnd = true;
         }
+        else if (fIgnoreOutsideContent) {
+        	if (elem.code == HTMLElements.BODY) {
+        		fSeenBodyElementEnd = true;
+        	}
+        	else if (fSeenBodyElementEnd) {
+            	notifyDiscardedEndElement(element, augs);
+                return;
+        	}
+        }
         else if (elem.code == HTMLElements.FORM) {
         	fOpenedForm = false;
         }
@@ -1029,7 +1039,7 @@ public class HTMLTagBalancer
         	endElementsBuffer_.add(new ElementEntry(element, augs));
         	return;
         }
-
+        
         // empty element
         int depth = getElementDepth(elem);
         if (depth == -1) {

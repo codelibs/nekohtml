@@ -31,7 +31,8 @@ Changes
  <dd>Don't rely on default locale for lowercase/uppercase conversion of tag and attribute names (#3544334, based on patch provided by Ronald Brill),
  accept only <code>FRAME</code> and <code>FRAMESET</code> within <code>FRAMESET</code> (fix StackOverflowError #3555034),
  add <code>HEAD</code> before <code>FRAMESET</code> when missing,
- recognize encoding specified in <code>META charset='...'</code>.
+ recognize encoding specified in <code>META charset='...'</code>,
+ fix StackOverflowError occurring with content after closing <code>BODY</code> tag with feature <code>http://cyberneko.org/html/features/balance-tags/ignore-outside-content</code> set to <code>true</code> (#3490807).
  </dd>
 
  <dt>Version 1.9.16 (18 Jul 2012)</dt>
