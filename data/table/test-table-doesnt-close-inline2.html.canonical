@@ -3,16 +3,18 @@
 )HEAD
 (BODY
 (A
-Ahref #
-"\n
+(TABLE
+)TABLE
 )A
+"\n
+(FONT
 (TABLE
 )TABLE
+)FONT
 "\n
-(B
-"\n
-)B
+(SUB
 (TABLE
 )TABLE
+)SUB
 )BODY
 )HTML

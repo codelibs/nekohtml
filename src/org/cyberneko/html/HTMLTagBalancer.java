@@ -732,17 +732,6 @@ public class HTMLTagBalancer
                 }
             }
         }
-        // TODO: investigate if only table is special here
-        // table closes all opened inline elements
-        else if (elementCode == HTMLElements.TABLE) {
-            for (int i=fElementStack.top-1; i >= 0; i--) {
-                final Info info = fElementStack.data[i];
-                if (!info.element.isInline()) {
-                    break;
-                }
-                endElement(info.qname, synthesizedAugs());
-            }
-        }
 
         // call handler
         fSeenRootElement = true;
