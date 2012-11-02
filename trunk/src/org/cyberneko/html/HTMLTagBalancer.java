@@ -584,7 +584,7 @@ public class HTMLTagBalancer
             return;
         }
 		// accept only frame and frameset within frameset
-		if (fSeenFramesetElement && elementCode != HTMLElements.FRAME && elementCode != HTMLElements.FRAMESET) {
+		if (fSeenFramesetElement && elementCode != HTMLElements.FRAME && elementCode != HTMLElements.FRAMESET && elementCode != HTMLElements.NOFRAMES) {
         	notifyDiscardedStartElement(elem, attrs, augs);
             return;
 		}

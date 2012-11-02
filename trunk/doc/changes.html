@@ -29,7 +29,7 @@ Changes
 <dl>
  <dt>Future version</dt>
  <dd>Don't rely on default locale for lowercase/uppercase conversion of tag and attribute names (#3544334, based on patch provided by Ronald Brill),
- accept only <code>FRAME</code> and <code>FRAMESET</code> within <code>FRAMESET</code> (fix StackOverflowError #3555034),
+ accept only <code>FRAME</code>, <code>FRAMESET</code>, and <code>NOFRAMES</code> within <code>FRAMESET</code> (fix StackOverflowError #3555034),
  add <code>HEAD</code> before <code>FRAMESET</code> when missing,
  recognize encoding specified in <code>META charset='...'</code>,
  fix StackOverflowError occurring with content after closing <code>BODY</code> tag with feature <code>http://cyberneko.org/html/features/balance-tags/ignore-outside-content</code> set to <code>true</code> (#3490807),
