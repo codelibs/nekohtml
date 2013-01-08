@@ -439,7 +439,7 @@ public class HTMLElements {
             // TITLE - - (#PCDATA) -(%head.misc;)
             new Element(TITLE, "TITLE", Element.SPECIAL, new short[]{HEAD,BODY}, null),
             // TR - O (TH|TD)+
-            new Element(TR, "TR", Element.BLOCK, new short[]{TBODY, THEAD, TFOOT}, TABLE, new short[]{TD,TH,TR,COLGROUP}),
+            new Element(TR, "TR", Element.BLOCK, new short[]{TBODY, THEAD, TFOOT}, TABLE, new short[]{TD,TH,TR,COLGROUP,DIV}),
             // TT - - (%inline;)*
             new Element(TT, "TT", Element.INLINE, BODY, null),
         };
