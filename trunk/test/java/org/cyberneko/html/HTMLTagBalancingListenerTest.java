@@ -46,6 +46,29 @@ public class HTMLTagBalancingListenerTest extends TestCase {
        
        assertEquals(Arrays.asList(expectedMessages).toString(), parser.messages.toString());
     }
+
+   /**
+    * HTMLTagBalancer field fSeenFramesetElement was not correctly reset as of 1.19.17  
+    * @throws Exception
+    */
+   public void testReuse() throws Exception {
+       String string = "<head><title>title</title></head><body><div>hello</div></body>";
+       
+       final TestParser parser = new TestParser();
+       final StringReader sr = new StringReader(string);
+       final XMLInputSource in = new XMLInputSource(null, "foo", null, sr, null);
+
+       parser.parse(in);
+       
+       final String[] expectedMessages = {"start HTML", "start HEAD", "start TITLE", "end TITLE", "end HEAD",
+    		   "start BODY", "start DIV", "end DIV", "end BODY", "end HTML"};
+       
+       assertEquals(Arrays.asList(expectedMessages).toString(), parser.messages.toString());
+       
+       parser.messages.clear();
+       parser.parse(new XMLInputSource(null, "foo", null, new StringReader(string), null));
+       assertEquals(Arrays.asList(expectedMessages).toString(), parser.messages.toString());
+    }
 }
 
 class TestParser extends AbstractSAXParser implements HTMLTagBalancingListener
