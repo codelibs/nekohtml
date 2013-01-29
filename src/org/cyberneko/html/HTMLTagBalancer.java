@@ -341,6 +341,14 @@ public class HTMLTagBalancer
         fErrorReporter = (HTMLErrorReporter)manager.getProperty(ERROR_REPORTER);
         
         fragmentContextStack_ = (QName[]) manager.getProperty(FRAGMENT_CONTEXT_STACK);
+        fSeenAnything = false;
+        fSeenDoctype = false;
+        fSeenRootElement = false;
+        fSeenRootElementEnd = false;
+        fSeenHeadElement = false;
+        fSeenBodyElement = false;
+        fSeenBodyElementEnd = false;
+        fSeenFramesetElement = false;
 
     } // reset(XMLComponentManager)
 
@@ -420,13 +428,6 @@ public class HTMLTagBalancer
         else {
         	fragmentContextStackSize_ = 0;
         }
-        fSeenAnything = false;
-        fSeenDoctype = false;
-        fSeenRootElement = false;
-        fSeenRootElementEnd = false;
-        fSeenHeadElement = false;
-        fSeenBodyElement = false;
-        
 
         // pass on event
         if (fDocumentHandler != null) {

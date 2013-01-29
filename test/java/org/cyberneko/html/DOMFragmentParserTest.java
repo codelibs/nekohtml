@@ -67,5 +67,31 @@ public class DOMFragmentParserTest extends TestCase {
             child = child.getNextSibling();
         }
     }
+
+    /**
+     * HTMLTagBalancer field fSeenBodyElementEnd was not correctly reset as of 1.19.17  
+     * @throws Exception
+     */
+    public void testInstanceReuse() throws Exception {
+    	final String s = "<html><body><frame><frameset></frameset></html>";
+
+    	final DOMFragmentParser parser = new DOMFragmentParser();
+        final HTMLDocument document = new HTMLDocumentImpl();
+
+        final DocumentFragment fragment1 = document.createDocumentFragment();
+        parser.parse(new InputSource(new StringReader(s)), fragment1);
+
+        final DocumentFragment fragment2 = document.createDocumentFragment();
+        parser.parse(new InputSource(new StringReader(s)), fragment2);
+
+        final DOMImplementationRegistry registry = DOMImplementationRegistry.newInstance();
+        final DOMImplementationLS impl = 
+            (DOMImplementationLS)registry.getDOMImplementation("LS");
+
+        final LSSerializer writer = impl.createLSSerializer();
+        final String str1 = writer.writeToString(fragment1);
+        final String str2 = writer.writeToString(fragment2);
+        assertEquals(str1, str2);
+	}
 }
 
