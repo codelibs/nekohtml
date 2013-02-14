@@ -1182,7 +1182,7 @@ public class HTMLScanner
         String sysid = null;
 
         if (skipSpaces()) {
-            root = scanName();
+            root = scanName(true);
             if (root == null) {
                 if (fReportErrors) {
                     fErrorReporter.reportError("HTML1014", null);
@@ -1271,7 +1271,7 @@ public class HTMLScanner
     } // scanLiteral():String
 
     /** Scans a name. */
-    protected String scanName() throws IOException {
+    protected String scanName(final boolean strict) throws IOException {
         if (DEBUG_BUFFER) { 
             fCurrentEntity.debugBufferIfNeeded("(scanName: ");
         }
@@ -1287,8 +1287,8 @@ public class HTMLScanner
         while (true) {
             while (fCurrentEntity.hasNext()) {
                 char c = fCurrentEntity.getNextChar();
-                if (!Character.isLetterOrDigit(c) &&
-                    !(c == '-' || c == '.' || c == ':' || c == '_')) {
+                if ((strict && (!Character.isLetterOrDigit(c) && c != '-' && c != '.' && c != ':' && c != '_'))
+                    || (!strict && (Character.isWhitespace(c) || c == '=' || c == '/' || c == '>'))) {
                 	fCurrentEntity.rewind();
                     break;
                 }
@@ -2507,7 +2507,7 @@ public class HTMLScanner
             }
 
             // scan processing instruction
-            String target = scanName();
+            String target = scanName(true);
             if (target != null && !target.equalsIgnoreCase("xml")) {
                 while (true) {
                     int c = fCurrentEntity.read();
@@ -2623,7 +2623,7 @@ public class HTMLScanner
          *              the start element tag is empty (e.g. "/&gt;").
          */
         protected String scanStartElement(boolean[] empty) throws IOException {
-            String ename = scanName();
+            String ename = scanName(true);
             int length = ename != null ? ename.length() : 0;
             int c = length > 0 ? ename.charAt(0) : -1;
             if (length == 0 || !((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'))) {
@@ -2841,7 +2841,7 @@ public class HTMLScanner
             	return false;
             }
             fCurrentEntity.rewind();
-            String aname = scanName();
+            String aname = scanName(false);
             if (aname == null) {
                 if (fReportErrors) {
                     fErrorReporter.reportError("HTML1011", null);
@@ -3056,7 +3056,7 @@ public class HTMLScanner
 
         /** Scans an end element. */
         protected void scanEndElement() throws IOException {
-            String ename = scanName();
+            String ename = scanName(true);
             if (fReportErrors && ename == null) {
                 fErrorReporter.reportError("HTML1012", null);
             }
@@ -3183,7 +3183,7 @@ public class HTMLScanner
                             int delimiter = -1;
                             int c = fCurrentEntity.read();
                             if (c == '/') {
-                                String ename = scanName();
+                                String ename = scanName(true);
                                 if (ename != null) {
                                     if (ename.equalsIgnoreCase(fElementName)) {
                                         if (fCurrentEntity.read() == '>') {
