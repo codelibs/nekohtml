@@ -4,14 +4,14 @@
  <!-- PROPERTIES -->
  <property file='build-custom.properties' />
  
- <property name='version'   value='1.9.18-SNAPSHOT'/>
+ <property name='version'   value='1.9.18'/>
  <property name='name'      value='nekohtml'/>
  <property name='fullname'  value='${name}-${version}'/>
  <property name='Title'     value='NekoHTML'/>
  <property name='FullTitle' value='CyberNeko HTML Parser'/>
  <property name='Name'      value='${Title} ${version}'/>
  <property name='author'    value='Andy Clark, Marc Guillemot'/>
- <property name='copyright' value='(C) Copyright 2002-2012, ${author}. All rights reserved.'/>
+ <property name='copyright' value='(C) Copyright 2002-2013, ${author}. All rights reserved.'/>
  <property name='URL'       value='http://nekohtml.sourceforge.net/index.html'/>
  
  <property name='compile.source' value='1.3' />
