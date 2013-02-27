@@ -4,7 +4,7 @@
   <artifactId>nekohtml</artifactId>
   <name>Neko HTML</name>
   <description>An HTML parser and tag balancer.</description>
-  <version>1.9.18-SNAPSHOT</version>
+  <version>1.9.18</version>
   <url>http://nekohtml.sourceforge.net/</url>
   <licenses>
     <license>
