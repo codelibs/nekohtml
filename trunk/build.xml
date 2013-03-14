@@ -363,11 +363,7 @@ public class Version {
 		</artifact:mvn>
 	</target>
 
-	<target name="mvn-deploy-oss.sonatype" depends="mvn-bundle" description="Deploys a snapshot to Sonatype snapshot repository">
-		<path id="maven-ant-tasks.classpath" path="lib/maven-ant-tasks-2.1.3.jar" />
-		<typedef resource="org/apache/maven/artifact/ant/antlib.xml" uri="urn:maven-artifact-ant"
-			classpathref="maven-ant-tasks.classpath" />
-
+	<target name="mvn-deploy-oss.sonatype" depends="-defineMavenAntTasks, mvn-bundle" description="Deploys a snapshot to Sonatype snapshot repository">
 		<artifact:mvn>
 			<arg value="org.apache.maven.plugins:maven-deploy-plugin:2.6:deploy-file" />
 			<arg value="-Durl=${maven-snapshots-repository-url}" />
@@ -377,7 +373,7 @@ public class Version {
 		</artifact:mvn>
 	</target>
 	
-	<target name="mvn-bundle" depends="jar, doc">
+	<target name="mvn-bundle" depends="jar, doc, -defineMavenAntTasks">
 		<property name="mvn.bundle.sources" value="${build.dir}/dist/nekohtml-${version}-sources.jar"/>
 		<property name="mvn.bundle.javadoc" value="${build.dir}/dist/nekohtml-${version}-javadoc.jar"/>
 		<mkdir dir="${build.dir}/dist"/>
@@ -388,13 +384,15 @@ public class Version {
 		    <fileset dir='${src.dir}' />
 		    <fileset dir='${build.src.dir}' />
 		</jar>
+	</target>
 
+	<target name="-defineMavenAntTasks">
 		<path id="maven-ant-tasks.classpath" path="lib/maven-ant-tasks-2.1.3.jar" />
 		<typedef resource="org/apache/maven/artifact/ant/antlib.xml" uri="urn:maven-artifact-ant"
 			classpathref="maven-ant-tasks.classpath" />
 		<artifact:pom id="maven.project" file="pom.xml" />
 	</target>
-
+	
 	<target name="deploy-mvn-local" depends="mvn-bundle" description="Deploys jars to a local folder">
 		<property name="deploy-mvn-local.dir" location="${build.dir}/dist/m2-repo"/>
 		<echo message="Deploying locally to ${deploy-mvn-local.dir}"/>
