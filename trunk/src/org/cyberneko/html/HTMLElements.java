@@ -323,7 +323,7 @@ public class HTMLElements {
             // LEGEND - - (%inline;)*
             new Element(LEGEND, "LEGEND", Element.INLINE, FIELDSET, null),
             // LI - O (%flow;)*
-            new Element(LI, "LI", 0, new short[]{BODY,UL,OL}, new short[]{LI,P}),
+            new Element(LI, "LI", 0, new short[]{BODY,UL,OL}, new short[]{LI,P,DIV}),
             // LINK - O EMPTY
             new Element(LINK, "LINK", Element.EMPTY, HEAD, null),
             // LISTING
@@ -447,7 +447,7 @@ public class HTMLElements {
             // U, 
             new Element(U, "U", Element.INLINE, BODY, null),
             // UL - - (LI)+
-            new Element(UL, "UL", Element.BLOCK, BODY, new short[] {P}),
+            new Element(UL, "UL", Element.CONTAINER, BODY, new short[] {P}),
         };
         ELEMENTS_ARRAY['V'-'A'] = new Element[] {
             // VAR - - (%inline;)*

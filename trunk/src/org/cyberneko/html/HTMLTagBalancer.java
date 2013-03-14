@@ -1194,6 +1194,9 @@ public class HTMLTagBalancer
             if (info.element.code == HTMLElements.TABLE && !tableBodyOrHtml) {
             	return -1; // current element not allowed to close a table
             }
+            if (element.isParent(info.element)) {
+            	break;
+            }
         }
         return depth;
     } // getElementDepth(HTMLElements.Element)
