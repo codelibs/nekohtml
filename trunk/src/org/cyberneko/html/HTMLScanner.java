@@ -1255,7 +1255,7 @@ public class HTMLScanner
                     break;
                 }
                 else {
-                    str.append((char)c);
+                    appendChar(str, c);
                 }
             }
             if (c == -1) {
@@ -1334,7 +1334,7 @@ public class HTMLScanner
             	fCurrentEntity.rewind();
                 break;
             }
-            str.append((char)c);
+            appendChar(str, c);
         }
 
         if (!endsWithSemicolon) {
@@ -1381,7 +1381,7 @@ public class HTMLScanner
                         fDocumentHandler.startGeneralEntity(name, id, encoding, locationAugs());
                     }
                     str.clear();
-                    str.append((char)value);
+                    appendChar(str, value);
                     fDocumentHandler.characters(str, locationAugs());
                     if (fNotifyCharRefs) {
                         fDocumentHandler.endGeneralEntity(name, locationAugs());
@@ -1430,7 +1430,7 @@ public class HTMLScanner
                 fDocumentHandler.startGeneralEntity(name, id, encoding, locationAugs());
             }
             str.clear();
-            str.append((char)c);
+            appendChar(str, c);
             fDocumentHandler.characters(str, locationAugs());
             if (notify) {
                 fDocumentHandler.endGeneralEntity(name, locationAugs());
@@ -1660,6 +1660,48 @@ public class HTMLScanner
     //
     // Private methods
     //
+
+    /**
+     * Append a character to an XMLStringBuffer. The character is an int value, and can either be a
+     * single UTF-16 character or a supplementary character represented by two UTF-16 code points.
+     *
+     * @param str The XMLStringBuffer to append to.
+     * @param value The character value.
+     */
+    private void appendChar( XMLStringBuffer str, int value )
+    {
+        if ( value > Character.MAX_VALUE )
+        {
+            char[] chars = Character.toChars( value );
+
+            str.append( chars, 0, chars.length );
+        }
+        else
+        {
+            str.append( (char) value );
+        }
+    }
+
+    /**
+     * Append a character to a StringBuffer. The character is an int value, and can either be a
+     * single UTF-16 character or a supplementary character represented by two UTF-16 code points.
+     *
+     * @param str The StringBuffer to append to.
+     * @param value The character value.
+     */
+    private void appendChar( StringBuffer str, int value )
+    {
+        if ( value > Character.MAX_VALUE )
+        {
+            char[] chars = Character.toChars( value );
+
+            str.append( chars, 0, chars.length );
+        }
+        else
+        {
+            str.append( (char) value );
+        }
+    }
 
     //
     // Interfaces
@@ -2167,7 +2209,7 @@ public class HTMLScanner
                     }
                 }
                 else {
-                    buffer.append((char)c);
+                    appendChar(buffer, c);
                 }
             }
             if (buffer.length > 0 && fDocumentHandler != null) {
@@ -2211,7 +2253,7 @@ public class HTMLScanner
                     }
                 }
                 else {
-                    buffer.append((char)c);
+                    appendChar(buffer, c);
                 }
             }
 
@@ -2405,7 +2447,7 @@ public class HTMLScanner
                         break;
                     }
                     else if (c != '>') {
-            			buffer.append((char)c);
+                        appendChar(buffer, c);
                         continue;
             		}
             		else if (c == '\n' || c == '\r') {
@@ -2492,7 +2534,7 @@ public class HTMLScanner
                     }
                     break;
                 }
-                buffer.append((char)c);
+                appendChar(buffer, c);
             }
             return c == -1;
         } // scanMarkupContent(XMLStringBuffer,char):boolean
@@ -2559,7 +2601,7 @@ public class HTMLScanner
                         break;
                     }
                     else {
-                        fStringBuffer.append((char)c);
+                        appendChar(fStringBuffer, c);
                     }
                 }
                 XMLString data = fStringBuffer;
@@ -2931,7 +2973,7 @@ public class HTMLScanner
                         if (c == '&') {
                             int ce = scanEntityRef(fStringBuffer2, false);
                             if (ce != -1) {
-                                fStringBuffer.append((char)ce);
+                                appendChar(fStringBuffer, ce);
                             }
                             else {
                                 fStringBuffer.append(fStringBuffer2);
@@ -2939,8 +2981,8 @@ public class HTMLScanner
                             fNonNormAttr.append(fStringBuffer2);
                         }
                         else {
-                            fStringBuffer.append((char)c);
-                            fNonNormAttr.append((char)c);
+                            appendChar(fStringBuffer, c);
+                            appendChar(fNonNormAttr, c);
                         }
                     }
                     fQName.setValues(null, aname, aname, null);
@@ -2972,7 +3014,7 @@ public class HTMLScanner
                     	isStart = false;
                         int ce = scanEntityRef(fStringBuffer2, false);
                         if (ce != -1) {
-                            fStringBuffer.append((char)ce);
+                            appendChar(fStringBuffer, ce);
                         }
                         else {
                             fStringBuffer.append(fStringBuffer2);
@@ -3004,8 +3046,8 @@ public class HTMLScanner
                     }
                     else if (c != quote) {
                     	isStart = false;
-                        fStringBuffer.append((char)c);
-                        fNonNormAttr.append((char)c);
+                        appendChar(fStringBuffer, c);
+                        appendChar(fNonNormAttr, c);
                     }
                     prevSpace = c == ' ' || c == '\t' || c == '\r' || c == '\n';
                     isStart = isStart && prevSpace;
@@ -3216,7 +3258,7 @@ public class HTMLScanner
                             else {
                                 fStringBuffer.clear();
                                 fStringBuffer.append('<');
-                                fStringBuffer.append((char)c);
+                                appendChar(fStringBuffer, c);
                             }
                             scanCharacters(fStringBuffer, delimiter);
                             setScannerState(STATE_CONTENT);
@@ -3269,7 +3311,7 @@ public class HTMLScanner
                     }
                 }
                 else {
-                    buffer.append((char)c);
+                    appendChar(buffer, c);
                     if (c == '\n') {
                         fCurrentEntity.incLine();
                     }
