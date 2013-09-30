@@ -252,7 +252,7 @@ public class HTMLElements {
             // DIR
             new Element(DIR, "DIR", 0, BODY, new short[] {P}),
             // DIV - - (%flow;)*
-            new Element(DIV, "DIV", Element.BLOCK, BODY, new short[]{P}),
+            new Element(DIV, "DIV", Element.CONTAINER, BODY, new short[]{P}),
             // DD - O (%flow;)*
             new Element(DD, "DD", 0, BODY, new short[]{DT,DD,P}),
             // DL - - (DT|DD)+
@@ -317,13 +317,13 @@ public class HTMLElements {
         };
         ELEMENTS_ARRAY['L'-'A'] = new Element[] {
             // LABEL - - (%inline;)* -(LABEL)
-            new Element(LABEL, "LABEL", 0, BODY, null),
+            new Element(LABEL, "LABEL", Element.INLINE, BODY, null),
             // LAYER
             new Element(LAYER, "LAYER", Element.BLOCK, BODY, null),
             // LEGEND - - (%inline;)*
             new Element(LEGEND, "LEGEND", Element.INLINE, FIELDSET, null),
             // LI - O (%flow;)*
-            new Element(LI, "LI", 0, new short[]{BODY,UL,OL}, new short[]{LI,P,DIV}),
+            new Element(LI, "LI", Element.CONTAINER, new short[]{BODY,UL,OL}, new short[]{LI,P}),
             // LINK - O EMPTY
             new Element(LINK, "LINK", Element.EMPTY, HEAD, null),
             // LISTING
