@@ -17,6 +17,7 @@
 package org.cyberneko.html;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -96,7 +97,9 @@ public class HTMLEntities {
     /** Loads the entity values in the specified resource. */
     private static void load0(final Properties props, final String filename) {
         try {
-        	props.load(HTMLEntities.class.getResourceAsStream(filename));
+        	final InputStream stream = HTMLEntities.class.getResourceAsStream(filename);
+			props.load(stream);
+			stream.close();
         }
         catch (final IOException e) {
             System.err.println("error: unable to load resource \""+filename+"\"");
