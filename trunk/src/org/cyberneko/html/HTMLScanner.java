@@ -533,6 +533,8 @@ public class HTMLScanner
     /** Resource identifier. */
     private final XMLResourceIdentifierImpl fResourceId = new XMLResourceIdentifierImpl();
 
+	private final char REPLACEMENT_CHARACTER = '\uFFFD'; // the � character
+
     //
     // Public methods
     //
@@ -1381,7 +1383,15 @@ public class HTMLScanner
                         fDocumentHandler.startGeneralEntity(name, id, encoding, locationAugs());
                     }
                     str.clear();
-                    appendChar(str, value);
+                    try {
+                    	appendChar(str, value);
+                    }
+                    catch (final IllegalArgumentException e) { // when value is not valid as UTF-16 
+        		        if (fReportErrors) {
+        		            fErrorReporter.reportError("HTML1005", new Object[]{name});
+        		        }
+                		str.append(REPLACEMENT_CHARACTER);
+                    }
                     fDocumentHandler.characters(str, locationAugs());
                     if (fNotifyCharRefs) {
                         fDocumentHandler.endGeneralEntity(name, locationAugs());
