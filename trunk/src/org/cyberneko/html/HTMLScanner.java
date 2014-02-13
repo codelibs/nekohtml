@@ -3040,12 +3040,12 @@ public class HTMLScanner
                     else if (c == '\r' || c == '\n') {
                         if (c == '\r') {
                             int c2 = fCurrentEntity.read();
-                            if (c2 != '\n') {
-                            	fCurrentEntity.rewind();
-                            }
-                            else {
+                            if (c2 == '\n') {
                                 fNonNormAttr.append('\r');
                                 c = c2;
+                            }
+                            else if (c2 != -1) {
+                            	fCurrentEntity.rewind();
                             }
                         }
                         if (acceptSpace) {

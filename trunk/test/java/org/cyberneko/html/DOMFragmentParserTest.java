@@ -21,6 +21,13 @@ import org.xml.sax.InputSource;
  */
 public class DOMFragmentParserTest extends TestCase {
 	/**
+	 * See <a href="https://sourceforge.net/p/nekohtml/bugs/154/">Bug 154</a>.
+	 */
+    public void testAttrEndingWithCRAtEndOfStream() throws Exception {
+    	doTest("<a href=\"\r", "<A href=\"&#xa;\"/>");
+    }
+
+    /**
 	 * See <a href="http://sourceforge.net/support/tracker.php?aid=2828553">Bug 2828553</a>.
 	 */
     public void testInvalidProcessingInstruction() throws Exception {
