@@ -1068,7 +1068,7 @@ public class HTMLTagBalancer
                 fErrorReporter.reportWarning("HTML2007", new Object[]{ename,iname});
             }
             if (fDocumentHandler != null) {
-                // PATCH: Marc-André Morissette
+                // PATCH: Marc-Andrï¿½ Morissette
                 callEndElement(info.qname, i < depth - 1 ? synthesizedAugs() : augs);
             }
         }
@@ -1184,7 +1184,8 @@ public class HTMLTagBalancer
         int depth = -1;
         for (int i = fElementStack.top - 1; i >=fragmentContextStackSize_; i--) {
             Info info = fElementStack.data[i];
-            if (info.element.code == element.code) {
+            if (info.element.code == element.code
+            		&& (elementCode != HTMLElements.UNKNOWN || (elementCode == HTMLElements.UNKNOWN && element.name.equals(info.element.name)))) {
                 depth = fElementStack.top - i;
                 break;
             }

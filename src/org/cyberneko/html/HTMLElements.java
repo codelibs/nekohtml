@@ -128,7 +128,8 @@ public class HTMLElements {
     public static final short S = RUBY+1;
     public static final short SAMP = S+1;
     public static final short SCRIPT = SAMP+1;
-    public static final short SELECT = SCRIPT+1;
+    public static final short SECTION = SCRIPT+1;
+    public static final short SELECT = SECTION+1;
     public static final short SMALL = SELECT+1;
     public static final short SOUND = SMALL+1;
     public static final short SPACER = SOUND+1;
@@ -400,6 +401,8 @@ public class HTMLElements {
             new Element(SAMP, "SAMP", Element.INLINE, BODY, null),
             // SCRIPT - - %Script;
             new Element(SCRIPT, "SCRIPT", Element.SPECIAL, new short[]{HEAD,BODY}, null),
+
+            new Element(SECTION, "SECTION", Element.CONTAINER, BODY, new short[]{SELECT}),
             // SELECT - - (OPTGROUP|OPTION)+
             new Element(SELECT, "SELECT", Element.CONTAINER, BODY, new short[]{SELECT}),
             // SMALL - - (%inline;)*
@@ -509,7 +512,13 @@ public class HTMLElements {
      * @param ename The element name.
      */
     public static final Element getElement(final String ename) {
-        return getElement(ename, NO_SUCH_ELEMENT);
+        Element element = getElement(ename, NO_SUCH_ELEMENT);
+        if (element == NO_SUCH_ELEMENT) {
+            element = new Element(UNKNOWN, ename.toUpperCase(),  Element.CONTAINER, new short[]{BODY,HEAD}/*HTML*/, null);
+            element.parent = NO_SUCH_ELEMENT.parent;
+            element.parentCodes = NO_SUCH_ELEMENT.parentCodes;
+        }
+        return element;
     } // getElement(String):Element
 
     /**
