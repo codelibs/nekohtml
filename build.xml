@@ -308,6 +308,7 @@ public class Version {
 		<delete dir="${build.dir}/junit"/>
 		<mkdir dir="${build.dir}/junit"/>
 
+		<testWith xercesVersion="2.11.0"/>
 		<testWith xercesVersion="2.10.0"/>
 		<testWith xercesVersion="2.9.1"/>
 		<testWith xercesVersion="2.8.1"/>
