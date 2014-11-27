@@ -346,7 +346,7 @@ public class HTMLElements {
             // NEXTID
             new Element(NEXTID, "NEXTID", Element.EMPTY, BODY, null),
             // NOBR
-            new Element(NOBR, "NOBR", Element.INLINE, BODY, null),
+            new Element(NOBR, "NOBR", Element.INLINE, BODY, new short[]{NOBR}),
             // NOEMBED
             new Element(NOEMBED, "NOEMBED", 0, BODY, null),
             // NOFRAMES - - (BODY) -(NOFRAMES)
