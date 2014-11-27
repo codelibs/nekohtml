@@ -227,7 +227,7 @@ public class HTMLElements {
             // BR - O EMPTY
             new Element(BR, "BR", Element.EMPTY, BODY, null),
             // BUTTON - - (%flow;)* -(A|%formctrl;|FORM|FIELDSET)
-            new Element(BUTTON, "BUTTON", Element.INLINE | Element.BLOCK, BODY, null),
+            new Element(BUTTON, "BUTTON", Element.INLINE | Element.BLOCK, BODY, new short[]{BUTTON}),
         };
         ELEMENTS_ARRAY['C'-'A'] = new Element[] {
             // CAPTION - - (%inline;)*
@@ -265,7 +265,7 @@ public class HTMLElements {
             // EM - - (%inline;)*
             new Element(EM, "EM", Element.INLINE, BODY, null),
             // EMBED
-            new Element(EMBED, "EMBED", 0, BODY, null),
+            new Element(EMBED, "EMBED", Element.EMPTY, BODY, null),
         };
         ELEMENTS_ARRAY['F'-'A'] = new Element[] {
             // FIELDSET - - (#PCDATA,LEGEND,(%flow;)*)
