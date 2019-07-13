@@ -19,7 +19,6 @@ package org.codelibs.nekohtml.filters;
 import org.apache.xerces.xni.Augmentations;
 import org.apache.xerces.xni.QName;
 import org.apache.xerces.xni.XMLAttributes;
-import org.apache.xerces.xni.XNIException;
 import org.codelibs.nekohtml.HTMLEventInfo;
 
 /**
@@ -67,7 +66,7 @@ public class Identity extends DefaultFilter {
 
     /** Start element. */
     @Override
-    public void startElement(final QName element, final XMLAttributes attributes, final Augmentations augs) throws XNIException {
+    public void startElement(final QName element, final XMLAttributes attributes, final Augmentations augs) {
         if (augs == null || !synthesized(augs)) {
             super.startElement(element, attributes, augs);
         }
@@ -75,7 +74,7 @@ public class Identity extends DefaultFilter {
 
     /** Empty element. */
     @Override
-    public void emptyElement(final QName element, final XMLAttributes attributes, final Augmentations augs) throws XNIException {
+    public void emptyElement(final QName element, final XMLAttributes attributes, final Augmentations augs) {
         if (augs == null || !synthesized(augs)) {
             super.emptyElement(element, attributes, augs);
         }
@@ -83,7 +82,7 @@ public class Identity extends DefaultFilter {
 
     /** End element. */
     @Override
-    public void endElement(final QName element, final Augmentations augs) throws XNIException {
+    public void endElement(final QName element, final Augmentations augs) {
         if (augs == null || !synthesized(augs)) {
             super.endElement(element, augs);
         }
@@ -96,7 +95,7 @@ public class Identity extends DefaultFilter {
     /** Returns true if the information provided is synthesized. */
     protected static boolean synthesized(final Augmentations augs) {
         final HTMLEventInfo info = (HTMLEventInfo) augs.getItem(AUGMENTATIONS);
-        return info != null ? info.isSynthesized() : false;
+        return info != null && info.isSynthesized();
     } // synthesized(Augmentations):boolean
 
 } // class Identity

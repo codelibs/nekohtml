@@ -25,7 +25,6 @@ import org.apache.xerces.xni.XMLAttributes;
 import org.apache.xerces.xni.XMLLocator;
 import org.apache.xerces.xni.XMLResourceIdentifier;
 import org.apache.xerces.xni.XMLString;
-import org.apache.xerces.xni.XNIException;
 
 /**
  * This class is a document filter capable of removing specified
@@ -169,8 +168,7 @@ public class ElementRemover extends DefaultFilter {
 
     /** Start document. */
     @Override
-    public void startDocument(final XMLLocator locator, final String encoding, final NamespaceContext nscontext, final Augmentations augs)
-            throws XNIException {
+    public void startDocument(final XMLLocator locator, final String encoding, final NamespaceContext nscontext, final Augmentations augs) {
         fElementDepth = 0;
         fRemovalElementDepth = Integer.MAX_VALUE;
         super.startDocument(locator, encoding, nscontext, augs);
@@ -180,13 +178,13 @@ public class ElementRemover extends DefaultFilter {
 
     /** Start document. */
     @Override
-    public void startDocument(final XMLLocator locator, final String encoding, final Augmentations augs) throws XNIException {
+    public void startDocument(final XMLLocator locator, final String encoding, final Augmentations augs) {
         startDocument(locator, encoding, null, augs);
     } // startDocument(XMLLocator,String,Augmentations)
 
     /** Start prefix mapping. */
     @Override
-    public void startPrefixMapping(final String prefix, final String uri, final Augmentations augs) throws XNIException {
+    public void startPrefixMapping(final String prefix, final String uri, final Augmentations augs) {
         if (fElementDepth <= fRemovalElementDepth) {
             super.startPrefixMapping(prefix, uri, augs);
         }
@@ -194,7 +192,7 @@ public class ElementRemover extends DefaultFilter {
 
     /** Start element. */
     @Override
-    public void startElement(final QName element, final XMLAttributes attributes, final Augmentations augs) throws XNIException {
+    public void startElement(final QName element, final XMLAttributes attributes, final Augmentations augs) {
         if (fElementDepth <= fRemovalElementDepth && handleOpenTag(element, attributes)) {
             super.startElement(element, attributes, augs);
         }
@@ -203,7 +201,7 @@ public class ElementRemover extends DefaultFilter {
 
     /** Empty element. */
     @Override
-    public void emptyElement(final QName element, final XMLAttributes attributes, final Augmentations augs) throws XNIException {
+    public void emptyElement(final QName element, final XMLAttributes attributes, final Augmentations augs) {
         if (fElementDepth <= fRemovalElementDepth && handleOpenTag(element, attributes)) {
             super.emptyElement(element, attributes, augs);
         }
@@ -211,7 +209,7 @@ public class ElementRemover extends DefaultFilter {
 
     /** Comment. */
     @Override
-    public void comment(final XMLString text, final Augmentations augs) throws XNIException {
+    public void comment(final XMLString text, final Augmentations augs) {
         if (fElementDepth <= fRemovalElementDepth) {
             super.comment(text, augs);
         }
@@ -219,7 +217,7 @@ public class ElementRemover extends DefaultFilter {
 
     /** Processing instruction. */
     @Override
-    public void processingInstruction(final String target, final XMLString data, final Augmentations augs) throws XNIException {
+    public void processingInstruction(final String target, final XMLString data, final Augmentations augs) {
         if (fElementDepth <= fRemovalElementDepth) {
             super.processingInstruction(target, data, augs);
         }
@@ -227,7 +225,7 @@ public class ElementRemover extends DefaultFilter {
 
     /** Characters. */
     @Override
-    public void characters(final XMLString text, final Augmentations augs) throws XNIException {
+    public void characters(final XMLString text, final Augmentations augs) {
         if (fElementDepth <= fRemovalElementDepth) {
             super.characters(text, augs);
         }
@@ -235,7 +233,7 @@ public class ElementRemover extends DefaultFilter {
 
     /** Ignorable whitespace. */
     @Override
-    public void ignorableWhitespace(final XMLString text, final Augmentations augs) throws XNIException {
+    public void ignorableWhitespace(final XMLString text, final Augmentations augs) {
         if (fElementDepth <= fRemovalElementDepth) {
             super.ignorableWhitespace(text, augs);
         }
@@ -243,8 +241,7 @@ public class ElementRemover extends DefaultFilter {
 
     /** Start general entity. */
     @Override
-    public void startGeneralEntity(final String name, final XMLResourceIdentifier id, final String encoding, final Augmentations augs)
-            throws XNIException {
+    public void startGeneralEntity(final String name, final XMLResourceIdentifier id, final String encoding, final Augmentations augs) {
         if (fElementDepth <= fRemovalElementDepth) {
             super.startGeneralEntity(name, id, encoding, augs);
         }
@@ -252,7 +249,7 @@ public class ElementRemover extends DefaultFilter {
 
     /** Text declaration. */
     @Override
-    public void textDecl(final String version, final String encoding, final Augmentations augs) throws XNIException {
+    public void textDecl(final String version, final String encoding, final Augmentations augs) {
         if (fElementDepth <= fRemovalElementDepth) {
             super.textDecl(version, encoding, augs);
         }
@@ -260,7 +257,7 @@ public class ElementRemover extends DefaultFilter {
 
     /** End general entity. */
     @Override
-    public void endGeneralEntity(final String name, final Augmentations augs) throws XNIException {
+    public void endGeneralEntity(final String name, final Augmentations augs) {
         if (fElementDepth <= fRemovalElementDepth) {
             super.endGeneralEntity(name, augs);
         }
@@ -268,7 +265,7 @@ public class ElementRemover extends DefaultFilter {
 
     /** Start CDATA section. */
     @Override
-    public void startCDATA(final Augmentations augs) throws XNIException {
+    public void startCDATA(final Augmentations augs) {
         if (fElementDepth <= fRemovalElementDepth) {
             super.startCDATA(augs);
         }
@@ -276,7 +273,7 @@ public class ElementRemover extends DefaultFilter {
 
     /** End CDATA section. */
     @Override
-    public void endCDATA(final Augmentations augs) throws XNIException {
+    public void endCDATA(final Augmentations augs) {
         if (fElementDepth <= fRemovalElementDepth) {
             super.endCDATA(augs);
         }
@@ -284,7 +281,7 @@ public class ElementRemover extends DefaultFilter {
 
     /** End element. */
     @Override
-    public void endElement(final QName element, final Augmentations augs) throws XNIException {
+    public void endElement(final QName element, final Augmentations augs) {
         if (fElementDepth <= fRemovalElementDepth && elementAccepted(element.rawname)) {
             super.endElement(element, augs);
         }
@@ -296,7 +293,7 @@ public class ElementRemover extends DefaultFilter {
 
     /** End prefix mapping. */
     @Override
-    public void endPrefixMapping(final String prefix, final Augmentations augs) throws XNIException {
+    public void endPrefixMapping(final String prefix, final Augmentations augs) {
         if (fElementDepth <= fRemovalElementDepth) {
             super.endPrefixMapping(prefix, augs);
         }

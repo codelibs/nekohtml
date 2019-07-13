@@ -326,17 +326,13 @@ class ObjectFactory {
         //throw security exception if the calling thread is not allowed to access the package
         //restrict the access to package as speicified in java.security policy
         final SecurityManager security = System.getSecurityManager();
-        try {
-            if (security != null) {
-                final int lastDot = className.lastIndexOf('.');
-                String packageName = className;
-                if (lastDot != -1) {
-                    packageName = className.substring(0, lastDot);
-                }
-                security.checkPackageAccess(packageName);
+        if (security != null) {
+            final int lastDot = className.lastIndexOf('.');
+            String packageName = className;
+            if (lastDot != -1) {
+                packageName = className.substring(0, lastDot);
             }
-        } catch (final SecurityException e) {
-            throw e;
+            security.checkPackageAccess(packageName);
         }
         Class<?> providerClass;
         if (cl == null) {

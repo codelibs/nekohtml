@@ -26,9 +26,7 @@ import org.apache.xerces.xni.QName;
 import org.apache.xerces.xni.XMLAttributes;
 import org.apache.xerces.xni.XMLLocator;
 import org.apache.xerces.xni.XMLString;
-import org.apache.xerces.xni.XNIException;
 import org.apache.xerces.xni.parser.XMLComponentManager;
-import org.apache.xerces.xni.parser.XMLConfigurationException;
 import org.codelibs.nekohtml.HTMLAugmentations;
 import org.codelibs.nekohtml.HTMLEventInfo;
 import org.codelibs.nekohtml.xercesbridge.XercesBridge;
@@ -147,7 +145,7 @@ public class Purifier extends DefaultFilter {
     //
 
     @Override
-    public void reset(final XMLComponentManager manager) throws XMLConfigurationException {
+    public void reset(final XMLComponentManager manager) {
 
         // state
         fInCDATASection = false;
@@ -164,7 +162,7 @@ public class Purifier extends DefaultFilter {
 
     /** Start document. */
     @Override
-    public void startDocument(final XMLLocator locator, final String encoding, final Augmentations augs) throws XNIException {
+    public void startDocument(final XMLLocator locator, final String encoding, final Augmentations augs) {
         fNamespaceContext = fNamespaces ? new NamespaceBinder.NamespaceSupport() : null;
         fSynthesizedNamespaceCount = 0;
         handleStartDocument();
@@ -173,8 +171,7 @@ public class Purifier extends DefaultFilter {
 
     /** Start document. */
     @Override
-    public void startDocument(final XMLLocator locator, final String encoding, final NamespaceContext nscontext, final Augmentations augs)
-            throws XNIException {
+    public void startDocument(final XMLLocator locator, final String encoding, final NamespaceContext nscontext, final Augmentations augs) {
         fNamespaceContext = nscontext;
         fSynthesizedNamespaceCount = 0;
         handleStartDocument();
@@ -183,7 +180,7 @@ public class Purifier extends DefaultFilter {
 
     /** XML declaration. */
     @Override
-    public void xmlDecl(String version, String encoding, String standalone, final Augmentations augs) throws XNIException {
+    public void xmlDecl(String version, String encoding, String standalone, final Augmentations augs) {
         if (version == null || !version.equals("1.0")) {
             version = "1.0";
         }
@@ -202,7 +199,7 @@ public class Purifier extends DefaultFilter {
 
     /** Comment. */
     @Override
-    public void comment(XMLString text, final Augmentations augs) throws XNIException {
+    public void comment(XMLString text, final Augmentations augs) {
         final StringBuffer str = new StringBuffer(purifyText(text).toString());
         final int length = str.length();
         for (int i = length - 1; i >= 0; i--) {
@@ -219,7 +216,7 @@ public class Purifier extends DefaultFilter {
 
     /** Processing instruction. */
     @Override
-    public void processingInstruction(String target, XMLString data, final Augmentations augs) throws XNIException {
+    public void processingInstruction(String target, XMLString data, final Augmentations augs) {
         target = purifyName(target, true);
         data = purifyText(data);
         super.processingInstruction(target, data, augs);
@@ -227,7 +224,7 @@ public class Purifier extends DefaultFilter {
 
     /** Doctype declaration. */
     @Override
-    public void doctypeDecl(final String root, final String pubid, final String sysid, final Augmentations augs) throws XNIException {
+    public void doctypeDecl(final String root, final String pubid, final String sysid, final Augmentations augs) {
         fSeenDoctype = true;
         // NOTE: It doesn't matter what the root element name is because
         //       it must match the root element. -Ac
@@ -244,35 +241,35 @@ public class Purifier extends DefaultFilter {
 
     /** Start element. */
     @Override
-    public void startElement(final QName element, final XMLAttributes attrs, final Augmentations augs) throws XNIException {
+    public void startElement(final QName element, final XMLAttributes attrs, final Augmentations augs) {
         handleStartElement(element, attrs);
         super.startElement(element, attrs, augs);
     } // startElement(QName,XMLAttributes,Augmentations)
 
     /** Empty element. */
     @Override
-    public void emptyElement(final QName element, final XMLAttributes attrs, final Augmentations augs) throws XNIException {
+    public void emptyElement(final QName element, final XMLAttributes attrs, final Augmentations augs) {
         handleStartElement(element, attrs);
         super.emptyElement(element, attrs, augs);
     } // emptyElement(QName,XMLAttributes,Augmentations)
 
     /** Start CDATA section. */
     @Override
-    public void startCDATA(final Augmentations augs) throws XNIException {
+    public void startCDATA(final Augmentations augs) {
         fInCDATASection = true;
         super.startCDATA(augs);
     } // startCDATA(Augmentations)
 
     /** End CDATA section. */
     @Override
-    public void endCDATA(final Augmentations augs) throws XNIException {
+    public void endCDATA(final Augmentations augs) {
         fInCDATASection = false;
         super.endCDATA(augs);
     } // endCDATA(Augmentations)
 
     /** Characters. */
     @Override
-    public void characters(XMLString text, final Augmentations augs) throws XNIException {
+    public void characters(XMLString text, final Augmentations augs) {
         text = purifyText(text);
         if (fInCDATASection) {
             final StringBuffer str = new StringBuffer(text.toString());
@@ -292,7 +289,7 @@ public class Purifier extends DefaultFilter {
 
     /** End element. */
     @Override
-    public void endElement(QName element, final Augmentations augs) throws XNIException {
+    public void endElement(QName element, final Augmentations augs) {
         element = purifyQName(element);
         if (fNamespaces) {
             if (element.prefix != null && element.uri == null) {
@@ -401,7 +398,7 @@ public class Purifier extends DefaultFilter {
         if (name == null) {
             return name;
         }
-        final StringBuffer str = new StringBuffer();
+        final StringBuilder str = new StringBuilder();
         final int length = name.length();
         boolean seenColon = localpart;
         for (int i = 0; i < length; i++) {
@@ -444,7 +441,7 @@ public class Purifier extends DefaultFilter {
 
     /** Returns a padded hexadecimal string for the given value. */
     protected static String toHexString(final int c, final int padlen) {
-        final StringBuffer str = new StringBuffer(padlen);
+        final StringBuilder str = new StringBuilder(padlen);
         str.append(Integer.toHexString(c));
         final int len = padlen - str.length();
         for (int i = 0; i < len; i++) {

@@ -17,7 +17,6 @@
 package org.codelibs.nekohtml.parsers;
 
 import org.apache.xerces.xni.Augmentations;
-import org.apache.xerces.xni.XNIException;
 import org.codelibs.nekohtml.HTMLConfiguration;
 import org.codelibs.nekohtml.xercesbridge.XercesBridge;
 
@@ -67,7 +66,7 @@ extends org.apache.xerces.parsers.DOMParser {
 
     /** Doctype declaration. */
     @Override
-    public void doctypeDecl(final String root, final String pubid, final String sysid, final Augmentations augs) throws XNIException {
+    public void doctypeDecl(final String root, final String pubid, final String sysid, final Augmentations augs) {
 
         // NOTE: Xerces HTML DOM implementation (up to and including
         //       2.5.0) throws a heirarchy request error exception

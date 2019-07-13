@@ -28,7 +28,6 @@ import org.apache.xerces.xni.XMLAttributes;
 import org.apache.xerces.xni.XMLLocator;
 import org.apache.xerces.xni.XMLResourceIdentifier;
 import org.apache.xerces.xni.XMLString;
-import org.apache.xerces.xni.XNIException;
 import org.apache.xerces.xni.parser.XMLDocumentFilter;
 import org.apache.xerces.xni.parser.XMLInputSource;
 import org.apache.xerces.xni.parser.XMLParserConfiguration;
@@ -161,8 +160,7 @@ public class Writer extends DefaultFilter {
 
     /** Start document. */
     @Override
-    public void startDocument(final XMLLocator locator, final String encoding, final NamespaceContext nscontext, final Augmentations augs)
-            throws XNIException {
+    public void startDocument(final XMLLocator locator, final String encoding, final NamespaceContext nscontext, final Augmentations augs) {
         fSeenRootElement = false;
         fSeenHttpEquiv = false;
         fElementDepth = 0;
@@ -175,13 +173,13 @@ public class Writer extends DefaultFilter {
 
     /** Start document. */
     @Override
-    public void startDocument(final XMLLocator locator, final String encoding, final Augmentations augs) throws XNIException {
+    public void startDocument(final XMLLocator locator, final String encoding, final Augmentations augs) {
         startDocument(locator, encoding, null, augs);
     } // startDocument(XMLLocator,String,Augmentations)
 
     /** Comment. */
     @Override
-    public void comment(final XMLString text, final Augmentations augs) throws XNIException {
+    public void comment(final XMLString text, final Augmentations augs) {
         if (fSeenRootElement && fElementDepth <= 0) {
             fPrinter.println();
         }
@@ -196,7 +194,7 @@ public class Writer extends DefaultFilter {
 
     /** Start element. */
     @Override
-    public void startElement(final QName element, final XMLAttributes attributes, final Augmentations augs) throws XNIException {
+    public void startElement(final QName element, final XMLAttributes attributes, final Augmentations augs) {
         fSeenRootElement = true;
         fElementDepth++;
         fNormalize = !HTMLElements.getElement(element.rawname).isSpecial();
@@ -206,7 +204,7 @@ public class Writer extends DefaultFilter {
 
     /** Empty element. */
     @Override
-    public void emptyElement(final QName element, final XMLAttributes attributes, final Augmentations augs) throws XNIException {
+    public void emptyElement(final QName element, final XMLAttributes attributes, final Augmentations augs) {
         fSeenRootElement = true;
         printStartElement(element, attributes);
         super.emptyElement(element, attributes, augs);
@@ -214,7 +212,7 @@ public class Writer extends DefaultFilter {
 
     /** Characters. */
     @Override
-    public void characters(final XMLString text, final Augmentations augs) throws XNIException {
+    public void characters(final XMLString text, final Augmentations augs) {
         if (fPrintChars) {
             printCharacters(text, fNormalize);
         }
@@ -223,7 +221,7 @@ public class Writer extends DefaultFilter {
 
     /** End element. */
     @Override
-    public void endElement(final QName element, final Augmentations augs) throws XNIException {
+    public void endElement(final QName element, final Augmentations augs) {
         fElementDepth--;
         fNormalize = true;
         /***
@@ -248,8 +246,7 @@ public class Writer extends DefaultFilter {
 
     /** Start general entity. */
     @Override
-    public void startGeneralEntity(String name, final XMLResourceIdentifier id, final String encoding, final Augmentations augs)
-            throws XNIException {
+    public void startGeneralEntity(String name, final XMLResourceIdentifier id, final String encoding, final Augmentations augs) {
         fPrintChars = false;
         if (name.startsWith("#")) {
             try {
@@ -271,7 +268,7 @@ public class Writer extends DefaultFilter {
 
     /** End general entity. */
     @Override
-    public void endGeneralEntity(final String name, final Augmentations augs) throws XNIException {
+    public void endGeneralEntity(final String name, final Augmentations augs) {
         fPrintChars = true;
         super.endGeneralEntity(name, augs);
     } // endGeneralEntity(String,Augmentations)

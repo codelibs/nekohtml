@@ -34,7 +34,6 @@ import org.apache.xerces.xni.XMLDocumentHandler;
 import org.apache.xerces.xni.XMLLocator;
 import org.apache.xerces.xni.XMLResourceIdentifier;
 import org.apache.xerces.xni.XMLString;
-import org.apache.xerces.xni.XNIException;
 import org.apache.xerces.xni.parser.XMLConfigurationException;
 import org.apache.xerces.xni.parser.XMLDocumentSource;
 import org.apache.xerces.xni.parser.XMLErrorHandler;
@@ -197,7 +196,7 @@ public class DOMFragmentParser implements XMLDocumentHandler {
         ErrorHandler errorHandler = null;
         try {
             final XMLErrorHandler xmlErrorHandler = (XMLErrorHandler) fParserConfiguration.getProperty(ERROR_HANDLER);
-            if (xmlErrorHandler != null && xmlErrorHandler instanceof ErrorHandlerWrapper) {
+            if (xmlErrorHandler instanceof ErrorHandlerWrapper) {
                 errorHandler = ((ErrorHandlerWrapper) xmlErrorHandler).getErrorHandler();
             }
         } catch (final XMLConfigurationException e) {
@@ -341,7 +340,7 @@ public class DOMFragmentParser implements XMLDocumentHandler {
     } // getDocumentSource():XMLDocumentSource
 
     /** Start document. */
-    public void startDocument(final XMLLocator locator, final String encoding, final Augmentations augs) throws XNIException {
+    public void startDocument(final XMLLocator locator, final String encoding, final Augmentations augs) {
         startDocument(locator, encoding, null, augs);
     } // startDocument(XMLLocator,String,Augmentations)
 
@@ -349,24 +348,23 @@ public class DOMFragmentParser implements XMLDocumentHandler {
 
     /** Start document. */
     @Override
-    public void startDocument(final XMLLocator locator, final String encoding, final NamespaceContext nscontext, final Augmentations augs)
-            throws XNIException {
+    public void startDocument(final XMLLocator locator, final String encoding, final NamespaceContext nscontext, final Augmentations augs) {
         fInCDATASection = false;
     } // startDocument(XMLLocator,String,NamespaceContext,Augmentations)
 
     /** XML declaration. */
     @Override
-    public void xmlDecl(final String version, final String encoding, final String standalone, final Augmentations augs) throws XNIException {
+    public void xmlDecl(final String version, final String encoding, final String standalone, final Augmentations augs) {
     } // xmlDecl(String,String,String,Augmentations)
 
     /** Document type declaration. */
     @Override
-    public void doctypeDecl(final String root, final String pubid, final String sysid, final Augmentations augs) throws XNIException {
+    public void doctypeDecl(final String root, final String pubid, final String sysid, final Augmentations augs) {
     } // doctypeDecl(String,String,String,Augmentations)
 
     /** Processing instruction. */
     @Override
-    public void processingInstruction(final String target, final XMLString data, final Augmentations augs) throws XNIException {
+    public void processingInstruction(final String target, final XMLString data, final Augmentations augs) {
 
         final String s = data.toString();
         if (XMLChar.isValidName(s)) {
@@ -377,22 +375,22 @@ public class DOMFragmentParser implements XMLDocumentHandler {
 
     /** Comment. */
     @Override
-    public void comment(final XMLString text, final Augmentations augs) throws XNIException {
+    public void comment(final XMLString text, final Augmentations augs) {
         final Comment comment = fDocument.createComment(text.toString());
         fCurrentNode.appendChild(comment);
     } // comment(XMLString,Augmentations)
 
     /** Start prefix mapping. @deprecated Since Xerces 2.2.0. */
-    public void startPrefixMapping(final String prefix, final String uri, final Augmentations augs) throws XNIException {
+    public void startPrefixMapping(final String prefix, final String uri, final Augmentations augs) {
     } // startPrefixMapping(String,String,Augmentations)
 
     /** End prefix mapping. @deprecated Since Xerces 2.2.0. */
-    public void endPrefixMapping(final String prefix, final Augmentations augs) throws XNIException {
+    public void endPrefixMapping(final String prefix, final Augmentations augs) {
     } // endPrefixMapping(String,Augmentations)
 
     /** Start element. */
     @Override
-    public void startElement(final QName element, final XMLAttributes attrs, final Augmentations augs) throws XNIException {
+    public void startElement(final QName element, final XMLAttributes attrs, final Augmentations augs) {
         final Element elementNode = fDocument.createElement(element.rawname);
         final int count = attrs != null ? attrs.getLength() : 0;
         for (int i = 0; i < count; i++) {
@@ -408,14 +406,14 @@ public class DOMFragmentParser implements XMLDocumentHandler {
 
     /** Empty element. */
     @Override
-    public void emptyElement(final QName element, final XMLAttributes attrs, final Augmentations augs) throws XNIException {
+    public void emptyElement(final QName element, final XMLAttributes attrs, final Augmentations augs) {
         startElement(element, attrs, augs);
         endElement(element, augs);
     } // emptyElement(QName,XMLAttributes,Augmentations)
 
     /** Characters. */
     @Override
-    public void characters(final XMLString text, final Augmentations augs) throws XNIException {
+    public void characters(final XMLString text, final Augmentations augs) {
 
         if (fInCDATASection) {
             final Node node = fCurrentNode.getLastChild();
@@ -441,14 +439,13 @@ public class DOMFragmentParser implements XMLDocumentHandler {
 
     /** Ignorable whitespace. */
     @Override
-    public void ignorableWhitespace(final XMLString text, final Augmentations augs) throws XNIException {
+    public void ignorableWhitespace(final XMLString text, final Augmentations augs) {
         characters(text, augs);
     } // ignorableWhitespace(XMLString,Augmentations)
 
     /** Start general entity. */
     @Override
-    public void startGeneralEntity(final String name, final XMLResourceIdentifier id, final String encoding, final Augmentations augs)
-            throws XNIException {
+    public void startGeneralEntity(final String name, final XMLResourceIdentifier id, final String encoding, final Augmentations augs) {
         final EntityReference entityRef = fDocument.createEntityReference(name);
         fCurrentNode.appendChild(entityRef);
         fCurrentNode = entityRef;
@@ -456,36 +453,36 @@ public class DOMFragmentParser implements XMLDocumentHandler {
 
     /** Text declaration. */
     @Override
-    public void textDecl(final String version, final String encoding, final Augmentations augs) throws XNIException {
+    public void textDecl(final String version, final String encoding, final Augmentations augs) {
     } // textDecl(String,String,Augmentations)
 
     /** End general entity. */
     @Override
-    public void endGeneralEntity(final String name, final Augmentations augs) throws XNIException {
+    public void endGeneralEntity(final String name, final Augmentations augs) {
         fCurrentNode = fCurrentNode.getParentNode();
     } // endGeneralEntity(String,Augmentations)
 
     /** Start CDATA section. */
     @Override
-    public void startCDATA(final Augmentations augs) throws XNIException {
+    public void startCDATA(final Augmentations augs) {
         fInCDATASection = true;
     } // startCDATA(Augmentations)
 
     /** End CDATA section. */
     @Override
-    public void endCDATA(final Augmentations augs) throws XNIException {
+    public void endCDATA(final Augmentations augs) {
         fInCDATASection = false;
     } // endCDATA(Augmentations)
 
     /** End element. */
     @Override
-    public void endElement(final QName element, final Augmentations augs) throws XNIException {
+    public void endElement(final QName element, final Augmentations augs) {
         fCurrentNode = fCurrentNode.getParentNode();
     } // endElement(QName,Augmentations)
 
     /** End document. */
     @Override
-    public void endDocument(final Augmentations augs) throws XNIException {
+    public void endDocument(final Augmentations augs) {
     } // endDocument(Augmentations)
 
     //

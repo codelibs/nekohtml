@@ -30,7 +30,7 @@ import org.apache.xerces.xni.parser.XMLDocumentSource;
  */
 public abstract class XercesBridge {
 
-    static private final XercesBridge instance = makeInstance();
+    private static final XercesBridge instance = makeInstance();
 
     /**
      * The access point for the bridge.

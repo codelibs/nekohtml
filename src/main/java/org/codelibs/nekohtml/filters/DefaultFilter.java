@@ -24,9 +24,7 @@ import org.apache.xerces.xni.XMLDocumentHandler;
 import org.apache.xerces.xni.XMLLocator;
 import org.apache.xerces.xni.XMLResourceIdentifier;
 import org.apache.xerces.xni.XMLString;
-import org.apache.xerces.xni.XNIException;
 import org.apache.xerces.xni.parser.XMLComponentManager;
-import org.apache.xerces.xni.parser.XMLConfigurationException;
 import org.apache.xerces.xni.parser.XMLDocumentFilter;
 import org.apache.xerces.xni.parser.XMLDocumentSource;
 import org.codelibs.nekohtml.HTMLComponent;
@@ -91,8 +89,7 @@ public class DefaultFilter implements XMLDocumentFilter, HTMLComponent {
 
     /** Start document. */
     @Override
-    public void startDocument(final XMLLocator locator, final String encoding, final NamespaceContext nscontext, final Augmentations augs)
-            throws XNIException {
+    public void startDocument(final XMLLocator locator, final String encoding, final NamespaceContext nscontext, final Augmentations augs) {
         if (fDocumentHandler != null) {
             XercesBridge.getInstance().XMLDocumentHandler_startDocument(fDocumentHandler, locator, encoding, nscontext, augs);
         }
@@ -102,7 +99,7 @@ public class DefaultFilter implements XMLDocumentFilter, HTMLComponent {
 
     /** XML declaration. */
     @Override
-    public void xmlDecl(final String version, final String encoding, final String standalone, final Augmentations augs) throws XNIException {
+    public void xmlDecl(final String version, final String encoding, final String standalone, final Augmentations augs) {
         if (fDocumentHandler != null) {
             fDocumentHandler.xmlDecl(version, encoding, standalone, augs);
         }
@@ -110,7 +107,7 @@ public class DefaultFilter implements XMLDocumentFilter, HTMLComponent {
 
     /** Doctype declaration. */
     @Override
-    public void doctypeDecl(final String root, final String publicId, final String systemId, final Augmentations augs) throws XNIException {
+    public void doctypeDecl(final String root, final String publicId, final String systemId, final Augmentations augs) {
         if (fDocumentHandler != null) {
             fDocumentHandler.doctypeDecl(root, publicId, systemId, augs);
         }
@@ -118,7 +115,7 @@ public class DefaultFilter implements XMLDocumentFilter, HTMLComponent {
 
     /** Comment. */
     @Override
-    public void comment(final XMLString text, final Augmentations augs) throws XNIException {
+    public void comment(final XMLString text, final Augmentations augs) {
         if (fDocumentHandler != null) {
             fDocumentHandler.comment(text, augs);
         }
@@ -126,7 +123,7 @@ public class DefaultFilter implements XMLDocumentFilter, HTMLComponent {
 
     /** Processing instruction. */
     @Override
-    public void processingInstruction(final String target, final XMLString data, final Augmentations augs) throws XNIException {
+    public void processingInstruction(final String target, final XMLString data, final Augmentations augs) {
         if (fDocumentHandler != null) {
             fDocumentHandler.processingInstruction(target, data, augs);
         }
@@ -134,7 +131,7 @@ public class DefaultFilter implements XMLDocumentFilter, HTMLComponent {
 
     /** Start element. */
     @Override
-    public void startElement(final QName element, final XMLAttributes attributes, final Augmentations augs) throws XNIException {
+    public void startElement(final QName element, final XMLAttributes attributes, final Augmentations augs) {
         if (fDocumentHandler != null) {
             fDocumentHandler.startElement(element, attributes, augs);
         }
@@ -142,7 +139,7 @@ public class DefaultFilter implements XMLDocumentFilter, HTMLComponent {
 
     /** Empty element. */
     @Override
-    public void emptyElement(final QName element, final XMLAttributes attributes, final Augmentations augs) throws XNIException {
+    public void emptyElement(final QName element, final XMLAttributes attributes, final Augmentations augs) {
         if (fDocumentHandler != null) {
             fDocumentHandler.emptyElement(element, attributes, augs);
         }
@@ -150,7 +147,7 @@ public class DefaultFilter implements XMLDocumentFilter, HTMLComponent {
 
     /** Characters. */
     @Override
-    public void characters(final XMLString text, final Augmentations augs) throws XNIException {
+    public void characters(final XMLString text, final Augmentations augs) {
         if (fDocumentHandler != null) {
             fDocumentHandler.characters(text, augs);
         }
@@ -158,7 +155,7 @@ public class DefaultFilter implements XMLDocumentFilter, HTMLComponent {
 
     /** Ignorable whitespace. */
     @Override
-    public void ignorableWhitespace(final XMLString text, final Augmentations augs) throws XNIException {
+    public void ignorableWhitespace(final XMLString text, final Augmentations augs) {
         if (fDocumentHandler != null) {
             fDocumentHandler.ignorableWhitespace(text, augs);
         }
@@ -166,8 +163,7 @@ public class DefaultFilter implements XMLDocumentFilter, HTMLComponent {
 
     /** Start general entity. */
     @Override
-    public void startGeneralEntity(final String name, final XMLResourceIdentifier id, final String encoding, final Augmentations augs)
-            throws XNIException {
+    public void startGeneralEntity(final String name, final XMLResourceIdentifier id, final String encoding, final Augmentations augs) {
         if (fDocumentHandler != null) {
             fDocumentHandler.startGeneralEntity(name, id, encoding, augs);
         }
@@ -175,7 +171,7 @@ public class DefaultFilter implements XMLDocumentFilter, HTMLComponent {
 
     /** Text declaration. */
     @Override
-    public void textDecl(final String version, final String encoding, final Augmentations augs) throws XNIException {
+    public void textDecl(final String version, final String encoding, final Augmentations augs) {
         if (fDocumentHandler != null) {
             fDocumentHandler.textDecl(version, encoding, augs);
         }
@@ -183,7 +179,7 @@ public class DefaultFilter implements XMLDocumentFilter, HTMLComponent {
 
     /** End general entity. */
     @Override
-    public void endGeneralEntity(final String name, final Augmentations augs) throws XNIException {
+    public void endGeneralEntity(final String name, final Augmentations augs) {
         if (fDocumentHandler != null) {
             fDocumentHandler.endGeneralEntity(name, augs);
         }
@@ -191,7 +187,7 @@ public class DefaultFilter implements XMLDocumentFilter, HTMLComponent {
 
     /** Start CDATA section. */
     @Override
-    public void startCDATA(final Augmentations augs) throws XNIException {
+    public void startCDATA(final Augmentations augs) {
         if (fDocumentHandler != null) {
             fDocumentHandler.startCDATA(augs);
         }
@@ -199,7 +195,7 @@ public class DefaultFilter implements XMLDocumentFilter, HTMLComponent {
 
     /** End CDATA section. */
     @Override
-    public void endCDATA(final Augmentations augs) throws XNIException {
+    public void endCDATA(final Augmentations augs) {
         if (fDocumentHandler != null) {
             fDocumentHandler.endCDATA(augs);
         }
@@ -207,7 +203,7 @@ public class DefaultFilter implements XMLDocumentFilter, HTMLComponent {
 
     /** End element. */
     @Override
-    public void endElement(final QName element, final Augmentations augs) throws XNIException {
+    public void endElement(final QName element, final Augmentations augs) {
         if (fDocumentHandler != null) {
             fDocumentHandler.endElement(element, augs);
         }
@@ -215,7 +211,7 @@ public class DefaultFilter implements XMLDocumentFilter, HTMLComponent {
 
     /** End document. */
     @Override
-    public void endDocument(final Augmentations augs) throws XNIException {
+    public void endDocument(final Augmentations augs) {
         if (fDocumentHandler != null) {
             fDocumentHandler.endDocument(augs);
         }
@@ -224,19 +220,19 @@ public class DefaultFilter implements XMLDocumentFilter, HTMLComponent {
     // removed since Xerces-J 2.3.0
 
     /** Start document. */
-    public void startDocument(final XMLLocator locator, final String encoding, final Augmentations augs) throws XNIException {
+    public void startDocument(final XMLLocator locator, final String encoding, final Augmentations augs) {
         startDocument(locator, encoding, null, augs);
     } // startDocument(XMLLocator,String,Augmentations)
 
     /** Start prefix mapping. */
-    public void startPrefixMapping(final String prefix, final String uri, final Augmentations augs) throws XNIException {
+    public void startPrefixMapping(final String prefix, final String uri, final Augmentations augs) {
         if (fDocumentHandler != null) {
             XercesBridge.getInstance().XMLDocumentHandler_startPrefixMapping(fDocumentHandler, prefix, uri, augs);
         }
     } // startPrefixMapping(String,String,Augmentations)
 
     /** End prefix mapping. */
-    public void endPrefixMapping(final String prefix, final Augmentations augs) throws XNIException {
+    public void endPrefixMapping(final String prefix, final Augmentations augs) {
         if (fDocumentHandler != null) {
             XercesBridge.getInstance().XMLDocumentHandler_endPrefixMapping(fDocumentHandler, prefix, augs);
         }
@@ -293,10 +289,10 @@ public class DefaultFilter implements XMLDocumentFilter, HTMLComponent {
      *
      * @param componentManager The component manager.
      *
-     * @throws XNIException Thrown by component on initialization error.
+     * @Thrown by component on initialization error.
      */
     @Override
-    public void reset(final XMLComponentManager componentManager) throws XMLConfigurationException {
+    public void reset(final XMLComponentManager componentManager) {
     } // reset(XMLComponentManager)
 
     /**
@@ -309,14 +305,14 @@ public class DefaultFilter implements XMLDocumentFilter, HTMLComponent {
      * @param featureId The feature identifier.
      * @param state     The state of the feature.
      *
-     * @throws XMLConfigurationException Thrown for configuration error.
+     * @Thrown for configuration error.
      *                                   In general, components should
      *                                   only throw this exception if
      *                                   it is <strong>really</strong>
      *                                   a critical error.
      */
     @Override
-    public void setFeature(final String featureId, final boolean state) throws XMLConfigurationException {
+    public void setFeature(final String featureId, final boolean state) {
     } // setFeature(String,boolean)
 
     /**
@@ -329,14 +325,14 @@ public class DefaultFilter implements XMLDocumentFilter, HTMLComponent {
      * @param propertyId The property identifier.
      * @param value      The value of the property.
      *
-     * @throws XMLConfigurationException Thrown for configuration error.
+     * @Thrown for configuration error.
      *                                   In general, components should
      *                                   only throw this exception if
      *                                   it is <strong>really</strong>
      *                                   a critical error.
      */
     @Override
-    public void setProperty(final String propertyId, final Object value) throws XMLConfigurationException {
+    public void setProperty(final String propertyId, final Object value) {
     } // setProperty(String,Object)
 
     //

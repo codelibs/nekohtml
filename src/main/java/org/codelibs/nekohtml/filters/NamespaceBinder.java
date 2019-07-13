@@ -25,9 +25,7 @@ import org.apache.xerces.xni.NamespaceContext;
 import org.apache.xerces.xni.QName;
 import org.apache.xerces.xni.XMLAttributes;
 import org.apache.xerces.xni.XMLLocator;
-import org.apache.xerces.xni.XNIException;
 import org.apache.xerces.xni.parser.XMLComponentManager;
-import org.apache.xerces.xni.parser.XMLConfigurationException;
 import org.codelibs.nekohtml.HTMLElements;
 import org.codelibs.nekohtml.xercesbridge.XercesBridge;
 
@@ -207,10 +205,10 @@ public class NamespaceBinder extends DefaultFilter {
      *
      * @param manager The component manager.
      *
-     * @throws XNIException Thrown by component on initialization error.
+     * @Thrown by component on initialization error.
      */
     @Override
-    public void reset(final XMLComponentManager manager) throws XMLConfigurationException {
+    public void reset(final XMLComponentManager manager) {
         super.reset(manager);
 
         // features
@@ -234,8 +232,7 @@ public class NamespaceBinder extends DefaultFilter {
 
     /** Start document. */
     @Override
-    public void startDocument(final XMLLocator locator, final String encoding, final NamespaceContext nscontext, final Augmentations augs)
-            throws XNIException {
+    public void startDocument(final XMLLocator locator, final String encoding, final NamespaceContext nscontext, final Augmentations augs) {
 
         // perform default handling
         // NOTE: using own namespace context
@@ -245,7 +242,7 @@ public class NamespaceBinder extends DefaultFilter {
 
     /** Start element. */
     @Override
-    public void startElement(final QName element, final XMLAttributes attrs, final Augmentations augs) throws XNIException {
+    public void startElement(final QName element, final XMLAttributes attrs, final Augmentations augs) {
 
         // bind namespaces, if needed
         if (fNamespaces) {
@@ -269,7 +266,7 @@ public class NamespaceBinder extends DefaultFilter {
 
     /** Empty element. */
     @Override
-    public void emptyElement(final QName element, final XMLAttributes attrs, final Augmentations augs) throws XNIException {
+    public void emptyElement(final QName element, final XMLAttributes attrs, final Augmentations augs) {
 
         // bind namespaces, if needed
         if (fNamespaces) {
@@ -306,7 +303,7 @@ public class NamespaceBinder extends DefaultFilter {
 
     /** End element. */
     @Override
-    public void endElement(final QName element, final Augmentations augs) throws XNIException {
+    public void endElement(final QName element, final Augmentations augs) {
 
         // bind namespaces, if needed
         if (fNamespaces) {
@@ -368,8 +365,9 @@ public class NamespaceBinder extends DefaultFilter {
             return name.toUpperCase(Locale.ENGLISH);
         case NAMES_LOWERCASE:
             return name.toLowerCase(Locale.ENGLISH);
+        default:
+            return name;
         }
-        return name;
     } // modifyName(String,short):String
 
     //
