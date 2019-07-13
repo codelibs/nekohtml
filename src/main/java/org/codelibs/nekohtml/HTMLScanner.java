@@ -42,9 +42,7 @@ import org.apache.xerces.xni.XMLDocumentHandler;
 import org.apache.xerces.xni.XMLLocator;
 import org.apache.xerces.xni.XMLResourceIdentifier;
 import org.apache.xerces.xni.XMLString;
-import org.apache.xerces.xni.XNIException;
 import org.apache.xerces.xni.parser.XMLComponentManager;
-import org.apache.xerces.xni.parser.XMLConfigurationException;
 import org.apache.xerces.xni.parser.XMLDocumentScanner;
 import org.apache.xerces.xni.parser.XMLInputSource;
 import org.codelibs.nekohtml.xercesbridge.XercesBridge;
@@ -305,7 +303,7 @@ public class HTMLScanner implements XMLDocumentScanner, XMLLocator, HTMLComponen
     /** Synthesized event info item. */
     protected static final HTMLEventInfo SYNTHESIZED_ITEM = new HTMLEventInfo.SynthesizedItem();
 
-    private final static BitSet ENTITY_CHARS = new BitSet();
+    private static final BitSet ENTITY_CHARS = new BitSet();
     static {
         final String str = "-.0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz";
         for (int i = 0; i < str.length(); ++i) {
@@ -486,7 +484,7 @@ public class HTMLScanner implements XMLDocumentScanner, XMLLocator, HTMLComponen
     /** Resource identifier. */
     private final XMLResourceIdentifierImpl fResourceId = new XMLResourceIdentifierImpl();
 
-    private final char REPLACEMENT_CHARACTER = '\uFFFD'; // the � character
+    private static final char REPLACEMENT_CHARACTER = '\uFFFD'; // the � character
 
     //
     // Public methods
@@ -655,7 +653,7 @@ public class HTMLScanner implements XMLDocumentScanner, XMLLocator, HTMLComponen
     /** Returns the default state for a feature. */
     @Override
     public Boolean getFeatureDefault(final String featureId) {
-        final int length = RECOGNIZED_FEATURES != null ? RECOGNIZED_FEATURES.length : 0;
+        final int length = RECOGNIZED_FEATURES.length;
         for (int i = 0; i < length; i++) {
             if (RECOGNIZED_FEATURES[i].equals(featureId)) {
                 return RECOGNIZED_FEATURES_DEFAULTS[i];
@@ -667,7 +665,7 @@ public class HTMLScanner implements XMLDocumentScanner, XMLLocator, HTMLComponen
     /** Returns the default state for a property. */
     @Override
     public Object getPropertyDefault(final String propertyId) {
-        final int length = RECOGNIZED_PROPERTIES != null ? RECOGNIZED_PROPERTIES.length : 0;
+        final int length = RECOGNIZED_PROPERTIES.length;
         for (int i = 0; i < length; i++) {
             if (RECOGNIZED_PROPERTIES[i].equals(propertyId)) {
                 return RECOGNIZED_PROPERTIES_DEFAULTS[i];
@@ -694,7 +692,7 @@ public class HTMLScanner implements XMLDocumentScanner, XMLLocator, HTMLComponen
 
     /** Resets the component. */
     @Override
-    public void reset(final XMLComponentManager manager) throws XMLConfigurationException {
+    public void reset(final XMLComponentManager manager) {
 
         // get features
         fAugmentations = manager.getFeature(AUGMENTATIONS);
@@ -762,7 +760,7 @@ public class HTMLScanner implements XMLDocumentScanner, XMLLocator, HTMLComponen
 
     /** Sets a property. */
     @Override
-    public void setProperty(final String propertyId, final Object value) throws XMLConfigurationException {
+    public void setProperty(final String propertyId, final Object value) {
 
         if (propertyId.equals(NAMES_ELEMS)) {
             fNamesElems = getNamesValue(String.valueOf(value));
@@ -862,7 +860,7 @@ public class HTMLScanner implements XMLDocumentScanner, XMLLocator, HTMLComponen
 
     /** Scans the document. */
     @Override
-    public boolean scanDocument(final boolean complete) throws XNIException, IOException {
+    public boolean scanDocument(final boolean complete) throws IOException {
         do {
             if (!fScanner.scan(complete)) {
                 return false;
@@ -1022,8 +1020,9 @@ public class HTMLScanner implements XMLDocumentScanner, XMLLocator, HTMLComponen
             return name.toUpperCase(Locale.ENGLISH);
         case NAMES_LOWERCASE:
             return name.toLowerCase(Locale.ENGLISH);
+        default:
+            return name;
         }
-        return name;
     } // modifyName(String,short):String
 
     /**
@@ -1100,8 +1099,9 @@ public class HTMLScanner implements XMLDocumentScanner, XMLLocator, HTMLComponen
             return 339;
         case 159:
             return 376;
+        default:
+            return origChar;
         }
-        return origChar;
     } // fixWindowsCharacter(int):int
 
     //
@@ -1215,7 +1215,7 @@ public class HTMLScanner implements XMLDocumentScanner, XMLLocator, HTMLComponen
     protected String scanLiteral() throws IOException {
         final int quote = fCurrentEntity.read();
         if (quote == '\'' || quote == '"') {
-            final StringBuffer str = new StringBuffer();
+            final StringBuilder str = new StringBuilder();
             int c;
             while ((c = fCurrentEntity.read()) != -1) {
                 if (c == quote) {
@@ -1651,7 +1651,7 @@ public class HTMLScanner implements XMLDocumentScanner, XMLLocator, HTMLComponen
      * @param str The StringBuffer to append to.
      * @param value The character value.
      */
-    private void appendChar(final StringBuffer str, final int value) {
+    private void appendChar(final StringBuilder str, final int value) {
         if (value > Character.MAX_VALUE) {
             final char[] chars = Character.toChars(value);
 
@@ -1713,19 +1713,19 @@ public class HTMLScanner implements XMLDocumentScanner, XMLLocator, HTMLComponen
         private String encoding;
 
         /** Public identifier. */
-        public final String publicId;
+        public String publicId;
 
         /** Base system identifier. */
-        public final String baseSystemId;
+        public String baseSystemId;
 
         /** Literal system identifier. */
-        public final String literalSystemId;
+        public String literalSystemId;
 
         /** Expanded system identifier. */
-        public final String expandedSystemId;
+        public String expandedSystemId;
 
         /** XML version. */
-        public final String version = "1.0";
+        public String version = "1.0";
 
         /** Line number. */
         private int lineNumber_ = 1;
@@ -2295,7 +2295,7 @@ public class HTMLScanner implements XMLDocumentScanner, XMLLocator, HTMLComponen
 
             } //end while
 
-            if (fStringBuffer.length != 0) {
+            if (fStringBuffer.length != 0 && fDocumentHandler != null) {
                 fDocumentHandler.characters(fStringBuffer, locationAugs());
             }
 
@@ -2672,11 +2672,11 @@ public class HTMLScanner implements XMLDocumentScanner, XMLLocator, HTMLComponen
          * Removes all spaces for the string (remember: JDK 1.3!)
          */
         private String removeSpaces(final String content) {
-            StringBuffer sb = null;
+            StringBuilder sb = null;
             for (int i = content.length() - 1; i >= 0; --i) {
                 if (Character.isWhitespace(content.charAt(i))) {
                     if (sb == null) {
-                        sb = new StringBuffer(content);
+                        sb = new StringBuilder(content);
                     }
                     sb.deleteCharAt(i);
                 }
@@ -2718,7 +2718,7 @@ public class HTMLScanner implements XMLDocumentScanner, XMLLocator, HTMLComponen
                     // change the charset
                     else {
                         fIso8859Encoding =
-                                ianaEncoding == null || ianaEncoding.toUpperCase(Locale.ENGLISH).startsWith("ISO-8859")
+                                ianaEncoding.toUpperCase(Locale.ENGLISH).startsWith("ISO-8859")
                                         || ianaEncoding.equalsIgnoreCase(fDefaultIANAEncoding);
                         fJavaEncoding = javaEncoding;
                         fCurrentEntity.setStream(new InputStreamReader(fByteStream, javaEncoding));
@@ -3583,7 +3583,7 @@ public class HTMLScanner implements XMLDocumentScanner, XMLLocator, HTMLComponen
         /** Returns a string representation of this object. */
         @Override
         public String toString() {
-            final StringBuffer str = new StringBuffer();
+            final StringBuilder str = new StringBuilder();
             str.append(fBeginLineNumber);
             str.append(':');
             str.append(fBeginColumnNumber);

@@ -29,9 +29,7 @@ import org.apache.xerces.xni.XMLDocumentHandler;
 import org.apache.xerces.xni.XMLLocator;
 import org.apache.xerces.xni.XMLResourceIdentifier;
 import org.apache.xerces.xni.XMLString;
-import org.apache.xerces.xni.XNIException;
 import org.apache.xerces.xni.parser.XMLComponentManager;
-import org.apache.xerces.xni.parser.XMLConfigurationException;
 import org.apache.xerces.xni.parser.XMLDocumentFilter;
 import org.apache.xerces.xni.parser.XMLDocumentSource;
 import org.codelibs.nekohtml.HTMLElements.Element;
@@ -262,7 +260,7 @@ public class HTMLTagBalancer implements XMLDocumentFilter, HTMLComponent {
     /** Returns the default state for a feature. */
     @Override
     public Boolean getFeatureDefault(final String featureId) {
-        final int length = RECOGNIZED_FEATURES != null ? RECOGNIZED_FEATURES.length : 0;
+        final int length = RECOGNIZED_FEATURES.length;
         for (int i = 0; i < length; i++) {
             if (RECOGNIZED_FEATURES[i].equals(featureId)) {
                 return RECOGNIZED_FEATURES_DEFAULTS[i];
@@ -274,7 +272,7 @@ public class HTMLTagBalancer implements XMLDocumentFilter, HTMLComponent {
     /** Returns the default state for a property. */
     @Override
     public Object getPropertyDefault(final String propertyId) {
-        final int length = RECOGNIZED_PROPERTIES != null ? RECOGNIZED_PROPERTIES.length : 0;
+        final int length = RECOGNIZED_PROPERTIES.length;
         for (int i = 0; i < length; i++) {
             if (RECOGNIZED_PROPERTIES[i].equals(propertyId)) {
                 return RECOGNIZED_PROPERTIES_DEFAULTS[i];
@@ -301,7 +299,7 @@ public class HTMLTagBalancer implements XMLDocumentFilter, HTMLComponent {
 
     /** Resets the component. */
     @Override
-    public void reset(final XMLComponentManager manager) throws XMLConfigurationException {
+    public void reset(final XMLComponentManager manager) {
 
         // get features
         fNamespaces = manager.getFeature(NAMESPACES);
@@ -331,7 +329,7 @@ public class HTMLTagBalancer implements XMLDocumentFilter, HTMLComponent {
 
     /** Sets a feature. */
     @Override
-    public void setFeature(final String featureId, final boolean state) throws XMLConfigurationException {
+    public void setFeature(final String featureId, final boolean state) {
 
         if (featureId.equals(AUGMENTATIONS)) {
             fAugmentations = state;
@@ -350,7 +348,7 @@ public class HTMLTagBalancer implements XMLDocumentFilter, HTMLComponent {
 
     /** Sets a property. */
     @Override
-    public void setProperty(final String propertyId, final Object value) throws XMLConfigurationException {
+    public void setProperty(final String propertyId, final Object value) {
 
         if (propertyId.equals(NAMES_ELEMS)) {
             fNamesElems = getNamesValue(String.valueOf(value));
@@ -390,8 +388,7 @@ public class HTMLTagBalancer implements XMLDocumentFilter, HTMLComponent {
 
     /** Start document. */
     @Override
-    public void startDocument(final XMLLocator locator, final String encoding, final NamespaceContext nscontext, final Augmentations augs)
-            throws XNIException {
+    public void startDocument(final XMLLocator locator, final String encoding, final NamespaceContext nscontext, final Augmentations augs) {
 
         // reset state
         fElementStack.top = 0;
@@ -417,7 +414,7 @@ public class HTMLTagBalancer implements XMLDocumentFilter, HTMLComponent {
 
     /** XML declaration. */
     @Override
-    public void xmlDecl(final String version, final String encoding, final String standalone, final Augmentations augs) throws XNIException {
+    public void xmlDecl(final String version, final String encoding, final String standalone, final Augmentations augs) {
         if (!fSeenAnything && fDocumentHandler != null) {
             fDocumentHandler.xmlDecl(version, encoding, standalone, augs);
         }
@@ -425,8 +422,7 @@ public class HTMLTagBalancer implements XMLDocumentFilter, HTMLComponent {
 
     /** Doctype declaration. */
     @Override
-    public void doctypeDecl(final String rootElementName, final String publicId, final String systemId, final Augmentations augs)
-            throws XNIException {
+    public void doctypeDecl(final String rootElementName, final String publicId, final String systemId, final Augmentations augs) {
         fSeenAnything = true;
         if (fReportErrors) {
             if (fSeenRootElement) {
@@ -445,7 +441,7 @@ public class HTMLTagBalancer implements XMLDocumentFilter, HTMLComponent {
 
     /** End document. */
     @Override
-    public void endDocument(final Augmentations augs) throws XNIException {
+    public void endDocument(final Augmentations augs) {
 
         // </body> and </html> have been buffered to consider outside content
         fIgnoreOutsideContent = true; // endElement should not ignore the elements passed from buffer
@@ -508,7 +504,7 @@ public class HTMLTagBalancer implements XMLDocumentFilter, HTMLComponent {
 
     /** Comment. */
     @Override
-    public void comment(final XMLString text, final Augmentations augs) throws XNIException {
+    public void comment(final XMLString text, final Augmentations augs) {
         fSeenAnything = true;
         consumeEarlyTextIfNeeded();
         if (fDocumentHandler != null) {
@@ -527,7 +523,7 @@ public class HTMLTagBalancer implements XMLDocumentFilter, HTMLComponent {
 
     /** Processing instruction. */
     @Override
-    public void processingInstruction(final String target, final XMLString data, final Augmentations augs) throws XNIException {
+    public void processingInstruction(final String target, final XMLString data, final Augmentations augs) {
         fSeenAnything = true;
         consumeEarlyTextIfNeeded();
         if (fDocumentHandler != null) {
@@ -537,7 +533,7 @@ public class HTMLTagBalancer implements XMLDocumentFilter, HTMLComponent {
 
     /** Start element. */
     @Override
-    public void startElement(final QName elem, XMLAttributes attrs, final Augmentations augs) throws XNIException {
+    public void startElement(final QName elem, XMLAttributes attrs, final Augmentations augs) {
         fSeenAnything = true;
 
         final boolean isForcedCreation = forcedStartElement_;
@@ -743,7 +739,7 @@ public class HTMLTagBalancer implements XMLDocumentFilter, HTMLComponent {
      * the element has been forced.
      * @return <code>true</code> if creation could be done (TABLE's creation for instance can't be forced)
      */
-    private boolean forceStartElement(final QName elem, final XMLAttributes attrs, final Augmentations augs) throws XNIException {
+    private boolean forceStartElement(final QName elem, final XMLAttributes attrs, final Augmentations augs) {
 
         forcedStartElement_ = true;
         startElement(elem, attrs, augs);
@@ -758,7 +754,7 @@ public class HTMLTagBalancer implements XMLDocumentFilter, HTMLComponent {
 
     /** Empty element. */
     @Override
-    public void emptyElement(final QName element, final XMLAttributes attrs, final Augmentations augs) throws XNIException {
+    public void emptyElement(final QName element, final XMLAttributes attrs, final Augmentations augs) {
         startElement(element, attrs, augs);
         // browser ignore the closing indication for non empty tags like <form .../> but not for unknown element
         final HTMLElements.Element elem = getElement(element);
@@ -770,8 +766,7 @@ public class HTMLTagBalancer implements XMLDocumentFilter, HTMLComponent {
 
     /** Start entity. */
     @Override
-    public void startGeneralEntity(final String name, final XMLResourceIdentifier id, final String encoding, final Augmentations augs)
-            throws XNIException {
+    public void startGeneralEntity(final String name, final XMLResourceIdentifier id, final String encoding, final Augmentations augs) {
         fSeenAnything = true;
 
         // check for end of document
@@ -820,7 +815,7 @@ public class HTMLTagBalancer implements XMLDocumentFilter, HTMLComponent {
 
     /** Text declaration. */
     @Override
-    public void textDecl(final String version, final String encoding, final Augmentations augs) throws XNIException {
+    public void textDecl(final String version, final String encoding, final Augmentations augs) {
         fSeenAnything = true;
 
         // check for end of document
@@ -837,7 +832,7 @@ public class HTMLTagBalancer implements XMLDocumentFilter, HTMLComponent {
 
     /** End entity. */
     @Override
-    public void endGeneralEntity(final String name, final Augmentations augs) throws XNIException {
+    public void endGeneralEntity(final String name, final Augmentations augs) {
 
         // check for end of document
         if (fSeenRootElementEnd) {
@@ -853,7 +848,7 @@ public class HTMLTagBalancer implements XMLDocumentFilter, HTMLComponent {
 
     /** Start CDATA section. */
     @Override
-    public void startCDATA(final Augmentations augs) throws XNIException {
+    public void startCDATA(final Augmentations augs) {
         fSeenAnything = true;
 
         consumeEarlyTextIfNeeded();
@@ -872,7 +867,7 @@ public class HTMLTagBalancer implements XMLDocumentFilter, HTMLComponent {
 
     /** End CDATA section. */
     @Override
-    public void endCDATA(final Augmentations augs) throws XNIException {
+    public void endCDATA(final Augmentations augs) {
 
         // check for end of document
         if (fSeenRootElementEnd) {
@@ -888,7 +883,7 @@ public class HTMLTagBalancer implements XMLDocumentFilter, HTMLComponent {
 
     /** Characters. */
     @Override
-    public void characters(final XMLString text, final Augmentations augs) throws XNIException {
+    public void characters(final XMLString text, final Augmentations augs) {
         // check for end of document
         if (fSeenRootElementEnd || fSeenBodyElementEnd) {
             return;
@@ -949,13 +944,13 @@ public class HTMLTagBalancer implements XMLDocumentFilter, HTMLComponent {
 
     /** Ignorable whitespace. */
     @Override
-    public void ignorableWhitespace(final XMLString text, final Augmentations augs) throws XNIException {
+    public void ignorableWhitespace(final XMLString text, final Augmentations augs) {
         characters(text, augs);
     } // ignorableWhitespace(XMLString,Augmentations)
 
     /** End element. */
     @Override
-    public void endElement(final QName element, final Augmentations augs) throws XNIException {
+    public void endElement(final QName element, final Augmentations augs) {
         final boolean forcedEndElement = forcedEndElement_;
         // is there anything to do?
         if (fSeenRootElementEnd) {
@@ -1071,12 +1066,12 @@ public class HTMLTagBalancer implements XMLDocumentFilter, HTMLComponent {
     // removed since Xerces-J 2.3.0
 
     /** Start document. */
-    public void startDocument(final XMLLocator locator, final String encoding, final Augmentations augs) throws XNIException {
+    public void startDocument(final XMLLocator locator, final String encoding, final Augmentations augs) {
         startDocument(locator, encoding, null, augs);
     } // startDocument(XMLLocator,String,Augmentations)
 
     /** Start prefix mapping. */
-    public void startPrefixMapping(final String prefix, final String uri, final Augmentations augs) throws XNIException {
+    public void startPrefixMapping(final String prefix, final String uri, final Augmentations augs) {
 
         // check for end of document
         if (fSeenRootElementEnd) {
@@ -1091,7 +1086,7 @@ public class HTMLTagBalancer implements XMLDocumentFilter, HTMLComponent {
     } // startPrefixMapping(String,String,Augmentations)
 
     /** End prefix mapping. */
-    public void endPrefixMapping(final String prefix, final Augmentations augs) throws XNIException {
+    public void endPrefixMapping(final String prefix, final Augmentations augs) {
 
         // check for end of document
         if (fSeenRootElementEnd) {
@@ -1122,12 +1117,12 @@ public class HTMLTagBalancer implements XMLDocumentFilter, HTMLComponent {
     } // getElement(String):HTMLElements.Element
 
     /** Call document handler start element. */
-    protected final void callStartElement(final QName element, final XMLAttributes attrs, final Augmentations augs) throws XNIException {
+    protected final void callStartElement(final QName element, final XMLAttributes attrs, final Augmentations augs) {
         fDocumentHandler.startElement(element, attrs, augs);
     } // callStartElement(QName,XMLAttributes,Augmentations)
 
     /** Call document handler end element. */
-    protected final void callEndElement(final QName element, final Augmentations augs) throws XNIException {
+    protected final void callEndElement(final QName element, final Augmentations augs) {
         fDocumentHandler.endElement(element, augs);
     } // callEndElement(QName,Augmentations)
 
@@ -1215,8 +1210,9 @@ public class HTMLTagBalancer implements XMLDocumentFilter, HTMLComponent {
             return name.toUpperCase(Locale.ENGLISH);
         case NAMES_LOWERCASE:
             return name.toLowerCase(Locale.ENGLISH);
+        default:
+            return name;
         }
-        return name;
     } // modifyName(String,short):String
 
     /**
@@ -1369,7 +1365,7 @@ public class HTMLTagBalancer implements XMLDocumentFilter, HTMLComponent {
          */
         @Override
         public String toString() {
-            final StringBuffer sb = new StringBuffer("InfoStack(");
+            final StringBuilder sb = new StringBuilder("InfoStack(");
             for (int i = top - 1; i >= 0; --i) {
                 sb.append(data[i]);
                 if (i != 0) {

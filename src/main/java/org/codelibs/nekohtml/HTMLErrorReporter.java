@@ -16,8 +16,6 @@
 
 package org.codelibs.nekohtml;
 
-import org.apache.xerces.xni.parser.XMLParseException;
-
 /**
  * Defines an error reporter for reporting HTML errors. There is no such
  * thing as a fatal error in parsing HTML. I/O errors are fatal but should
@@ -48,9 +46,9 @@ public interface HTMLErrorReporter {
     String formatMessage(String key, Object[] args);
 
     /** Reports a warning. */
-    void reportWarning(String key, Object[] args) throws XMLParseException;
+    void reportWarning(String key, Object[] args);
 
     /** Reports an error. */
-    void reportError(String key, Object[] args) throws XMLParseException;
+    void reportError(String key, Object[] args);
 
 } // interface HTMLErrorReporter

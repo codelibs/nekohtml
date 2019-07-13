@@ -49,7 +49,9 @@ class SecuritySupport {
             ClassLoader cl = null;
             try {
                 cl = Thread.currentThread().getContextClassLoader();
-            } catch (final SecurityException ex) {}
+            } catch (final SecurityException ex) {
+                // nothing
+            }
             return cl;
         };
         return AccessController.doPrivileged(action);
@@ -60,7 +62,9 @@ class SecuritySupport {
             ClassLoader cl = null;
             try {
                 cl = ClassLoader.getSystemClassLoader();
-            } catch (final SecurityException ex) {}
+            } catch (final SecurityException ex) {
+                // nothing
+            }
             return cl;
         };
         return AccessController.doPrivileged(action);
@@ -71,12 +75,14 @@ class SecuritySupport {
             ClassLoader parent = null;
             try {
                 parent = cl.getParent();
-            } catch (final SecurityException ex) {}
+            } catch (final SecurityException ex) {
+                // nothing
+            }
 
             // eliminate loops in case of the boot
             // ClassLoader returning itself as a parent
-                return (parent == cl) ? null : parent;
-            };
+            return (parent == cl) ? null : parent;
+        };
         return AccessController.doPrivileged(action);
     }
 

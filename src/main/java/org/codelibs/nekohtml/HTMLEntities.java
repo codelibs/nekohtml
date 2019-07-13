@@ -80,7 +80,7 @@ public class HTMLEntities {
      * -1 if the name is not known.
      */
     public static int get(final String name) {
-        final String value = (String) ENTITIES.get(name);
+        final String value = ENTITIES.get(name);
         return value != null ? value.charAt(0) : -1;
     } // get(String):char
 
