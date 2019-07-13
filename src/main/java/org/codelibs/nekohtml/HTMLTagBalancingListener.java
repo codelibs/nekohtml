@@ -20,8 +20,7 @@ import org.apache.xerces.xni.QName;
 import org.apache.xerces.xni.XMLAttributes;
 
 /**
- * <font color="red">EXPERIMENTAL: may change in next release</font><br/>
- * {@link XMLDocumentHandler} implementing this interface will get notified of elements discarded
+ * XMLDocumentHandler implementing this interface will get notified of elements discarded
  * by the tag balancer when they:
  * <ul>
  * <li>are configured using {@link HTMLConfiguration}</li>

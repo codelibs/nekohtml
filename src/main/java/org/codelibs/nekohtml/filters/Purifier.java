@@ -45,7 +45,7 @@ import org.codelibs.nekohtml.xercesbridge.XercesBridge;
  *  </ul>
  * <li>ensuring the string "--" does not appear in the content of
  *     a comment;
- * <li>ensuring the string "]]>" does not appear in the content of
+ * <li>ensuring the string "]]&gt;" does not appear in the content of
  *     a CDATA section;
  * <li>ensuring that the XML declaration has required pseudo-attributes
  *     and that the values are correct;

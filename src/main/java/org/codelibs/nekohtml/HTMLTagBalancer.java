@@ -116,7 +116,6 @@ public class HTMLTagBalancer implements XMLDocumentFilter, HTMLComponent {
     protected static final String ERROR_REPORTER = "http://cyberneko.org/html/properties/error-reporter";
 
     /**
-     * <font color="red">EXPERIMENTAL: may change in next release</font><br/>
      * Name of the property holding the stack of elements in which context a document fragment should be parsed.
      **/
     public static final String FRAGMENT_CONTEXT_STACK = "http://cyberneko.org/html/properties/balance-tags/fragment-context-stack";
@@ -1245,7 +1244,7 @@ public class HTMLTagBalancer implements XMLDocumentFilter, HTMLComponent {
      * Element info for each start element. This information is used when
      * closing unbalanced inline elements. For example:
      * <pre>
-     * &lt;i>unbalanced &lt;b>HTML&lt;/i> content&lt;/b>
+     * &lt;i&gt;unbalanced &lt;b&gt;HTML&lt;/i&gt; content&lt;/b&gt;
      * </pre>
      * <p>
      * It seems that it is a waste of processing and memory to copy the

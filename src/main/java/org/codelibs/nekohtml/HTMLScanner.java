@@ -2770,7 +2770,9 @@ public class HTMLScanner implements XMLDocumentScanner, XMLLocator, HTMLComponen
          *                   whether the start element tag is empty
          *                   (e.g. "/&gt;").
          * @param endc       The end character that appears before the
-         *                   closing angle bracket ('>').
+         *                   closing angle bracket ('&gt;').
+         * @return
+         * @throws IOException
          */
         protected boolean scanAttribute(final XMLAttributesImpl attributes, final boolean[] empty, final char endc) throws IOException {
             final boolean skippedSpaces = skipSpaces();
@@ -2982,7 +2984,10 @@ public class HTMLScanner implements XMLDocumentScanner, XMLLocator, HTMLComponen
             return true;
         } // scanAttribute(XMLAttributesImpl):boolean
 
-        /** Adds location augmentations to the specified attribute. */
+        /** Adds location augmentations to the specified attribute.
+         * @param attributes
+         * @param index
+         */
         protected void addLocationItem(final XMLAttributes attributes, final int index) {
             fEndLineNumber = fCurrentEntity.getLineNumber();
             fEndColumnNumber = fCurrentEntity.getColumnNumber();
@@ -2994,7 +2999,9 @@ public class HTMLScanner implements XMLDocumentScanner, XMLLocator, HTMLComponen
             augs.putItem(AUGMENTATIONS, locationItem);
         } // addLocationItem(XMLAttributes,int)
 
-        /** Scans an end element. */
+        /** Scans an end element.
+         * @throws IOException
+         */
         protected void scanEndElement() throws IOException {
             String ename = scanName(true);
             if (fReportErrors && ename == null) {

@@ -244,7 +244,6 @@ public class HTMLConfiguration extends ParserConfigurationSettings implements XM
     } // pushInputSource(XMLInputSource)
 
     /**
-     * <font color="red">EXPERIMENTAL: may change in next release</font><br/>
      * Immediately evaluates an input source and add the new content (e.g.
      * the output written by an embedded script).
      *
