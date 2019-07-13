@@ -87,7 +87,7 @@ The following sample code shows how to instantiate a DOM
 parser using the NekoHTML parser configuration:
 <pre class='code'>
 <span class='code-comment'>// import org.apache.xerces.parsers.DOMParser;
-// import org.cyberneko.html.HTMLConfiguration;</span>
+// import org.codelibs.nekohtml.HTMLConfiguration;</span>
 
 DOMParser parser <span class='code-punct'>=</span> <span class='code-keyword'>new</span> DOMParser<span class='code-punct'>(</span><span class='code-keyword'>new</span> HTMLConfiguration<span class='code-punct'>());</span>
 </pre>
@@ -110,7 +110,7 @@ Therefore, in order to use the default HTML DOM implementation
 with NekoHTML's <code>DOMParser</code> to parse XHTML documents,
 you must turn off namespace processing. For example:
 <pre class='code'>
-<span class='code-comment'>// import org.cyberneko.html.parsers.DOMParser;</span>
+<span class='code-comment'>// import org.codelibs.nekohtml.parsers.DOMParser;</span>
 
 DOMParser parser <span class='code-punct'>=</span> <span class='code-keyword'>new</span> DOMParser<span class='code-punct'>();</span>
 parser<span class='code-punct'>.</span><span class='code-func'>setFeature</span><span class='code-punct'>(</span><span class='code-string'>"http://xml.org/sax/features/namespaces"</span><span class='code-punct'>,</class> <span class='code-keyword'>false</span><span class='code-punct'>);</span>
@@ -122,8 +122,8 @@ custom filter to the parsing pipeline to remove namespace
 information before the <code>DOMParser</code> constructs the
 document. For example:
 <pre class='code'>
-<span class='code-comment'>// import org.cyberneko.html.filters.DefaultFilter;
-// import org.cyberneko.html.parsers.DOMParser;
+<span class='code-comment'>// import org.codelibs.nekohtml.filters.DefaultFilter;
+// import org.codelibs.nekohtml.parsers.DOMParser;
 // import org.apache.xerces.xni.*;
 // import org.apache.xerces.xni.parser.XMLDocumentFilter;</span>
 
@@ -159,8 +159,8 @@ example shows how to add a custom filter before the tag-balancer
 in the DOM parser. (This also works on all other types of parsers
 that use the <code>HTMLConfiguration</code>.)
 <pre class='code'>
-<span class='code-comment'>// import org.cyberneko.html.HTMLConfiguration;
-// import org.cyberneko.html.parsers.DOMParser;
+<span class='code-comment'>// import org.codelibs.nekohtml.HTMLConfiguration;
+// import org.codelibs.nekohtml.parsers.DOMParser;
 // import org.apache.xerces.xni.parser.XMLDocumentFilter;</span>
 
 DOMParser parser <span class='code-punct'>=</span> <span class='code-keyword'>new</span> DOMParser<span class='code-punct'>();</span>
@@ -213,7 +213,7 @@ for document information, the
 feature needs to be turned on. For example:
 <p>
 <pre class='code'>
-<span class='code-comment'>// import org.cyberneko.html.parsers.SAXParser;</span>
+<span class='code-comment'>// import org.codelibs.nekohtml.parsers.SAXParser;</span>
 
 String AUGMENTATIONS <span class='code-punct'>=</span> <span class='code-string'>"http://cyberneko.org/html/features/augmentations"</span><span class='code-punct'>;</span>
 
@@ -232,7 +232,7 @@ information to the application.
 The XNI dependence does not restrict applications to only
 using the Xerces Native Interface, however. The best way to
 use this information is by extending one of the parsers in the
-<code>org.cyberneko.html.parsers</code> package and overriding
+<code>org.codelibs.nekohtml.parsers</code> package and overriding
 the methods of interest. The following example extends the
 <code>SAXParser</code> class to retrieve the event information
 for start elements:
@@ -331,11 +331,11 @@ may be a useful alternative.
 Since version 0.9.3, NekoHTML includes a class that can be
 used to query the product version within application code. 
 The <code>Version</code> class in the
-<code>org.cyberneko.html</code> package contains a method,
+<code>org.codelibs.nekohtml</code> package contains a method,
 <code>getVersion</code> that returns the NekoHTML version
 as a string. For example:
 <pre class='code'>
-<span class='code-comment'>// import org.cyberneko.html.Version;</span>
+<span class='code-comment'>// import org.codelibs.nekohtml.Version;</span>
 
 System<span class='code-punct'>.</span>err<span class='code-punct'>.</span><span class='code-func'>println</span><span class='code-punct'>(</span>Version<span class='code-punct'>.</span><span class='code-func'>getVersion</span><span class='code-punct'>());</span>
 </pre>
@@ -346,7 +346,7 @@ method that prints the version information to standard output.
 The version and product information can also be queried using
 the Java package API. For example:
 <pre class='code'>
-Class cls <span class='code-punct'>=</span> Class<span class='code-punct'>.</span><span class='code-func'>forName</span><span class='code-punct'>(</span><span class='code-string'>"org.cyberneko.html.HTMLConfiguration"</span><span class='code-punct'>);</span>
+Class cls <span class='code-punct'>=</span> Class<span class='code-punct'>.</span><span class='code-func'>forName</span><span class='code-punct'>(</span><span class='code-string'>"org.codelibs.nekohtml.HTMLConfiguration"</span><span class='code-punct'>);</span>
 Package pkg <span class='code-punct'>=</span> cls<span class='code-punct'>.</span><span class='code-func'>getPackage</span><span class='code-punct'>();</span>
 
 String name <span class='code-punct'>=</span> pkg<span class='code-punct'>.</span><span class='code-func'>getName</span><span class='code-punct'>();</span>

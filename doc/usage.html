@@ -81,7 +81,7 @@ Jar file, you must build it using the "jar-xni" Ant task.
 <p>
 If you don't want to override the default Xerces2 parser 
 instantiation mechanism, separate DOM and SAX parser classes are 
-included in the <code>org.cyberneko.html.parsers</code> package 
+included in the <code>org.codelibs.nekohtml.parsers</code> package 
 for convenience. Both parsers use the <code>HTMLConfiguration</code> 
 class to be able to parse HTML documents. In addition, the DOM 
 parser uses the Xerces HTML DOM implementation so that the
@@ -91,7 +91,7 @@ shows how to use the NekoHTML <code>DOMParser</code> directly:
 <pre class='code'>
 <span class='code-keyword'>package</span> sample<span class='code-punct'>;</span>
 
-<span class='code-keyword'>import</span> org.cyberneko.html.parsers.DOMParser<span class='code-punct'>;</span>
+<span class='code-keyword'>import</span> org.codelibs.nekohtml.parsers.DOMParser<span class='code-punct'>;</span>
 <span class='code-keyword'>import</span> org.w3c.dom.Document<span class='code-punct'>;</span>
 <span class='code-keyword'>import</span> org.w3c.dom.Node<span class='code-punct'>;</span>
 
@@ -132,14 +132,14 @@ This source code is included in the <code>src/sample/</code> directory.
 <p>
 In addition to the provided DOM and SAX parser classes, NekoHTML
 also provides a DOM fragment parser class. The <code>DOMFragmentParser</code>
-class, found in the <code>org.cyberneko.html.parsers</code>
+class, found in the <code>org.codelibs.nekohtml.parsers</code>
 package, in can be used to parse fragments of HTML documents 
 into their corresponding DOM nodes. The following example shows 
 how to use the NekoHTML <code>DOMFragmentParser</code> directly:
 <pre class='code'>
 <span class='code-keyword'>package</span> sample<span class='code-punct'>;</span>
 
-<span class='code-keyword'>import</span> org.cyberneko.html.parsers.DOMFragmentParser<span class='code-punct'>;</span>
+<span class='code-keyword'>import</span> org.codelibs.nekohtml.parsers.DOMFragmentParser<span class='code-punct'>;</span>
 <span class='code-keyword'>import</span> org.apache.html.dom.HTMLDocumentImpl<span class='code-punct'>;</span>
 <span class='code-keyword'>import</span> org.w3c.dom.Document<span class='code-punct'>;</span>
 <span class='code-keyword'>import</span> org.w3c.dom.DocumentFragment<span class='code-punct'>;</span>
@@ -190,7 +190,7 @@ a DOM document object of type <code>org.w3c.dom.html.HTMLDocument</code>.
 <p>
 Alternatively, you can construct any XNI-based parser class
 using the <code>HTMLConfiguration</code> parser configuration class
-found in the <code>org.cyberneko.html</code> package. The following
+found in the <code>org.codelibs.nekohtml</code> package. The following
 example shows how to extend the abstract SAX parser provided with
 the Xerces2 implementation by passing the NekoHTML parser 
 configuration to the base class in the constructor.
@@ -198,7 +198,7 @@ configuration to the base class in the constructor.
 <span class='code-keyword'>package</span> sample<span class='code-punct'>;</span>
 
 <span class='code-keyword'>import</span> org.apache.xerces.parsers.AbstractSAXParser<span class='code-punct'>;</span>
-<span class='code-keyword'>import</span> org.cyberneko.html.HTMLConfiguration<span class='code-punct'>;</span>
+<span class='code-keyword'>import</span> org.codelibs.nekohtml.HTMLConfiguration<span class='code-punct'>;</span>
 
 <span class='code-keyword'>public class</span> HTMLSAXParser <span class='code-keyword'>extends</span> AbstractSAXParser <span class='code-punct'>{</span>
     <span class='code-keyword'>public</span> HTMLSAXParser<span class='code-punct'>() {</span>

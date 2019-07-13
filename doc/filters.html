@@ -73,7 +73,7 @@ anything else you want!
 NekoHTML includes a base filter class to simplify the creation of
 custom filters. To write a new filter, simply extend the 
 <code>DefaultFilter</code> class located in the
-<code>org.cyberneko.html.filters</code> package and override the
+<code>org.codelibs.nekohtml.filters</code> package and override the
 relevent methods to add your own behavior. Once done, the only
 thing you need to do is append the filter to the end of the
 parser pipeline.
@@ -113,7 +113,7 @@ enable applications to perform a variety of operations, including:
 <p>
 NekoHTML includes a simple HTML serializer written as a filter. 
 The <code>Writer</code> class is located in the 
-<code>org.cyberneko.html.filters</code> and contains two
+<code>org.codelibs.nekohtml.filters</code> and contains two
 different constructors. The default constructor creates a writer
 that prints to the standard output. The other constructor allows 
 the application to control the output stream and the encoding.
@@ -155,7 +155,7 @@ encoding of existing documents.
 The following table shows the standard usage of the writer:
 <table cellspacing='0' cellpadding='3'>
 <tr><th style='border-bottom: 0'>Usage:
-<td style='border-bottom: 0'><tt>java org.cyberneko.html.filters.Writer (options) file ...</tt>
+<td style='border-bottom: 0'><tt>java org.codelibs.nekohtml.filters.Writer (options) file ...</tt>
 <tr><th style='border-bottom: solid black 1'>Options:
 <td><pre>
   -e name  Specify IANA name of output encoding.
@@ -174,7 +174,7 @@ for convenience. You do not need to add this filter manually because
 it is automatically added to the parsing pipeline if the SAX namespaces 
 feature is enabled. However, if you are interested, the
 <code>NamespaceBinder</code> component is included in the 
-<code>org.cyberneko.html.filters</code> package.
+<code>org.codelibs.nekohtml.filters</code> package.
 <p>
 <strong>Note:</strong>
 This component does not perform <em>any</em> namespace processing
@@ -195,7 +195,7 @@ NekoHTML parser provides a filter that "purifies" the input,
 ensuring that the output is well-formed XML.
 <p>
 The <code>Purifier</code> class in the
-<code>org.cyberneko.html.filters</code> package lets the application
+<code>org.codelibs.nekohtml.filters</code> package lets the application
 convert the HTML input into well-formed XML output. Some of the
 changes that the Purifier performs, are:
 <ul>
@@ -212,7 +212,7 @@ changes that the Purifier performs, are:
 The NekoHTML parser also provides a basic document filter capable 
 of removing specified elements from the processing stream. The
 <code>ElementRemover</code> class is located in the 
-<code>org.cyberneko.html.filters</code> package and provides
+<code>org.codelibs.nekohtml.filters</code> package and provides
 two options for processing document elements:
 <ul>
 <li>specifying those elements which should be accepted and,

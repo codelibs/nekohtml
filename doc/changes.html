@@ -106,7 +106,7 @@ Changes
  don't generate opening <code>TABLE</code> or <code>SELECT</code> tag when it's missing (therefore discard child nodes),
  added <font color='red'>experimental</font> tag balancer property <code>http://cyberneko.org/html/properties/balance-tags/fragment-context-stack</code> allowing to to specify the current tag stack when evaluating a new input source during parsing,
  ignore whitespaces that are direct children of <code>HTML</code>,
- <code>org.cyberneko.html.filters.Writer</code> wrongly changes attribute value of some <code>META</code> tags (#2815779),
+ <code>org.codelibs.nekohtml.filters.Writer</code> wrongly changes attribute value of some <code>META</code> tags (#2815779),
  use <code>http://www.w3.org/1999/xhtml</code> namespace for automatically inserted tags (#2799585),
  <code>DOMFragmentParser</code> ignores invalid processing instruction and attribute name (#2828553, #2828534),
  define latest Xerces version (2.9.1) as dependency in the published Maven POM,
@@ -120,7 +120,7 @@ Changes
  <dt>Version 1.9.12 (20 Apr 2009)
      [<a href='http://downloads.sourceforge.net/nekohtml/nekohtml-1.9.12.zip'>zip</a>]
      [<a href='http://downloads.sourceforge.net/nekohtml/nekohtml-1.9.12.tar.gz'>tgz</a>]
- <dd>fixed NPE when parsing from a Character stream (patch provided by Ludger B�nger, #2503982),
+ <dd>fixed NPE when parsing from a Character stream (patch provided by Ludger B�ｿｽnger, #2503982),
  when closing comment --&gt; is missing, comment ends with &gt; (patch provided by Tatsuhiko Miyabe, #2552096),
  don't treat tags with non-HTML namespace like HTML tags (patch provided by Tatsuhiko Miyabe, #2551958),
  force creation of BODY rather than of HEAD for unknown tags,
@@ -239,9 +239,9 @@ fixed issues 1922810, 1927966, 1926831 (thanks to Ahmed Ashour)
      added features to strip CDATA delimiters (i.e. "&lt;![CDATA[" and
        "]]>") from &lt;script> and &lt;style> elements suggested by Dan Sojka;
      fixed tag-balancing problem reported by Egor Samarkhanov;
-     applied augmentations patches donated by Marc-Andr� Morissette;
+     applied augmentations patches donated by Marc-Andr�ｿｽ Morissette;
      implemented augmentation performance enhancements inspired by
-       Marc-Andr� Morissette;
+       Marc-Andr�ｿｽ Morissette;
      fixed ignore-outside-content bug reported by Chris Erskine;
      and
      updated link to Xerces download site.
