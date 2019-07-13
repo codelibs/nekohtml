@@ -205,7 +205,6 @@ public class NamespaceBinder extends DefaultFilter {
      *
      * @param manager The component manager.
      *
-     * @Thrown by component on initialization error.
      */
     @Override
     public void reset(final XMLComponentManager manager) {

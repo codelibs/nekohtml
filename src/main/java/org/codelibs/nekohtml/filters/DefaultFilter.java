@@ -289,7 +289,6 @@ public class DefaultFilter implements XMLDocumentFilter, HTMLComponent {
      *
      * @param componentManager The component manager.
      *
-     * @Thrown by component on initialization error.
      */
     @Override
     public void reset(final XMLComponentManager componentManager) {
@@ -305,11 +304,6 @@ public class DefaultFilter implements XMLDocumentFilter, HTMLComponent {
      * @param featureId The feature identifier.
      * @param state     The state of the feature.
      *
-     * @Thrown for configuration error.
-     *                                   In general, components should
-     *                                   only throw this exception if
-     *                                   it is <strong>really</strong>
-     *                                   a critical error.
      */
     @Override
     public void setFeature(final String featureId, final boolean state) {
@@ -325,11 +319,6 @@ public class DefaultFilter implements XMLDocumentFilter, HTMLComponent {
      * @param propertyId The property identifier.
      * @param value      The value of the property.
      *
-     * @Thrown for configuration error.
-     *                                   In general, components should
-     *                                   only throw this exception if
-     *                                   it is <strong>really</strong>
-     *                                   a critical error.
      */
     @Override
     public void setProperty(final String propertyId, final Object value) {
