@@ -63,7 +63,7 @@ public class CanonicalTest extends TestCase {
 
         TestSuite suite = new TestSuite();
         final List/*File*/dataFiles = new ArrayList();
-        File dataDir = new File("data");
+        File dataDir = new File("src/test/resources/data");
         dataDir.listFiles(new FileFilter() {
             public boolean accept(final File file) {
                 String name = file.getName();
