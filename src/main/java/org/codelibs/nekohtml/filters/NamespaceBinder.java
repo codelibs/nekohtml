@@ -592,8 +592,8 @@ public class NamespaceBinder extends DefaultFilter {
 
         /** Get all prefixes. */
         @Override
-        public Enumeration getAllPrefixes() {
-            final Vector prefixes = new Vector();
+        public Enumeration<String> getAllPrefixes() {
+            final Vector<String> prefixes = new Vector<>();
             for (int i = fLevels[1]; i < fLevels[fTop]; i++) {
                 final String prefix = fEntries[i].prefix;
                 if (!prefixes.contains(prefix)) {

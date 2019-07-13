@@ -48,7 +48,7 @@ class LostText {
         }
     }
 
-    private final List entries = new ArrayList();
+    private final List<Entry> entries = new ArrayList<>();
 
     /**
      * Adds some text that need to be re-feed later. The information gets copied.
@@ -64,7 +64,7 @@ class LostText {
      * @param tagBalancer the tag balancer that will receive the events
      */
     public void refeed(final XMLDocumentHandler tagBalancer) {
-        for (final Iterator iter = entries.iterator(); iter.hasNext();) {
+        for (final Iterator<Entry> iter = entries.iterator(); iter.hasNext();) {
             final LostText.Entry entry = (LostText.Entry) iter.next();
             tagBalancer.characters(entry.text_, entry.augs_);
         }

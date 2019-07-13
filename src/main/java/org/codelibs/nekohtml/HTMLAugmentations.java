@@ -43,7 +43,7 @@ public class HTMLAugmentations implements Augmentations {
     //
 
     /** Augmentation items. */
-    protected final Hashtable fItems = new Hashtable();
+    protected final Hashtable<String, Object> fItems = new Hashtable<>();
 
     //
     // Public methods
@@ -57,8 +57,9 @@ public class HTMLAugmentations implements Augmentations {
      * @param augs the object to copy
      */
     HTMLAugmentations(final Augmentations augs) {
-        for (final Enumeration keys = augs.keys(); keys.hasMoreElements();) {
-            final String key = (String) keys.nextElement();
+        for (@SuppressWarnings("unchecked")
+        final Enumeration<String> keys = augs.keys(); keys.hasMoreElements();) {
+            final String key = keys.nextElement();
             Object value = augs.getItem(key);
             if (value instanceof HTMLScanner.LocationItem) {
                 value = new HTMLScanner.LocationItem((HTMLScanner.LocationItem) value);
@@ -131,7 +132,7 @@ public class HTMLAugmentations implements Augmentations {
      * Returns an enumeration of the keys in the Augmentations structure.
      */
     @Override
-    public Enumeration keys() {
+    public Enumeration<String> keys() {
         return fItems.keys();
     } // keys():Enumeration
 

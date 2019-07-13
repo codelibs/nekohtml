@@ -45,27 +45,29 @@ class SecuritySupport {
     }
 
     ClassLoader getContextClassLoader() {
-        return (ClassLoader) AccessController.doPrivileged((PrivilegedAction) () -> {
+        final PrivilegedAction<ClassLoader> action = () -> {
             ClassLoader cl = null;
             try {
                 cl = Thread.currentThread().getContextClassLoader();
             } catch (final SecurityException ex) {}
             return cl;
-        });
+        };
+        return AccessController.doPrivileged(action);
     }
 
     ClassLoader getSystemClassLoader() {
-        return (ClassLoader) AccessController.doPrivileged((PrivilegedAction) () -> {
+        final PrivilegedAction<ClassLoader> action = () -> {
             ClassLoader cl = null;
             try {
                 cl = ClassLoader.getSystemClassLoader();
             } catch (final SecurityException ex) {}
             return cl;
-        });
+        };
+        return AccessController.doPrivileged(action);
     }
 
     ClassLoader getParentClassLoader(final ClassLoader cl) {
-        return (ClassLoader) AccessController.doPrivileged((PrivilegedAction) () -> {
+        final PrivilegedAction<ClassLoader> action = () -> {
             ClassLoader parent = null;
             try {
                 parent = cl.getParent();
@@ -74,23 +76,26 @@ class SecuritySupport {
             // eliminate loops in case of the boot
             // ClassLoader returning itself as a parent
                 return (parent == cl) ? null : parent;
-            });
+            };
+        return AccessController.doPrivileged(action);
     }
 
     String getSystemProperty(final String propName) {
-        return (String) AccessController.doPrivileged((PrivilegedAction) () -> System.getProperty(propName));
+        final PrivilegedAction<String> action = () -> System.getProperty(propName);
+        return AccessController.doPrivileged(action);
     }
 
     FileInputStream getFileInputStream(final File file) throws FileNotFoundException {
         try {
-            return (FileInputStream) AccessController.doPrivileged((PrivilegedExceptionAction) () -> new FileInputStream(file));
+            final PrivilegedExceptionAction<FileInputStream> action = () -> new FileInputStream(file);
+            return AccessController.doPrivileged(action);
         } catch (final PrivilegedActionException e) {
             throw (FileNotFoundException) e.getException();
         }
     }
 
     InputStream getResourceAsStream(final ClassLoader cl, final String name) {
-        return (InputStream) AccessController.doPrivileged((PrivilegedAction) () -> {
+        final PrivilegedAction<InputStream> action = () -> {
             InputStream ris;
             if (cl == null) {
                 ris = ClassLoader.getSystemResourceAsStream(name);
@@ -98,15 +103,18 @@ class SecuritySupport {
                 ris = cl.getResourceAsStream(name);
             }
             return ris;
-        });
+        };
+        return AccessController.doPrivileged(action);
     }
 
     boolean getFileExists(final File f) {
-        return ((Boolean) AccessController.doPrivileged((PrivilegedAction) () -> Boolean.valueOf(f.exists()))).booleanValue();
+        final PrivilegedAction<Boolean> action = () -> Boolean.valueOf(f.exists());
+        return AccessController.doPrivileged(action).booleanValue();
     }
 
     long getLastModified(final File f) {
-        return ((Long) AccessController.doPrivileged((PrivilegedAction) () -> Long.valueOf(f.lastModified()))).longValue();
+        final PrivilegedAction<Long> action = () -> Long.valueOf(f.lastModified());
+        return AccessController.doPrivileged(action).longValue();
     }
 
 }

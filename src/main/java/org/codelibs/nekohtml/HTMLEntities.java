@@ -20,9 +20,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collections;
 import java.util.Enumeration;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+import java.util.stream.Collectors;
 
 /**
  * Pre-defined HTML entities.
@@ -38,7 +38,7 @@ public class HTMLEntities {
     //
 
     /** Entities. */
-    protected static final Map ENTITIES;
+    protected static final Map<String, String> ENTITIES;
 
     /** Reverse mapping from characters to names. */
     protected static final IntProperties SEITITNE = new IntProperties();
@@ -56,7 +56,7 @@ public class HTMLEntities {
         load0(props, "res/XMLbuiltin.properties");
 
         // store reverse mappings
-        final Enumeration keys = props.propertyNames();
+        final Enumeration<?> keys = props.propertyNames();
         while (keys.hasMoreElements()) {
             final String key = (String) keys.nextElement();
             final String value = props.getProperty(key);
@@ -66,7 +66,9 @@ public class HTMLEntities {
             }
         }
 
-        ENTITIES = Collections.unmodifiableMap(new HashMap(props));
+        ENTITIES =
+                Collections.unmodifiableMap(props.entrySet().stream()
+                        .collect(Collectors.toMap(e -> (String) e.getKey(), e -> (String) e.getValue())));
     }
 
     //

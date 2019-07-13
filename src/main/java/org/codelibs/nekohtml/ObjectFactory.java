@@ -305,8 +305,8 @@ class ObjectFactory {
     static Object newInstance(final String className, final ClassLoader cl, final boolean doFallback) throws ConfigurationError {
         // assert(className != null);
         try {
-            final Class providerClass = findProviderClass(className, cl, doFallback);
-            final Object instance = providerClass.newInstance();
+            final Class<?> providerClass = findProviderClass(className, cl, doFallback);
+            final Object instance = providerClass.getDeclaredConstructor().newInstance();
             if (DEBUG) {
                 debugPrintln("created new instance of " + providerClass + " using ClassLoader: " + cl);
             }
@@ -321,7 +321,7 @@ class ObjectFactory {
     /**
      * Find a Class using the specified ClassLoader
      */
-    static Class findProviderClass(final String className, ClassLoader cl, final boolean doFallback) throws ClassNotFoundException,
+    static Class<?> findProviderClass(final String className, ClassLoader cl, final boolean doFallback) throws ClassNotFoundException,
             ConfigurationError {
         //throw security exception if the calling thread is not allowed to access the package
         //restrict the access to package as speicified in java.security policy
@@ -338,7 +338,7 @@ class ObjectFactory {
         } catch (final SecurityException e) {
             throw e;
         }
-        Class providerClass;
+        Class<?> providerClass;
         if (cl == null) {
             // XXX Use the bootstrap ClassLoader.  There is no way to
             // load a class using the bootstrap ClassLoader that works

@@ -434,7 +434,7 @@ public class Writer extends DefaultFilter {
                 printUsage();
                 System.exit(1);
             }
-            final java.util.Vector filtersVector = new java.util.Vector(2);
+            final java.util.Vector<DefaultFilter> filtersVector = new java.util.Vector<>(2);
             if (identity) {
                 filtersVector.addElement(new Identity());
             } else if (purify) {

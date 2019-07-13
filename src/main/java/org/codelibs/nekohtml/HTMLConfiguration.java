@@ -157,7 +157,7 @@ public class HTMLConfiguration extends ParserConfigurationSettings implements XM
     // components
 
     /** Components. */
-    protected final Vector fHTMLComponents = new Vector(2);
+    protected final Vector<HTMLComponent> fHTMLComponents = new Vector<>(2);
 
     // pipeline
 

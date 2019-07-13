@@ -28,7 +28,7 @@ public class XercesBridge_2_3 extends XercesBridge_2_2 {
      */
     public XercesBridge_2_3() throws InstantiationException {
         try {
-            final Class[] args = { String.class, String.class };
+            final Class<?>[] args = { String.class, String.class };
             NamespaceContext.class.getMethod("declarePrefix", args);
         } catch (final NoSuchMethodException e) {
             // means that we're not using Xerces 2.3 or higher

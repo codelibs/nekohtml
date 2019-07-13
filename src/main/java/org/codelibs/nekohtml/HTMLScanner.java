@@ -425,7 +425,7 @@ public class HTMLScanner implements XMLDocumentScanner, XMLLocator, HTMLComponen
     protected CurrentEntity fCurrentEntity;
 
     /** The current entity stack. */
-    protected final Stack fCurrentEntityStack = new Stack();
+    protected final Stack<CurrentEntity> fCurrentEntityStack = new Stack<>();
 
     /** The current scanner. */
     protected Scanner fScanner;
@@ -582,7 +582,7 @@ public class HTMLScanner implements XMLDocumentScanner, XMLLocator, HTMLComponen
             }
             // close remaining streams
             for (int i = closeall ? 0 : 1; i < size; i++) {
-                fCurrentEntity = (CurrentEntity) fCurrentEntityStack.pop();
+                fCurrentEntity = fCurrentEntityStack.pop();
                 fCurrentEntity.closeQuietly();
             }
         } else if (closeall && fCurrentEntity != null) {
@@ -2109,7 +2109,7 @@ public class HTMLScanner implements XMLDocumentScanner, XMLLocator, HTMLComponen
                     if (fCurrentEntityStack.empty()) {
                         setScannerState(STATE_END_DOCUMENT);
                     } else {
-                        fCurrentEntity = (CurrentEntity) fCurrentEntityStack.pop();
+                        fCurrentEntity = fCurrentEntityStack.pop();
                     }
                     next = true;
                 }
@@ -3171,7 +3171,7 @@ public class HTMLScanner implements XMLDocumentScanner, XMLLocator, HTMLComponen
                     if (fCurrentEntityStack.empty()) {
                         setScannerState(STATE_END_DOCUMENT);
                     } else {
-                        fCurrentEntity = (CurrentEntity) fCurrentEntityStack.pop();
+                        fCurrentEntity = fCurrentEntityStack.pop();
                         setScannerState(STATE_CONTENT);
                     }
                     return true;

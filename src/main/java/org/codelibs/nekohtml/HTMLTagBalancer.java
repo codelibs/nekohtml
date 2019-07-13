@@ -253,7 +253,7 @@ public class HTMLTagBalancer implements XMLDocumentFilter, HTMLComponent {
     private QName[] fragmentContextStack_ = null;
     private int fragmentContextStackSize_ = 0; // not 0 only when a fragment is parsed and fragmentContextStack_ is set
 
-    private final List/*ElementEntry*/endElementsBuffer_ = new ArrayList();
+    private final List<ElementEntry> endElementsBuffer_ = new ArrayList<>();
 
     //
     // HTMLComponent methods
@@ -496,10 +496,10 @@ public class HTMLTagBalancer implements XMLDocumentFilter, HTMLComponent {
      * at the end of document
      */
     private void consumeBufferedEndElements() {
-        final List toConsume = new ArrayList(endElementsBuffer_);
+        final List<ElementEntry> toConsume = new ArrayList<>(endElementsBuffer_);
         endElementsBuffer_.clear();
         for (int i = 0; i < toConsume.size(); ++i) {
-            final ElementEntry entry = (ElementEntry) toConsume.get(i);
+            final ElementEntry entry = toConsume.get(i);
             forcedEndElement_ = true;
             endElement(entry.name_, entry.augs_);
         }

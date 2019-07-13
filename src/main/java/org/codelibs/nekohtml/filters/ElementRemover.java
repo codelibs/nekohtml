@@ -107,10 +107,10 @@ public class ElementRemover extends DefaultFilter {
     // information
 
     /** Accepted elements. */
-    protected Hashtable fAcceptedElements = new Hashtable();
+    protected Hashtable<String, Object> fAcceptedElements = new Hashtable<>();
 
     /** Removed elements. */
-    protected Hashtable fRemovedElements = new Hashtable();
+    protected Hashtable<String, Object> fRemovedElements = new Hashtable<>();
 
     // state
 
@@ -135,7 +135,7 @@ public class ElementRemover extends DefaultFilter {
      * see #removeElement
      */
     public void acceptElement(final String element, final String[] attributes) {
-        final Object key = element.toLowerCase();
+        final String key = element.toLowerCase();
         Object value = NULL;
         if (attributes != null) {
             final String[] newarray = new String[attributes.length];
@@ -156,7 +156,7 @@ public class ElementRemover extends DefaultFilter {
      * @param element The element to completely remove.
      */
     public void removeElement(final String element) {
-        final Object key = element.toLowerCase();
+        final String key = element.toLowerCase();
         final Object value = NULL;
         fRemovedElements.put(key, value);
     } // removeElement(String)
@@ -308,20 +308,20 @@ public class ElementRemover extends DefaultFilter {
 
     /** Returns true if the specified element is accepted. */
     protected boolean elementAccepted(final String element) {
-        final Object key = element.toLowerCase();
+        final String key = element.toLowerCase();
         return fAcceptedElements.containsKey(key);
     } // elementAccepted(String):boolean
 
     /** Returns true if the specified element should be removed. */
     protected boolean elementRemoved(final String element) {
-        final Object key = element.toLowerCase();
+        final String key = element.toLowerCase();
         return fRemovedElements.containsKey(key);
     } // elementRemoved(String):boolean
 
     /** Handles an open tag. */
     protected boolean handleOpenTag(final QName element, final XMLAttributes attributes) {
         if (elementAccepted(element.rawname)) {
-            final Object key = element.rawname.toLowerCase();
+            final String key = element.rawname.toLowerCase();
             final Object value = fAcceptedElements.get(key);
             if (value != NULL) {
                 final String[] anames = (String[]) value;

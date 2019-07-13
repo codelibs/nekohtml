@@ -15,6 +15,8 @@
  */
 package org.codelibs.nekohtml.xercesbridge;
 
+import java.lang.reflect.InvocationTargetException;
+
 import org.apache.xerces.xni.Augmentations;
 import org.apache.xerces.xni.NamespaceContext;
 import org.apache.xerces.xni.XMLDocumentHandler;
@@ -54,8 +56,11 @@ public abstract class XercesBridge {
 
     private static XercesBridge newInstanceOrNull(final String className) {
         try {
-            return (XercesBridge) Class.forName(className).newInstance();
-        } catch (final ClassNotFoundException ex) {} catch (final SecurityException ex) {} catch (final LinkageError ex) {} catch (final IllegalArgumentException e) {} catch (final IllegalAccessException e) {} catch (final InstantiationException e) {}
+            return (XercesBridge) Class.forName(className).getDeclaredConstructor().newInstance();
+        } catch (final ClassNotFoundException | SecurityException | LinkageError | IllegalArgumentException | IllegalAccessException
+                | InstantiationException | InvocationTargetException | NoSuchMethodException e) {
+            // nothing
+        }
 
         return null;
     }
