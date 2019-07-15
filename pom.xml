@@ -104,15 +104,9 @@
 	</build>
 	<dependencies>
 		<dependency>
-			<groupId>xerces</groupId>
+			<groupId>org.codelibs.xerces</groupId>
 			<artifactId>xercesImpl</artifactId>
-			<version>2.12.0</version>
-			<exclusions>
-				<exclusion>
-					<groupId>xml-apis</groupId>
-					<artifactId>xml-apis</artifactId>
-				</exclusion>
-			</exclusions>
+			<version>2.12.0-sp1</version>
 		</dependency>
 		<dependency>
 			<groupId>junit</groupId>
