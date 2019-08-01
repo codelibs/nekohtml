@@ -23,9 +23,9 @@
 		<url>https://www.codelibs.org/</url>
 	</organization>
 	<scm>
-		<connection>scm:git:git@github.com:codelibs/corelib.git</connection>
-		<url>scm:git:git@github.com:codelibs/corelib.git</url>
-		<developerConnection>scm:git:git@github.com:codelibs/corelib.git</developerConnection>
+		<connection>scm:git:git@github.com:codelibs/nekohtml.git</connection>
+		<url>scm:git:git@github.com:codelibs/nekohtml.git</url>
+		<developerConnection>scm:git:git@github.com:codelibs/nekohtml.git</developerConnection>
 	</scm>
 	<parent>
 		<groupId>org.sonatype.oss</groupId>
