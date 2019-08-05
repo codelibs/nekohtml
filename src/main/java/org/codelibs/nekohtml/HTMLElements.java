@@ -44,10 +44,13 @@ public class HTMLElements {
     public static final short APPLET = ADDRESS + 1;
     public static final short AREA = APPLET + 1;
     public static final short ARTICLE = AREA + 1;
-    public static final short B = ARTICLE + 1;
+    public static final short ASIDE = ARTICLE + 1;
+    public static final short AUDIO = ASIDE + 1;
+    public static final short B = AUDIO + 1;
     public static final short BASE = B + 1;
     public static final short BASEFONT = BASE + 1;
-    public static final short BDO = BASEFONT + 1;
+    public static final short BDI = BASEFONT + 1;
+    public static final short BDO = BDI + 1;
     public static final short BGSOUND = BDO + 1;
     public static final short BIG = BGSOUND + 1;
     public static final short BLINK = BIG + 1;
@@ -55,16 +58,21 @@ public class HTMLElements {
     public static final short BODY = BLOCKQUOTE + 1;
     public static final short BR = BODY + 1;
     public static final short BUTTON = BR + 1;
-    public static final short CAPTION = BUTTON + 1;
+    public static final short CANVAS = BUTTON + 1;
+    public static final short CAPTION = CANVAS + 1;
     public static final short CENTER = CAPTION + 1;
     public static final short CITE = CENTER + 1;
     public static final short CODE = CITE + 1;
     public static final short COL = CODE + 1;
     public static final short COLGROUP = COL + 1;
     public static final short COMMENT = COLGROUP + 1;
-    public static final short DEL = COMMENT + 1;
-    public static final short DFN = DEL + 1;
-    public static final short DIR = DFN + 1;
+    public static final short DATA = COMMENT + 1;
+    public static final short DATALIST = DATA + 1;
+    public static final short DEL = DATALIST + 1;
+    public static final short DETAILS = DEL + 1;
+    public static final short DFN = DETAILS + 1;
+    public static final short DIALOG = DFN + 1;
+    public static final short DIR = DIALOG + 1;
     public static final short DIV = DIR + 1;
     public static final short DD = DIV + 1;
     public static final short DL = DD + 1;
@@ -72,8 +80,11 @@ public class HTMLElements {
     public static final short EM = DT + 1;
     public static final short EMBED = EM + 1;
     public static final short FIELDSET = EMBED + 1;
-    public static final short FONT = FIELDSET + 1;
-    public static final short FORM = FONT + 1;
+    public static final short FIGCAPTION = FIELDSET + 1;
+    public static final short FIGURE = FIGCAPTION + 1;
+    public static final short FONT = FIGURE + 1;
+    public static final short FOOTER = FONT + 1;
+    public static final short FORM = FOOTER + 1;
     public static final short FRAME = FORM + 1;
     public static final short FRAMESET = FRAME + 1;
     public static final short H1 = FRAMESET + 1;
@@ -83,7 +94,8 @@ public class HTMLElements {
     public static final short H5 = H4 + 1;
     public static final short H6 = H5 + 1;
     public static final short HEAD = H6 + 1;
-    public static final short HR = HEAD + 1;
+    public static final short HEADER = HEAD + 1;
+    public static final short HR = HEADER + 1;
     public static final short HTML = HR + 1;
     public static final short I = HTML + 1;
     public static final short IFRAME = I + 1;
@@ -100,12 +112,16 @@ public class HTMLElements {
     public static final short LI = LEGEND + 1;
     public static final short LINK = LI + 1;
     public static final short LISTING = LINK + 1;
-    public static final short MAP = LISTING + 1;
-    public static final short MARQUEE = MAP + 1;
+    public static final short MAIN = LISTING + 1;
+    public static final short MAP = MAIN + 1;
+    public static final short MARK = MAP + 1;
+    public static final short MARQUEE = MARK + 1;
     public static final short MENU = MARQUEE + 1;
     public static final short META = MENU + 1;
-    public static final short MULTICOL = META + 1;
-    public static final short NEXTID = MULTICOL + 1;
+    public static final short METER = META + 1;
+    public static final short MULTICOL = METER + 1;
+    public static final short NAV = MULTICOL + 1;
+    public static final short NEXTID = NAV + 1;
     public static final short NOBR = NEXTID + 1;
     public static final short NOEMBED = NOBR + 1;
     public static final short NOFRAMES = NOEMBED + 1;
@@ -115,11 +131,14 @@ public class HTMLElements {
     public static final short OL = OBJECT + 1;
     public static final short OPTION = OL + 1;
     public static final short OPTGROUP = OPTION + 1;
-    public static final short P = OPTGROUP + 1;
+    public static final short OUTPUT = OPTGROUP + 1;
+    public static final short P = OUTPUT + 1;
     public static final short PARAM = P + 1;
-    public static final short PLAINTEXT = PARAM + 1;
+    public static final short PICTURE = PARAM + 1;
+    public static final short PLAINTEXT = PICTURE + 1;
     public static final short PRE = PLAINTEXT + 1;
-    public static final short Q = PRE + 1;
+    public static final short PROGRESS = PRE + 1;
+    public static final short Q = PROGRESS + 1;
     public static final short RB = Q + 1;
     public static final short RBC = RB + 1;
     public static final short RP = RBC + 1;
@@ -133,27 +152,33 @@ public class HTMLElements {
     public static final short SELECT = SECTION + 1;
     public static final short SMALL = SELECT + 1;
     public static final short SOUND = SMALL + 1;
-    public static final short SPACER = SOUND + 1;
+    public static final short SOURCE = SOUND + 1;
+    public static final short SPACER = SOURCE + 1;
     public static final short SPAN = SPACER + 1;
     public static final short STRIKE = SPAN + 1;
     public static final short STRONG = STRIKE + 1;
     public static final short STYLE = STRONG + 1;
     public static final short SUB = STYLE + 1;
-    public static final short SUP = SUB + 1;
+    public static final short SUMMARY = SUB + 1;
+    public static final short SUP = SUMMARY + 1;
     public static final short TABLE = SUP + 1;
-    public static final short TBODY = TABLE + 1;
+    public static final short TEMPLATE = TABLE + 1;
+    public static final short TBODY = TEMPLATE + 1;
     public static final short TD = TBODY + 1;
     public static final short TEXTAREA = TD + 1;
     public static final short TFOOT = TEXTAREA + 1;
     public static final short TH = TFOOT + 1;
     public static final short THEAD = TH + 1;
-    public static final short TITLE = THEAD + 1;
+    public static final short TIME = THEAD + 1;
+    public static final short TITLE = TIME + 1;
     public static final short TR = TITLE + 1;
-    public static final short TT = TR + 1;
+    public static final short TRACK = TR + 1;
+    public static final short TT = TRACK + 1;
     public static final short U = TT + 1;
     public static final short UL = U + 1;
     public static final short VAR = UL + 1;
-    public static final short WBR = VAR + 1;
+    public static final short VIDEO = VAR + 1;
+    public static final short WBR = VIDEO + 1;
     public static final short XML = WBR + 1;
     public static final short XMP = XML + 1;
     public static final short UNKNOWN = XMP + 1;
@@ -206,7 +231,11 @@ public class HTMLElements {
                 // AREA - O EMPTY
                 new Element(AREA, "AREA", Element.EMPTY, MAP, null),
                 // ARTICLE
-                new Element(ARTICLE, "ARTICLE", Element.BLOCK, BODY, new short[] { P }), };
+                new Element(ARTICLE, "ARTICLE", Element.CONTAINER, BODY, new short[] { P }),
+                // ASIDE
+                new Element(ASIDE, "ASIDE", Element.BLOCK, BODY, new short[] { P }),
+                // AUDIO
+                new Element(AUDIO, "AUDIO", Element.EMPTY, BODY, null), };
         ELEMENTS_ARRAY['B' - 'A'] = new Element[] {
                 // B - - (%inline;)*
                 new Element(B, "B", Element.INLINE, BODY, null),
@@ -216,6 +245,8 @@ public class HTMLElements {
                 new Element(BASEFONT, "BASEFONT", Element.EMPTY, HEAD, null),
                 // BDO - - (%inline;)*
                 new Element(BDO, "BDO", Element.INLINE, BODY, null),
+                // BDI
+                new Element(BDI, "BDI", Element.INLINE, BODY, null),
                 // BGSOUND
                 new Element(BGSOUND, "BGSOUND", Element.EMPTY, HEAD, null),
                 // BIG - - (%inline;)*
@@ -231,6 +262,8 @@ public class HTMLElements {
                 // BUTTON - - (%flow;)* -(A|%formctrl;|FORM|FIELDSET)
                 new Element(BUTTON, "BUTTON", Element.INLINE | Element.BLOCK, BODY, new short[] { BUTTON }), };
         ELEMENTS_ARRAY['C' - 'A'] = new Element[] {
+                // CANVAS
+                new Element(CANVAS, "CANVAS", Element.EMPTY, BODY, null),
                 // CAPTION - - (%inline;)*
                 new Element(CAPTION, "CAPTION", Element.INLINE, TABLE, null),
                 // CENTER,
@@ -246,10 +279,20 @@ public class HTMLElements {
                 // COMMENT
                 new Element(COMMENT, "COMMENT", Element.SPECIAL, HTML, null), };
         ELEMENTS_ARRAY['D' - 'A'] = new Element[] {
+                // DATA
+                new Element(DATA, "DATA", Element.INLINE, BODY, null),
+                // DATALIST
+                new Element(DATALIST, "DATALIST", Element.CONTAINER, BODY, null),
                 // DEL - - (%flow;)*
                 new Element(DEL, "DEL", Element.INLINE, BODY, null),
+                // DETAILS
+                new Element(DETAILS, "DETAILS", Element.BLOCK, BODY, new short[] { P }),
                 // DFN - - (%inline;)*
                 new Element(DFN, "DFN", Element.INLINE, BODY, null),
+                // DIALOG
+                new Element(DIALOG, "DIALOG", Element.BLOCK, BODY, new short[] { P }),
+                // DL - - (DT|DD)+
+                new Element(DL, "DL", Element.BLOCK, BODY, new short[] { P }),
                 // DIR
                 new Element(DIR, "DIR", Element.CONTAINER, BODY, new short[] { P }),
                 // DIV - - (%flow;)*
@@ -268,8 +311,14 @@ public class HTMLElements {
         ELEMENTS_ARRAY['F' - 'A'] = new Element[] {
                 // FIELDSET - - (#PCDATA,LEGEND,(%flow;)*)
                 new Element(FIELDSET, "FIELDSET", Element.CONTAINER, BODY, new short[] { P }),
+                // FIGCAPTION
+                new Element(FIGCAPTION, "FIGCAPTION", Element.BLOCK, BODY, new short[] { P }),
+                // FIGURE
+                new Element(FIGURE, "FIGURE", Element.BLOCK, BODY, new short[] { P }),
                 // FONT
                 new Element(FONT, "FONT", Element.CONTAINER, BODY, null),
+                // FOOTER
+                new Element(FOOTER, "FOOTER", Element.CONTAINER, BODY, new short[] { P }),
                 // FORM - - (%block;|SCRIPT)+ -(FORM)
                 new Element(FORM, "FORM", Element.CONTAINER, new short[] { BODY, TD, DIV }, new short[] { BUTTON, P }),
                 // FRAME - O EMPTY
@@ -287,6 +336,8 @@ public class HTMLElements {
                         new Element(H6, "H6", Element.BLOCK, new short[] { BODY, A }, new short[] { H1, H2, H3, H4, H5, H6, P }),
                         // HEAD O O (%head.content;) +(%head.misc;)
                         new Element(HEAD, "HEAD", 0, HTML, null),
+                        // HEADER
+                        new Element(HEADER, "HEADER", Element.CONTAINER, BODY, new short[] { P }),
                         // HR - O EMPTY
                         new Element(HR, "HR", Element.EMPTY, BODY, new short[] { P }),
                         // HTML O O (%html.content;)
@@ -325,17 +376,25 @@ public class HTMLElements {
                 // LISTING
                 new Element(LISTING, "LISTING", Element.BLOCK, BODY, new short[] { P }), };
         ELEMENTS_ARRAY['M' - 'A'] = new Element[] {
+                // MAIN
+                new Element(MAIN, "MAIN", Element.CONTAINER, BODY, null),
                 // MAP - - ((%block;) | AREA)+
                 new Element(MAP, "MAP", Element.INLINE, BODY, null),
+                // MARK
+                new Element(MARK, "MARK", Element.INLINE, BODY, null),
                 // MARQUEE
                 new Element(MARQUEE, "MARQUEE", Element.CONTAINER, BODY, null),
                 // MENU
                 new Element(MENU, "MENU", Element.CONTAINER, BODY, new short[] { P }),
                 // META - O EMPTY
                 new Element(META, "META", Element.EMPTY, HEAD, new short[] { STYLE, TITLE }),
+                // METER
+                new Element(METER, "METER", Element.EMPTY, BODY, null),
                 // MULTICOL
                 new Element(MULTICOL, "MULTICOL", Element.CONTAINER, BODY, null), };
         ELEMENTS_ARRAY['N' - 'A'] = new Element[] {
+                // NAV
+                new Element(NAV, "NAV", Element.CONTAINER, BODY, null),
                 // NEXTID
                 new Element(NEXTID, "NEXTID", Element.EMPTY, BODY, null),
                 // NOBR
@@ -354,18 +413,24 @@ public class HTMLElements {
                 // OL - - (LI)+
                 new Element(OL, "OL", Element.BLOCK, BODY, new short[] { P }),
                 // OPTGROUP - - (OPTION)+
-                new Element(OPTGROUP, "OPTGROUP", 0, SELECT, new short[] { OPTION }),
+                new Element(OPTGROUP, "OPTGROUP", 0, new short[] { DATALIST, SELECT }, new short[] { OPTION }),
                 // OPTION - O (#PCDATA)
-                new Element(OPTION, "OPTION", 0, SELECT, new short[] { OPTION }), };
+                new Element(OPTION, "OPTION", 0, new short[] { DATALIST, SELECT }, new short[] { OPTGROUP, OPTION }),
+                // OUTPUT
+                new Element(OUTPUT, "OUTPUT", Element.EMPTY, BODY, null), };
         ELEMENTS_ARRAY['P' - 'A'] = new Element[] {
                 // P - O (%inline;)*
                 new Element(P, "P", Element.CONTAINER, BODY, new short[] { P }),
                 // PARAM - O EMPTY
                 new Element(PARAM, "PARAM", Element.EMPTY, new short[] { OBJECT, APPLET }, null),
+                // PICTURE
+                new Element(PICTURE, "PICTURE", Element.EMPTY, BODY, null),
                 // PLAINTEXT
                 new Element(PLAINTEXT, "PLAINTEXT", Element.SPECIAL, BODY, null),
                 // PRE - - (%inline;)* -(%pre.exclusion;)
-                new Element(PRE, "PRE", Element.BLOCK, BODY, new short[] { P }), };
+                new Element(PRE, "PRE", Element.BLOCK, BODY, new short[] { P }),
+                // PROGRESS
+                new Element(PROGRESS, "PROGRESS", Element.EMPTY, BODY, null), };
         ELEMENTS_ARRAY['Q' - 'A'] = new Element[] {
         // Q - - (%inline;)*
         new Element(Q, "Q", Element.INLINE, BODY, null), };
@@ -389,7 +454,7 @@ public class HTMLElements {
                 new Element(SAMP, "SAMP", Element.INLINE, BODY, null),
                 // SCRIPT - - %Script;
                 new Element(SCRIPT, "SCRIPT", Element.SPECIAL, new short[] { HEAD, BODY }, null),
-
+                // SECTION
                 new Element(SECTION, "SECTION", Element.CONTAINER, BODY, new short[] { SELECT }),
                 // SELECT - - (OPTGROUP|OPTION)+
                 new Element(SELECT, "SELECT", Element.CONTAINER, BODY, new short[] { SELECT }),
@@ -397,6 +462,8 @@ public class HTMLElements {
                 new Element(SMALL, "SMALL", Element.INLINE, BODY, null),
                 // SOUND
                 new Element(SOUND, "SOUND", Element.EMPTY, HEAD, null),
+                // SOURCE
+                new Element(SOURCE, "SOURCE", Element.EMPTY, BODY, null),
                 // SPACER
                 new Element(SPACER, "SPACER", Element.EMPTY, BODY, null),
                 // SPAN - - (%inline;)*
@@ -410,11 +477,15 @@ public class HTMLElements {
                 // SUB - - (%inline;)*
                 new Element(SUB, "SUB", Element.INLINE, BODY, null),
                 // SUP - - (%inline;)*
+                new Element(SUMMARY, "SUMMARY", Element.INLINE, BODY, null),
+                // SUP - - (%inline;)*
                 new Element(SUP, "SUP", Element.INLINE, BODY, null), };
         ELEMENTS_ARRAY['T' - 'A'] =
                 new Element[] {
                         // TABLE - - (CAPTION?, (COL*|COLGROUP*), THEAD?, TFOOT?, TBODY+)
                         new Element(TABLE, "TABLE", Element.BLOCK | Element.CONTAINER, BODY, null),
+                        // TEMPLATE
+                        new Element(TEMPLATE, "TEMPLATE", Element.SPECIAL, new short[] { HEAD, BODY }, null),
                         // TBODY O O (TR)+
                         new Element(TBODY, "TBODY", 0, TABLE, new short[] { THEAD, TBODY, TFOOT, TD, TH, TR, COLGROUP }),
                         // TD - O (%flow;)*
@@ -427,11 +498,15 @@ public class HTMLElements {
                         new Element(TH, "TH", Element.CONTAINER, TR, TABLE, new short[] { TD, TH }),
                         // THEAD - O (TR)+
                         new Element(THEAD, "THEAD", 0, TABLE, new short[] { THEAD, TBODY, TFOOT, TD, TH, TR, COLGROUP }),
+                        // TIME
+                        new Element(TIME, "TIME", Element.INLINE, BODY, null),
                         // TITLE - - (#PCDATA) -(%head.misc;)
                         new Element(TITLE, "TITLE", Element.SPECIAL, new short[] { HEAD, BODY }, null),
                         // TR - O (TH|TD)+
                         new Element(TR, "TR", Element.BLOCK, new short[] { TBODY, THEAD, TFOOT }, TABLE, new short[] { TD, TH, TR,
                                 COLGROUP, DIV }),
+                        // TRACK
+                        new Element(TRACK, "TRACK", Element.EMPTY, BODY, null),
                         // TT - - (%inline;)*
                         new Element(TT, "TT", Element.INLINE, BODY, null), };
         ELEMENTS_ARRAY['U' - 'A'] = new Element[] {
@@ -440,8 +515,10 @@ public class HTMLElements {
                 // UL - - (LI)+
                 new Element(UL, "UL", Element.CONTAINER, BODY, new short[] { P }), };
         ELEMENTS_ARRAY['V' - 'A'] = new Element[] {
-        // VAR - - (%inline;)*
-        new Element(VAR, "VAR", Element.INLINE, BODY, null), };
+                // VAR - - (%inline;)*
+                new Element(VAR, "VAR", Element.INLINE, BODY, null),
+                // VIDEO
+                new Element(VIDEO, "VIDEO", Element.EMPTY, BODY, null), };
         ELEMENTS_ARRAY['W' - 'A'] = new Element[] {
         // WBR
         new Element(WBR, "WBR", Element.EMPTY, BODY, null), };
