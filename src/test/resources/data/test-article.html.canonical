@@ -1,0 +1,17 @@
+(HTML
+(HEAD
+)HEAD
+(BODY
+(ARTICLE
+"\n    
+(H1
+"Article
+)H1
+"\n    
+(P
+"The article tag specifies independent, self-contained content.
+)P
+"\n
+)ARTICLE
+)BODY
+)HTML
