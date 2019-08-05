@@ -43,7 +43,8 @@ public class HTMLElements {
     public static final short ADDRESS = ACRONYM + 1;
     public static final short APPLET = ADDRESS + 1;
     public static final short AREA = APPLET + 1;
-    public static final short B = AREA + 1;
+    public static final short ARTICLE = AREA + 1;
+    public static final short B = ARTICLE + 1;
     public static final short BASE = B + 1;
     public static final short BASEFONT = BASE + 1;
     public static final short BDO = BASEFONT + 1;
@@ -203,7 +204,9 @@ public class HTMLElements {
                 // APPLET
                 new Element(APPLET, "APPLET", Element.CONTAINER, BODY, null),
                 // AREA - O EMPTY
-                new Element(AREA, "AREA", Element.EMPTY, MAP, null), };
+                new Element(AREA, "AREA", Element.EMPTY, MAP, null),
+                // ARTICLE
+                new Element(ARTICLE, "ARTICLE", Element.BLOCK, BODY, new short[] { P }), };
         ELEMENTS_ARRAY['B' - 'A'] = new Element[] {
                 // B - - (%inline;)*
                 new Element(B, "B", Element.INLINE, BODY, null),
