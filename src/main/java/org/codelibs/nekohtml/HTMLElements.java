@@ -763,6 +763,6 @@ public class HTMLElements {
             data[size++] = element;
         } // addElement(Element)
 
-    } // class Element
+    } // class ElementList
 
 } // class HTMLElements
