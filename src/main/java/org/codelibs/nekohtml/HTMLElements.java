@@ -291,8 +291,6 @@ public class HTMLElements {
                 new Element(DFN, "DFN", Element.INLINE, BODY, null),
                 // DIALOG
                 new Element(DIALOG, "DIALOG", Element.BLOCK, BODY, new short[] { P }),
-                // DL - - (DT|DD)+
-                new Element(DL, "DL", Element.BLOCK, BODY, new short[] { P }),
                 // DIR
                 new Element(DIR, "DIR", Element.CONTAINER, BODY, new short[] { P }),
                 // DIV - - (%flow;)*
@@ -413,9 +411,9 @@ public class HTMLElements {
                 // OL - - (LI)+
                 new Element(OL, "OL", Element.BLOCK, BODY, new short[] { P }),
                 // OPTGROUP - - (OPTION)+
-                new Element(OPTGROUP, "OPTGROUP", 0, new short[] { DATALIST, SELECT }, new short[] { OPTION }),
+                new Element(OPTGROUP, "OPTGROUP", 0, new short[] { SELECT }, new short[] { OPTION }),
                 // OPTION - O (#PCDATA)
-                new Element(OPTION, "OPTION", 0, new short[] { DATALIST, SELECT }, new short[] { OPTGROUP, OPTION }),
+                new Element(OPTION, "OPTION", 0, new short[] { SELECT }, new short[] { OPTGROUP, OPTION }),
                 // OUTPUT
                 new Element(OUTPUT, "OUTPUT", Element.EMPTY, BODY, null), };
         ELEMENTS_ARRAY['P' - 'A'] = new Element[] {
