@@ -1,0 +1,80 @@
+(HTML
+(HEAD
+)HEAD
+(BODY
+(FORM
+Aaction courseselector.dll
+Amethod get
+"\n
+(P
+"Which course would you like to watch today?\n
+)P
+(P
+(LABEL
+"Course:\n
+(SELECT
+Aname c
+"\n
+(OPTGROUP
+Alabel 8.01 Physics I: Classical Mechanics
+"\n
+)OPTGROUP
+(OPTION
+Avalue 8.01.1
+"Lecture 01: Powers of Ten\n
+)OPTION
+(OPTION
+Avalue 8.01.2
+"Lecture 02: 1D Kinematics\n
+)OPTION
+(OPTION
+Avalue 8.01.3
+"Lecture 03: Vectors\n
+)OPTION
+(OPTGROUP
+Alabel 8.02 Electricity and Magnestism
+"\n
+)OPTGROUP
+(OPTION
+Avalue 8.02.1
+"Lecture 01: What holds our world together?\n
+)OPTION
+(OPTION
+Avalue 8.02.2
+"Lecture 02: Electric Field\n
+)OPTION
+(OPTION
+Avalue 8.02.3
+"Lecture 03: Electric Flux\n
+)OPTION
+(OPTGROUP
+Alabel 8.03 Physics III: Vibrations and Waves
+"\n
+)OPTGROUP
+(OPTION
+Avalue 8.03.1
+"Lecture 01: Periodic Phenomenon\n
+)OPTION
+(OPTION
+Avalue 8.03.2
+"Lecture 02: Beats\n
+)OPTION
+(OPTION
+Avalue 8.03.3
+"Lecture 03: Forced Oscillations with Damping\n
+)OPTION
+)SELECT
+"\n
+)LABEL
+"\n
+)P
+(P
+(INPUT
+Atype submit
+Avalue Play
+)INPUT
+"\n
+)P
+)FORM
+)BODY
+)HTML

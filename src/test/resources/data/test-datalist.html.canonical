@@ -1,0 +1,38 @@
+(HTML
+(HEAD
+)HEAD
+(BODY
+(LABEL
+"\nSex:\n
+(INPUT
+Alist sexes
+Aname sex
+)INPUT
+"\n
+)LABEL
+"\n
+(DATALIST
+Aid sexes
+"\n
+(LABEL
+"\nor select from the list:\n
+(SELECT
+Aname sex
+"\n
+(OPTION
+Avalue none
+"\n
+)OPTION
+(OPTION
+"Female\n
+)OPTION
+(OPTION
+"Male\n
+)OPTION
+)SELECT
+"\n
+)LABEL
+"\n
+)DATALIST
+)BODY
+)HTML
