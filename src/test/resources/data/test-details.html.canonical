@@ -1,0 +1,79 @@
+(HTML
+(HEAD
+)HEAD
+(BODY
+(SECTION
+Aclass progress window
+"\n    
+(H1
+"Copying "Really Achieving Your Childhood Dreams"
+)H1
+"\n    
+(DETAILS
+"\n        
+(SUMMARY
+"Copying... 
+(PROGRESS
+Amax 375505392
+Avalue 97543282
+)PROGRESS
+" 25%
+)SUMMARY
+"\n        
+(DL
+"\n            
+(DT
+"Transfer rate:
+)DT
+" 
+(DD
+"452KB/s
+)DD
+"\n            
+(DT
+"Local filename:
+)DT
+" 
+(DD
+"/home/rpausch/raycd.m4v
+)DD
+"\n            
+(DT
+"Remote filename:
+)DT
+" 
+(DD
+"/var/www/lectures/raycd.m4v
+)DD
+"\n            
+(DT
+"Duration:
+)DT
+" 
+(DD
+"01:16:27
+)DD
+"\n            
+(DT
+"Color profile:
+)DT
+" 
+(DD
+"SD (6-1-6)
+)DD
+"\n            
+(DT
+"Dimensions:
+)DT
+" 
+(DD
+"320Ã—240
+)DD
+"\n        
+)DL
+"\n    
+)DETAILS
+"\n
+)SECTION
+)BODY
+)HTML

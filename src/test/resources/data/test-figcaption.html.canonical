@@ -1,0 +1,19 @@
+(HTML
+(HEAD
+)HEAD
+(BODY
+(FIGURE
+"\n    
+(IMG
+Aalt example.jpg
+Asrc example.jpg
+Astyle width:100%
+)IMG
+"\n    
+(FIGCAPTION
+"Fig.1
+)FIGCAPTION
+"\n
+)FIGURE
+)BODY
+)HTML
