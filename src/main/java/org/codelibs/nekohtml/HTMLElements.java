@@ -243,10 +243,10 @@ public class HTMLElements {
                 new Element(BASE, "BASE", Element.EMPTY, HEAD, null),
                 // BASEFONT
                 new Element(BASEFONT, "BASEFONT", Element.EMPTY, HEAD, null),
-                // BDO - - (%inline;)*
-                new Element(BDO, "BDO", Element.INLINE, BODY, null),
                 // BDI
                 new Element(BDI, "BDI", Element.INLINE, BODY, null),
+                // BDO - - (%inline;)*
+                new Element(BDO, "BDO", Element.INLINE, BODY, null),
                 // BGSOUND
                 new Element(BGSOUND, "BGSOUND", Element.EMPTY, HEAD, null),
                 // BIG - - (%inline;)*
