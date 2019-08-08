@@ -475,7 +475,7 @@ public class HTMLElements {
                 // SUB - - (%inline;)*
                 new Element(SUB, "SUB", Element.INLINE, BODY, null),
                 // SUP - - (%inline;)*
-                new Element(SUMMARY, "SUMMARY", Element.INLINE, BODY, null),
+                new Element(SUMMARY, "SUMMARY", Element.INLINE, DETAILS, null),
                 // SUP - - (%inline;)*
                 new Element(SUP, "SUP", Element.INLINE, BODY, null), };
         ELEMENTS_ARRAY['T' - 'A'] =
