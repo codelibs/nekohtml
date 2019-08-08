@@ -474,7 +474,7 @@ public class HTMLElements {
                 new Element(STYLE, "STYLE", Element.SPECIAL, new short[] { HEAD, BODY }, new short[] { STYLE, TITLE, META }),
                 // SUB - - (%inline;)*
                 new Element(SUB, "SUB", Element.INLINE, BODY, null),
-                // SUP - - (%inline;)*
+                // SUMMARY
                 new Element(SUMMARY, "SUMMARY", Element.INLINE, DETAILS, null),
                 // SUP - - (%inline;)*
                 new Element(SUP, "SUP", Element.INLINE, BODY, null), };
