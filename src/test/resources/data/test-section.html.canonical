@@ -1,0 +1,49 @@
+(HTML
+(HEAD
+)HEAD
+(BODY
+(ARTICLE
+"\n
+(HGROUP
+"\n
+(H1
+"Apples
+)H1
+"\n
+(H2
+"Tasty, delicious fruit!
+)H2
+"\n
+)HGROUP
+"\n
+(P
+"The apple is the pomaceous fruit of the apple tree.
+)P
+"\n
+(SECTION
+"\n
+(H1
+"Red Delicious
+)H1
+"\n
+(P
+"These bright red apples are the most common found in many supermarkets.
+)P
+"\n
+)SECTION
+"\n
+(SECTION
+"\n
+(H1
+"Granny Smith
+)H1
+"\n
+(P
+"These juicy, green apples make a great filling for apple pies.
+)P
+"\n
+)SECTION
+"\n
+)ARTICLE
+)BODY
+)HTML

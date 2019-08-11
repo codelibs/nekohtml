@@ -1,0 +1,33 @@
+(HTML
+(HEAD
+)HEAD
+(BODY
+(UL
+"\n    
+(LI
+"User 
+(BDI
+"A
+)BDI
+": 60 points
+)LI
+"\n    
+(LI
+"User 
+(BDI
+"B
+)BDI
+": 80 points
+)LI
+"\n    
+(LI
+"User 
+(BDI
+"C
+)BDI
+": 90 points
+)LI
+"\n
+)UL
+)BODY
+)HTML

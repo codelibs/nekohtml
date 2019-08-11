@@ -1,0 +1,17 @@
+(HTML
+(HEAD
+)HEAD
+(BODY
+(DETAILS
+"\n
+(SUMMARY
+"Summary
+)SUMMARY
+"\n
+(P
+"the summary element example.
+)P
+"\n
+)DETAILS
+)BODY
+)HTML

@@ -1,0 +1,37 @@
+(HTML
+(HEAD
+)HEAD
+(BODY
+(P
+"The grapefruit pie had a radius of 12cm and a height of 2cm.
+)P
+"\n
+(DL
+"\n    
+(DT
+"Radius: 
+)DT
+(DD
+" 
+(METER
+Amax 20
+Amin 0
+Avalue 12
+)METER
+"12cm\n    
+)DD
+(DT
+"Height: 
+)DT
+(DD
+" 
+(METER
+Amax 10
+Amin 0
+Avalue 2
+)METER
+"2cm\n
+)DD
+)DL
+)BODY
+)HTML

@@ -1,0 +1,53 @@
+(HTML
+(HEAD
+)HEAD
+(BODY
+(MAIN
+"\n    
+(H1
+"Web Browsers
+)H1
+"\n    
+(P
+"Google Chrome, Firefox, and Internet Explorer are the most used browsers today.
+)P
+"\n    
+(ARTICLE
+"\n        
+(H1
+"Google Chrome
+)H1
+"\n        
+(P
+"Google Chrome is a free, open-source web browser developed by Google, released in 2008.
+)P
+"\n    
+)ARTICLE
+"\n    
+(ARTICLE
+"\n        
+(H1
+"Internet Explorer
+)H1
+"\n        
+(P
+"Internet Explorer is a free web browser from Microsoft, released in 1995.
+)P
+"\n    
+)ARTICLE
+"\n    
+(ARTICLE
+"\n        
+(H1
+"Mozilla Firefox
+)H1
+"\n        
+(P
+"Firefox is a free, open-source web browser from Mozilla, released in 2004.
+)P
+"\n    
+)ARTICLE
+"\n
+)MAIN
+)BODY
+)HTML
