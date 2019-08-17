@@ -6,7 +6,7 @@
 	<packaging>jar</packaging>
 	<name>Neko HTML</name>
 	<description>An HTML parser and tag balancer.</description>
-	<version>2.0.1-SNAPSHOT</version>
+	<version>2.0.1</version>
 	<url>https://github.com/codelibs/nekohtml</url>
 	<inceptionYear>2012</inceptionYear>
 	<licenses>
