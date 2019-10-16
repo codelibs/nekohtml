@@ -1,4 +1,4 @@
-NekoHTML
+NekoHTML [![Build Status](https://travis-ci.org/codelibs/fess.svg?branch=master)](https://travis-ci.org/codelibs/nekohtml) 
 ========
 
 An HTML parser and tag balancer.
