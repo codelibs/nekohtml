@@ -15,5 +15,5 @@ Put the following block into pom.xml if using Maven:
     <dependency>
         <groupId>org.codelibs</groupId>
         <artifactId>nekohtml</artifactId>
-        <version>2.0.0</version>
+        <version>2.0.2</version>
     </dependency>
