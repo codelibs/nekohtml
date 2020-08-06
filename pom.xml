@@ -98,6 +98,43 @@
 					<configFile>${basedir}/src/config/eclipse/formatter/java.xml</configFile>
 				</configuration>
 			</plugin>
+			<plugin>
+				<artifactId>maven-shade-plugin</artifactId>
+				<version>3.2.4</version>
+				<executions>
+					<execution>
+						<phase>package</phase>
+						<goals>
+							<goal>shade</goal>
+						</goals>
+						<configuration>
+							<filters>
+								<filter>
+									<artifact>org.codelibs.xerces:xercesImpl</artifact>
+									<includes>
+										<include>org/apache/**</include>
+									</includes>
+									<excludes>
+										<exclude>META-INF/**</exclude>
+									</excludes>
+								</filter>
+							</filters>
+							<relocations>
+								<relocation>
+									<pattern>org.apache</pattern>
+									<shadedPattern>org.codelibs.xerces</shadedPattern>
+									<includes>
+										<include>org.apache.html.**</include>
+										<include>org.apache.wml.**</include>
+										<include>org.apache.xerces.**</include>
+										<include>org.apache.xml.**</include>
+									</includes>
+								</relocation>
+							</relocations>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
 		</plugins>
 	</build>
 	<dependencies>
