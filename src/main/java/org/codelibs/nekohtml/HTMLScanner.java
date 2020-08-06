@@ -3389,7 +3389,7 @@ public class HTMLScanner implements XMLDocumentScanner, XMLLocator, HTMLComponen
                 System.out.println("(read");
             }
             if (fPushbackOffset < fPushbackLength) {
-                return fByteBuffer[fPushbackOffset++];
+                return fByteBuffer[fPushbackOffset++] & 0xFF;
             }
             if (fCleared) {
                 return in.read();
