@@ -49,9 +49,9 @@ extends org.apache.xerces.parsers.DOMParser {
         /*** extending DOMParser ***/
         try {
             setProperty("http://apache.org/xml/properties/dom/document-class-name", "org.apache.html.dom.HTMLDocumentImpl");
-        } catch (org.xml.sax.SAXNotRecognizedException e) {
+        } catch (final org.xml.sax.SAXNotRecognizedException e) {
             throw new RuntimeException("http://apache.org/xml/properties/dom/document-class-name property not recognized");
-        } catch (org.xml.sax.SAXNotSupportedException e) {
+        } catch (final org.xml.sax.SAXNotSupportedException e) {
             throw new RuntimeException("http://apache.org/xml/properties/dom/document-class-name property not supported");
         }
         /*** extending AbstractDOMParser ***

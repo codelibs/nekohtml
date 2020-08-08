@@ -114,13 +114,13 @@ class SecuritySupport {
     }
 
     boolean getFileExists(final File f) {
-        final PrivilegedAction<Boolean> action = () -> Boolean.valueOf(f.exists());
-        return AccessController.doPrivileged(action).booleanValue();
+        final PrivilegedAction<Boolean> action = () -> f.exists();
+        return AccessController.doPrivileged(action);
     }
 
     long getLastModified(final File f) {
-        final PrivilegedAction<Long> action = () -> Long.valueOf(f.lastModified());
-        return AccessController.doPrivileged(action).longValue();
+        final PrivilegedAction<Long> action = () -> f.lastModified();
+        return AccessController.doPrivileged(action);
     }
 
 }

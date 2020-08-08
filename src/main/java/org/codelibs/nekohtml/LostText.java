@@ -16,7 +16,6 @@
 package org.codelibs.nekohtml;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import org.apache.xerces.xni.Augmentations;
@@ -64,8 +63,7 @@ class LostText {
      * @param tagBalancer the tag balancer that will receive the events
      */
     public void refeed(final XMLDocumentHandler tagBalancer) {
-        for (final Iterator<Entry> iter = entries.iterator(); iter.hasNext();) {
-            final LostText.Entry entry = iter.next();
+        for (Entry entry : entries) {
             tagBalancer.characters(entry.text_, entry.augs_);
         }
         // not needed anymore once it has been used -> clear to free memory

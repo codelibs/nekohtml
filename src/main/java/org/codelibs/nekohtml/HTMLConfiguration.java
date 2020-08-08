@@ -193,7 +193,7 @@ public class HTMLConfiguration extends ParserConfigurationSettings implements XM
 
         // recognized features
         final String VALIDATION = "http://xml.org/sax/features/validation";
-        String[] recognizedFeatures = { AUGMENTATIONS, NAMESPACES, VALIDATION, REPORT_ERRORS, SIMPLE_ERROR_FORMAT, BALANCE_TAGS, };
+        final String[] recognizedFeatures = { AUGMENTATIONS, NAMESPACES, VALIDATION, REPORT_ERRORS, SIMPLE_ERROR_FORMAT, BALANCE_TAGS, };
         addRecognizedFeatures(recognizedFeatures);
         setFeature(AUGMENTATIONS, false);
         setFeature(NAMESPACES, true);
@@ -207,7 +207,7 @@ public class HTMLConfiguration extends ParserConfigurationSettings implements XM
         //
 
         // recognized properties
-        String[] recognizedProperties = { NAMES_ELEMS, NAMES_ATTRS, FILTERS, ERROR_REPORTER, };
+        final String[] recognizedProperties = { NAMES_ELEMS, NAMES_ATTRS, FILTERS, ERROR_REPORTER, };
         addRecognizedProperties(recognizedProperties);
         setProperty(NAMES_ELEMS, "upper");
         setProperty(NAMES_ATTRS, "lower");
@@ -461,7 +461,7 @@ public class HTMLConfiguration extends ParserConfigurationSettings implements XM
         for (int i = 0; i < featureCount; i++) {
             final Boolean state = component.getFeatureDefault(features[i]);
             if (state != null) {
-                setFeature(features[i], state.booleanValue());
+                setFeature(features[i], state);
             }
         }
 

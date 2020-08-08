@@ -2388,7 +2388,7 @@ public class HTMLScanner implements XMLDocumentScanner, XMLLocator, HTMLComponen
             String ename = scanName(true);
             final int length = ename != null ? ename.length() : 0;
             final int c = length > 0 ? ename.charAt(0) : -1;
-            if (length == 0 || !((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'))) {
+            if (length == 0 || (((c < 'a') || (c > 'z')) && ((c < 'A') || (c > 'Z')))) {
                 if (fReportErrors) {
                     fErrorReporter.reportError("HTML1009", null);
                 }

@@ -494,8 +494,7 @@ public class HTMLTagBalancer implements XMLDocumentFilter, HTMLComponent {
     private void consumeBufferedEndElements() {
         final List<ElementEntry> toConsume = new ArrayList<>(endElementsBuffer_);
         endElementsBuffer_.clear();
-        for (int i = 0; i < toConsume.size(); ++i) {
-            final ElementEntry entry = toConsume.get(i);
+        for (final ElementEntry entry : toConsume) {
             forcedEndElement_ = true;
             endElement(entry.name_, entry.augs_);
         }
