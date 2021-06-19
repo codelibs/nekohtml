@@ -1,4 +1,5 @@
-NekoHTML [![Build Status](https://travis-ci.org/codelibs/nekohtml.svg?branch=master)](https://travis-ci.org/codelibs/nekohtml) 
+NekoHTML
+[![Java CI with Maven](https://github.com/codelibs/nekohtml/actions/workflows/maven.yml/badge.svg)](https://github.com/codelibs/nekohtml/actions/workflows/maven.yml)
 ========
 
 An HTML parser and tag balancer.
