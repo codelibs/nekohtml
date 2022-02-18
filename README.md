@@ -7,7 +7,7 @@ This project is forked from [CyberNeko HTML Parser 1.9.22](http://nekohtml.sourc
 
 ## Version
 
-[Versions in Maven Repository](http://central.maven.org/maven2/org/codelibs/nekohtml/)
+[Versions in Maven Repository](https://repo1.maven.org/maven2/org/codelibs/nekohtml/)
 
 ## Using Maven
 
