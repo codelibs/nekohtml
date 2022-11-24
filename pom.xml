@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.codelibs</groupId>
 	<artifactId>nekohtml</artifactId>
-	<packaging>jar</packaging>
+	<packaging>bundle</packaging>
 	<name>Neko HTML</name>
 	<description>An HTML parser and tag balancer.</description>
 	<version>2.1.3-SNAPSHOT</version>
@@ -146,6 +146,17 @@
 					</execution>
 				</executions>
 			</plugin>
+			<plugin>
+				<groupId>org.apache.felix</groupId>
+				<artifactId>maven-bundle-plugin</artifactId>
+				<version>5.1.8</version>
+				<extensions>true</extensions>
+				<configuration>
+					<instructions>
+						<Export-Package>org.codelibs.*</Export-Package>
+					</instructions>
+				</configuration>
+			</plugin> 
 		</plugins>
 	</build>
 	<dependencies>
