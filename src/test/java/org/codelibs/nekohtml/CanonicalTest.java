@@ -124,10 +124,10 @@ public class CanonicalTest extends TestCase {
     }
 
     private String getResult(final File infile) throws IOException {
-        StringWriter out = new StringWriter();
-        try {
+
+        try (StringWriter out = new StringWriter()) {
             // create filters
-            XMLDocumentFilter[] filters = { new Writer(out) };
+            XMLDocumentFilter[] filters = {new Writer(out)};
 
             // create parser
             XMLParserConfiguration parser = new HTMLConfiguration();
@@ -158,8 +158,6 @@ public class CanonicalTest extends TestCase {
 
             // parse
             parser.parse(new XMLInputSource(null, infilename, null));
-        } finally {
-            out.close();
         }
         final BufferedReader reader = new BufferedReader(new StringReader(out.toString()));
         final StringBuilder sb = new StringBuilder();
