@@ -16,7 +16,7 @@ Put the following block into pom.xml if using Maven:
     <dependency>
         <groupId>org.codelibs</groupId>
         <artifactId>nekohtml</artifactId>
-        <version>2.1.0</version>
+        <version>2.1.2</version>
     </dependency>
 
 2.1.x supports Java 11 or the above.
