@@ -425,10 +425,7 @@ public class HTMLConfiguration extends ParserConfigurationSettings implements XM
                 cleanup();
             }
             return more;
-        } catch (final XNIException e) {
-            cleanup();
-            throw e;
-        } catch (final IOException e) {
+        } catch (final XNIException | IOException e) {
             cleanup();
             throw e;
         }

@@ -2817,7 +2817,7 @@ public class HTMLScanner implements XMLDocumentScanner, XMLLocator, HTMLComponen
          */
         private boolean isEnded(final String ename) {
             final String content = new String(fCurrentEntity.buffer, fCurrentEntity.offset, fCurrentEntity.length - fCurrentEntity.offset);
-            return content.toLowerCase().indexOf("</" + ename.toLowerCase() + ">") != -1;
+            return content.toLowerCase().contains("</" + ename.toLowerCase() + ">");
         }
 
     } // class ContentScanner
@@ -2988,6 +2988,7 @@ public class HTMLScanner implements XMLDocumentScanner, XMLLocator, HTMLComponen
                 } else {
                     appendChar(buffer, c);
                     if (c == '\n') {
+                        // unreachable
                         fCurrentEntity.incLine();
                     }
                 }

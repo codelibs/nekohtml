@@ -445,7 +445,7 @@ public class NamespaceBinder extends DefaultFilter {
             splitQName(fQName);
             prefix = !fQName.rawname.equals("xmlns") ? (fQName.prefix != null ? fQName.prefix : "") : "xmlns";
             // PATCH: Joseph Walton
-            if (!prefix.equals("")) {
+            if (!prefix.isEmpty()) {
                 fQName.uri = prefix.equals("xml") ? XML_URI : fNamespaceContext.getURI(prefix);
             }
             // NOTE: You would think the xmlns namespace would be handled
