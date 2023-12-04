@@ -77,8 +77,8 @@ public class CanonicalTest extends TestCase {
         });
         Collections.sort(dataFiles);
 
-        for (int i = 0; i < dataFiles.size(); i++) {
-            suite.addTest(new CanonicalTest((File) dataFiles.get(i)));
+        for (Object file : dataFiles) {
+            suite.addTest(new CanonicalTest((File) file));
         }
         return suite;
     }

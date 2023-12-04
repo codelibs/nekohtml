@@ -455,8 +455,8 @@ public class Writer extends DefaultFilter {
         org.apache.xerces.xni.parser.XMLDocumentFilter[] filters = { new Writer(), };
         org.apache.xerces.xni.parser.XMLParserConfiguration parser = new org.codelibs.nekohtml.HTMLConfiguration();
         parser.setProperty("http://cyberneko.org/html/properties/filters", filters);
-        for (int i = 0; i < argv.length; i++) {
-            org.apache.xerces.xni.parser.XMLInputSource source = new org.apache.xerces.xni.parser.XMLInputSource(null, argv[i], null);
+        for (String s : argv) {
+            org.apache.xerces.xni.parser.XMLInputSource source = new org.apache.xerces.xni.parser.XMLInputSource(null, s, null);
             parser.parse(source);
         }
     } // main(String[])
