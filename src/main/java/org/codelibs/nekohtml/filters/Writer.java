@@ -322,18 +322,18 @@ public class Writer extends DefaultFilter {
         // modify META[@http-equiv='content-type']/@content value
         int contentIndex = -1;
         String originalContent = null;
-        if (element.rawname.toLowerCase().equals("meta")) {
+        if ("meta".equalsIgnoreCase(element.rawname)) {
             String httpEquiv = null;
             final int length = attributes.getLength();
             for (int i = 0; i < length; i++) {
                 final String aname = attributes.getQName(i).toLowerCase();
-                if (aname.equals("http-equiv")) {
+                if ("http-equiv".equals(aname)) {
                     httpEquiv = attributes.getValue(i);
-                } else if (aname.equals("content")) {
+                } else if ("content".equals(aname)) {
                     contentIndex = i;
                 }
             }
-            if (httpEquiv != null && httpEquiv.toLowerCase().equals("content-type")) {
+            if (httpEquiv != null && "content-type".equalsIgnoreCase(httpEquiv)) {
                 fSeenHttpEquiv = true;
                 String content = null;
                 if (contentIndex != -1) {
@@ -411,23 +411,23 @@ public class Writer extends DefaultFilter {
         boolean purify = false;
         for (int i = 0; i < argv.length; i++) {
             final String arg = argv[i];
-            if (arg.equals("-ie")) {
+            if ("-ie".equals(arg)) {
                 iencoding = argv[++i];
                 continue;
             }
-            if (arg.equals("-e") || arg.equals("-oe")) {
+            if ("-e".equals(arg) || "-oe".equals(arg)) {
                 oencoding = argv[++i];
                 continue;
             }
-            if (arg.equals("-i")) {
+            if ("-i".equals(arg)) {
                 identity = true;
                 continue;
             }
-            if (arg.equals("-p")) {
+            if ("-p".equals(arg)) {
                 purify = true;
                 continue;
             }
-            if (arg.equals("-h")) {
+            if ("-h".equals(arg)) {
                 printUsage();
                 System.exit(1);
             }

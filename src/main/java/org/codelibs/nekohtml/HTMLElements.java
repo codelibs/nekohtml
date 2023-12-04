@@ -586,7 +586,7 @@ public class HTMLElements {
      */
     public static final Element getElement(final String ename, final Element element) {
 
-        if (ename.length() > 0) {
+        if (!ename.isEmpty()) {
             int c = ename.charAt(0);
             if (c >= 'a' && c <= 'z') {
                 c = 'A' + c - 'a';
