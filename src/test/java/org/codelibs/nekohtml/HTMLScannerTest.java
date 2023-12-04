@@ -160,7 +160,7 @@ public class HTMLScannerTest extends TestCase {
      * @throws Exception
      */
     public void testInfiniteLoop() throws Exception {
-        StringBuffer buffer = new StringBuffer();
+        StringBuilder buffer = new StringBuilder();
         buffer.append("<html>\n");
         for (int x = 0; x <= 2005; x++) {
             buffer.append((char) (x % 10 + '0'));

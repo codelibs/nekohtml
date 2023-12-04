@@ -114,7 +114,7 @@ public class CanonicalTest extends TestCase {
 
     private String getCanonical(final File infile) throws IOException {
         final BufferedReader reader = new BufferedReader(new InputStreamReader(new UTF8BOMSkipper(new FileInputStream(infile)), "UTF-8"));
-        final StringBuffer sb = new StringBuffer();
+        final StringBuilder sb = new StringBuilder();
         String line;
         while ((line = reader.readLine()) != null) {
             sb.append(line).append("\n");
@@ -162,7 +162,7 @@ public class CanonicalTest extends TestCase {
             out.close();
         }
         final BufferedReader reader = new BufferedReader(new StringReader(out.toString()));
-        final StringBuffer sb = new StringBuffer();
+        final StringBuilder sb = new StringBuilder();
         String line;
         while ((line = reader.readLine()) != null) {
             sb.append(line).append("\n");
