@@ -113,7 +113,7 @@ public class CanonicalTest extends TestCase {
     }
 
     private String getCanonical(final File infile) throws IOException {
-        final BufferedReader reader = new BufferedReader(new InputStreamReader(new UTF8BOMSkipper(new FileInputStream(infile)), "UTF-8"));
+        final BufferedReader reader = new BufferedReader(new InputStreamReader(new UTF8BOMSkipper(new FileInputStream(infile)), StandardCharsets.UTF_8));
         final StringBuilder sb = new StringBuilder();
         String line;
         while ((line = reader.readLine()) != null) {
