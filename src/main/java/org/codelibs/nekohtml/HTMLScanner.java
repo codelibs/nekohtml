@@ -711,32 +711,46 @@ public class HTMLScanner implements XMLDocumentScanner, XMLLocator, HTMLComponen
     @Override
     public void setFeature(final String featureId, final boolean state) {
 
-        if (featureId.equals(AUGMENTATIONS)) {
-            fAugmentations = state;
-        } else if (featureId.equals(IGNORE_SPECIFIED_CHARSET)) {
-            fIgnoreSpecifiedCharset = state;
-        } else if (featureId.equals(NOTIFY_CHAR_REFS)) {
-            fNotifyCharRefs = state;
-        } else if (featureId.equals(NOTIFY_XML_BUILTIN_REFS)) {
-            fNotifyXmlBuiltinRefs = state;
-        } else if (featureId.equals(NOTIFY_HTML_BUILTIN_REFS)) {
-            fNotifyHtmlBuiltinRefs = state;
-        } else if (featureId.equals(FIX_MSWINDOWS_REFS)) {
-            fFixWindowsCharRefs = state;
-        } else if (featureId.equals(SCRIPT_STRIP_CDATA_DELIMS)) {
-            fScriptStripCDATADelims = state;
-        } else if (featureId.equals(SCRIPT_STRIP_COMMENT_DELIMS)) {
-            fScriptStripCommentDelims = state;
-        } else if (featureId.equals(STYLE_STRIP_CDATA_DELIMS)) {
-            fStyleStripCDATADelims = state;
-        } else if (featureId.equals(STYLE_STRIP_COMMENT_DELIMS)) {
-            fStyleStripCommentDelims = state;
-        } else if (featureId.equals(PARSE_NOSCRIPT_CONTENT)) {
-            fParseNoScriptContent = state;
-        } else if (featureId.equals(ALLOW_SELFCLOSING_IFRAME)) {
-            fAllowSelfclosingIframe = state;
-        } else if (featureId.equals(ALLOW_SELFCLOSING_TAGS)) {
-            fAllowSelfclosingTags = state;
+        switch (featureId) {
+            case AUGMENTATIONS:
+                fAugmentations = state;
+                break;
+            case IGNORE_SPECIFIED_CHARSET:
+                fIgnoreSpecifiedCharset = state;
+                break;
+            case NOTIFY_CHAR_REFS:
+                fNotifyCharRefs = state;
+                break;
+            case NOTIFY_XML_BUILTIN_REFS:
+                fNotifyXmlBuiltinRefs = state;
+                break;
+            case NOTIFY_HTML_BUILTIN_REFS:
+                fNotifyHtmlBuiltinRefs = state;
+                break;
+            case FIX_MSWINDOWS_REFS:
+                fFixWindowsCharRefs = state;
+                break;
+            case SCRIPT_STRIP_CDATA_DELIMS:
+                fScriptStripCDATADelims = state;
+                break;
+            case SCRIPT_STRIP_COMMENT_DELIMS:
+                fScriptStripCommentDelims = state;
+                break;
+            case STYLE_STRIP_CDATA_DELIMS:
+                fStyleStripCDATADelims = state;
+                break;
+            case STYLE_STRIP_COMMENT_DELIMS:
+                fStyleStripCommentDelims = state;
+                break;
+            case PARSE_NOSCRIPT_CONTENT:
+                fParseNoScriptContent = state;
+                break;
+            case ALLOW_SELFCLOSING_IFRAME:
+                fAllowSelfclosingIframe = state;
+                break;
+            case ALLOW_SELFCLOSING_TAGS:
+                fAllowSelfclosingTags = state;
+                break;
         }
 
     } // setFeature(String,boolean)
@@ -897,7 +911,7 @@ public class HTMLScanner implements XMLDocumentScanner, XMLLocator, HTMLComponen
     public static String expandSystemId(final String systemId, final String baseSystemId) {
 
         // check for bad parameters id
-        if (systemId == null || systemId.length() == 0) {
+        if (systemId == null || systemId.isEmpty()) {
             return systemId;
         }
         // if id already expanded, return
@@ -916,7 +930,7 @@ public class HTMLScanner implements XMLDocumentScanner, XMLLocator, HTMLComponen
         URI base = null;
         URI uri = null;
         try {
-            if (baseSystemId == null || baseSystemId.length() == 0 || baseSystemId.equals(systemId)) {
+            if (baseSystemId == null || baseSystemId.isEmpty() || baseSystemId.equals(systemId)) {
                 String dir;
                 try {
                     dir = fixURI(System.getProperty("user.dir"));
@@ -1016,10 +1030,10 @@ public class HTMLScanner implements XMLDocumentScanner, XMLLocator, HTMLComponen
      * @see #NAMES_UPPERCASE
      */
     protected static final short getNamesValue(final String value) {
-        if (value.equals("lower")) {
+        if ("lower".equals(value)) {
             return NAMES_LOWERCASE;
         }
-        if (value.equals("upper")) {
+        if ("upper".equals(value)) {
             return NAMES_UPPERCASE;
         }
         return NAMES_NO_CHANGE;
@@ -1545,7 +1559,7 @@ public class HTMLScanner implements XMLDocumentScanner, XMLLocator, HTMLComponen
 
     /** Returns true if the name is a built-in XML general entity reference. */
     protected static boolean builtinXmlRef(final String name) {
-        return name.equals("amp") || name.equals("lt") || name.equals("gt") || name.equals("quot") || name.equals("apos");
+        return "amp".equals(name) || "lt".equals(name) || "gt".equals(name) || "quot".equals(name) || "apos".equals(name);
     } // builtinXmlRef(String):boolean
 
     //
@@ -1915,7 +1929,7 @@ public class HTMLScanner implements XMLDocumentScanner, XMLLocator, HTMLComponen
                             } else if (!fParseNoFramesContent && "noframes".equals(enameLC)) {
                                 scanUntilEndTag("noframes");
                             } else if (ename != null && !fSingleBoolean[0] && HTMLElements.getElement(enameLC).isSpecial()
-                                    && (!ename.equalsIgnoreCase("TITLE") || isEnded(enameLC))) {
+                                    && (!"TITLE".equalsIgnoreCase(ename) || isEnded(enameLC))) {
                                 setScanner(fSpecialScanner.setElementName(ename));
                                 setScannerState(STATE_CONTENT);
                                 return true;
@@ -2279,7 +2293,7 @@ public class HTMLScanner implements XMLDocumentScanner, XMLLocator, HTMLComponen
 
             // scan processing instruction
             final String target = scanName(true);
-            if (target != null && !target.equalsIgnoreCase("xml")) {
+            if (target != null && !"xml".equalsIgnoreCase(target)) {
                 while (true) {
                     int c = fCurrentEntity.read();
                     if (c == '\r' || c == '\n') {
@@ -2348,7 +2362,7 @@ public class HTMLScanner implements XMLDocumentScanner, XMLLocator, HTMLComponen
                 int aindex = 0;
                 while (scanPseudoAttribute(fAttributes)) {
                     // if we haven't scanned a value, remove the entry as values have special signification
-                    if (fAttributes.getValue(aindex).length() == 0) {
+                    if (fAttributes.getValue(aindex).isEmpty()) {
                         fAttributes.removeAttributeAt(aindex);
                     } else {
                         fAttributes.getName(aindex, fQName);
@@ -2414,9 +2428,9 @@ public class HTMLScanner implements XMLDocumentScanner, XMLLocator, HTMLComponen
             fBeginColumnNumber = beginColumnNumber;
             fBeginCharacterOffset = beginCharacterOffset;
             if (fByteStream != null && fElementDepth == -1) {
-                if (ename.equalsIgnoreCase("META") && !fIgnoreSpecifiedCharset) {
+                if ("META".equalsIgnoreCase(ename) && !fIgnoreSpecifiedCharset) {
                     final String httpEquiv = getValue(fAttributes, "http-equiv");
-                    if (httpEquiv != null && httpEquiv.equalsIgnoreCase("content-type")) {
+                    if (httpEquiv != null && "content-type".equalsIgnoreCase(httpEquiv)) {
                         String content = getValue(fAttributes, "content");
                         if (content != null) {
                             content = removeSpaces(content);
@@ -2433,7 +2447,7 @@ public class HTMLScanner implements XMLDocumentScanner, XMLLocator, HTMLComponen
                             changeEncoding(metaCharset);
                         }
                     }
-                } else if (ename.equalsIgnoreCase("BODY")) {
+                } else if ("BODY".equalsIgnoreCase(ename)) {
                     fByteStream.clear();
                     fByteStream = null;
                 } else {
@@ -2862,9 +2876,9 @@ public class HTMLScanner implements XMLDocumentScanner, XMLLocator, HTMLComponen
         /** Sets the element name. */
         public Scanner setElementName(final String ename) {
             fElementName = ename;
-            fStyle = fElementName.equalsIgnoreCase("STYLE");
-            fTextarea = fElementName.equalsIgnoreCase("TEXTAREA");
-            fTitle = fElementName.equalsIgnoreCase("TITLE");
+            fStyle = "STYLE".equalsIgnoreCase(fElementName);
+            fTextarea = "TEXTAREA".equalsIgnoreCase(fElementName);
+            fTitle = "TITLE".equalsIgnoreCase(fElementName);
             return this;
         } // setElementName(String):Scanner
 
