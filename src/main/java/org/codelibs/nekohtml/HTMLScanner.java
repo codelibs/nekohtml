@@ -712,45 +712,45 @@ public class HTMLScanner implements XMLDocumentScanner, XMLLocator, HTMLComponen
     public void setFeature(final String featureId, final boolean state) {
 
         switch (featureId) {
-            case AUGMENTATIONS:
-                fAugmentations = state;
-                break;
-            case IGNORE_SPECIFIED_CHARSET:
-                fIgnoreSpecifiedCharset = state;
-                break;
-            case NOTIFY_CHAR_REFS:
-                fNotifyCharRefs = state;
-                break;
-            case NOTIFY_XML_BUILTIN_REFS:
-                fNotifyXmlBuiltinRefs = state;
-                break;
-            case NOTIFY_HTML_BUILTIN_REFS:
-                fNotifyHtmlBuiltinRefs = state;
-                break;
-            case FIX_MSWINDOWS_REFS:
-                fFixWindowsCharRefs = state;
-                break;
-            case SCRIPT_STRIP_CDATA_DELIMS:
-                fScriptStripCDATADelims = state;
-                break;
-            case SCRIPT_STRIP_COMMENT_DELIMS:
-                fScriptStripCommentDelims = state;
-                break;
-            case STYLE_STRIP_CDATA_DELIMS:
-                fStyleStripCDATADelims = state;
-                break;
-            case STYLE_STRIP_COMMENT_DELIMS:
-                fStyleStripCommentDelims = state;
-                break;
-            case PARSE_NOSCRIPT_CONTENT:
-                fParseNoScriptContent = state;
-                break;
-            case ALLOW_SELFCLOSING_IFRAME:
-                fAllowSelfclosingIframe = state;
-                break;
-            case ALLOW_SELFCLOSING_TAGS:
-                fAllowSelfclosingTags = state;
-                break;
+        case AUGMENTATIONS:
+            fAugmentations = state;
+            break;
+        case IGNORE_SPECIFIED_CHARSET:
+            fIgnoreSpecifiedCharset = state;
+            break;
+        case NOTIFY_CHAR_REFS:
+            fNotifyCharRefs = state;
+            break;
+        case NOTIFY_XML_BUILTIN_REFS:
+            fNotifyXmlBuiltinRefs = state;
+            break;
+        case NOTIFY_HTML_BUILTIN_REFS:
+            fNotifyHtmlBuiltinRefs = state;
+            break;
+        case FIX_MSWINDOWS_REFS:
+            fFixWindowsCharRefs = state;
+            break;
+        case SCRIPT_STRIP_CDATA_DELIMS:
+            fScriptStripCDATADelims = state;
+            break;
+        case SCRIPT_STRIP_COMMENT_DELIMS:
+            fScriptStripCommentDelims = state;
+            break;
+        case STYLE_STRIP_CDATA_DELIMS:
+            fStyleStripCDATADelims = state;
+            break;
+        case STYLE_STRIP_COMMENT_DELIMS:
+            fStyleStripCommentDelims = state;
+            break;
+        case PARSE_NOSCRIPT_CONTENT:
+            fParseNoScriptContent = state;
+            break;
+        case ALLOW_SELFCLOSING_IFRAME:
+            fAllowSelfclosingIframe = state;
+            break;
+        case ALLOW_SELFCLOSING_TAGS:
+            fAllowSelfclosingTags = state;
+            break;
         }
 
     } // setFeature(String,boolean)

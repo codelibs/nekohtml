@@ -114,7 +114,8 @@ public class CanonicalTest extends TestCase {
     }
 
     private String getCanonical(final File infile) throws IOException {
-        final BufferedReader reader = new BufferedReader(new InputStreamReader(new UTF8BOMSkipper(new FileInputStream(infile)), StandardCharsets.UTF_8));
+        final BufferedReader reader =
+                new BufferedReader(new InputStreamReader(new UTF8BOMSkipper(new FileInputStream(infile)), StandardCharsets.UTF_8));
         final StringBuilder sb = new StringBuilder();
         String line;
         while ((line = reader.readLine()) != null) {
@@ -126,46 +127,57 @@ public class CanonicalTest extends TestCase {
 
     private String getResult(final File infile) throws IOException {
 
+        final StringBuilder sb = new StringBuilder();
         try (StringWriter out = new StringWriter()) {
             // create filters
-            XMLDocumentFilter[] filters = {new Writer(out)};
+            XMLDocumentFilter[] filters = { new Writer(out) };
 
             // create parser
             XMLParserConfiguration parser = new HTMLConfiguration();
 
             // parser settings
             parser.setProperty("http://cyberneko.org/html/properties/filters", filters);
-            String infilename = infile.toString();
-            File insettings = new File(infilename + ".settings");
+            final String infilename = infile.toString();
+            final File insettings = new File(infile.toString() + ".settings");
             if (insettings.exists()) {
-                BufferedReader settings = new BufferedReader(new FileReader(insettings));
-                String settingline;
-                while ((settingline = settings.readLine()) != null) {
-                    StringTokenizer tokenizer = new StringTokenizer(settingline);
-                    String type = tokenizer.nextToken();
-                    String id = tokenizer.nextToken();
-                    String value = tokenizer.nextToken();
-                    if ("feature".equals(type)) {
-                        parser.setFeature(id, "true".equals(value));
-                        if (HTMLScanner.REPORT_ERRORS.equals(id)) {
-                            parser.setErrorHandler(new HTMLErrorHandler(out));
-                        }
-                    } else {
-                        parser.setProperty(id, value);
-                    }
-                }
-                settings.close();
+                readSettings(insettings, parser, out);
             }
 
             // parse
             parser.parse(new XMLInputSource(null, infilename, null));
-        }
-        final BufferedReader reader = new BufferedReader(new StringReader(out.toString()));
-        final StringBuilder sb = new StringBuilder();
-        String line;
-        while ((line = reader.readLine()) != null) {
-            sb.append(line).append("\n");
+
+            // make nice output
+            addNewLines(out, sb);
         }
         return sb.toString();
+    }
+
+    private static void addNewLines(StringWriter out, StringBuilder sb) throws IOException {
+        try (final BufferedReader reader = new BufferedReader(new StringReader(out.toString()))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                sb.append(line).append("\n");
+            }
+        }
+    }
+
+    private static void readSettings(File insettings, XMLParserConfiguration parser, StringWriter out) throws IOException {
+        try (BufferedReader settings = new BufferedReader(new FileReader(insettings))) {
+            String settingline;
+            while ((settingline = settings.readLine()) != null) {
+                StringTokenizer tokenizer = new StringTokenizer(settingline);
+                String type = tokenizer.nextToken();
+                String id = tokenizer.nextToken();
+                String value = tokenizer.nextToken();
+                if ("feature".equals(type)) {
+                    parser.setFeature(id, "true".equals(value));
+                    if (HTMLScanner.REPORT_ERRORS.equals(id)) {
+                        parser.setErrorHandler(new HTMLErrorHandler(out));
+                    }
+                } else {
+                    parser.setProperty(id, value);
+                }
+            }
+        }
     }
 }
