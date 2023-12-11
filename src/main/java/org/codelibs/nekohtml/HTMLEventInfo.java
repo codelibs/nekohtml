@@ -60,7 +60,7 @@ public interface HTMLEventInfo {
      *
      * @author Andy Clark
      */
-    public static class SynthesizedItem implements HTMLEventInfo {
+    class SynthesizedItem implements HTMLEventInfo {
 
         //
         // HTMLEventInfo methods

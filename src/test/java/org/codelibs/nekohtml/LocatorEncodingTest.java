@@ -2,6 +2,7 @@ package org.codelibs.nekohtml;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
 import junit.framework.TestCase;
 
@@ -27,7 +28,7 @@ public class LocatorEncodingTest extends TestCase {
         }
 
         final String content = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<html></html>";
-        ByteArrayInputStream input = new ByteArrayInputStream(content.getBytes("UTF-8"));
+        ByteArrayInputStream input = new ByteArrayInputStream(content.getBytes(StandardCharsets.UTF_8));
         SAXParser parser = new SAXParser();
 
         final Locator[] locators = { null };

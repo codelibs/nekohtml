@@ -181,14 +181,14 @@ public class Purifier extends DefaultFilter {
     /** XML declaration. */
     @Override
     public void xmlDecl(String version, String encoding, String standalone, final Augmentations augs) {
-        if (version == null || !version.equals("1.0")) {
+        if (version == null || !"1.0".equals(version)) {
             version = "1.0";
         }
-        if (encoding != null && encoding.length() == 0) {
+        if (encoding != null && encoding.isEmpty()) {
             encoding = null;
         }
         if (standalone != null) {
-            if (!standalone.equalsIgnoreCase("true") && !standalone.equalsIgnoreCase("false")) {
+            if (!"true".equalsIgnoreCase(standalone) && !"false".equalsIgnoreCase(standalone)) {
                 standalone = null;
             } else {
                 standalone = standalone.toLowerCase();
@@ -200,7 +200,7 @@ public class Purifier extends DefaultFilter {
     /** Comment. */
     @Override
     public void comment(XMLString text, final Augmentations augs) {
-        final StringBuffer str = new StringBuffer(purifyText(text).toString());
+        final StringBuilder str = new StringBuilder(purifyText(text).toString());
         final int length = str.length();
         for (int i = length - 1; i >= 0; i--) {
             final char c = str.charAt(i);
@@ -272,7 +272,7 @@ public class Purifier extends DefaultFilter {
     public void characters(XMLString text, final Augmentations augs) {
         text = purifyText(text);
         if (fInCDATASection) {
-            final StringBuffer str = new StringBuffer(text.toString());
+            final StringBuilder str = new StringBuilder(text.toString());
             final int length = str.length();
             for (int i = length - 1; i >= 0; i--) {
                 final char c = str.charAt(i);
@@ -322,7 +322,7 @@ public class Purifier extends DefaultFilter {
 
             // synthesize namespace bindings
             if (fNamespaces) {
-                if (!fQName.rawname.equals("xmlns") && !fQName.rawname.startsWith("xmlns:")) {
+                if (!"xmlns".equals(fQName.rawname) && !fQName.rawname.startsWith("xmlns:")) {
                     // NOTE: Must get attribute name again because the
                     //       purifyQName method does not guarantee that
                     //       the same QName object is returned. -Ac
@@ -405,13 +405,13 @@ public class Purifier extends DefaultFilter {
             final char c = name.charAt(i);
             if (i == 0) {
                 if (!XMLChar.isNameStart(c)) {
-                    str.append("_u" + toHexString(c, 4) + "_");
+                    str.append("_u").append(toHexString(c, 4)).append("_");
                 } else {
                     str.append(c);
                 }
             } else {
                 if ((fNamespaces && c == ':' && seenColon) || !XMLChar.isName(c)) {
-                    str.append("_u" + toHexString(c, 4) + "_");
+                    str.append("_u").append(toHexString(c, 4)).append("_");
                 } else {
                     str.append(c);
                 }

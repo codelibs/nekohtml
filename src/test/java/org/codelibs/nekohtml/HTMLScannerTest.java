@@ -114,7 +114,7 @@ public class HTMLScannerTest extends TestCase {
 
         public void endElement(QName element, Augmentations augs) throws XNIException {
             collectedStrings.add(")" + element.rawname);
-            if (element.localpart.equals("SCRIPT")) {
+            if ("SCRIPT".equals(element.localpart)) {
                 // act as if evaluation of document.write would insert the content
                 insert("<style type=\"text/css\" id=\"myStyle\">");
                 insert("  .nwr {white-space: nowrap;}");
@@ -160,7 +160,7 @@ public class HTMLScannerTest extends TestCase {
      * @throws Exception
      */
     public void testInfiniteLoop() throws Exception {
-        StringBuffer buffer = new StringBuffer();
+        StringBuilder buffer = new StringBuilder();
         buffer.append("<html>\n");
         for (int x = 0; x <= 2005; x++) {
             buffer.append((char) (x % 10 + '0'));

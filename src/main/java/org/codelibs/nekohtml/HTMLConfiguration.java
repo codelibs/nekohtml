@@ -425,10 +425,7 @@ public class HTMLConfiguration extends ParserConfigurationSettings implements XM
                 cleanup();
             }
             return more;
-        } catch (final XNIException e) {
-            cleanup();
-            throw e;
-        } catch (final IOException e) {
+        } catch (final XNIException | IOException e) {
             cleanup();
             throw e;
         }
@@ -610,7 +607,7 @@ public class HTMLConfiguration extends ParserConfigurationSettings implements XM
                     if (i > 0) {
                         str.append('\t');
                     }
-                    str.append(String.valueOf(args[i]));
+                    str.append(args[i]);
                 }
             }
             return str.toString();

@@ -22,6 +22,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.Properties;
 
 /**
@@ -420,11 +421,7 @@ class ObjectFactory {
         // officially decommit from VJ++. [Edited comment from
         // jkesselm]
         BufferedReader rd;
-        try {
-            rd = new BufferedReader(new InputStreamReader(is, "UTF-8"), DEFAULT_LINE_LENGTH);
-        } catch (final java.io.UnsupportedEncodingException e) {
-            rd = new BufferedReader(new InputStreamReader(is), DEFAULT_LINE_LENGTH);
-        }
+        rd = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8), DEFAULT_LINE_LENGTH);
 
         String factoryClassName = null;
         try {
@@ -437,7 +434,7 @@ class ObjectFactory {
             return null;
         }
 
-        if (factoryClassName != null && !"".equals(factoryClassName)) {
+        if (factoryClassName != null && !factoryClassName.isEmpty()) {
             if (DEBUG) {
                 debugPrintln("found in resource, value=" + factoryClassName);
             }

@@ -348,10 +348,10 @@ public class NamespaceBinder extends DefaultFilter {
      * @see #NAMES_UPPERCASE
      */
     protected static final short getNamesValue(final String value) {
-        if (value.equals("lower")) {
+        if ("lower".equals(value)) {
             return NAMES_LOWERCASE;
         }
-        if (value.equals("upper")) {
+        if ("upper".equals(value)) {
             return NAMES_UPPERCASE;
         }
         return NAMES_NO_CHANGE;
@@ -385,7 +385,7 @@ public class NamespaceBinder extends DefaultFilter {
             attrs.getName(i, fQName);
             String aname = fQName.rawname;
             final String ANAME = aname.toUpperCase(Locale.ENGLISH);
-            if (ANAME.startsWith("XMLNS:") || ANAME.equals("XMLNS")) {
+            if (ANAME.startsWith("XMLNS:") || "XMLNS".equals(ANAME)) {
                 final int anamelen = aname.length();
 
                 // get parts
@@ -407,7 +407,7 @@ public class NamespaceBinder extends DefaultFilter {
 
                 // declare prefix
                 final String prefix = alocal != aname ? alocal : "";
-                String uri = avalue.length() > 0 ? avalue : null;
+                String uri = !avalue.isEmpty() ? avalue : null;
                 if (fOverrideNamespaces && prefix.equals(element.prefix) && HTMLElements.getElement(element.localpart, null) != null) {
                     uri = fNamespacesURI;
                 }
@@ -443,14 +443,14 @@ public class NamespaceBinder extends DefaultFilter {
         for (int i = 0; i < attrCount; i++) {
             attrs.getName(i, fQName);
             splitQName(fQName);
-            prefix = !fQName.rawname.equals("xmlns") ? (fQName.prefix != null ? fQName.prefix : "") : "xmlns";
+            prefix = !"xmlns".equals(fQName.rawname) ? (fQName.prefix != null ? fQName.prefix : "") : "xmlns";
             // PATCH: Joseph Walton
-            if (!prefix.equals("")) {
-                fQName.uri = prefix.equals("xml") ? XML_URI : fNamespaceContext.getURI(prefix);
+            if (!prefix.isEmpty()) {
+                fQName.uri = "xml".equals(prefix) ? XML_URI : fNamespaceContext.getURI(prefix);
             }
             // NOTE: You would think the xmlns namespace would be handled
             //       by NamespaceSupport but it's not. -Ac
-            if (prefix.equals("xmlns") && fQName.uri == null) {
+            if ("xmlns".equals(prefix) && fQName.uri == null) {
                 fQName.uri = XMLNS_URI;
             }
             attrs.setName(i, fQName);
