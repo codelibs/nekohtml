@@ -1,13 +1,13 @@
 package org.codelibs.nekohtml;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.io.StringReader;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
-
-import junit.framework.TestCase;
 
 import org.apache.xerces.util.XMLStringBuffer;
 import org.apache.xerces.xni.Augmentations;
@@ -17,9 +17,9 @@ import org.apache.xerces.xni.XNIException;
 import org.apache.xerces.xni.parser.XMLDocumentFilter;
 import org.apache.xerces.xni.parser.XMLInputSource;
 import org.apache.xerces.xni.parser.XMLParserConfiguration;
-import org.codelibs.nekohtml.HTMLConfiguration;
-import org.codelibs.nekohtml.HTMLScanner;
 import org.codelibs.nekohtml.filters.DefaultFilter;
+
+import junit.framework.TestCase;
 
 /**
  * Unit tests for {@link HTMLScanner}.
@@ -189,6 +189,48 @@ public class HTMLScannerTest extends TestCase {
                 nextContent(30);
                 super.scanComment();
             }
+        }
+    }
+
+    /**
+     * Regression test https://github.com/HtmlUnit/htmlunit-neko/pull/98.
+     * @throws Exception on error
+     */
+    public void testReader() throws Exception {
+        final String string = "<html><body>"//
+                + "<script type='text/javascript'>//<!-- /* <![CDATA[ */ function foo() {} /* ]]> */ // --> </script>"//
+                + "</body></html>";
+
+        final String[] expected = {//
+                "(HTML",//
+                        "(HEAD",//
+                        ")HEAD",//
+                        "(BODY",//
+                        "(SCRIPT",//
+                        "Atype text/javascript",//
+                        "\"//<!-- /* <![CDATA[ */ function foo() {} /* ]]> */ // --> ",//
+                        ")SCRIPT",//
+                        ")BODY",//
+                        ")HTML"//
+                };
+
+        try (StringWriter out = new StringWriter()) {
+            final HTMLConfiguration parser = new HTMLConfiguration();
+            final Writer filter = new Writer(new PrintWriter(out));
+            parser.setProperty("http://cyberneko.org/html/properties/filters", new XMLDocumentFilter[] { filter });
+
+            StringReader testReader = new StringReader(string) {
+                @Override
+                public int read(char[] cbuf, int off, int len) throws IOException {
+                    // this simulates the return of a smaller buffer
+                    return super.read(cbuf, off, 1);
+                }
+            };
+
+            final XMLInputSource source = new XMLInputSource(null, "myTest", null, testReader, "UTF-8");
+            parser.parse(source);
+
+            assertEquals(String.join("\n", expected), out.toString().trim());
         }
     }
 }
