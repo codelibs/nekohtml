@@ -48,20 +48,6 @@
 				</configuration>
 			</plugin>
 			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-source-plugin</artifactId>
-				<version>3.3.1</version>
-				<executions>
-					<execution>
-						<id>source-jar</id>
-						<phase>package</phase>
-						<goals>
-							<goal>jar</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
-			<plugin>
 				<artifactId>maven-javadoc-plugin</artifactId>
 				<version>3.11.2</version>
 				<configuration>
@@ -109,17 +95,21 @@
 				<artifactId>license-maven-plugin</artifactId>
 				<version>5.0.0</version>
 				<configuration>
-					<header>https://www.codelibs.org/assets/license/header.txt</header>
+					<encoding>UTF-8</encoding>
 					<properties>
 						<year>2025</year>
 					</properties>
-					<includes>
-						<include>src/**/*.java</include>
-					</includes>
-					<encoding>UTF-8</encoding>
 					<headerDefinitions>
 						<headerDefinition>https://www.codelibs.org/assets/license/header-definition-2.xml</headerDefinition>
 					</headerDefinitions>
+					<licenseSets>
+						<licenseSet>
+							<header>https://www.codelibs.org/assets/license/header.txt</header>
+							<includes>
+								<include>src/**/*.java</include>
+							</includes>
+						</licenseSet>
+					</licenseSets>
 				</configuration>
 			</plugin>
 			<plugin>
