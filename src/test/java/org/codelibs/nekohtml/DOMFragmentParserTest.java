@@ -17,7 +17,9 @@ package org.codelibs.nekohtml;
 
 import java.io.StringReader;
 
-import junit.framework.TestCase;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import org.junit.jupiter.api.Test;
 
 import org.apache.html.dom.HTMLDocumentImpl;
 import org.codelibs.nekohtml.parsers.DOMFragmentParser;
@@ -34,10 +36,11 @@ import org.xml.sax.InputSource;
  * @author Marc Guillemot
  *
  */
-public class DOMFragmentParserTest extends TestCase {
+public class DOMFragmentParserTest {
     /**
      * See <a href="https://sourceforge.net/p/nekohtml/bugs/154/">Bug 154</a>.
      */
+    @Test
     public void testAttrEndingWithCRAtEndOfStream() throws Exception {
         doTest("<a href=\"\r", "<A href=\"&#xa;\"/>");
     }
@@ -45,6 +48,7 @@ public class DOMFragmentParserTest extends TestCase {
     /**
      * See <a href="http://sourceforge.net/support/tracker.php?aid=2828553">Bug 2828553</a>.
      */
+    @Test
     public void testInvalidProcessingInstruction() throws Exception {
         doTest("<html><?9 ?></html>", "<HTML/>");
     }
@@ -52,6 +56,7 @@ public class DOMFragmentParserTest extends TestCase {
     /**
      * See <a href="http://sourceforge.net/support/tracker.php?aid=2828534">Bug 2828534</a>.
      */
+    @Test
     public void testInvalidAttributeName() throws Exception {
         doTest("<html 9='id'></html>", "<HTML/>");
     }
@@ -93,6 +98,7 @@ public class DOMFragmentParserTest extends TestCase {
      * HTMLTagBalancer field fSeenBodyElementEnd was not correctly reset as of 1.19.17  
      * @throws Exception
      */
+    @Test
     public void testInstanceReuse() throws Exception {
         final String s = "<html><body><frame><frameset></frameset></html>";
 

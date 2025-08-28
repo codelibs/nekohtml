@@ -140,6 +140,19 @@ public class Purifier extends DefaultFilter {
     private final XMLStringBuffer fStringBuffer = new XMLStringBuffer();
 
     //
+    // Constructors
+    //
+
+    /**
+     * Default constructor for Purifier filter.
+     * Creates a filter that ensures well-formed XML output by modifying names
+     * and content to comply with XML naming rules and character restrictions.
+     */
+    public Purifier() {
+        // Default constructor
+    }
+
+    //
     // XMLComponent methods
     //
 
@@ -308,7 +321,11 @@ public class Purifier extends DefaultFilter {
         fSeenRootElement = false;
     } // handleStartDocument()
 
-    /** Handle start element. */
+    /** 
+     * Handle start element.
+     * @param element The element name to process
+     * @param attrs The element attributes to process
+     */
     protected void handleStartElement(QName element, final XMLAttributes attrs) {
 
         // handle element and attributes
@@ -351,7 +368,11 @@ public class Purifier extends DefaultFilter {
 
     } // handleStartElement(QName,XMLAttributes)
 
-    /** Synthesize namespace binding. */
+    /** 
+     * Synthesize namespace binding.
+     * @param attrs The attributes to add the namespace binding to
+     * @param ns The namespace prefix to bind
+     */
     protected void synthesizeBinding(final XMLAttributes attrs, final String ns) {
         final String prefix = "xmlns";
         final String localpart = ns;
@@ -369,7 +390,10 @@ public class Purifier extends DefaultFilter {
 
     } // synthesizeBinding(XMLAttributes,String)
 
-    /** Returns an augmentations object with a synthesized item added. */
+    /** 
+     * Returns an augmentations object with a synthesized item added.
+     * @return Augmentations object marked as synthesized
+     */
     protected final Augmentations synthesizedAugs() {
         HTMLAugmentations augs = null;
         if (fAugmentations) {
@@ -384,7 +408,11 @@ public class Purifier extends DefaultFilter {
     // Protected methods
     //
 
-    /** Purify qualified name. */
+    /** 
+     * Purify qualified name.
+     * @param qname The qualified name to purify
+     * @return The purified qualified name
+     */
     protected QName purifyQName(final QName qname) {
         qname.prefix = purifyName(qname.prefix, true);
         qname.localpart = purifyName(qname.localpart, true);
@@ -392,7 +420,12 @@ public class Purifier extends DefaultFilter {
         return qname;
     } // purifyQName(QName):QName
 
-    /** Purify name. */
+    /** 
+     * Purify name.
+     * @param name The name to purify
+     * @param localpart True if this is a local part of a qualified name
+     * @return The purified name that conforms to XML naming rules
+     */
     protected String purifyName(final String name, final boolean localpart) {
         if (name == null) {
             return name;
@@ -420,7 +453,11 @@ public class Purifier extends DefaultFilter {
         return str.toString();
     } // purifyName(String):String
 
-    /** Purify content. */
+    /** 
+     * Purify content.
+     * @param text The text content to purify
+     * @return The purified text with invalid XML characters replaced
+     */
     protected XMLString purifyText(final XMLString text) {
         fStringBuffer.length = 0;
         for (int i = 0; i < text.length; i++) {
@@ -438,7 +475,12 @@ public class Purifier extends DefaultFilter {
     // Protected static methods
     //
 
-    /** Returns a padded hexadecimal string for the given value. */
+    /** 
+     * Returns a padded hexadecimal string for the given value.
+     * @param c The character value to convert to hexadecimal
+     * @param padlen The desired length of the resulting string (padded with zeros)
+     * @return The hexadecimal string representation
+     */
     protected static String toHexString(final int c, final int padlen) {
         final StringBuilder str = new StringBuilder(padlen);
         str.append(Integer.toHexString(c));

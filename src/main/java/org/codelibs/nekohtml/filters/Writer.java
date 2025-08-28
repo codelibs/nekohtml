@@ -129,6 +129,7 @@ public class Writer extends DefaultFilter {
      * @param outputStream The output stream to write to.
      * @param encoding The encoding to be used for the output. The encoding name
      *                 should be an official IANA encoding name.
+     * @throws UnsupportedEncodingException If the specified encoding is not supported
      */
     public Writer(final OutputStream outputStream, final String encoding) throws UnsupportedEncodingException {
         this(new OutputStreamWriter(outputStream, encoding), encoding);
@@ -276,7 +277,10 @@ public class Writer extends DefaultFilter {
     // Protected methods
     //
 
-    /** Print attribute value. */
+    /** 
+     * Print attribute value.
+     * @param text The attribute value text to print
+     */
     protected void printAttributeValue(final String text) {
         final int length = text.length();
         for (int j = 0; j < length; j++) {
@@ -290,7 +294,11 @@ public class Writer extends DefaultFilter {
         fPrinter.flush();
     } // printAttributeValue(String)
 
-    /** Print characters. */
+    /** 
+     * Print characters.
+     * @param text The character data to print
+     * @param normalize Whether to normalize the text by converting entities
+     */
     protected void printCharacters(final XMLString text, final boolean normalize) {
         if (normalize) {
             for (int i = 0; i < text.length; i++) {
@@ -315,7 +323,11 @@ public class Writer extends DefaultFilter {
         fPrinter.flush();
     } // printCharacters(XMLString,boolean)
 
-    /** Print start element. */
+    /** 
+     * Print start element.
+     * @param element The element name to print
+     * @param attributes The element attributes to print
+     */
     protected void printStartElement(final QName element, final XMLAttributes attributes) {
 
         // modify META[@http-equiv='content-type']/@content value
@@ -375,7 +387,10 @@ public class Writer extends DefaultFilter {
 
     } // printStartElement(QName,XMLAttributes)
 
-    /** Print end element. */
+    /** 
+     * Print end element.
+     * @param element The element name to print
+     */
     protected void printEndElement(final QName element) {
         fPrinter.print("</");
         fPrinter.print(element.rawname);
@@ -383,7 +398,10 @@ public class Writer extends DefaultFilter {
         fPrinter.flush();
     } // printEndElement(QName)
 
-    /** Print entity. */
+    /** 
+     * Print entity.
+     * @param name The entity name to print
+     */
     protected void printEntity(final String name) {
         fPrinter.print('&');
         fPrinter.print(name);
@@ -395,7 +413,11 @@ public class Writer extends DefaultFilter {
     // MAIN
     //
 
-    /** Main. */
+    /** 
+     * Main.
+     * @param argv Command line arguments
+     * @throws Exception If an error occurs during processing
+     */
     public static void main(final String[] argv) throws Exception {
         if (argv.length == 0) {
             printUsage();

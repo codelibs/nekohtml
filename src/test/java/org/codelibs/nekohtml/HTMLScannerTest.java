@@ -34,7 +34,11 @@ import org.apache.xerces.xni.parser.XMLInputSource;
 import org.apache.xerces.xni.parser.XMLParserConfiguration;
 import org.codelibs.nekohtml.filters.DefaultFilter;
 
-import junit.framework.TestCase;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import org.junit.jupiter.api.Test;
 
 /**
  * Unit tests for {@link HTMLScanner}.
@@ -42,8 +46,9 @@ import junit.framework.TestCase;
  * @author Ahmed Ashour
  * @version $Id: HTMLScanner.java,v 1.19 2005/06/14 05:52:37 andyc Exp $
  */
-public class HTMLScannerTest extends TestCase {
+public class HTMLScannerTest {
 
+    @Test
     public void testisEncodingCompatible() throws Exception {
         final HTMLScanner scanner = new HTMLScanner();
         assertTrue(scanner.isEncodingCompatible("ISO-8859-1", "ISO-8859-1"));
@@ -57,6 +62,7 @@ public class HTMLScannerTest extends TestCase {
         assertFalse(scanner.isEncodingCompatible("UTF-16", "Cp1252"));
     }
 
+    @Test
     public void testEvaluateInputSource() throws Exception {
         String string =
                 "<html><head><title>foo</title></head>" + "<body>" + "<script id='myscript'>"
@@ -82,6 +88,7 @@ public class HTMLScannerTest extends TestCase {
      * see issue https://sourceforge.net/tracker/?func=detail&atid=952178&aid=3544334&group_id=195122
      * @throws Exception
      */
+    @Test
     public void testLocale() throws Exception {
         final Locale originalLocale = Locale.getDefault();
         try {
@@ -105,6 +112,7 @@ public class HTMLScannerTest extends TestCase {
      * Following test caused NPE with release 1.9.11.
      * Regression test for [ 2503982 ] NPE when parsing from a CharacterStream
      */
+    @Test
     public void testChangeEncodingWithReader() throws Exception {
         String string = "<?xml version='1.0' encoding='UTF-8'?><html><head><title>foo</title></head>" + "</body></html>";
 
@@ -147,6 +155,7 @@ public class HTMLScannerTest extends TestCase {
 
     }
 
+    @Test
     public void testReduceToContent() throws Exception {
         XMLStringBuffer buffer = new XMLStringBuffer("<!-- hello-->");
 
@@ -174,6 +183,7 @@ public class HTMLScannerTest extends TestCase {
      * Regression test for bug 2933989.
      * @throws Exception
      */
+    @Test
     public void testInfiniteLoop() throws Exception {
         StringBuilder buffer = new StringBuilder();
         buffer.append("<html>\n");
@@ -211,6 +221,7 @@ public class HTMLScannerTest extends TestCase {
      * Regression test https://github.com/HtmlUnit/htmlunit-neko/pull/98.
      * @throws Exception on error
      */
+    @Test
     public void testReader() throws Exception {
         final String string = "<html><body>"//
                 + "<script type='text/javascript'>//<!-- /* <![CDATA[ */ function foo() {} /* ]]> */ // --> </script>"//

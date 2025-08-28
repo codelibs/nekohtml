@@ -144,6 +144,19 @@ public class NamespaceBinder extends DefaultFilter {
     private final QName fQName = new QName();
 
     //
+    // Constructors
+    //
+
+    /**
+     * Default constructor for NamespaceBinder filter.
+     * Creates a filter that binds namespaces to HTML elements and attributes,
+     * supporting proper namespace handling in HTML documents.
+     */
+    public NamespaceBinder() {
+        // Default constructor
+    }
+
+    //
     // HTMLComponent methods
     //
 
@@ -330,7 +343,10 @@ public class NamespaceBinder extends DefaultFilter {
     // Protected static methods
     //
 
-    /** Splits a qualified name. */
+    /** 
+     * Splits a qualified name.
+     * @param qname The qualified name to split into prefix and local part
+     */
     protected static void splitQName(final QName qname) {
         final int index = qname.rawname.indexOf(':');
         if (index != -1) {
@@ -342,6 +358,8 @@ public class NamespaceBinder extends DefaultFilter {
     /**
      * Converts HTML names string value to constant value.
      *
+     * @param value The string value to convert ("lower", "upper", or other)
+     * @return The corresponding constant value
      * @see #NAMES_NO_CHANGE
      * @see #NAMES_LOWERCASE
      * @see #NAMES_UPPERCASE
@@ -356,7 +374,12 @@ public class NamespaceBinder extends DefaultFilter {
         return NAMES_NO_CHANGE;
     } // getNamesValue(String):short
 
-    /** Modifies the given name based on the specified mode. */
+    /** 
+     * Modifies the given name based on the specified mode.
+     * @param name The name to modify
+     * @param mode The modification mode (NAMES_UPPERCASE, NAMES_LOWERCASE, or NAMES_NO_CHANGE)
+     * @return The modified name
+     */
     protected static final String modifyName(final String name, final short mode) {
         switch (mode) {
         case NAMES_UPPERCASE:
@@ -372,7 +395,11 @@ public class NamespaceBinder extends DefaultFilter {
     // Protected methods
     //
 
-    /** Binds namespaces. */
+    /** 
+     * Binds namespaces.
+     * @param element The element name to bind namespaces for
+     * @param attrs The element attributes that may contain namespace declarations
+     */
     protected void bindNamespaces(final QName element, final XMLAttributes attrs) {
 
         // split element qname
@@ -522,7 +549,10 @@ public class NamespaceBinder extends DefaultFilter {
             return fEntries[fLevels[fTop - 1] + index].prefix;
         } // getDeclaredPrefixAt(int):String
 
-        /** Get parent context. */
+        /** 
+         * Get parent context.
+         * @return The parent namespace context
+         */
         public NamespaceContext getParentContext() {
             return this;
         } // getParentContext():NamespaceContext

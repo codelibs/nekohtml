@@ -19,7 +19,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 
-import junit.framework.TestCase;
+import org.junit.jupiter.api.Test;
 
 import org.apache.xerces.xni.parser.XMLDocumentFilter;
 import org.apache.xerces.xni.parser.XMLInputSource;
@@ -32,12 +32,13 @@ import org.codelibs.nekohtml.filters.Writer;
  *
  * @author Marc Guillemot
  */
-public class WriterTest extends TestCase {
+public class WriterTest {
 
     /**
      * Regression test for bug: writer changed attribute value causing NPE in 2nd writer.
      * http://sourceforge.net/support/tracker.php?aid=2815779
      */
+    @Test
     public void testEmptyAttribute() throws Exception {
 
         final String content = "<html><head>" + "<meta name='COPYRIGHT' content='SOMEONE' />" + "</head><body></body></html>";

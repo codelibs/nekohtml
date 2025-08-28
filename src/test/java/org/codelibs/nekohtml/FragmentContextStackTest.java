@@ -18,7 +18,9 @@ package org.codelibs.nekohtml;
 import java.io.StringReader;
 import java.io.StringWriter;
 
-import junit.framework.TestCase;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import org.junit.jupiter.api.Test;
 
 import org.apache.xerces.xni.QName;
 import org.apache.xerces.xni.parser.XMLDocumentFilter;
@@ -33,8 +35,9 @@ import org.codelibs.nekohtml.parsers.DOMParser;
  * @version $Id: HTMLTagBalancingListenerTest.java 145 2008-03-17 18:18:33Z
  *          mguillem $
  */
-public class FragmentContextStackTest extends TestCase {
+public class FragmentContextStackTest {
 
+    @Test
     public void testSimple() throws Exception {
         String expected = "(DIV\n" + "(SPAN\n" + "\"hello\n" + ")SPAN\n" + ")DIV\n";
         doTest("<div><span>hello</span>", new String[] { "html", "body" }, expected);
@@ -45,6 +48,7 @@ public class FragmentContextStackTest extends TestCase {
         doTest("<div><span>hello</span>", null, expected);
     }
 
+    @Test
     public void testTR() throws Exception {
         String expected = "(TR\n" + "(TD\n" + "\"hello\n" + ")TD\n" + ")TR\n";
         doTest("<tr><td>hello</td></tr>", new String[] { "html", "body", "table", "tbody" }, expected);
@@ -53,6 +57,7 @@ public class FragmentContextStackTest extends TestCase {
         doTest("<tr><td>hello</td></tr>", new String[] { "html", "body" }, "\"hello");
     }
 
+    @Test
     public void testFragmentShouldNotCloseContextStack() throws Exception {
         String expected = "\"helloworld\n";
         doTest("hello</div>world", new String[] { "html", "body", "div" }, expected);

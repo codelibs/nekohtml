@@ -17,6 +17,7 @@ package org.codelibs.nekohtml;
 
 /**
  * Collection of HTML element information.
+ * This class provides metadata and definitions for HTML elements used by the parser.
  *
  * @author Andy Clark
  * @author Ahmed Ashour
@@ -25,6 +26,13 @@ package org.codelibs.nekohtml;
  * @version $Id: HTMLElements.java,v 1.12 2005/02/14 07:16:59 andyc Exp $
  */
 public class HTMLElements {
+
+    /**
+     * Default constructor. This class serves as a static utility for HTML element definitions.
+     */
+    public HTMLElements() {
+        // Default constructor
+    }
 
     //
     // Constants
@@ -36,150 +44,295 @@ public class HTMLElements {
     //       sequence. The parent and closes references depends on
     //       this assumption. -Ac
 
+    /** Element code for A (anchor) element. */
     public static final short A = 0;
+    /** Element code for ABBR (abbreviation) element. */
     public static final short ABBR = A + 1;
+    /** Element code for ACRONYM element. */
     public static final short ACRONYM = ABBR + 1;
+    /** Element code for ADDRESS element. */
     public static final short ADDRESS = ACRONYM + 1;
+    /** Element code for APPLET element. */
     public static final short APPLET = ADDRESS + 1;
+    /** Element code for AREA element. */
     public static final short AREA = APPLET + 1;
+    /** Element code for ARTICLE element. */
     public static final short ARTICLE = AREA + 1;
+    /** Element code for ASIDE element. */
     public static final short ASIDE = ARTICLE + 1;
+    /** Element code for AUDIO element. */
     public static final short AUDIO = ASIDE + 1;
+    /** Element code for B (bold) element. */
     public static final short B = AUDIO + 1;
+    /** Element code for BASE element. */
     public static final short BASE = B + 1;
+    /** Element code for BASEFONT element. */
     public static final short BASEFONT = BASE + 1;
+    /** Element code for BDI (bidirectional isolate) element. */
     public static final short BDI = BASEFONT + 1;
+    /** Element code for BDO (bidirectional override) element. */
     public static final short BDO = BDI + 1;
+    /** Element code for BGSOUND element. */
     public static final short BGSOUND = BDO + 1;
+    /** Element code for BIG element. */
     public static final short BIG = BGSOUND + 1;
+    /** Element code for BLINK element. */
     public static final short BLINK = BIG + 1;
+    /** Element code for BLOCKQUOTE element. */
     public static final short BLOCKQUOTE = BLINK + 1;
+    /** Element code for BODY element. */
     public static final short BODY = BLOCKQUOTE + 1;
+    /** Element code for BR (line break) element. */
     public static final short BR = BODY + 1;
+    /** Element code for BUTTON element. */
     public static final short BUTTON = BR + 1;
+    /** Element code for CANVAS element. */
     public static final short CANVAS = BUTTON + 1;
+    /** Element code for CAPTION element. */
     public static final short CAPTION = CANVAS + 1;
+    /** Element code for CENTER element. */
     public static final short CENTER = CAPTION + 1;
+    /** Element code for CITE element. */
     public static final short CITE = CENTER + 1;
+    /** Element code for CODE element. */
     public static final short CODE = CITE + 1;
+    /** Element code for COL (column) element. */
     public static final short COL = CODE + 1;
+    /** Element code for COLGROUP (column group) element. */
     public static final short COLGROUP = COL + 1;
+    /** Element code for COMMENT element. */
     public static final short COMMENT = COLGROUP + 1;
+    /** Element code for DATA element. */
     public static final short DATA = COMMENT + 1;
+    /** Element code for DATALIST element. */
     public static final short DATALIST = DATA + 1;
+    /** Element code for DEL (deleted text) element. */
     public static final short DEL = DATALIST + 1;
+    /** Element code for DETAILS element. */
     public static final short DETAILS = DEL + 1;
+    /** Element code for DFN (definition) element. */
     public static final short DFN = DETAILS + 1;
+    /** Element code for DIALOG element. */
     public static final short DIALOG = DFN + 1;
+    /** Element code for DIR (directory) element. */
     public static final short DIR = DIALOG + 1;
+    /** Element code for DIV element. */
     public static final short DIV = DIR + 1;
+    /** Element code for DD (description definition) element. */
     public static final short DD = DIV + 1;
+    /** Element code for DL (description list) element. */
     public static final short DL = DD + 1;
+    /** Element code for DT (description term) element. */
     public static final short DT = DL + 1;
+    /** Element code for EM (emphasis) element. */
     public static final short EM = DT + 1;
+    /** Element code for EMBED element. */
     public static final short EMBED = EM + 1;
+    /** Element code for FIELDSET element. */
     public static final short FIELDSET = EMBED + 1;
+    /** Element code for FIGCAPTION element. */
     public static final short FIGCAPTION = FIELDSET + 1;
+    /** Element code for FIGURE element. */
     public static final short FIGURE = FIGCAPTION + 1;
+    /** Element code for FONT element. */
     public static final short FONT = FIGURE + 1;
+    /** Element code for FOOTER element. */
     public static final short FOOTER = FONT + 1;
+    /** Element code for FORM element. */
     public static final short FORM = FOOTER + 1;
+    /** Element code for FRAME element. */
     public static final short FRAME = FORM + 1;
+    /** Element code for FRAMESET element. */
     public static final short FRAMESET = FRAME + 1;
+    /** Element code for H1 (heading level 1) element. */
     public static final short H1 = FRAMESET + 1;
+    /** Element code for H2 (heading level 2) element. */
     public static final short H2 = H1 + 1;
+    /** Element code for H3 (heading level 3) element. */
     public static final short H3 = H2 + 1;
+    /** Element code for H4 (heading level 4) element. */
     public static final short H4 = H3 + 1;
+    /** Element code for H5 (heading level 5) element. */
     public static final short H5 = H4 + 1;
+    /** Element code for H6 (heading level 6) element. */
     public static final short H6 = H5 + 1;
+    /** Element code for HEAD element. */
     public static final short HEAD = H6 + 1;
+    /** Element code for HEADER element. */
     public static final short HEADER = HEAD + 1;
+    /** Element code for HR (horizontal rule) element. */
     public static final short HR = HEADER + 1;
+    /** Element code for HTML element. */
     public static final short HTML = HR + 1;
+    /** Element code for I (italic) element. */
     public static final short I = HTML + 1;
+    /** Element code for IFRAME (inline frame) element. */
     public static final short IFRAME = I + 1;
+    /** Element code for ILAYER element. */
     public static final short ILAYER = IFRAME + 1;
+    /** Element code for IMG (image) element. */
     public static final short IMG = ILAYER + 1;
+    /** Element code for INPUT element. */
     public static final short INPUT = IMG + 1;
+    /** Element code for INS (inserted text) element. */
     public static final short INS = INPUT + 1;
+    /** Element code for ISINDEX element. */
     public static final short ISINDEX = INS + 1;
+    /** Element code for KBD (keyboard input) element. */
     public static final short KBD = ISINDEX + 1;
+    /** Element code for KEYGEN element. */
     public static final short KEYGEN = KBD + 1;
+    /** Element code for LABEL element. */
     public static final short LABEL = KEYGEN + 1;
+    /** Element code for LAYER element. */
     public static final short LAYER = LABEL + 1;
+    /** Element code for LEGEND element. */
     public static final short LEGEND = LAYER + 1;
+    /** Element code for LI (list item) element. */
     public static final short LI = LEGEND + 1;
+    /** Element code for LINK element. */
     public static final short LINK = LI + 1;
+    /** Element code for LISTING element. */
     public static final short LISTING = LINK + 1;
+    /** Element code for MAIN element. */
     public static final short MAIN = LISTING + 1;
+    /** Element code for MAP element. */
     public static final short MAP = MAIN + 1;
+    /** Element code for MARK element. */
     public static final short MARK = MAP + 1;
+    /** Element code for MARQUEE element. */
     public static final short MARQUEE = MARK + 1;
+    /** Element code for MENU element. */
     public static final short MENU = MARQUEE + 1;
+    /** Element code for META element. */
     public static final short META = MENU + 1;
+    /** Element code for METER element. */
     public static final short METER = META + 1;
+    /** Element code for MULTICOL element. */
     public static final short MULTICOL = METER + 1;
+    /** Element code for NAV (navigation) element. */
     public static final short NAV = MULTICOL + 1;
+    /** Element code for NEXTID element. */
     public static final short NEXTID = NAV + 1;
+    /** Element code for NOBR (no break) element. */
     public static final short NOBR = NEXTID + 1;
+    /** Element code for NOEMBED element. */
     public static final short NOEMBED = NOBR + 1;
+    /** Element code for NOFRAMES element. */
     public static final short NOFRAMES = NOEMBED + 1;
+    /** Element code for NOLAYER element. */
     public static final short NOLAYER = NOFRAMES + 1;
+    /** Element code for NOSCRIPT element. */
     public static final short NOSCRIPT = NOLAYER + 1;
+    /** Element code for OBJECT element. */
     public static final short OBJECT = NOSCRIPT + 1;
+    /** Element code for OL (ordered list) element. */
     public static final short OL = OBJECT + 1;
+    /** Element code for OPTION element. */
     public static final short OPTION = OL + 1;
+    /** Element code for OPTGROUP (option group) element. */
     public static final short OPTGROUP = OPTION + 1;
+    /** Element code for OUTPUT element. */
     public static final short OUTPUT = OPTGROUP + 1;
+    /** Element code for P (paragraph) element. */
     public static final short P = OUTPUT + 1;
+    /** Element code for PARAM element. */
     public static final short PARAM = P + 1;
+    /** Element code for PICTURE element. */
     public static final short PICTURE = PARAM + 1;
+    /** Element code for PLAINTEXT element. */
     public static final short PLAINTEXT = PICTURE + 1;
+    /** Element code for PRE (preformatted text) element. */
     public static final short PRE = PLAINTEXT + 1;
+    /** Element code for PROGRESS element. */
     public static final short PROGRESS = PRE + 1;
+    /** Element code for Q (quotation) element. */
     public static final short Q = PROGRESS + 1;
+    /** Element code for RB (ruby base) element. */
     public static final short RB = Q + 1;
+    /** Element code for RBC (ruby base container) element. */
     public static final short RBC = RB + 1;
+    /** Element code for RP (ruby parentheses) element. */
     public static final short RP = RBC + 1;
+    /** Element code for RT (ruby text) element. */
     public static final short RT = RP + 1;
+    /** Element code for RTC (ruby text container) element. */
     public static final short RTC = RT + 1;
+    /** Element code for RUBY element. */
     public static final short RUBY = RTC + 1;
+    /** Element code for S (strikethrough) element. */
     public static final short S = RUBY + 1;
+    /** Element code for SAMP (sample output) element. */
     public static final short SAMP = S + 1;
+    /** Element code for SCRIPT element. */
     public static final short SCRIPT = SAMP + 1;
+    /** Element code for SECTION element. */
     public static final short SECTION = SCRIPT + 1;
+    /** Element code for SELECT element. */
     public static final short SELECT = SECTION + 1;
+    /** Element code for SMALL element. */
     public static final short SMALL = SELECT + 1;
+    /** Element code for SOUND element. */
     public static final short SOUND = SMALL + 1;
+    /** Element code for SOURCE element. */
     public static final short SOURCE = SOUND + 1;
+    /** Element code for SPACER element. */
     public static final short SPACER = SOURCE + 1;
+    /** Element code for SPAN element. */
     public static final short SPAN = SPACER + 1;
+    /** Element code for STRIKE element. */
     public static final short STRIKE = SPAN + 1;
+    /** Element code for STRONG element. */
     public static final short STRONG = STRIKE + 1;
+    /** Element code for STYLE element. */
     public static final short STYLE = STRONG + 1;
+    /** Element code for SUB (subscript) element. */
     public static final short SUB = STYLE + 1;
+    /** Element code for SUMMARY element. */
     public static final short SUMMARY = SUB + 1;
+    /** Element code for SUP (superscript) element. */
     public static final short SUP = SUMMARY + 1;
+    /** Element code for TABLE element. */
     public static final short TABLE = SUP + 1;
+    /** Element code for TEMPLATE element. */
     public static final short TEMPLATE = TABLE + 1;
+    /** Element code for TBODY (table body) element. */
     public static final short TBODY = TEMPLATE + 1;
+    /** Element code for TD (table data cell) element. */
     public static final short TD = TBODY + 1;
+    /** Element code for TEXTAREA element. */
     public static final short TEXTAREA = TD + 1;
+    /** Element code for TFOOT (table footer) element. */
     public static final short TFOOT = TEXTAREA + 1;
+    /** Element code for TH (table header cell) element. */
     public static final short TH = TFOOT + 1;
+    /** Element code for THEAD (table header) element. */
     public static final short THEAD = TH + 1;
+    /** Element code for TIME element. */
     public static final short TIME = THEAD + 1;
+    /** Element code for TITLE element. */
     public static final short TITLE = TIME + 1;
+    /** Element code for TR (table row) element. */
     public static final short TR = TITLE + 1;
+    /** Element code for TRACK element. */
     public static final short TRACK = TR + 1;
+    /** Element code for TT (teletype text) element. */
     public static final short TT = TRACK + 1;
+    /** Element code for U (underline) element. */
     public static final short U = TT + 1;
+    /** Element code for UL (unordered list) element. */
     public static final short UL = U + 1;
+    /** Element code for VAR (variable) element. */
     public static final short VAR = UL + 1;
+    /** Element code for VIDEO element. */
     public static final short VIDEO = VAR + 1;
+    /** Element code for WBR (word break opportunity) element. */
     public static final short WBR = VIDEO + 1;
+    /** Element code for XML element. */
     public static final short XML = WBR + 1;
+    /** Element code for XMP (example) element. */
     public static final short XMP = XML + 1;
+    /** Element code for unknown/unrecognized elements. */
     public static final short UNKNOWN = XMP + 1;
 
     // information
@@ -557,6 +710,7 @@ public class HTMLElements {
      * Returns the element information for the specified element code.
      *
      * @param code The element code.
+     * @return the element information for the specified code
      */
     public static final Element getElement(final short code) {
         return ELEMENTS.data[code];
@@ -566,6 +720,7 @@ public class HTMLElements {
      * Returns the element information for the specified element name.
      *
      * @param ename The element name.
+     * @return the element information for the specified name
      */
     public static final Element getElement(final String ename) {
         Element element = getElement(ename, NO_SUCH_ELEMENT);
@@ -582,6 +737,7 @@ public class HTMLElements {
      *
      * @param ename The element name.
      * @param element The default element to return if not found.
+     * @return the element information for the specified name, or the default element if not found
      */
     public static final Element getElement(final String ename, final Element element) {
 
@@ -684,6 +840,7 @@ public class HTMLElements {
          * @param name The element name.
          * @param flags Informational flags
          * @param parent Natural closing parent name.
+         * @param bounds Element boundary code for special parsing rules.
          * @param closes List of elements this element can close.
          */
         public Element(final short code, final String name, final int flags, final short parent, final short bounds, final short[] closes) {
@@ -710,6 +867,7 @@ public class HTMLElements {
          * @param name The element name.
          * @param flags Informational flags
          * @param parents Natural closing parent names.
+         * @param bounds Element boundary code for special parsing rules.
          * @param closes List of elements this element can close.
          */
         public Element(final short code, final String name, final int flags, final short[] parents, final short bounds, final short[] closes) {
@@ -726,22 +884,34 @@ public class HTMLElements {
         // Public methods
         //
 
-        /** Returns true if this element is an inline element. */
+        /**
+         * Returns true if this element is an inline element.
+         * @return true if this is an inline element, false otherwise
+         */
         public final boolean isInline() {
             return (flags & INLINE) != 0;
         } // isInline():boolean
 
-        /** Returns true if this element is a block element. */
+        /**
+         * Returns true if this element is a block element.
+         * @return true if this is a block element, false otherwise
+         */
         public final boolean isBlock() {
             return (flags & BLOCK) != 0;
         } // isBlock():boolean
 
-        /** Returns true if this element is an empty element. */
+        /**
+         * Returns true if this element is an empty element.
+         * @return true if this is an empty element, false otherwise
+         */
         public final boolean isEmpty() {
             return (flags & EMPTY) != 0;
         } // isEmpty():boolean
 
-        /** Returns true if this element is a container element. */
+        /**
+         * Returns true if this element is a container element.
+         * @return true if this is a container element, false otherwise
+         */
         public final boolean isContainer() {
             return (flags & CONTAINER) != 0;
         } // isContainer():boolean
@@ -749,6 +919,7 @@ public class HTMLElements {
         /**
          * Returns true if this element is special -- if its content
          * should be parsed ignoring markup.
+         * @return true if this is a special element, false otherwise
          */
         public final boolean isSpecial() {
             return (flags & SPECIAL) != 0;
@@ -757,7 +928,8 @@ public class HTMLElements {
         /**
          * Returns true if this element can close the specified Element.
          *
-         * @param tag The element.
+         * @param tag The element code to check.
+         * @return true if this element can close the specified element
          */
         public boolean closes(final short tag) {
             if (closes != null) {
@@ -813,8 +985,18 @@ public class HTMLElements {
         }
     } // class Element
 
-    /** Unsynchronized list of elements. */
+    /**
+     * Unsynchronized list of elements.
+     * This class provides a simple dynamic array implementation for storing Element objects.
+     */
     public static class ElementList {
+
+        /**
+         * Default constructor. Initializes an empty element list with default capacity.
+         */
+        public ElementList() {
+            // Default constructor
+        }
 
         //
         // Data
@@ -830,7 +1012,10 @@ public class HTMLElements {
         // Public methods
         //
 
-        /** Adds an element to list, resizing if necessary. */
+        /**
+         * Adds an element to list, resizing if necessary.
+         * @param element The element to add to the list
+         */
         public void addElement(final Element element) {
             if (size == data.length) {
                 final Element[] newarray = new Element[size + 20];

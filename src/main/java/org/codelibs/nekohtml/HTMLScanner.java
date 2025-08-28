@@ -94,6 +94,13 @@ import org.codelibs.nekohtml.xercesbridge.XercesBridge;
  */
 public class HTMLScanner implements XMLDocumentScanner, XMLLocator, HTMLComponent {
 
+    /**
+     * Default constructor. Creates an HTML scanner with default settings.
+     */
+    public HTMLScanner() {
+        // Default constructor
+    }
+
     //
     // Constants
     //
@@ -883,7 +890,12 @@ public class HTMLScanner implements XMLDocumentScanner, XMLLocator, HTMLComponen
     // Protected static methods
     //
 
-    /** Returns the value of the specified attribute, ignoring case. */
+    /**
+     * Returns the value of the specified attribute, ignoring case.
+     * @param attrs The attributes to search
+     * @param aname The attribute name to search for
+     * @return The attribute value or null if not found
+     */
     protected static String getValue(final XMLAttributes attrs, final String aname) {
         final int length = attrs != null ? attrs.getLength() : 0;
         for (int i = 0; i < length; i++) {
@@ -901,6 +913,7 @@ public class HTMLScanner implements XMLDocumentScanner, XMLLocator, HTMLComponen
      * indicates a failure to expand the id.
      *
      * @param systemId The systemId to be expanded.
+     * @param baseSystemId The base system identifier for resolving relative URIs.
      *
      * @return Returns the URI string representing the expanded system
      *         identifier. A null value indicates that the given
@@ -1009,7 +1022,12 @@ public class HTMLScanner implements XMLDocumentScanner, XMLLocator, HTMLComponen
 
     } // fixURI(String):String
 
-    /** Modifies the given name based on the specified mode. */
+    /**
+     * Modifies the given name based on the specified mode.
+     * @param name The name to modify
+     * @param mode The modification mode (NAMES_UPPERCASE, NAMES_LOWERCASE, or NAMES_NO_CHANGE)
+     * @return The modified name
+     */
     protected static final String modifyName(final String name, final short mode) {
         switch (mode) {
         case NAMES_UPPERCASE:
@@ -1024,6 +1042,8 @@ public class HTMLScanner implements XMLDocumentScanner, XMLLocator, HTMLComponen
     /**
      * Converts HTML names string value to constant value.
      *
+     * @param value The string value ("upper", "lower", or anything else for no change)
+     * @return The corresponding names mode constant
      * @see #NAMES_NO_CHANGE
      * @see #NAMES_LOWERCASE
      * @see #NAMES_UPPERCASE
@@ -1043,6 +1063,8 @@ public class HTMLScanner implements XMLDocumentScanner, XMLLocator, HTMLComponen
      * <p>
      * Details about this common problem can be found at
      * <a href='http://www.cs.tut.fi/~jkorpela/www/windows-chars.html'>http://www.cs.tut.fi/~jkorpela/www/windows-chars.html</a>
+     * @param origChar The original character code to fix
+     * @return The fixed character code
      */
     protected int fixWindowsCharacter(final int origChar) {
         /* PATCH: Asgeir Asgeirsson */
@@ -1105,26 +1127,39 @@ public class HTMLScanner implements XMLDocumentScanner, XMLLocator, HTMLComponen
     //
 
     // i/o
-    /** Reads a single character. */
+    /**
+     * Reads a single character.
+     * @return The character read as an integer, or -1 if end of stream
+     * @throws IOException If an I/O error occurs
+     */
     protected int read() throws IOException {
         return fCurrentEntity.read();
     }
 
     // debugging
 
-    /** Sets the scanner. */
+    /**
+     * Sets the scanner.
+     * @param scanner The scanner to set
+     */
     protected void setScanner(final Scanner scanner) {
         fScanner = scanner;
     } // setScanner(Scanner)
 
-    /** Sets the scanner state. */
+    /**
+     * Sets the scanner state.
+     * @param state The scanner state to set
+     */
     protected void setScannerState(final short state) {
         fScannerState = state;
     } // setScannerState(short)
 
     // scanning
 
-    /** Scans a DOCTYPE line. */
+    /**
+     * Scans a DOCTYPE line.
+     * @throws IOException If an I/O error occurs
+     */
     protected void scanDoctype() throws IOException {
         String root = null;
         String pubid = null;
@@ -1180,7 +1215,11 @@ public class HTMLScanner implements XMLDocumentScanner, XMLLocator, HTMLComponen
 
     } // scanDoctype()
 
-    /** Scans a quoted literal. */
+    /**
+     * Scans a quoted literal.
+     * @return The scanned literal string or null if no literal found
+     * @throws IOException If an I/O error occurs
+     */
     protected String scanLiteral() throws IOException {
         final int quote = fCurrentEntity.read();
         if (quote == '\'' || quote == '"') {
@@ -1215,7 +1254,12 @@ public class HTMLScanner implements XMLDocumentScanner, XMLLocator, HTMLComponen
         return null;
     } // scanLiteral():String
 
-    /** Scans a name. */
+    /**
+     * Scans a name.
+     * @param strict Whether to use strict name character validation
+     * @return The scanned name or null if no valid name found
+     * @throws IOException If an I/O error occurs
+     */
     protected String scanName(final boolean strict) throws IOException {
         if (fCurrentEntity.offset == fCurrentEntity.length) {
             if (fCurrentEntity.load(0) == -1) {
@@ -1249,7 +1293,13 @@ public class HTMLScanner implements XMLDocumentScanner, XMLLocator, HTMLComponen
         return name;
     } // scanName():String
 
-    /** Scans an entity reference. */
+    /**
+     * Scans an entity reference.
+     * @param str The string buffer to store the entity reference
+     * @param content Whether scanning within content context
+     * @return The entity character value or -1 if not a valid entity
+     * @throws IOException If an I/O error occurs
+     */
     protected int scanEntityRef(final XMLStringBuffer str, final boolean content) throws IOException {
         str.clear();
         str.append('&');
@@ -1378,7 +1428,13 @@ public class HTMLScanner implements XMLDocumentScanner, XMLLocator, HTMLComponen
 
     } // scanEntityRef(XMLStringBuffer,boolean):int
 
-    /** Returns true if the specified text is present and is skipped. */
+    /**
+     * Returns true if the specified text is present and is skipped.
+     * @param s The string to match and skip
+     * @param caseSensitive Whether the comparison should be case sensitive
+     * @return true if the string was matched and skipped, false otherwise
+     * @throws IOException If an I/O error occurs
+     */
     protected boolean skip(final String s, final boolean caseSensitive) throws IOException {
         final int length = s != null ? s.length() : 0;
         for (int i = 0; i < length; i++) {
@@ -1403,7 +1459,12 @@ public class HTMLScanner implements XMLDocumentScanner, XMLLocator, HTMLComponen
         return true;
     } // skip(String):boolean
 
-    /** Skips markup. */
+    /**
+     * Skips markup.
+     * @param balance Whether to balance opening and closing angle brackets
+     * @return true if markup was successfully skipped, false otherwise
+     * @throws IOException If an I/O error occurs
+     */
     protected boolean skipMarkup(final boolean balance) throws IOException {
         int depth = 1;
         boolean slashgt = false;
@@ -1447,7 +1508,11 @@ public class HTMLScanner implements XMLDocumentScanner, XMLLocator, HTMLComponen
         return slashgt;
     } // skipMarkup():boolean
 
-    /** Skips whitespace. */
+    /**
+     * Skips whitespace.
+     * @return true if any whitespace was skipped, false otherwise
+     * @throws IOException If an I/O error occurs
+     */
     protected boolean skipSpaces() throws IOException {
         boolean spaces = false;
         while (true) {
@@ -1471,7 +1536,11 @@ public class HTMLScanner implements XMLDocumentScanner, XMLLocator, HTMLComponen
         return spaces;
     } // skipSpaces()
 
-    /** Skips newlines and returns the number of newlines skipped. */
+    /**
+     * Skips newlines and returns the number of newlines skipped.
+     * @return The number of newlines skipped
+     * @throws IOException If an I/O error occurs
+     */
     protected int skipNewlines() throws IOException {
         if (!fCurrentEntity.hasNext()) {
             if (fCurrentEntity.load(0) == -1) {
@@ -1515,7 +1584,10 @@ public class HTMLScanner implements XMLDocumentScanner, XMLLocator, HTMLComponen
 
     // infoset utility methods
 
-    /** Returns an augmentations object with a location item added. */
+    /**
+     * Returns an augmentations object with a location item added.
+     * @return Augmentations object with location information
+     */
     protected final Augmentations locationAugs() {
         HTMLAugmentations augs = null;
         if (fAugmentations) {
@@ -1528,7 +1600,10 @@ public class HTMLScanner implements XMLDocumentScanner, XMLLocator, HTMLComponen
         return augs;
     } // locationAugs():Augmentations
 
-    /** Returns an augmentations object with a synthesized item added. */
+    /**
+     * Returns an augmentations object with a synthesized item added.
+     * @return Augmentations object marked as synthesized
+     */
     protected final Augmentations synthesizedAugs() {
         HTMLAugmentations augs = null;
         if (fAugmentations) {
@@ -1539,7 +1614,10 @@ public class HTMLScanner implements XMLDocumentScanner, XMLLocator, HTMLComponen
         return augs;
     } // synthesizedAugs():Augmentations
 
-    /** Returns an empty resource identifier. */
+    /**
+     * Returns an empty resource identifier.
+     * @return An empty XMLResourceIdentifier
+     */
     protected final XMLResourceIdentifier resourceId() {
         /***/
         fResourceId.clear();
@@ -1556,7 +1634,11 @@ public class HTMLScanner implements XMLDocumentScanner, XMLLocator, HTMLComponen
     // Protected static methods
     //
 
-    /** Returns true if the name is a built-in XML general entity reference. */
+    /**
+     * Returns true if the name is a built-in XML general entity reference.
+     * @param name The entity name to check
+     * @return true if the name is a built-in XML entity reference
+     */
     protected static boolean builtinXmlRef(final String name) {
         return "amp".equals(name) || "lt".equals(name) || "gt".equals(name) || "quot".equals(name) || "apos".equals(name);
     } // builtinXmlRef(String):boolean
@@ -1691,7 +1773,15 @@ public class HTMLScanner implements XMLDocumentScanner, XMLLocator, HTMLComponen
         // Constructors
         //
 
-        /** Constructs an entity from the specified stream. */
+        /**
+         * Constructs an entity from the specified stream.
+         * @param stream The input stream reader
+         * @param encoding The character encoding
+         * @param publicId The public identifier
+         * @param baseSystemId The base system identifier
+         * @param literalSystemId The literal system identifier
+         * @param expandedSystemId The expanded system identifier
+         */
         public CurrentEntity(final Reader stream, final String encoding, final String publicId, final String baseSystemId,
                 final String literalSystemId, final String expandedSystemId) {
             stream_ = stream;
@@ -1736,6 +1826,8 @@ public class HTMLScanner implements XMLDocumentScanner, XMLLocator, HTMLComponen
          * characters loaded or -1 if no additional characters were loaded.
          *
          * @param offset The offset at which new characters should be loaded.
+         * @return The number of characters loaded or -1 if no more characters
+         * @throws IOException If an I/O error occurs
          */
         protected int load(final int offset) throws IOException {
             // resize buffer, if needed
@@ -1755,7 +1847,11 @@ public class HTMLScanner implements XMLDocumentScanner, XMLLocator, HTMLComponen
             return count;
         } // load():int
 
-        /** Reads a single character. */
+        /**
+         * Reads a single character.
+         * @return The character read as an integer, or -1 if end of stream
+         * @throws IOException If an I/O error occurs
+         */
         protected int read() throws IOException {
             if (offset == length) {
                 if (endReached_) {
@@ -1804,6 +1900,10 @@ public class HTMLScanner implements XMLDocumentScanner, XMLLocator, HTMLComponen
             columnNumber_ = 1;
         }
 
+        /**
+         * Returns the current line number.
+         * @return The current line number
+         */
         public int getLineNumber() {
             return lineNumber_;
         }
@@ -1838,6 +1938,13 @@ public class HTMLScanner implements XMLDocumentScanner, XMLLocator, HTMLComponen
      * @author Andy Clark
      */
     public class ContentScanner implements Scanner {
+
+        /**
+         * Default constructor. Creates a content scanner.
+         */
+        public ContentScanner() {
+            // Default constructor
+        }
 
         //
         // Data
@@ -2075,6 +2182,7 @@ public class HTMLScanner implements XMLDocumentScanner, XMLLocator, HTMLComponen
          * up to current offset.
          * @param len the number of characters to read
          * @return the read string (length may be smaller if EOF is encountered)
+         * @throws IOException If an I/O error occurs
          */
         protected String nextContent(final int len) throws IOException {
             final int originalOffset = fCurrentEntity.offset;
@@ -2106,7 +2214,10 @@ public class HTMLScanner implements XMLDocumentScanner, XMLLocator, HTMLComponen
         // Protected methods
         //
 
-        /** Scans characters. */
+        /**
+         * Scans characters.
+         * @throws IOException If an I/O error occurs
+         */
         protected void scanCharacters() throws IOException {
             fStringBuffer.clear();
             while (true) {
@@ -2148,7 +2259,10 @@ public class HTMLScanner implements XMLDocumentScanner, XMLLocator, HTMLComponen
 
         } // scanCharacters()
 
-        /** Scans a CDATA section. */
+        /**
+         * Scans a CDATA section.
+         * @throws IOException If an I/O error occurs
+         */
         protected void scanCDATA() throws IOException {
             fStringBuffer.clear();
             if (fCDATASections) {
@@ -2181,7 +2295,10 @@ public class HTMLScanner implements XMLDocumentScanner, XMLLocator, HTMLComponen
             }
         } // scanCDATA()
 
-        /** Scans a comment. */
+        /**
+         * Scans a comment.
+         * @throws IOException If an I/O error occurs
+         */
         protected void scanComment() throws IOException {
             fEndLineNumber = fCurrentEntity.getLineNumber();
             fEndColumnNumber = fCurrentEntity.getColumnNumber();
@@ -2226,7 +2343,13 @@ public class HTMLScanner implements XMLDocumentScanner, XMLLocator, HTMLComponen
             }
         } // scanComment()
 
-        /** Scans markup content. */
+        /**
+         * Scans markup content.
+         * @param buffer The buffer to store the scanned content
+         * @param cend The character that marks the end of content
+         * @return true if EOF was encountered, false otherwise
+         * @throws IOException If an I/O error occurs
+         */
         protected boolean scanMarkupContent(final XMLStringBuffer buffer, final char cend) throws IOException {
             int c = -1;
             OUTER: while (true) {
@@ -2283,7 +2406,10 @@ public class HTMLScanner implements XMLDocumentScanner, XMLLocator, HTMLComponen
             return c == -1;
         } // scanMarkupContent(XMLStringBuffer,char):boolean
 
-        /** Scans a processing instruction. */
+        /**
+         * Scans a processing instruction.
+         * @throws IOException If an I/O error occurs
+         */
         protected void scanPI() throws IOException {
             if (fReportErrors) {
                 fErrorReporter.reportWarning("HTML1008", null);
@@ -2395,6 +2521,8 @@ public class HTMLScanner implements XMLDocumentScanner, XMLLocator, HTMLComponen
          *
          * @param empty Is used for a second return value to indicate whether
          *              the start element tag is empty (e.g. "/&gt;").
+         * @return The element name or null if invalid
+         * @throws IOException If an I/O error occurs
          */
         protected String scanStartElement(final boolean[] empty) throws IOException {
             String ename = scanName(true);
@@ -2548,6 +2676,8 @@ public class HTMLScanner implements XMLDocumentScanner, XMLLocator, HTMLComponen
          * @param empty      Is used for a second return value to indicate
          *                   whether the start element tag is empty
          *                   (e.g. "/&gt;").
+         * @return true if an attribute was scanned, false otherwise
+         * @throws IOException If an I/O error occurs
          */
         protected boolean scanAttribute(final XMLAttributesImpl attributes, final boolean[] empty) throws IOException {
             return scanAttribute(attributes, empty, '/');
@@ -2557,6 +2687,8 @@ public class HTMLScanner implements XMLDocumentScanner, XMLLocator, HTMLComponen
          * Scans a pseudo attribute.
          *
          * @param attributes The list of attributes.
+         * @return true if a pseudo attribute was scanned, false otherwise
+         * @throws IOException If an I/O error occurs
          */
         protected boolean scanPseudoAttribute(final XMLAttributesImpl attributes) throws IOException {
             return scanAttribute(attributes, fSingleBoolean, '?');
@@ -2571,8 +2703,8 @@ public class HTMLScanner implements XMLDocumentScanner, XMLLocator, HTMLComponen
          *                   (e.g. "/&gt;").
          * @param endc       The end character that appears before the
          *                   closing angle bracket ('&gt;').
-         * @return
-         * @throws IOException
+         * @return true if an attribute was scanned, false otherwise
+         * @throws IOException If an I/O error occurs
          */
         protected boolean scanAttribute(final XMLAttributesImpl attributes, final boolean[] empty, final char endc) throws IOException {
             final boolean skippedSpaces = skipSpaces();
@@ -2784,9 +2916,10 @@ public class HTMLScanner implements XMLDocumentScanner, XMLLocator, HTMLComponen
             return true;
         } // scanAttribute(XMLAttributesImpl):boolean
 
-        /** Adds location augmentations to the specified attribute.
-         * @param attributes
-         * @param index
+        /**
+         * Adds location augmentations to the specified attribute.
+         * @param attributes The attributes collection
+         * @param index The attribute index
          */
         protected void addLocationItem(final XMLAttributes attributes, final int index) {
             fEndLineNumber = fCurrentEntity.getLineNumber();
@@ -2799,8 +2932,9 @@ public class HTMLScanner implements XMLDocumentScanner, XMLLocator, HTMLComponen
             augs.putItem(AUGMENTATIONS, locationItem);
         } // addLocationItem(XMLAttributes,int)
 
-        /** Scans an end element.
-         * @throws IOException
+        /**
+         * Scans an end element.
+         * @throws IOException If an I/O error occurs
          */
         protected void scanEndElement() throws IOException {
             String ename = scanName(true);
@@ -2868,10 +3002,27 @@ public class HTMLScanner implements XMLDocumentScanner, XMLLocator, HTMLComponen
         private final XMLStringBuffer fStringBuffer = new XMLStringBuffer();
 
         //
+        // Constructors
+        //
+
+        /**
+         * Default constructor for SpecialScanner.
+         * Initializes the scanner for processing special HTML elements that require
+         * text-only content handling.
+         */
+        public SpecialScanner() {
+            // Default constructor
+        }
+
+        //
         // Public methods
         //
 
-        /** Sets the element name. */
+        /**
+         * Sets the element name.
+         * @param ename The element name
+         * @return This scanner instance
+         */
         public Scanner setElementName(final String ename) {
             fElementName = ename;
             fStyle = "STYLE".equalsIgnoreCase(fElementName);
@@ -2979,7 +3130,12 @@ public class HTMLScanner implements XMLDocumentScanner, XMLLocator, HTMLComponen
         // Protected methods
         //
 
-        /** Scan characters. */
+        /**
+         * Scan characters.
+         * @param buffer The buffer to store scanned characters
+         * @param delimiter The delimiter character to stop scanning
+         * @throws IOException If an I/O error occurs
+         */
         protected void scanCharacters(final XMLStringBuffer buffer, final int delimiter) throws IOException {
             while (true) {
                 final int c = fCurrentEntity.read();
@@ -3085,7 +3241,10 @@ public class HTMLScanner implements XMLDocumentScanner, XMLLocator, HTMLComponen
         // Constructors
         //
 
-        /** Constructor. */
+        /**
+         * Constructor.
+         * @param in The input stream to wrap
+         */
         public PlaybackInputStream(final InputStream in) {
             super(in);
         } // <init>(InputStream)
@@ -3094,7 +3253,11 @@ public class HTMLScanner implements XMLDocumentScanner, XMLLocator, HTMLComponen
         // Public methods
         //
 
-        /** Detect encoding. */
+        /**
+         * Detect encoding.
+         * @param encodings Array to store detected encoding information
+         * @throws IOException If an I/O error occurs
+         */
         public void detectEncoding(final String[] encodings) throws IOException {
             if (fDetected) {
                 throw new IOException("Should not detect encoding twice.");
@@ -3269,6 +3432,9 @@ public class HTMLScanner implements XMLDocumentScanner, XMLLocator, HTMLComponen
         //
         // Public methods
         //
+        /**
+         * Default constructor. Creates an empty location item.
+         */
         public LocationItem() {
             // nothing
         }
@@ -3278,7 +3444,15 @@ public class HTMLScanner implements XMLDocumentScanner, XMLLocator, HTMLComponen
                     other.fEndColumnNumber, other.fEndCharacterOffset);
         }
 
-        /** Sets the values of this item. */
+        /**
+         * Sets the values of this item.
+         * @param beginLine The beginning line number
+         * @param beginColumn The beginning column number
+         * @param beginOffset The beginning character offset
+         * @param endLine The ending line number
+         * @param endColumn The ending column number
+         * @param endOffset The ending character offset
+         */
         public void setValues(final int beginLine, final int beginColumn, final int beginOffset, final int endLine, final int endColumn,
                 final int endOffset) {
             fBeginLineNumber = beginLine;
@@ -3402,7 +3576,11 @@ public class HTMLScanner implements XMLDocumentScanner, XMLLocator, HTMLComponen
         return string.equals(s);
     }
 
-    /** Reads a single character, preserving the old buffer content */
+    /**
+     * Reads a single character, preserving the old buffer content
+     * @return The character read as an integer, or -1 if end of stream
+     * @throws IOException If an I/O error occurs
+     */
     protected int readPreservingBufferContent() throws IOException {
         if (fCurrentEntity.offset == fCurrentEntity.length) {
             if (fCurrentEntity.load(fCurrentEntity.length) < 1) {

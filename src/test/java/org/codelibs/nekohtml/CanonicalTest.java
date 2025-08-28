@@ -32,10 +32,14 @@ import java.util.Collections;
 import java.util.List;
 import java.util.StringTokenizer;
 
-import junit.framework.AssertionFailedError;
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
+
+import java.util.stream.Stream;
+
+import org.junit.jupiter.api.DynamicTest;
+import org.junit.jupiter.api.TestFactory;
+import org.junit.jupiter.api.Test;
 
 import org.apache.xerces.xni.parser.XMLDocumentFilter;
 import org.apache.xerces.xni.parser.XMLInputSource;
@@ -52,17 +56,17 @@ import org.codelibs.nekohtml.xercesbridge.XercesBridge;
  * @author Marc Guillemot
  * @author Ahmed Ashour
  */
-public class CanonicalTest extends TestCase {
+public class CanonicalTest {
 
     private static final File canonicalDir = new File("src/test/resources/data/canonical");
     private static final File outputDir = new File("target/build/data/output/" + XercesBridge.getInstance().getVersion());
     private File dataFile;
 
-    public static Test suite() throws Exception {
+    @TestFactory
+    Stream<DynamicTest> canonicalTests() throws Exception {
         outputDir.mkdirs();
 
-        TestSuite suite = new TestSuite();
-        final List/*File*/dataFiles = new ArrayList();
+        final List<File> dataFiles = new ArrayList<>();
         File dataDir = new File("src/test/resources/data");
         dataDir.listFiles(new FileFilter() {
             public boolean accept(final File file) {
@@ -77,18 +81,12 @@ public class CanonicalTest extends TestCase {
         });
         Collections.sort(dataFiles);
 
-        for (Object file : dataFiles) {
-            suite.addTest(new CanonicalTest((File) file));
-        }
-        return suite;
+        return dataFiles.stream().map(
+                dataFile -> DynamicTest.dynamicTest(dataFile.getName() + " [" + XercesBridge.getInstance().getVersion() + "]",
+                        () -> runCanonicalTest(dataFile)));
     }
 
-    CanonicalTest(final File dataFile) throws Exception {
-        super(dataFile.getName() + " [" + XercesBridge.getInstance().getVersion() + "]");
-        this.dataFile = dataFile;
-    }
-
-    protected void runTest() throws Exception {
+    private void runCanonicalTest(final File dataFile) throws Exception {
         final String dataLines = getResult(dataFile);
         try {
             // prepare for future changes where canonical files are next to test file
@@ -102,7 +100,7 @@ public class CanonicalTest extends TestCase {
             final String canonicalLines = getCanonical(canonicalFile);
 
             assertEquals(canonicalLines, dataLines);
-        } catch (final AssertionFailedError e) {
+        } catch (final AssertionError e) {
             final File output = new File(outputDir, dataFile.getName());
             final PrintWriter pw = new PrintWriter(new FileOutputStream(output));
             pw.print(dataLines);

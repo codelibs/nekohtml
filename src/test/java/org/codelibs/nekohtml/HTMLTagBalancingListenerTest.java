@@ -20,7 +20,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import junit.framework.TestCase;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import org.junit.jupiter.api.Test;
 
 import org.apache.xerces.parsers.AbstractSAXParser;
 import org.apache.xerces.xni.Augmentations;
@@ -36,8 +38,9 @@ import org.codelibs.nekohtml.HTMLTagBalancingListener;
  * @author Marc Guillemot
  * @version $Id$
  */
-public class HTMLTagBalancingListenerTest extends TestCase {
+public class HTMLTagBalancingListenerTest {
 
+    @Test
     public void testIgnoredTags() throws Exception {
         String string =
                 "<html><head><title>foo</title></head>" + "<body>" + "<body onload='alert(123)'>" + "<div>" + "<form action='foo'>"
@@ -60,6 +63,7 @@ public class HTMLTagBalancingListenerTest extends TestCase {
      * HTMLTagBalancer field fSeenFramesetElement was not correctly reset as of 1.19.17  
      * @throws Exception
      */
+    @Test
     public void testReuse() throws Exception {
         String string = "<head><title>title</title></head><body><div>hello</div></body>";
 

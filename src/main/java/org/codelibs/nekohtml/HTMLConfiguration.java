@@ -214,6 +214,11 @@ public class HTMLConfiguration extends ParserConfigurationSettings implements XM
 
     } // <init>()
 
+    /**
+     * Creates a new document scanner for HTML parsing.
+     * 
+     * @return a new HTMLScanner instance
+     */
     protected HTMLScanner createDocumentScanner() {
         return new HTMLScanner();
     }
@@ -444,7 +449,11 @@ public class HTMLConfiguration extends ParserConfigurationSettings implements XM
     // Protected methods
     //
 
-    /** Adds a component. */
+    /**
+     * Adds a component to the parser configuration.
+     * 
+     * @param component the HTML component to add
+     */
     protected void addComponent(final HTMLComponent component) {
 
         // add component to list
@@ -532,6 +541,12 @@ public class HTMLConfiguration extends ParserConfigurationSettings implements XM
      */
     protected class ErrorReporter implements HTMLErrorReporter {
 
+        /**
+         * Constructs an error reporter.
+         */
+        public ErrorReporter() {
+        }
+
         //
         // Data
         //
@@ -588,13 +603,25 @@ public class HTMLConfiguration extends ParserConfigurationSettings implements XM
         // Protected methods
         //
 
-        /** Creates parse exception. */
+        /**
+         * Creates a parse exception with a formatted message.
+         * 
+         * @param key the error message key
+         * @param args arguments to format into the message
+         * @return a new XMLParseException with the formatted message
+         */
         protected XMLParseException createException(final String key, final Object[] args) {
             final String message = formatMessage(key, args);
             return new XMLParseException(fDocumentScanner, message);
         } // createException(String,Object[]):XMLParseException
 
-        /** Format simple message. */
+        /**
+         * Formats a simple error message without localization.
+         * 
+         * @param key the error message key
+         * @param args arguments to include in the message
+         * @return the formatted simple error message
+         */
         protected String formatSimpleMessage(final String key, final Object[] args) {
             final StringBuilder str = new StringBuilder();
             str.append(ERROR_DOMAIN);

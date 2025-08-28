@@ -17,7 +17,9 @@ package org.codelibs.nekohtml;
 
 import java.io.ByteArrayInputStream;
 
-import junit.framework.TestCase;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import org.junit.jupiter.api.Test;
 
 import org.apache.xerces.parsers.AbstractSAXParser;
 import org.codelibs.nekohtml.HTMLConfiguration;
@@ -32,11 +34,12 @@ import org.xml.sax.helpers.DefaultHandler;
  * @author Marc Guillemot
  *
  */
-public class HeadNamespaceBug extends TestCase {
+public class HeadNamespaceBug {
 
     /**
      * Ensure that the inserted head element has the right namespace
      */
+    @Test
     public void testHeadNamespace() throws Exception {
         final int[] nbTags = { 0 };
         final ContentHandler handler = new DefaultHandler() {
