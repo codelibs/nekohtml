@@ -91,6 +91,12 @@ import org.apache.xerces.xni.XMLString;
  */
 public class ElementRemover extends DefaultFilter {
 
+    /**
+     * Constructs an element remover filter.
+     */
+    public ElementRemover() {
+    }
+
     //
     // Constants
     //
@@ -302,19 +308,35 @@ public class ElementRemover extends DefaultFilter {
     // Protected methods
     //
 
-    /** Returns true if the specified element is accepted. */
+    /**
+     * Returns true if the specified element is accepted.
+     * 
+     * @param element the element name to check
+     * @return true if the element is accepted, false otherwise
+     */
     protected boolean elementAccepted(final String element) {
         final String key = element.toLowerCase();
         return fAcceptedElements.containsKey(key);
     } // elementAccepted(String):boolean
 
-    /** Returns true if the specified element should be removed. */
+    /**
+     * Returns true if the specified element should be removed.
+     * 
+     * @param element the element name to check
+     * @return true if the element should be removed, false otherwise
+     */
     protected boolean elementRemoved(final String element) {
         final String key = element.toLowerCase();
         return fRemovedElements.containsKey(key);
     } // elementRemoved(String):boolean
 
-    /** Handles an open tag. */
+    /**
+     * Handles an open tag.
+     * 
+     * @param element the element qualified name
+     * @param attributes the element attributes
+     * @return true if the element should be processed, false if it should be filtered out
+     */
     protected boolean handleOpenTag(final QName element, final XMLAttributes attributes) {
         if (elementAccepted(element.rawname)) {
             final String key = element.rawname.toLowerCase();

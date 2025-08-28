@@ -31,27 +31,48 @@ public interface HTMLEventInfo {
 
     // location information
 
-    /** Returns the line number of the beginning of this event.*/
+    /**
+     * Returns the line number of the beginning of this event.
+     * @return The line number where this event begins
+     */
     int getBeginLineNumber();
 
-    /** Returns the column number of the beginning of this event.*/
+    /**
+     * Returns the column number of the beginning of this event.
+     * @return The column number where this event begins
+     */
     int getBeginColumnNumber();
 
-    /** Returns the character offset of the beginning of this event.*/
+    /**
+     * Returns the character offset of the beginning of this event.
+     * @return The character offset where this event begins
+     */
     int getBeginCharacterOffset();
 
-    /** Returns the line number of the end of this event.*/
+    /**
+     * Returns the line number of the end of this event.
+     * @return The line number where this event ends
+     */
     int getEndLineNumber();
 
-    /** Returns the column number of the end of this event.*/
+    /**
+     * Returns the column number of the end of this event.
+     * @return The column number where this event ends
+     */
     int getEndColumnNumber();
 
-    /** Returns the character offset of the end of this event.*/
+    /**
+     * Returns the character offset of the end of this event.
+     * @return The character offset where this event ends
+     */
     int getEndCharacterOffset();
 
     // other information
 
-    /** Returns true if this corresponding event was synthesized. */
+    /**
+     * Returns true if this corresponding event was synthesized.
+     * @return true if the event was synthesized, false otherwise
+     */
     boolean isSynthesized();
 
     /**
@@ -60,6 +81,13 @@ public interface HTMLEventInfo {
      * @author Andy Clark
      */
     class SynthesizedItem implements HTMLEventInfo {
+
+        /**
+         * Default constructor. Creates a synthesized event info item.
+         */
+        public SynthesizedItem() {
+            // Default constructor
+        }
 
         //
         // HTMLEventInfo methods

@@ -40,6 +40,12 @@ import org.codelibs.nekohtml.xercesbridge.XercesBridge;
  */
 public class DefaultFilter implements XMLDocumentFilter, HTMLComponent {
 
+    /**
+     * Constructs a default document filter.
+     */
+    public DefaultFilter() {
+    }
+
     //
     // Data
     //
@@ -218,19 +224,36 @@ public class DefaultFilter implements XMLDocumentFilter, HTMLComponent {
 
     // removed since Xerces-J 2.3.0
 
-    /** Start document. */
+    /**
+     * Start document.
+     * 
+     * @param locator the document locator
+     * @param encoding the document encoding
+     * @param augs additional augmentations information
+     */
     public void startDocument(final XMLLocator locator, final String encoding, final Augmentations augs) {
         startDocument(locator, encoding, null, augs);
     } // startDocument(XMLLocator,String,Augmentations)
 
-    /** Start prefix mapping. */
+    /**
+     * Start prefix mapping.
+     * 
+     * @param prefix the namespace prefix
+     * @param uri the namespace URI
+     * @param augs additional augmentations information
+     */
     public void startPrefixMapping(final String prefix, final String uri, final Augmentations augs) {
         if (fDocumentHandler != null) {
             XercesBridge.getInstance().XMLDocumentHandler_startPrefixMapping(fDocumentHandler, prefix, uri, augs);
         }
     } // startPrefixMapping(String,String,Augmentations)
 
-    /** End prefix mapping. */
+    /**
+     * End prefix mapping.
+     * 
+     * @param prefix the namespace prefix
+     * @param augs additional augmentations information
+     */
     public void endPrefixMapping(final String prefix, final Augmentations augs) {
         if (fDocumentHandler != null) {
             XercesBridge.getInstance().XMLDocumentHandler_endPrefixMapping(fDocumentHandler, prefix, augs);
@@ -330,6 +353,10 @@ public class DefaultFilter implements XMLDocumentFilter, HTMLComponent {
     /**
      * Utility method for merging string arrays for recognized features
      * and recognized properties.
+     * 
+     * @param array1 the first string array to merge
+     * @param array2 the second string array to merge
+     * @return a new array containing all elements from both input arrays
      */
     protected static String[] merge(final String[] array1, final String[] array2) {
 

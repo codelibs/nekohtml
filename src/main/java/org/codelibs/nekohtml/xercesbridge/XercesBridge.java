@@ -33,6 +33,14 @@ public abstract class XercesBridge {
     private static final XercesBridge instance = makeInstance();
 
     /**
+     * Default constructor for XercesBridge.
+     * Creates a bridge for handling version-specific Xerces implementation differences.
+     */
+    protected XercesBridge() {
+        // Protected constructor
+    }
+
+    /**
      * The access point for the bridge.
      * @return the instance corresponding to the Xerces version being currently used.
      */
@@ -67,9 +75,9 @@ public abstract class XercesBridge {
 
     /**
      * Default implementation does nothing
-     * @param namespaceContext
-     * @param ns
-     * @param avalue
+     * @param namespaceContext The namespace context to declare the prefix in
+     * @param ns The namespace prefix
+     * @param avalue The namespace URI value
      */
     public void NamespaceContext_declarePrefix(final NamespaceContext namespaceContext, final String ns, final String avalue) {
         // nothing
@@ -83,12 +91,21 @@ public abstract class XercesBridge {
 
     /**
      * Calls startDocument on the {@link XMLDocumentHandler}.
+     * @param documentHandler The document handler to call startDocument on
+     * @param locator The document locator
+     * @param encoding The character encoding
+     * @param nscontext The namespace context
+     * @param augs Additional information that may include infoset augmentations
      */
     public abstract void XMLDocumentHandler_startDocument(XMLDocumentHandler documentHandler, XMLLocator locator, String encoding,
             NamespaceContext nscontext, Augmentations augs);
 
     /**
      * Calls startPrefixMapping on the {@link XMLDocumentHandler}.
+     * @param documentHandler The document handler to call startPrefixMapping on
+     * @param prefix The namespace prefix
+     * @param uri The namespace URI
+     * @param augs Additional information that may include infoset augmentations
      */
     public void XMLDocumentHandler_startPrefixMapping(final XMLDocumentHandler documentHandler, final String prefix, final String uri,
             final Augmentations augs) {
@@ -97,6 +114,9 @@ public abstract class XercesBridge {
 
     /**
      * Calls endPrefixMapping on the {@link XMLDocumentHandler}.
+     * @param documentHandler The document handler to call endPrefixMapping on
+     * @param prefix The namespace prefix
+     * @param augs Additional information that may include infoset augmentations
      */
     public void XMLDocumentHandler_endPrefixMapping(final XMLDocumentHandler documentHandler, final String prefix, final Augmentations augs) {
         // default does nothing
@@ -105,6 +125,8 @@ public abstract class XercesBridge {
     /**
      * Calls setDocumentSource (if available in the Xerces version used) on the {@link XMLDocumentFilter}.
      * This implementation does nothing.
+     * @param filter The document filter to set the document source on
+     * @param lastSource The document source to set
      */
     public void XMLDocumentFilter_setDocumentSource(final XMLDocumentFilter filter, final XMLDocumentSource lastSource) {
         // nothing, it didn't exist on old Xerces versions

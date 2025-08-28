@@ -238,6 +238,7 @@ public class HTMLTagBalancer implements XMLDocumentFilter, HTMLComponent {
     /** Augmentations. */
     private final HTMLAugmentations fInfosetAugs = new HTMLAugmentations();
 
+    /** Tag balancing listener for handling ignored elements. */
     protected HTMLTagBalancingListener tagBalancingListener;
     private final LostText lostText_ = new LostText();
 
@@ -251,6 +252,19 @@ public class HTMLTagBalancer implements XMLDocumentFilter, HTMLComponent {
     private int fragmentContextStackSize_ = 0; // not 0 only when a fragment is parsed and fragmentContextStack_ is set
 
     private final List<ElementEntry> endElementsBuffer_ = new ArrayList<>();
+
+    //
+    // Constructors
+    //
+
+    /**
+     * Default constructor for HTMLTagBalancer.
+     * Initializes the tag balancer for processing HTML documents and fixing
+     * structural problems in malformed HTML.
+     */
+    public HTMLTagBalancer() {
+        // Default constructor
+    }
 
     //
     // HTMLComponent methods
@@ -1063,12 +1077,22 @@ public class HTMLTagBalancer implements XMLDocumentFilter, HTMLComponent {
 
     // removed since Xerces-J 2.3.0
 
-    /** Start document. */
+    /** 
+     * Start document.
+     * @param locator The document locator
+     * @param encoding The character encoding
+     * @param augs Additional information that may include infoset augmentations
+     */
     public void startDocument(final XMLLocator locator, final String encoding, final Augmentations augs) {
         startDocument(locator, encoding, null, augs);
     } // startDocument(XMLLocator,String,Augmentations)
 
-    /** Start prefix mapping. */
+    /** 
+     * Start prefix mapping.
+     * @param prefix The namespace prefix
+     * @param uri The namespace URI
+     * @param augs Additional information that may include infoset augmentations
+     */
     public void startPrefixMapping(final String prefix, final String uri, final Augmentations augs) {
 
         // check for end of document
@@ -1083,7 +1107,11 @@ public class HTMLTagBalancer implements XMLDocumentFilter, HTMLComponent {
 
     } // startPrefixMapping(String,String,Augmentations)
 
-    /** End prefix mapping. */
+    /** 
+     * End prefix mapping.
+     * @param prefix The namespace prefix
+     * @param augs Additional information that may include infoset augmentations
+     */
     public void endPrefixMapping(final String prefix, final Augmentations augs) {
 
         // check for end of document
@@ -1102,7 +1130,11 @@ public class HTMLTagBalancer implements XMLDocumentFilter, HTMLComponent {
     // Protected methods
     //
 
-    /** Returns an HTML element. */
+    /** 
+     * Returns an HTML element.
+     * @param elementName The qualified name of the element
+     * @return The HTML element descriptor for the given name
+     */
     protected HTMLElements.Element getElement(final QName elementName) {
         String name = elementName.rawname;
         if (fNamespaces && NamespaceBinder.XHTML_1_0_URI.equals(elementName.uri)) {
@@ -1114,12 +1146,21 @@ public class HTMLTagBalancer implements XMLDocumentFilter, HTMLComponent {
         return HTMLElements.getElement(name);
     } // getElement(String):HTMLElements.Element
 
-    /** Call document handler start element. */
+    /** 
+     * Call document handler start element.
+     * @param element The element name
+     * @param attrs The element attributes
+     * @param augs Additional information that may include infoset augmentations
+     */
     protected final void callStartElement(final QName element, final XMLAttributes attrs, final Augmentations augs) {
         fDocumentHandler.startElement(element, attrs, augs);
     } // callStartElement(QName,XMLAttributes,Augmentations)
 
-    /** Call document handler end element. */
+    /** 
+     * Call document handler end element.
+     * @param element The element name
+     * @param augs Additional information that may include infoset augmentations
+     */
     protected final void callEndElement(final QName element, final Augmentations augs) {
         fDocumentHandler.endElement(element, augs);
     } // callEndElement(QName,Augmentations)
@@ -1129,6 +1170,7 @@ public class HTMLTagBalancer implements XMLDocumentFilter, HTMLComponent {
      * element name or -1 if no matching element is found.
      *
      * @param element The element.
+     * @return The depth of the element in the stack, or -1 if not found
      */
     protected final int getElementDepth(final HTMLElements.Element element) {
         final boolean container = element.isContainer();
@@ -1162,6 +1204,8 @@ public class HTMLTagBalancer implements XMLDocumentFilter, HTMLComponent {
      * element parent names or -1 if no matching element is found.
      *
      * @param parents The parent elements.
+     * @param bounds The bounds for parent element matching
+     * @return The depth of the first matching parent element, or -1 if not found
      */
     protected int getParentDepth(final HTMLElements.Element[] parents, final short bounds) {
         if (parents != null) {
@@ -1180,13 +1224,19 @@ public class HTMLTagBalancer implements XMLDocumentFilter, HTMLComponent {
         return -1;
     } // getParentDepth(HTMLElements.Element[],short):int
 
-    /** Returns a set of empty attributes. */
+    /** 
+     * Returns a set of empty attributes.
+     * @return An empty XMLAttributes instance
+     */
     protected final XMLAttributes emptyAttributes() {
         fEmptyAttrs.removeAllAttributes();
         return fEmptyAttrs;
     } // emptyAttributes():XMLAttributes
 
-    /** Returns an augmentations object with a synthesized item added. */
+    /** 
+     * Returns an augmentations object with a synthesized item added.
+     * @return Augmentations object marked as synthesized
+     */
     protected final Augmentations synthesizedAugs() {
         HTMLAugmentations augs = null;
         if (fAugmentations) {
@@ -1201,7 +1251,12 @@ public class HTMLTagBalancer implements XMLDocumentFilter, HTMLComponent {
     // Protected static methods
     //
 
-    /** Modifies the given name based on the specified mode. */
+    /** 
+     * Modifies the given name based on the specified mode.
+     * @param name The name to modify
+     * @param mode The modification mode (NAMES_UPPERCASE, NAMES_LOWERCASE, or NAMES_MATCH)
+     * @return The modified name
+     */
     protected static final String modifyName(final String name, final short mode) {
         switch (mode) {
         case NAMES_UPPERCASE:
@@ -1216,6 +1271,8 @@ public class HTMLTagBalancer implements XMLDocumentFilter, HTMLComponent {
     /**
      * Converts HTML names string value to constant value.
      *
+     * @param value The string value to convert ("lower", "upper", or "match")
+     * @return The corresponding constant value
      * @see #NAMES_NO_CHANGE
      * @see #NAMES_LOWERCASE
      * @see #NAMES_UPPERCASE
@@ -1274,7 +1331,8 @@ public class HTMLTagBalancer implements XMLDocumentFilter, HTMLComponent {
          * <strong>Note:</strong>
          * This constructor makes a copy of the element information.
          *
-         * @param element The element qualified name.
+         * @param element The HTML element descriptor.
+         * @param qname The element qualified name.
          */
         public Info(final HTMLElements.Element element, final QName qname) {
             this(element, qname, null);
@@ -1286,7 +1344,8 @@ public class HTMLTagBalancer implements XMLDocumentFilter, HTMLComponent {
          * <strong>Note:</strong>
          * This constructor makes a copy of the element information.
          *
-         * @param element The element qualified name.
+         * @param element The HTML element descriptor.
+         * @param qname The element qualified name.
          * @param attributes The element attributes.
          */
         public Info(final HTMLElements.Element element, final QName qname, final XMLAttributes attributes) {
@@ -1335,10 +1394,25 @@ public class HTMLTagBalancer implements XMLDocumentFilter, HTMLComponent {
         public Info[] data = new Info[10];
 
         //
+        // Constructors
+        //
+
+        /**
+         * Default constructor for InfoStack.
+         * Initializes an empty stack for storing element information.
+         */
+        public InfoStack() {
+            // Default constructor
+        }
+
+        //
         // Public methods
         //
 
-        /** Pushes element information onto the stack. */
+        /** 
+         * Pushes element information onto the stack.
+         * @param info The element information to push
+         */
         public void push(final Info info) {
             if (top == data.length) {
                 final Info[] newarray = new Info[top + 10];
@@ -1348,12 +1422,18 @@ public class HTMLTagBalancer implements XMLDocumentFilter, HTMLComponent {
             data[top++] = info;
         } // push(Info)
 
-        /** Peeks at the top of the stack. */
+        /** 
+         * Peeks at the top of the stack.
+         * @return The top element information without removing it
+         */
         public Info peek() {
             return data[top - 1];
         } // peek():Info
 
-        /** Pops the top item off of the stack. */
+        /** 
+         * Pops the top item off of the stack.
+         * @return The top element information after removing it
+         */
         public Info pop() {
             return data[--top];
         } // pop():Info

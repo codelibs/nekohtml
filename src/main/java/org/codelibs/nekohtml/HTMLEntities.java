@@ -25,12 +25,20 @@ import java.util.stream.Collectors;
 
 /**
  * Pre-defined HTML entities.
+ * This class provides mappings between HTML entity names and their corresponding character values.
  *
  * @author Andy Clark
  *
  * @version $Id: HTMLEntities.java,v 1.5 2005/02/14 03:56:54 andyc Exp $
  */
 public class HTMLEntities {
+
+    /**
+     * Default constructor. This class provides static utility methods for HTML entity handling.
+     */
+    public HTMLEntities() {
+        // Default constructor
+    }
 
     //
     // Constants
@@ -77,6 +85,8 @@ public class HTMLEntities {
     /**
      * Returns the character associated to the given entity name, or
      * -1 if the name is not known.
+     * @param name The entity name to lookup
+     * @return The character value associated with the entity name, or -1 if not found
      */
     public static int get(final String name) {
         final String value = ENTITIES.get(name);
@@ -86,6 +96,8 @@ public class HTMLEntities {
     /**
      * Returns the name associated to the given character or null if
      * the character is not known.
+     * @param c The character value to lookup
+     * @return The entity name associated with the character, or null if not found
      */
     public static String get(final int c) {
         return SEITITNE.get(c);

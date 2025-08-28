@@ -124,12 +124,26 @@ public class DOMFragmentParser implements XMLDocumentHandler {
     // Public methods
     //
 
-    /** Parses a document fragment. */
+    /**
+     * Parses a document fragment.
+     * 
+     * @param systemId the system identifier for the input source
+     * @param fragment the document fragment to populate with parsed content
+     * @throws SAXException if a SAX error occurs during parsing
+     * @throws IOException if an I/O error occurs during parsing
+     */
     public void parse(final String systemId, final DocumentFragment fragment) throws SAXException, IOException {
         parse(new InputSource(systemId), fragment);
     } // parse(String,DocumentFragment)
 
-    /** Parses a document fragment. */
+    /**
+     * Parses a document fragment.
+     * 
+     * @param source the input source containing the HTML content to parse
+     * @param fragment the document fragment to populate with parsed content
+     * @throws SAXException if a SAX error occurs during parsing
+     * @throws IOException if an I/O error occurs during parsing
+     */
     public void parse(final InputSource source, final DocumentFragment fragment) throws SAXException, IOException {
 
         fCurrentNode = fDocumentFragment = fragment;
@@ -335,7 +349,13 @@ public class DOMFragmentParser implements XMLDocumentHandler {
         return fDocumentSource;
     } // getDocumentSource():XMLDocumentSource
 
-    /** Start document. */
+    /**
+     * Start document.
+     * 
+     * @param locator the document locator
+     * @param encoding the document encoding
+     * @param augs additional augmentations information
+     */
     public void startDocument(final XMLLocator locator, final String encoding, final Augmentations augs) {
         startDocument(locator, encoding, null, augs);
     } // startDocument(XMLLocator,String,Augmentations)
@@ -376,11 +396,24 @@ public class DOMFragmentParser implements XMLDocumentHandler {
         fCurrentNode.appendChild(comment);
     } // comment(XMLString,Augmentations)
 
-    /** Start prefix mapping. @deprecated Since Xerces 2.2.0. */
+    /**
+     * Start prefix mapping.
+     * 
+     * @param prefix the namespace prefix
+     * @param uri the namespace URI
+     * @param augs additional augmentations information
+     * @deprecated Since Xerces 2.2.0.
+     */
     public void startPrefixMapping(final String prefix, final String uri, final Augmentations augs) {
     } // startPrefixMapping(String,String,Augmentations)
 
-    /** End prefix mapping. @deprecated Since Xerces 2.2.0. */
+    /**
+     * End prefix mapping.
+     * 
+     * @param prefix the namespace prefix
+     * @param augs additional augmentations information
+     * @deprecated Since Xerces 2.2.0.
+     */
     public void endPrefixMapping(final String prefix, final Augmentations augs) {
     } // endPrefixMapping(String,Augmentations)
 

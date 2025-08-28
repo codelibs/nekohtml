@@ -47,6 +47,9 @@ public class HTMLAugmentations implements Augmentations {
     //
     // Public methods
     //
+    /**
+     * Constructs an empty HTMLAugmentations object.
+     */
     public HTMLAugmentations() {
         // nothing
     }

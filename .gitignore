@@ -3,3 +3,4 @@ bin/
 .project
 /target
 /.settings
+/.serena

@@ -41,13 +41,29 @@ public interface HTMLErrorReporter {
     // HTMLErrorReporter methods
     //
 
-    /** Format message without reporting error. */
+    /**
+     * Formats an error message without reporting the error.
+     * 
+     * @param key the message key to format
+     * @param args arguments to substitute into the message
+     * @return the formatted error message
+     */
     String formatMessage(String key, Object[] args);
 
-    /** Reports a warning. */
+    /**
+     * Reports a warning message.
+     * 
+     * @param key the warning message key
+     * @param args arguments to substitute into the message
+     */
     void reportWarning(String key, Object[] args);
 
-    /** Reports an error. */
+    /**
+     * Reports an error message.
+     * 
+     * @param key the error message key
+     * @param args arguments to substitute into the message
+     */
     void reportError(String key, Object[] args);
 
 } // interface HTMLErrorReporter

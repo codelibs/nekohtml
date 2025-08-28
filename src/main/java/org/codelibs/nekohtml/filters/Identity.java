@@ -60,6 +60,19 @@ public class Identity extends DefaultFilter {
     protected static final String FILTERS = "http://cyberneko.org/html/properties/filters";
 
     //
+    // Constructors
+    //
+
+    /**
+     * Default constructor for Identity filter.
+     * Creates a filter that outputs only content that appeared in the original HTML document,
+     * filtering out any synthesized elements and structures added during parsing.
+     */
+    public Identity() {
+        // Default constructor
+    }
+
+    //
     // XMLDocumentHandler methods
     //
 
@@ -91,7 +104,11 @@ public class Identity extends DefaultFilter {
     // Protected static methods
     //
 
-    /** Returns true if the information provided is synthesized. */
+    /** 
+     * Returns true if the information provided is synthesized.
+     * @param augs The augmentations to check for synthesized content
+     * @return True if the content was synthesized during parsing, false otherwise
+     */
     protected static boolean synthesized(final Augmentations augs) {
         final HTMLEventInfo info = (HTMLEventInfo) augs.getItem(AUGMENTATIONS);
         return info != null && info.isSynthesized();

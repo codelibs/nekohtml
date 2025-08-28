@@ -19,7 +19,9 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
-import junit.framework.TestCase;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import org.junit.jupiter.api.Test;
 
 import org.apache.xerces.impl.Version;
 import org.codelibs.nekohtml.parsers.SAXParser;
@@ -35,8 +37,9 @@ import org.xml.sax.ext.Locator2;
  * @author Marc Guillemot
  * @version $Revision$
  */
-public class LocatorEncodingTest extends TestCase {
+public class LocatorEncodingTest {
 
+    @Test
     public void test() throws SAXException, IOException {
         if (Version.getVersion().startsWith("Xerces-J 2.2") || Version.getVersion().startsWith("Xerces-J 2.3")) {
             return; // this test makes sense only for more recent Xerces versions
