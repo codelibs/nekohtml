@@ -387,7 +387,7 @@ public class HTMLElements {
                 // ASIDE
                 new Element(ASIDE, "ASIDE", Element.BLOCK, BODY, new short[] { P }),
                 // AUDIO
-                new Element(AUDIO, "AUDIO", Element.EMPTY, BODY, null), };
+                new Element(AUDIO, "AUDIO", Element.CONTAINER, BODY, null), };
         ELEMENTS_ARRAY['B' - 'A'] = new Element[] {
                 // B - - (%inline;)*
                 new Element(B, "B", Element.INLINE, BODY, null),
@@ -415,7 +415,7 @@ public class HTMLElements {
                 new Element(BUTTON, "BUTTON", Element.INLINE | Element.BLOCK, BODY, new short[] { BUTTON }), };
         ELEMENTS_ARRAY['C' - 'A'] = new Element[] {
                 // CANVAS
-                new Element(CANVAS, "CANVAS", Element.EMPTY, BODY, null),
+                new Element(CANVAS, "CANVAS", Element.CONTAINER, BODY, null),
                 // CAPTION - - (%inline;)*
                 new Element(CAPTION, "CAPTION", Element.INLINE, TABLE, null),
                 // CENTER,
@@ -506,7 +506,7 @@ public class HTMLElements {
                 // INS - - (%flow;)*
                 new Element(INS, "INS", Element.INLINE, BODY, null),
                 // ISINDEX
-                new Element(ISINDEX, "ISINDEX", Element.INLINE, HEAD, null), };
+                new Element(ISINDEX, "ISINDEX", Element.EMPTY, HEAD, null), };
         ELEMENTS_ARRAY['K' - 'A'] = new Element[] {
                 // KBD - - (%inline;)*
                 new Element(KBD, "KBD", Element.INLINE, BODY, null),
@@ -539,7 +539,7 @@ public class HTMLElements {
                 // META - O EMPTY
                 new Element(META, "META", Element.EMPTY, HEAD, new short[] { STYLE, TITLE }),
                 // METER
-                new Element(METER, "METER", Element.EMPTY, BODY, null),
+                new Element(METER, "METER", Element.CONTAINER, BODY, null),
                 // MULTICOL
                 new Element(MULTICOL, "MULTICOL", Element.CONTAINER, BODY, null), };
         ELEMENTS_ARRAY['N' - 'A'] = new Element[] {
@@ -567,20 +567,20 @@ public class HTMLElements {
                 // OPTION - O (#PCDATA)
                 new Element(OPTION, "OPTION", 0, new short[] { SELECT }, new short[] { OPTGROUP, OPTION }),
                 // OUTPUT
-                new Element(OUTPUT, "OUTPUT", Element.EMPTY, BODY, null), };
+                new Element(OUTPUT, "OUTPUT", Element.CONTAINER, BODY, null), };
         ELEMENTS_ARRAY['P' - 'A'] = new Element[] {
                 // P - O (%inline;)*
                 new Element(P, "P", Element.CONTAINER, BODY, new short[] { P }),
                 // PARAM - O EMPTY
                 new Element(PARAM, "PARAM", Element.EMPTY, new short[] { OBJECT, APPLET }, null),
                 // PICTURE
-                new Element(PICTURE, "PICTURE", Element.EMPTY, BODY, null),
+                new Element(PICTURE, "PICTURE", Element.CONTAINER, BODY, null),
                 // PLAINTEXT
                 new Element(PLAINTEXT, "PLAINTEXT", Element.SPECIAL, BODY, null),
                 // PRE - - (%inline;)* -(%pre.exclusion;)
                 new Element(PRE, "PRE", Element.BLOCK, BODY, new short[] { P }),
                 // PROGRESS
-                new Element(PROGRESS, "PROGRESS", Element.EMPTY, BODY, null), };
+                new Element(PROGRESS, "PROGRESS", Element.CONTAINER, BODY, null), };
         ELEMENTS_ARRAY['Q' - 'A'] = new Element[] {
         // Q - - (%inline;)*
         new Element(Q, "Q", Element.INLINE, BODY, null), };
@@ -668,7 +668,7 @@ public class HTMLElements {
                 // VAR - - (%inline;)*
                 new Element(VAR, "VAR", Element.INLINE, BODY, null),
                 // VIDEO
-                new Element(VIDEO, "VIDEO", Element.EMPTY, BODY, null), };
+                new Element(VIDEO, "VIDEO", Element.CONTAINER, BODY, null), };
         ELEMENTS_ARRAY['W' - 'A'] = new Element[] {
         // WBR
         new Element(WBR, "WBR", Element.EMPTY, BODY, null), };

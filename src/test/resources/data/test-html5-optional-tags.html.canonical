@@ -1,0 +1,117 @@
+!HTML
+# Optional html, head, body tags omitted in some cases 
+(HTML
+(HEAD
+(META
+Acharset UTF-8
+)META
+"\n
+(TITLE
+"Optional Tags Test
+)TITLE
+"\n\n
+# Body tag omitted 
+"\n
+)HEAD
+(BODY
+(H1
+"Main Heading
+)H1
+"\n\n
+(P
+"First paragraph\n
+)P
+(P
+"Second paragraph without closing tag\n\n
+)P
+(UL
+"\n
+(LI
+"First item\n
+)LI
+(LI
+"Second item without closing tag\n
+)LI
+(LI
+"Third item\n
+)LI
+)UL
+"\n\n
+(DL
+"\n
+(DT
+"Term 1\n
+)DT
+(DD
+"Definition 1\n
+)DD
+(DT
+"Term 2\n
+)DT
+(DD
+"Definition 2 without closing tag\n\n\n
+(TABLE
+"\n
+(CAPTION
+"Sample Table
+)CAPTION
+"\n
+(THEAD
+"\n
+(TR
+"\n
+(TH
+"Header 1\n
+)TH
+(TH
+"Header 2\n\n
+)TH
+)TR
+)THEAD
+(TBODY
+"\n
+(TR
+"\n
+(TD
+"Data 1\n
+)TD
+(TD
+"Data 2\n
+)TD
+)TR
+(TR
+"\n
+(TD
+"Data 3\n
+)TD
+(TD
+"Data 4\n\n
+)TD
+)TR
+)TBODY
+)TABLE
+"\n\n
+(SECTION
+"\n
+(H2
+"Section without closing
+)H2
+"\n
+(P
+"Content in section\n\n
+)P
+(ARTICLE
+"\n
+(H3
+"Article
+)H3
+"\n
+(P
+"Article content
+)P
+)ARTICLE
+)SECTION
+)DD
+)DL
+)BODY
+)HTML

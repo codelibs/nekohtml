@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTML5 Complete Test</title>
+</head>
+<body>
+    <!-- HTML5 semantic elements -->
+    <header>
+        <nav>
+            <ul>
+                <li><a href="#home">Home</a></li>
+                <li><a href="#about">About</a></li>
+            </ul>
+        </nav>
+    </header>
+    
+    <main>
+        <article>
+            <header>
+                <h1>Article Title</h1>
+                <time datetime="2025-08-30">August 30, 2025</time>
+            </header>
+            
+            <section>
+                <h2>Section 1</h2>
+                <p>This is a <mark>highlighted</mark> paragraph with <data value="123">custom data</data>.</p>
+                
+                <!-- HTML5 media elements with fallback -->
+                <figure>
+                    <video controls width="300" height="200">
+                        <source src="video.mp4" type="video/mp4">
+                        <source src="video.webm" type="video/webm">
+                        <p>Your browser doesn't support HTML5 video.</p>
+                    </video>
+                    <figcaption>Sample video with fallback content</figcaption>
+                </figure>
+                
+                <figure>
+                    <audio controls>
+                        <source src="audio.mp3" type="audio/mpeg">
+                        <source src="audio.ogg" type="audio/ogg">
+                        <p>Your browser doesn't support HTML5 audio.</p>
+                    </audio>
+                    <figcaption>Sample audio with fallback content</figcaption>
+                </figure>
+            </section>
+            
+            <section>
+                <h2>Interactive Elements</h2>
+                <details>
+                    <summary>Click to expand</summary>
+                    <p>This content is hidden by default.</p>
+                </details>
+                
+                <dialog id="sample-dialog">
+                    <p>This is a modal dialog</p>
+                </dialog>
+            </section>
+            
+            <aside>
+                <h3>Related Information</h3>
+                <p>This is sidebar content.</p>
+            </aside>
+        </article>
+        
+        <!-- HTML5 form elements -->
+        <section>
+            <h2>HTML5 Form Elements</h2>
+            <form>
+                <fieldset>
+                    <legend>User Information</legend>
+                    
+                    <label for="name">Name:</label>
+                    <input type="text" id="name" name="name" required>
+                    
+                    <label for="email">Email:</label>
+                    <input type="email" id="email" name="email">
+                    
+                    <label for="age">Age:</label>
+                    <input type="number" id="age" name="age" min="18" max="120">
+                    
+                    <label for="website">Website:</label>
+                    <input type="url" id="website" name="website">
+                    
+                    <label for="colors">Favorite Color:</label>
+                    <input type="color" id="colors" name="colors">
+                    
+                    <label for="birthday">Birthday:</label>
+                    <input type="date" id="birthday" name="birthday">
+                    
+                    <label for="skills">Skills (0-100):</label>
+                    <input type="range" id="skills" name="skills" min="0" max="100">
+                    <output name="skills-output" for="skills">50</output>
+                    
+                    <label for="experience">Experience:</label>
+                    <meter id="experience" value="7" min="0" max="10">7 out of 10</meter>
+                    
+                    <label for="completion">Task Completion:</label>
+                    <progress id="completion" value="75" max="100">75%</progress>
+                </fieldset>
+                
+                <button type="submit">Submit</button>
+            </form>
+        </section>
+        
+        <!-- Responsive images with picture element -->
+        <section>
+            <h2>Responsive Images</h2>
+            <picture>
+                <source media="(min-width: 800px)" srcset="large.jpg">
+                <source media="(min-width: 400px)" srcset="medium.jpg">
+                <img src="small.jpg" alt="Responsive image example">
+            </picture>
+        </section>
+        
+        <!-- Canvas with fallback -->
+        <section>
+            <h2>Canvas Element</h2>
+            <canvas id="myCanvas" width="300" height="150">
+                <p>Your browser doesn't support the HTML5 canvas element.</p>
+                <img src="fallback-chart.png" alt="Chart showing sales data">
+            </canvas>
+        </section>
+    </main>
+    
+    <footer>
+        <p>&copy; 2025 HTML5 Test Document. All rights reserved.</p>
+        <address>
+            Contact: <a href="mailto:test@example.com">test@example.com</a>
+        </address>
+    </footer>
+</body>
+</html>
