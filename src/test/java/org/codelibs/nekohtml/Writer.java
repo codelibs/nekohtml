@@ -28,7 +28,6 @@ import org.apache.xerces.xni.XMLAttributes;
 import org.apache.xerces.xni.XMLLocator;
 import org.apache.xerces.xni.XMLString;
 import org.apache.xerces.xni.XNIException;
-import org.codelibs.nekohtml.HTMLEventInfo;
 import org.codelibs.nekohtml.filters.DefaultFilter;
 
 /**

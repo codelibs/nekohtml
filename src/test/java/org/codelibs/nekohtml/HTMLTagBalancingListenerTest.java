@@ -15,14 +15,12 @@
  */
 package org.codelibs.nekohtml;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-
-import org.junit.jupiter.api.Test;
 
 import org.apache.xerces.parsers.AbstractSAXParser;
 import org.apache.xerces.xni.Augmentations;
@@ -30,8 +28,7 @@ import org.apache.xerces.xni.QName;
 import org.apache.xerces.xni.XMLAttributes;
 import org.apache.xerces.xni.XNIException;
 import org.apache.xerces.xni.parser.XMLInputSource;
-import org.codelibs.nekohtml.HTMLConfiguration;
-import org.codelibs.nekohtml.HTMLTagBalancingListener;
+import org.junit.jupiter.api.Test;
 
 /**
  * Unit tests for {@link HTMLTagBalancingListener}.

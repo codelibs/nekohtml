@@ -15,14 +15,12 @@
  */
 package org.codelibs.nekohtml;
 
-import java.io.ByteArrayInputStream;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import org.junit.jupiter.api.Test;
+import java.io.ByteArrayInputStream;
 
 import org.apache.xerces.parsers.AbstractSAXParser;
-import org.codelibs.nekohtml.HTMLConfiguration;
+import org.junit.jupiter.api.Test;
 import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.InputSource;

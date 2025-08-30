@@ -15,14 +15,13 @@
  */
 package org.codelibs.nekohtml;
 
-import java.io.StringReader;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import org.junit.jupiter.api.Test;
+import java.io.StringReader;
 
 import org.apache.html.dom.HTMLDocumentImpl;
 import org.codelibs.nekohtml.parsers.DOMFragmentParser;
+import org.junit.jupiter.api.Test;
 import org.w3c.dom.DocumentFragment;
 import org.w3c.dom.Node;
 import org.w3c.dom.bootstrap.DOMImplementationRegistry;

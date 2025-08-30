@@ -433,7 +433,7 @@ public class NamespaceBinder extends DefaultFilter {
 
                 // declare prefix
                 final String prefix = alocal != aname ? alocal : "";
-                String uri = !avalue.isEmpty() ? avalue : null;
+                String uri = (avalue != null && !avalue.isEmpty()) ? avalue : null;
                 if (fOverrideNamespaces && prefix.equals(element.prefix) && HTMLElements.getElement(element.localpart, null) != null) {
                     uri = fNamespacesURI;
                 }
@@ -459,8 +459,7 @@ public class NamespaceBinder extends DefaultFilter {
                 final String xmlns = "xmlns" + ((element.prefix != null) ? ":" + element.prefix : "");
                 fQName.setValues(null, xmlns, xmlns, null);
                 attrs.addAttribute(fQName, "CDATA", fNamespacesURI);
-                bindNamespaces(element, attrs);
-                return;
+                // Continue processing without recursive call to avoid stack overflow
             }
         }
 

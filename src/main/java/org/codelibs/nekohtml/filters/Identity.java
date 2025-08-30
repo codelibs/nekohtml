@@ -110,6 +110,9 @@ public class Identity extends DefaultFilter {
      * @return True if the content was synthesized during parsing, false otherwise
      */
     protected static boolean synthesized(final Augmentations augs) {
+        if (augs == null) {
+            return false;
+        }
         final HTMLEventInfo info = (HTMLEventInfo) augs.getItem(AUGMENTATIONS);
         return info != null && info.isSynthesized();
     } // synthesized(Augmentations):boolean
