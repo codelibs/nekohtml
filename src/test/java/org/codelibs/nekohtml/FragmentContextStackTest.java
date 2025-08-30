@@ -15,18 +15,16 @@
  */
 package org.codelibs.nekohtml;
 
-import java.io.StringReader;
-import java.io.StringWriter;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import org.junit.jupiter.api.Test;
+import java.io.StringReader;
+import java.io.StringWriter;
 
 import org.apache.xerces.xni.QName;
 import org.apache.xerces.xni.parser.XMLDocumentFilter;
 import org.apache.xerces.xni.parser.XMLInputSource;
-import org.codelibs.nekohtml.HTMLTagBalancer;
 import org.codelibs.nekohtml.parsers.DOMParser;
+import org.junit.jupiter.api.Test;
 
 /**
  * Unit tests for {@link HTMLTagBalancer}'s property {@link HTMLTagBalancer#FRAGMENT_CONTEXT_STACK}.
