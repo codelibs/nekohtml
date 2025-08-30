@@ -1,0 +1,404 @@
+!HTML
+(HTML
+Alang en
+(HEAD
+"\n    
+(META
+Acharset UTF-8
+)META
+"\n    
+(META
+Acontent width=device-width, initial-scale=1.0
+Aname viewport
+)META
+"\n    
+(TITLE
+"HTML5 Complete Test
+)TITLE
+"\n
+)HEAD
+(BODY
+"\n    
+# HTML5 semantic elements 
+"\n    
+(HEADER
+"\n        
+(NAV
+"\n            
+(UL
+"\n                
+(LI
+(A
+Ahref #home
+"Home
+)A
+)LI
+"\n                
+(LI
+(A
+Ahref #about
+"About
+)A
+)LI
+"\n            
+)UL
+"\n        
+)NAV
+"\n    
+)HEADER
+"\n    \n    
+(MAIN
+"\n        
+(ARTICLE
+"\n            
+(HEADER
+"\n                
+(H1
+"Article Title
+)H1
+"\n                
+(TIME
+Adatetime 2025-08-30
+"August 30, 2025
+)TIME
+"\n            
+)HEADER
+"\n            \n            
+(SECTION
+"\n                
+(H2
+"Section 1
+)H2
+"\n                
+(P
+"This is a 
+(MARK
+"highlighted
+)MARK
+" paragraph with 
+(DATA
+Avalue 123
+"custom data
+)DATA
+".
+)P
+"\n                \n                
+# HTML5 media elements with fallback 
+"\n                
+(FIGURE
+"\n                    
+(VIDEO
+Acontrols 
+Aheight 200
+Awidth 300
+"\n                        
+(SOURCE
+Asrc video.mp4
+Atype video/mp4
+)SOURCE
+"\n                        
+(SOURCE
+Asrc video.webm
+Atype video/webm
+)SOURCE
+"\n                        
+(P
+"Your browser doesn't support HTML5 video.
+)P
+"\n                    
+)VIDEO
+"\n                    
+(FIGCAPTION
+"Sample video with fallback content
+)FIGCAPTION
+"\n                
+)FIGURE
+"\n                \n                
+(FIGURE
+"\n                    
+(AUDIO
+Acontrols 
+"\n                        
+(SOURCE
+Asrc audio.mp3
+Atype audio/mpeg
+)SOURCE
+"\n                        
+(SOURCE
+Asrc audio.ogg
+Atype audio/ogg
+)SOURCE
+"\n                        
+(P
+"Your browser doesn't support HTML5 audio.
+)P
+"\n                    
+)AUDIO
+"\n                    
+(FIGCAPTION
+"Sample audio with fallback content
+)FIGCAPTION
+"\n                
+)FIGURE
+"\n            
+)SECTION
+"\n            \n            
+(SECTION
+"\n                
+(H2
+"Interactive Elements
+)H2
+"\n                
+(DETAILS
+"\n                    
+(SUMMARY
+"Click to expand
+)SUMMARY
+"\n                    
+(P
+"This content is hidden by default.
+)P
+"\n                
+)DETAILS
+"\n                \n                
+(DIALOG
+Aid sample-dialog
+"\n                    
+(P
+"This is a modal dialog
+)P
+"\n                
+)DIALOG
+"\n            
+)SECTION
+"\n            \n            
+(ASIDE
+"\n                
+(H3
+"Related Information
+)H3
+"\n                
+(P
+"This is sidebar content.
+)P
+"\n            
+)ASIDE
+"\n        
+)ARTICLE
+"\n        \n        
+# HTML5 form elements 
+"\n        
+(SECTION
+"\n            
+(H2
+"HTML5 Form Elements
+)H2
+"\n            
+(FORM
+"\n                
+(FIELDSET
+"\n                    
+(LEGEND
+"User Information
+)LEGEND
+"\n                    \n                    
+(LABEL
+Afor name
+"Name:
+)LABEL
+"\n                    
+(INPUT
+Aid name
+Aname name
+Arequired 
+Atype text
+)INPUT
+"\n                    \n                    
+(LABEL
+Afor email
+"Email:
+)LABEL
+"\n                    
+(INPUT
+Aid email
+Aname email
+Atype email
+)INPUT
+"\n                    \n                    
+(LABEL
+Afor age
+"Age:
+)LABEL
+"\n                    
+(INPUT
+Aid age
+Amax 120
+Amin 18
+Aname age
+Atype number
+)INPUT
+"\n                    \n                    
+(LABEL
+Afor website
+"Website:
+)LABEL
+"\n                    
+(INPUT
+Aid website
+Aname website
+Atype url
+)INPUT
+"\n                    \n                    
+(LABEL
+Afor colors
+"Favorite Color:
+)LABEL
+"\n                    
+(INPUT
+Aid colors
+Aname colors
+Atype color
+)INPUT
+"\n                    \n                    
+(LABEL
+Afor birthday
+"Birthday:
+)LABEL
+"\n                    
+(INPUT
+Aid birthday
+Aname birthday
+Atype date
+)INPUT
+"\n                    \n                    
+(LABEL
+Afor skills
+"Skills (0-100):
+)LABEL
+"\n                    
+(INPUT
+Aid skills
+Amax 100
+Amin 0
+Aname skills
+Atype range
+)INPUT
+"\n                    
+(OUTPUT
+Afor skills
+Aname skills-output
+"50
+)OUTPUT
+"\n                    \n                    
+(LABEL
+Afor experience
+"Experience:
+)LABEL
+"\n                    
+(METER
+Aid experience
+Amax 10
+Amin 0
+Avalue 7
+"7 out of 10
+)METER
+"\n                    \n                    
+(LABEL
+Afor completion
+"Task Completion:
+)LABEL
+"\n                    
+(PROGRESS
+Aid completion
+Amax 100
+Avalue 75
+"75%
+)PROGRESS
+"\n                
+)FIELDSET
+"\n                \n                
+(BUTTON
+Atype submit
+"Submit
+)BUTTON
+"\n            
+)FORM
+"\n        
+)SECTION
+"\n        \n        
+# Responsive images with picture element 
+"\n        
+(SECTION
+"\n            
+(H2
+"Responsive Images
+)H2
+"\n            
+(PICTURE
+"\n                
+(SOURCE
+Amedia (min-width: 800px)
+Asrcset large.jpg
+)SOURCE
+"\n                
+(SOURCE
+Amedia (min-width: 400px)
+Asrcset medium.jpg
+)SOURCE
+"\n                
+(IMG
+Aalt Responsive image example
+Asrc small.jpg
+)IMG
+"\n            
+)PICTURE
+"\n        
+)SECTION
+"\n        \n        
+# Canvas with fallback 
+"\n        
+(SECTION
+"\n            
+(H2
+"Canvas Element
+)H2
+"\n            
+(CANVAS
+Aheight 150
+Aid myCanvas
+Awidth 300
+"\n                
+(P
+"Your browser doesn't support the HTML5 canvas element.
+)P
+"\n                
+(IMG
+Aalt Chart showing sales data
+Asrc fallback-chart.png
+)IMG
+"\n            
+)CANVAS
+"\n        
+)SECTION
+"\n    
+)MAIN
+"\n    \n    
+(FOOTER
+"\n        
+(P
+"© 2025 HTML5 Test Document. All rights reserved.
+)P
+"\n        
+(ADDRESS
+"\n            Contact: 
+(A
+Ahref mailto:test@example.com
+"test@example.com
+)A
+"\n        
+)ADDRESS
+"\n    
+)FOOTER
+"\n
+)BODY
+)HTML

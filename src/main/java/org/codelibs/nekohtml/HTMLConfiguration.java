@@ -111,6 +111,8 @@ public class HTMLConfiguration extends ParserConfigurationSettings implements XM
 
     /** Error reporter. */
     protected static final String ERROR_REPORTER = "http://cyberneko.org/html/properties/error-reporter";
+    /** HTML5 mode property. */
+    protected static final String HTML5_MODE = "http://cyberneko.org/html/properties/html5-mode";
 
     // other
 
@@ -206,11 +208,12 @@ public class HTMLConfiguration extends ParserConfigurationSettings implements XM
         //
 
         // recognized properties
-        final String[] recognizedProperties = { NAMES_ELEMS, NAMES_ATTRS, FILTERS, ERROR_REPORTER, };
+        final String[] recognizedProperties = { NAMES_ELEMS, NAMES_ATTRS, FILTERS, ERROR_REPORTER, HTML5_MODE, };
         addRecognizedProperties(recognizedProperties);
         setProperty(NAMES_ELEMS, "upper");
         setProperty(NAMES_ATTRS, "lower");
         setProperty(ERROR_REPORTER, fErrorReporter);
+        setProperty(HTML5_MODE, false);
 
     } // <init>()
 
@@ -504,6 +507,19 @@ public class HTMLConfiguration extends ParserConfigurationSettings implements XM
             lastSource.setDocumentHandler(fTagBalancer);
             fTagBalancer.setDocumentSource(fDocumentScanner);
             lastSource = fTagBalancer;
+
+            // Pass HTML5 mode from scanner to tag balancer after components are reset
+            if (fDocumentScanner instanceof HTMLScanner) {
+                final HTMLScanner scanner = (HTMLScanner) fDocumentScanner;
+                try {
+                    setProperty(HTML5_MODE, scanner.isHTML5Mode());
+                } catch (final Exception e) {
+                    // Report warning for HTML5_MODE property setting failure
+                    if (fErrorReporter != null) {
+                        fErrorReporter.reportWarning("html5-mode-property-error", new Object[] { e.getMessage() });
+                    }
+                }
+            }
         }
         final XMLDocumentFilter[] filters = (XMLDocumentFilter[]) getProperty(FILTERS);
         if (filters != null) {

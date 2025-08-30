@@ -357,9 +357,10 @@ class HTMLElementsTest {
         assertNotNull(source);
         assertNotNull(track);
 
-        assertTrue(audio.isEmpty());
-        assertTrue(video.isEmpty());
-        assertTrue(canvas.isEmpty());
+        // HTML5 media elements should be containers to hold fallback content
+        assertTrue(audio.isContainer());
+        assertTrue(video.isContainer());
+        assertTrue(canvas.isContainer());
         assertTrue(source.isEmpty());
         assertTrue(track.isEmpty());
     }

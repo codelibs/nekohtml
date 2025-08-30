@@ -129,6 +129,11 @@ public class HTMLScanner implements XMLDocumentScanner, XMLLocator, HTMLComponen
     /** HTML 4.01 frameset system identifier ("http://www.w3.org/TR/html4/frameset.dtd"). */
     public static final String HTML_4_01_FRAMESET_SYSID = "http://www.w3.org/TR/html4/frameset.dtd";
 
+    // doctype info: HTML5
+
+    /** HTML5 DOCTYPE ("html"). */
+    public static final String HTML5_DOCTYPE = "html";
+
     // features
 
     /** Include infoset augmentations. */
@@ -347,6 +352,9 @@ public class HTMLScanner implements XMLDocumentScanner, XMLLocator, HTMLComponen
 
     /** Insert document type declaration. */
     protected boolean fInsertDoctype;
+
+    /** HTML5 mode detected. */
+    protected boolean fHTML5Mode;
 
     /** Normalize attribute values. */
     protected boolean fNormalizeAttributes;
@@ -886,6 +894,14 @@ public class HTMLScanner implements XMLDocumentScanner, XMLLocator, HTMLComponen
         return fDocumentHandler;
     } // getDocumentHandler():XMLDocumentHandler
 
+    /**
+     * Returns whether HTML5 mode has been detected based on the DOCTYPE.
+     * @return true if HTML5 DOCTYPE was detected, false otherwise
+     */
+    public boolean isHTML5Mode() {
+        return fHTML5Mode;
+    } // isHTML5Mode():boolean
+
     //
     // Protected static methods
     //
@@ -1200,6 +1216,11 @@ public class HTMLScanner implements XMLDocumentScanner, XMLLocator, HTMLComponen
                 skipMarkup(true);
                 break;
             }
+        }
+
+        // Check for HTML5 DOCTYPE
+        if (HTML5_DOCTYPE.equalsIgnoreCase(root) && pubid == null && sysid == null) {
+            fHTML5Mode = true;
         }
 
         if (fDocumentHandler != null) {

@@ -17,8 +17,9 @@
 Amax 20
 Amin 0
 Avalue 12
+"12cm
 )METER
-"12cm\n    
+"\n    
 )DD
 (DT
 "Height: 
@@ -29,8 +30,9 @@ Avalue 12
 Amax 10
 Amin 0
 Avalue 2
+"2cm
 )METER
-"2cm\n
+"\n
 )DD
 )DL
 )BODY

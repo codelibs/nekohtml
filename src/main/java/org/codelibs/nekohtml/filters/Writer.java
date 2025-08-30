@@ -177,6 +177,39 @@ public class Writer extends DefaultFilter {
         startDocument(locator, encoding, null, augs);
     } // startDocument(XMLLocator,String,Augmentations)
 
+    /** DOCTYPE declaration. */
+    @Override
+    public void doctypeDecl(final String root, final String publicId, final String systemId, final Augmentations augs) {
+        if (root != null) {
+            fPrinter.print("<!DOCTYPE ");
+
+            // For HTML5 DOCTYPE (no publicId and no systemId), always use lowercase "html"
+            if (publicId == null && systemId == null && "HTML".equalsIgnoreCase(root)) {
+                fPrinter.print("html");
+            } else {
+                fPrinter.print(root);
+            }
+
+            if (publicId != null) {
+                fPrinter.print(" PUBLIC \"");
+                fPrinter.print(publicId);
+                fPrinter.print("\"");
+                if (systemId != null) {
+                    fPrinter.print(" \"");
+                    fPrinter.print(systemId);
+                    fPrinter.print("\"");
+                }
+            } else if (systemId != null) {
+                fPrinter.print(" SYSTEM \"");
+                fPrinter.print(systemId);
+                fPrinter.print("\"");
+            }
+            fPrinter.println(">");
+            fPrinter.flush();
+        }
+        super.doctypeDecl(root, publicId, systemId, augs);
+    } // doctypeDecl(String,String,String,Augmentations)
+
     /** Comment. */
     @Override
     public void comment(final XMLString text, final Augmentations augs) {
