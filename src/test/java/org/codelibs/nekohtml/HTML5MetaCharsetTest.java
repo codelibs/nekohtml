@@ -1,7 +1,5 @@
 /*
- * Copyright Marc Guillemot
- * Copyright 2002-2009 Andy Clark, Marc Guillemot
- * Copyright 2017-2024 Shinsuke Sugaya
+ * Copyright 2025 CodeLibs, Inc.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,8 +30,6 @@ import org.xml.sax.SAXException;
 
 /**
  * Unit tests for HTML5 meta charset shorthand support.
- *
- * @author Shinsuke Sugaya
  */
 public class HTML5MetaCharsetTest {
 
