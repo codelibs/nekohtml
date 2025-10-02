@@ -19,9 +19,9 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.StringWriter;
 
-import org.junit.jupiter.api.Test;
 import org.codelibs.nekohtml.filters.Writer;
-import org.apache.xerces.xni.parser.XMLInputSource;
+import org.codelibs.xerces.xni.parser.XMLInputSource;
+import org.junit.jupiter.api.Test;
 
 /**
  * Debug test to see HTML5 optional tag output.

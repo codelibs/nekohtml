@@ -15,7 +15,7 @@
  */
 package org.codelibs.nekohtml.xercesbridge;
 
-import org.apache.xerces.xni.NamespaceContext;
+import org.codelibs.xerces.xni.NamespaceContext;
 
 /**
  * Xerces bridge for use with Xerces 2.3 and higher

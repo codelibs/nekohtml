@@ -18,7 +18,7 @@ package org.codelibs.nekohtml;
 import java.util.Enumeration;
 import java.util.Hashtable;
 
-import org.apache.xerces.xni.Augmentations;
+import org.codelibs.xerces.xni.Augmentations;
 
 /**
  * This class is here to overcome the XNI changes to the

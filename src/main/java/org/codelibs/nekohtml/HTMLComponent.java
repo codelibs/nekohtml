@@ -15,7 +15,7 @@
  */
 package org.codelibs.nekohtml;
 
-import org.apache.xerces.xni.parser.XMLComponent;
+import org.codelibs.xerces.xni.parser.XMLComponent;
 
 /**
  * This interface extends the XNI <code>XMLComponent</code> interface

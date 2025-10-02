@@ -15,9 +15,9 @@
  */
 package org.codelibs.nekohtml;
 
-import org.apache.xerces.xni.Augmentations;
-import org.apache.xerces.xni.QName;
-import org.apache.xerces.xni.XMLAttributes;
+import org.codelibs.xerces.xni.Augmentations;
+import org.codelibs.xerces.xni.QName;
+import org.codelibs.xerces.xni.XMLAttributes;
 
 /**
  * XMLDocumentHandler implementing this interface will get notified of elements discarded

@@ -15,21 +15,23 @@
  */
 package org.codelibs.nekohtml;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.StringWriter;
 
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.DisplayName;
 import org.codelibs.nekohtml.filters.Writer;
 import org.codelibs.nekohtml.parsers.DOMParser;
-import org.apache.xerces.xni.parser.XMLInputSource;
-import org.xml.sax.SAXException;
+import org.codelibs.xerces.xni.parser.XMLInputSource;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
 /**
  * Tests for HTML5 optional tag omission features.

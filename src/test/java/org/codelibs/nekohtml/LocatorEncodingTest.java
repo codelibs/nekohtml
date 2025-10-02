@@ -21,8 +21,8 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
-import org.apache.xerces.impl.Version;
 import org.codelibs.nekohtml.parsers.SAXParser;
+import org.codelibs.xerces.impl.Version;
 import org.junit.jupiter.api.Test;
 import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;
