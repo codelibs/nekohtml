@@ -29,9 +29,9 @@ import java.io.StringReader;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
-import org.apache.xerces.xni.Augmentations;
 import org.codelibs.nekohtml.HTMLConfiguration;
 import org.codelibs.nekohtml.xercesbridge.XercesBridge;
+import org.codelibs.xerces.xni.Augmentations;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -73,7 +73,7 @@ class DOMParserTest {
 
         // Verify HTMLConfiguration is used
         try {
-            Field configField = org.apache.xerces.parsers.AbstractSAXParser.class.getDeclaredField("fConfiguration");
+            Field configField = org.codelibs.xerces.parsers.AbstractSAXParser.class.getDeclaredField("fConfiguration");
             configField.setAccessible(true);
             Object config = configField.get(parser);
             assertTrue(config instanceof HTMLConfiguration);
@@ -89,7 +89,7 @@ class DOMParserTest {
         // We can verify that the property is set correctly
         try {
             String docClassName = (String) domParser.getProperty("http://apache.org/xml/properties/dom/document-class-name");
-            assertEquals("org.apache.html.dom.HTMLDocumentImpl", docClassName);
+            assertEquals("org.codelibs.xerces.html.dom.HTMLDocumentImpl", docClassName);
         } catch (SAXException e) {
             // Property might not be available in test environment
         }
@@ -358,7 +358,7 @@ class DOMParserTest {
             Object value = domParser.getProperty("http://apache.org/xml/properties/dom/document-class-name");
             assertNotNull(value);
             // Should be set to HTMLDocumentImpl by constructor
-            assertEquals("org.apache.html.dom.HTMLDocumentImpl", value);
+            assertEquals("org.codelibs.xerces.html.dom.HTMLDocumentImpl", value);
         } catch (SAXNotRecognizedException | SAXNotSupportedException e) {
             // Property might not be available in test environment
         }

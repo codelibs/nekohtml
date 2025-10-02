@@ -17,9 +17,9 @@ package org.codelibs.nekohtml;
 
 import java.io.IOException;
 
-import org.apache.xerces.util.DefaultErrorHandler;
-import org.apache.xerces.xni.XNIException;
-import org.apache.xerces.xni.parser.XMLParseException;
+import org.codelibs.xerces.util.DefaultErrorHandler;
+import org.codelibs.xerces.xni.XNIException;
+import org.codelibs.xerces.xni.parser.XMLParseException;
 
 /**
  * Error handler for test purposes: just logs the errors to the provided PrintWriter.

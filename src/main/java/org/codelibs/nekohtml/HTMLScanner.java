@@ -27,24 +27,24 @@ import java.util.BitSet;
 import java.util.Locale;
 import java.util.Stack;
 
-import org.apache.xerces.util.EncodingMap;
-import org.apache.xerces.util.NamespaceSupport;
-import org.apache.xerces.util.URI;
-import org.apache.xerces.util.XMLAttributesImpl;
-import org.apache.xerces.util.XMLResourceIdentifierImpl;
-import org.apache.xerces.util.XMLStringBuffer;
-import org.apache.xerces.xni.Augmentations;
-import org.apache.xerces.xni.NamespaceContext;
-import org.apache.xerces.xni.QName;
-import org.apache.xerces.xni.XMLAttributes;
-import org.apache.xerces.xni.XMLDocumentHandler;
-import org.apache.xerces.xni.XMLLocator;
-import org.apache.xerces.xni.XMLResourceIdentifier;
-import org.apache.xerces.xni.XMLString;
-import org.apache.xerces.xni.parser.XMLComponentManager;
-import org.apache.xerces.xni.parser.XMLDocumentScanner;
-import org.apache.xerces.xni.parser.XMLInputSource;
 import org.codelibs.nekohtml.xercesbridge.XercesBridge;
+import org.codelibs.xerces.util.EncodingMap;
+import org.codelibs.xerces.util.NamespaceSupport;
+import org.codelibs.xerces.util.URI;
+import org.codelibs.xerces.util.XMLAttributesImpl;
+import org.codelibs.xerces.util.XMLResourceIdentifierImpl;
+import org.codelibs.xerces.util.XMLStringBuffer;
+import org.codelibs.xerces.xni.Augmentations;
+import org.codelibs.xerces.xni.NamespaceContext;
+import org.codelibs.xerces.xni.QName;
+import org.codelibs.xerces.xni.XMLAttributes;
+import org.codelibs.xerces.xni.XMLDocumentHandler;
+import org.codelibs.xerces.xni.XMLLocator;
+import org.codelibs.xerces.xni.XMLResourceIdentifier;
+import org.codelibs.xerces.xni.XMLString;
+import org.codelibs.xerces.xni.parser.XMLComponentManager;
+import org.codelibs.xerces.xni.parser.XMLDocumentScanner;
+import org.codelibs.xerces.xni.parser.XMLInputSource;
 
 /**
  * A simple HTML scanner. This scanner makes no attempt to balance tags

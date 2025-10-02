@@ -15,9 +15,9 @@
  */
 package org.codelibs.nekohtml.parsers;
 
-import org.apache.xerces.xni.Augmentations;
 import org.codelibs.nekohtml.HTMLConfiguration;
 import org.codelibs.nekohtml.xercesbridge.XercesBridge;
+import org.codelibs.xerces.xni.Augmentations;
 
 /**
  * A DOM parser for HTML documents.
@@ -28,14 +28,14 @@ import org.codelibs.nekohtml.xercesbridge.XercesBridge;
  */
 public class DOMParser
 /***/
-extends org.apache.xerces.parsers.DOMParser {
+extends org.codelibs.xerces.parsers.DOMParser {
     /***
     // NOTE: It would be better to extend from AbstractDOMParser but
     //       most users will find it easier if the API is just like the
     //       Xerces DOM parser. By extending directly from DOMParser,
     //       users can register SAX error handlers, entity resolvers,
     //       and the like. -Ac
-    extends org.apache.xerces.parsers.AbstractDOMParser {
+    extends org.codelibs.xerces.parsers.AbstractDOMParser {
     /***/
 
     //
@@ -47,7 +47,7 @@ extends org.apache.xerces.parsers.DOMParser {
         super(new HTMLConfiguration());
         /*** extending DOMParser ***/
         try {
-            setProperty("http://apache.org/xml/properties/dom/document-class-name", "org.apache.html.dom.HTMLDocumentImpl");
+            setProperty("http://apache.org/xml/properties/dom/document-class-name", "org.codelibs.xerces.html.dom.HTMLDocumentImpl");
         } catch (final org.xml.sax.SAXNotRecognizedException e) {
             throw new RuntimeException("http://apache.org/xml/properties/dom/document-class-name property not recognized");
         } catch (final org.xml.sax.SAXNotSupportedException e) {
@@ -55,7 +55,7 @@ extends org.apache.xerces.parsers.DOMParser {
         }
         /*** extending AbstractDOMParser ***
         fConfiguration.setProperty("http://apache.org/xml/properties/dom/document-class-name",
-                                   "org.apache.html.dom.HTMLDocumentImpl");
+                                   "org.codelibs.xerces.html.dom.HTMLDocumentImpl");
         /***/
     } // <init>()
 

@@ -18,12 +18,12 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 
-import org.apache.xerces.xni.Augmentations;
-import org.apache.xerces.xni.NamespaceContext;
-import org.apache.xerces.xni.XMLDocumentHandler;
-import org.apache.xerces.xni.XMLLocator;
-import org.apache.xerces.xni.parser.XMLDocumentFilter;
-import org.apache.xerces.xni.parser.XMLDocumentSource;
+import org.codelibs.xerces.xni.Augmentations;
+import org.codelibs.xerces.xni.NamespaceContext;
+import org.codelibs.xerces.xni.XMLDocumentHandler;
+import org.codelibs.xerces.xni.XMLLocator;
+import org.codelibs.xerces.xni.parser.XMLDocumentFilter;
+import org.codelibs.xerces.xni.parser.XMLDocumentSource;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

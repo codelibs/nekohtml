@@ -36,10 +36,10 @@ import java.util.List;
 import java.util.StringTokenizer;
 import java.util.stream.Stream;
 
-import org.apache.xerces.xni.parser.XMLDocumentFilter;
-import org.apache.xerces.xni.parser.XMLInputSource;
-import org.apache.xerces.xni.parser.XMLParserConfiguration;
 import org.codelibs.nekohtml.xercesbridge.XercesBridge;
+import org.codelibs.xerces.xni.parser.XMLDocumentFilter;
+import org.codelibs.xerces.xni.parser.XMLInputSource;
+import org.codelibs.xerces.xni.parser.XMLParserConfiguration;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
 

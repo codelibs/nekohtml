@@ -19,8 +19,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.StringReader;
 
-import org.apache.html.dom.HTMLDocumentImpl;
 import org.codelibs.nekohtml.parsers.DOMFragmentParser;
+import org.codelibs.xerces.html.dom.HTMLDocumentImpl;
 import org.junit.jupiter.api.Test;
 import org.w3c.dom.DocumentFragment;
 import org.w3c.dom.Node;
@@ -79,6 +79,8 @@ public class DOMFragmentParserTest {
 
         LSSerializer writer = impl.createLSSerializer();
         String str = writer.writeToString(fragment);
+        System.out.println("=== DOM Fragment ===");
+        System.out.println(str);
 
         final String xmlDecl = "<?xml version=\"1.0\" encoding=\"UTF-16\"?>" + System.getProperty("line.separator");
         assertEquals(xmlDecl + expected, str);

@@ -20,10 +20,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.io.StringReader;
 import java.io.StringWriter;
 
-import org.apache.xerces.xni.QName;
-import org.apache.xerces.xni.parser.XMLDocumentFilter;
-import org.apache.xerces.xni.parser.XMLInputSource;
 import org.codelibs.nekohtml.parsers.DOMParser;
+import org.codelibs.xerces.xni.QName;
+import org.codelibs.xerces.xni.parser.XMLDocumentFilter;
+import org.codelibs.xerces.xni.parser.XMLInputSource;
 import org.junit.jupiter.api.Test;
 
 /**

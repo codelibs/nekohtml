@@ -17,12 +17,12 @@ package org.codelibs.nekohtml.xercesbridge;
 
 import java.lang.reflect.InvocationTargetException;
 
-import org.apache.xerces.xni.Augmentations;
-import org.apache.xerces.xni.NamespaceContext;
-import org.apache.xerces.xni.XMLDocumentHandler;
-import org.apache.xerces.xni.XMLLocator;
-import org.apache.xerces.xni.parser.XMLDocumentFilter;
-import org.apache.xerces.xni.parser.XMLDocumentSource;
+import org.codelibs.xerces.xni.Augmentations;
+import org.codelibs.xerces.xni.NamespaceContext;
+import org.codelibs.xerces.xni.XMLDocumentHandler;
+import org.codelibs.xerces.xni.XMLLocator;
+import org.codelibs.xerces.xni.parser.XMLDocumentFilter;
+import org.codelibs.xerces.xni.parser.XMLDocumentSource;
 
 /**
  * This class allows to transparently handle Xerces methods that have changed among versions.

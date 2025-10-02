@@ -15,14 +15,15 @@
  */
 package org.codelibs.nekohtml;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 import java.io.StringReader;
 
-import org.junit.jupiter.api.Test;
+import org.codelibs.xerces.xni.parser.XMLInputSource;
 import org.junit.jupiter.api.DisplayName;
-import org.apache.xerces.xni.parser.XMLInputSource;
+import org.junit.jupiter.api.Test;
 
 /**
  * Unit tests for HTML5 DOCTYPE handling.

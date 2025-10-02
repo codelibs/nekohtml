@@ -15,8 +15,8 @@
  */
 package org.codelibs.nekohtml.parsers;
 
-import org.apache.xerces.parsers.AbstractSAXParser;
 import org.codelibs.nekohtml.HTMLConfiguration;
+import org.codelibs.xerces.parsers.AbstractSAXParser;
 
 /**
  * A SAX parser for HTML documents.

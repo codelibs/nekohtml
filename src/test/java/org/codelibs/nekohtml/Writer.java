@@ -20,15 +20,15 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 
-import org.apache.xerces.util.XMLStringBuffer;
-import org.apache.xerces.xni.Augmentations;
-import org.apache.xerces.xni.NamespaceContext;
-import org.apache.xerces.xni.QName;
-import org.apache.xerces.xni.XMLAttributes;
-import org.apache.xerces.xni.XMLLocator;
-import org.apache.xerces.xni.XMLString;
-import org.apache.xerces.xni.XNIException;
 import org.codelibs.nekohtml.filters.DefaultFilter;
+import org.codelibs.xerces.util.XMLStringBuffer;
+import org.codelibs.xerces.xni.Augmentations;
+import org.codelibs.xerces.xni.NamespaceContext;
+import org.codelibs.xerces.xni.QName;
+import org.codelibs.xerces.xni.XMLAttributes;
+import org.codelibs.xerces.xni.XMLLocator;
+import org.codelibs.xerces.xni.XMLString;
+import org.codelibs.xerces.xni.XNIException;
 
 /**
  * This class implements an filter to output "canonical" files for
@@ -450,11 +450,11 @@ public class Writer extends DefaultFilter {
 
     /** Main program. */
     public static void main(String[] argv) throws Exception {
-        org.apache.xerces.xni.parser.XMLDocumentFilter[] filters = { new Writer(), };
-        org.apache.xerces.xni.parser.XMLParserConfiguration parser = new org.codelibs.nekohtml.HTMLConfiguration();
+        org.codelibs.xerces.xni.parser.XMLDocumentFilter[] filters = { new Writer(), };
+        org.codelibs.xerces.xni.parser.XMLParserConfiguration parser = new org.codelibs.nekohtml.HTMLConfiguration();
         parser.setProperty("http://cyberneko.org/html/properties/filters", filters);
         for (String s : argv) {
-            org.apache.xerces.xni.parser.XMLInputSource source = new org.apache.xerces.xni.parser.XMLInputSource(null, s, null);
+            org.codelibs.xerces.xni.parser.XMLInputSource source = new org.codelibs.xerces.xni.parser.XMLInputSource(null, s, null);
             parser.parse(source);
         }
     } // main(String[])

@@ -19,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.ByteArrayInputStream;
 
-import org.apache.xerces.parsers.AbstractSAXParser;
+import org.codelibs.xerces.parsers.AbstractSAXParser;
 import org.junit.jupiter.api.Test;
 import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;
@@ -42,6 +42,7 @@ public class HeadNamespaceBug {
         final int[] nbTags = { 0 };
         final ContentHandler handler = new DefaultHandler() {
             public void startElement(final String ns, final String name, final String qName, final Attributes atts) {
+                System.out.println("HEAD Namespace: " + ns + ":" + name);
                 assertEquals("http://www.w3.org/1999/xhtml:" + name, ns + ":" + name);
                 ++nbTags[0];
             }

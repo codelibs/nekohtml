@@ -38,15 +38,15 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.xerces.util.XMLStringBuffer;
-import org.apache.xerces.xni.Augmentations;
-import org.apache.xerces.xni.QName;
-import org.apache.xerces.xni.XMLAttributes;
-import org.apache.xerces.xni.XNIException;
-import org.apache.xerces.xni.parser.XMLDocumentFilter;
-import org.apache.xerces.xni.parser.XMLInputSource;
-import org.apache.xerces.xni.parser.XMLParserConfiguration;
 import org.codelibs.nekohtml.filters.DefaultFilter;
+import org.codelibs.xerces.util.XMLStringBuffer;
+import org.codelibs.xerces.xni.Augmentations;
+import org.codelibs.xerces.xni.QName;
+import org.codelibs.xerces.xni.XMLAttributes;
+import org.codelibs.xerces.xni.XNIException;
+import org.codelibs.xerces.xni.parser.XMLDocumentFilter;
+import org.codelibs.xerces.xni.parser.XMLInputSource;
+import org.codelibs.xerces.xni.parser.XMLParserConfiguration;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -1912,7 +1912,7 @@ public class HTMLScannerTest {
         }
 
         @Override
-        public void characters(org.apache.xerces.xni.XMLString text, Augmentations augs) throws XNIException {
+        public void characters(org.codelibs.xerces.xni.XMLString text, Augmentations augs) throws XNIException {
             if (text.length > 0) {
                 events.add("CHARACTERS:" + text.toString().trim());
             }
@@ -1955,7 +1955,7 @@ public class HTMLScannerTest {
         private boolean hasNonWhitespace = false;
 
         @Override
-        public void characters(org.apache.xerces.xni.XMLString text, Augmentations augs) throws XNIException {
+        public void characters(org.codelibs.xerces.xni.XMLString text, Augmentations augs) throws XNIException {
             String content = text.toString();
             if (content.trim().isEmpty()) {
                 hasWhitespace = true;
@@ -1981,7 +1981,7 @@ public class HTMLScannerTest {
         private boolean hasEntities = false;
 
         @Override
-        public void characters(org.apache.xerces.xni.XMLString text, Augmentations augs) throws XNIException {
+        public void characters(org.codelibs.xerces.xni.XMLString text, Augmentations augs) throws XNIException {
             // Entity references will be resolved by the scanner, so we check for resolved content
             String content = text.toString();
             if (content.contains("<") || content.contains(">") || content.contains("&") || content.contains("\"")) {
@@ -2019,7 +2019,7 @@ public class HTMLScannerTest {
         private boolean hasPI = false;
 
         @Override
-        public void processingInstruction(String target, org.apache.xerces.xni.XMLString data, Augmentations augs) throws XNIException {
+        public void processingInstruction(String target, org.codelibs.xerces.xni.XMLString data, Augmentations augs) throws XNIException {
             hasPI = true;
             super.processingInstruction(target, data, augs);
         }
@@ -2036,7 +2036,7 @@ public class HTMLScannerTest {
         private int commentCount = 0;
 
         @Override
-        public void comment(org.apache.xerces.xni.XMLString text, Augmentations augs) throws XNIException {
+        public void comment(org.codelibs.xerces.xni.XMLString text, Augmentations augs) throws XNIException {
             commentCount++;
             super.comment(text, augs);
         }
@@ -2113,7 +2113,7 @@ public class HTMLScannerTest {
         }
 
         @Override
-        public void characters(org.apache.xerces.xni.XMLString text, Augmentations augs) throws XNIException {
+        public void characters(org.codelibs.xerces.xni.XMLString text, Augmentations augs) throws XNIException {
             if (currentElement != null) {
                 currentContent.append(text.toString());
             }
@@ -2146,7 +2146,7 @@ public class HTMLScannerTest {
         private boolean hasContent = false;
 
         @Override
-        public void characters(org.apache.xerces.xni.XMLString text, Augmentations augs) throws XNIException {
+        public void characters(org.codelibs.xerces.xni.XMLString text, Augmentations augs) throws XNIException {
             if (text.length > 0) {
                 hasContent = true;
             }
@@ -2607,7 +2607,7 @@ public class HTMLScannerTest {
         private int entityCount = 0;
 
         @Override
-        public void characters(org.apache.xerces.xni.XMLString text, Augmentations augs) throws XNIException {
+        public void characters(org.codelibs.xerces.xni.XMLString text, Augmentations augs) throws XNIException {
             String content = text.toString();
             // Look for resolved entities (characters that were entities)
             if (content.contains("<") || content.contains(">") || content.contains("&") || content.contains("\"") || content.contains("'")
@@ -2962,7 +2962,7 @@ public class HTMLScannerTest {
         private List<String> piTargets = new ArrayList<>();
 
         @Override
-        public void processingInstruction(String target, org.apache.xerces.xni.XMLString data, Augmentations augs) throws XNIException {
+        public void processingInstruction(String target, org.codelibs.xerces.xni.XMLString data, Augmentations augs) throws XNIException {
             piTargets.add(target);
             super.processingInstruction(target, data, augs);
         }
@@ -3026,7 +3026,7 @@ public class HTMLScannerTest {
         }
 
         @Override
-        public void characters(org.apache.xerces.xni.XMLString text, Augmentations augs) throws XNIException {
+        public void characters(org.codelibs.xerces.xni.XMLString text, Augmentations augs) throws XNIException {
             String content = text.toString();
             if (content.contains("    ") || content.contains("\n")) {
                 hasPreservedWhitespace = true;
@@ -3337,7 +3337,7 @@ public class HTMLScannerTest {
         }
 
         @Override
-        public void characters(org.apache.xerces.xni.XMLString text, Augmentations augs) throws XNIException {
+        public void characters(org.codelibs.xerces.xni.XMLString text, Augmentations augs) throws XNIException {
             if (text.length > 0 && !text.toString().trim().isEmpty()) {
                 hasProcessedText = true;
             }
@@ -3345,7 +3345,7 @@ public class HTMLScannerTest {
         }
 
         @Override
-        public void comment(org.apache.xerces.xni.XMLString text, Augmentations augs) throws XNIException {
+        public void comment(org.codelibs.xerces.xni.XMLString text, Augmentations augs) throws XNIException {
             hasProcessedComments = true;
             super.comment(text, augs);
         }
@@ -3367,7 +3367,7 @@ public class HTMLScannerTest {
         private boolean hasDocumentStart = false, hasDocumentEnd = false;
 
         @Override
-        public void startDocument(org.apache.xerces.xni.XMLLocator locator, String encoding, Augmentations augs) throws XNIException {
+        public void startDocument(org.codelibs.xerces.xni.XMLLocator locator, String encoding, Augmentations augs) throws XNIException {
             hasDocumentStart = true;
             super.startDocument(locator, encoding, augs);
         }

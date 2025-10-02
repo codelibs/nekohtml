@@ -31,12 +31,12 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 
-import org.apache.xerces.xni.QName;
-import org.apache.xerces.xni.XMLAttributes;
-import org.apache.xerces.xni.parser.XMLDocumentFilter;
-import org.apache.xerces.xni.parser.XMLInputSource;
-import org.apache.xerces.xni.parser.XMLParserConfiguration;
 import org.codelibs.nekohtml.HTMLConfiguration;
+import org.codelibs.xerces.xni.QName;
+import org.codelibs.xerces.xni.XMLAttributes;
+import org.codelibs.xerces.xni.parser.XMLDocumentFilter;
+import org.codelibs.xerces.xni.parser.XMLInputSource;
+import org.codelibs.xerces.xni.parser.XMLParserConfiguration;
 import org.junit.jupiter.api.Test;
 
 /**

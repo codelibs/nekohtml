@@ -26,11 +26,11 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import org.apache.xerces.xni.Augmentations;
-import org.apache.xerces.xni.QName;
-import org.apache.xerces.xni.XMLAttributes;
-import org.apache.xerces.xni.XMLDocumentHandler;
 import org.codelibs.nekohtml.HTMLEventInfo;
+import org.codelibs.xerces.xni.Augmentations;
+import org.codelibs.xerces.xni.QName;
+import org.codelibs.xerces.xni.XMLAttributes;
+import org.codelibs.xerces.xni.XMLDocumentHandler;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

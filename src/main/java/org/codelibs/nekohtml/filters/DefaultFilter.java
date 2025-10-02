@@ -15,19 +15,19 @@
  */
 package org.codelibs.nekohtml.filters;
 
-import org.apache.xerces.xni.Augmentations;
-import org.apache.xerces.xni.NamespaceContext;
-import org.apache.xerces.xni.QName;
-import org.apache.xerces.xni.XMLAttributes;
-import org.apache.xerces.xni.XMLDocumentHandler;
-import org.apache.xerces.xni.XMLLocator;
-import org.apache.xerces.xni.XMLResourceIdentifier;
-import org.apache.xerces.xni.XMLString;
-import org.apache.xerces.xni.parser.XMLComponentManager;
-import org.apache.xerces.xni.parser.XMLDocumentFilter;
-import org.apache.xerces.xni.parser.XMLDocumentSource;
 import org.codelibs.nekohtml.HTMLComponent;
 import org.codelibs.nekohtml.xercesbridge.XercesBridge;
+import org.codelibs.xerces.xni.Augmentations;
+import org.codelibs.xerces.xni.NamespaceContext;
+import org.codelibs.xerces.xni.QName;
+import org.codelibs.xerces.xni.XMLAttributes;
+import org.codelibs.xerces.xni.XMLDocumentHandler;
+import org.codelibs.xerces.xni.XMLLocator;
+import org.codelibs.xerces.xni.XMLResourceIdentifier;
+import org.codelibs.xerces.xni.XMLString;
+import org.codelibs.xerces.xni.parser.XMLComponentManager;
+import org.codelibs.xerces.xni.parser.XMLDocumentFilter;
+import org.codelibs.xerces.xni.parser.XMLDocumentSource;
 
 /**
  * This class implements a filter that simply passes document

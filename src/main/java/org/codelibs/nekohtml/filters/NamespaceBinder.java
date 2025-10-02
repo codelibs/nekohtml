@@ -19,14 +19,14 @@ import java.util.Enumeration;
 import java.util.Locale;
 import java.util.Vector;
 
-import org.apache.xerces.xni.Augmentations;
-import org.apache.xerces.xni.NamespaceContext;
-import org.apache.xerces.xni.QName;
-import org.apache.xerces.xni.XMLAttributes;
-import org.apache.xerces.xni.XMLLocator;
-import org.apache.xerces.xni.parser.XMLComponentManager;
 import org.codelibs.nekohtml.HTMLElements;
 import org.codelibs.nekohtml.xercesbridge.XercesBridge;
+import org.codelibs.xerces.xni.Augmentations;
+import org.codelibs.xerces.xni.NamespaceContext;
+import org.codelibs.xerces.xni.QName;
+import org.codelibs.xerces.xni.XMLAttributes;
+import org.codelibs.xerces.xni.XMLLocator;
+import org.codelibs.xerces.xni.parser.XMLComponentManager;
 
 /**
  * This filter binds namespaces if namespace processing is turned on

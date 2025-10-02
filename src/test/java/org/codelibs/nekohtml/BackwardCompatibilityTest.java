@@ -21,8 +21,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.io.StringReader;
 import java.io.StringWriter;
 
-import org.apache.xerces.xni.parser.XMLInputSource;
 import org.codelibs.nekohtml.filters.Writer;
+import org.codelibs.xerces.xni.parser.XMLInputSource;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 

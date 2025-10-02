@@ -10,8 +10,8 @@ import java.text.MessageFormat;
 import java.util.Locale;
 import java.util.ResourceBundle;
 
-import org.apache.xerces.xni.parser.XMLErrorHandler;
-import org.apache.xerces.xni.parser.XMLParseException;
+import org.codelibs.xerces.xni.parser.XMLErrorHandler;
+import org.codelibs.xerces.xni.parser.XMLParseException;
 import org.junit.jupiter.api.Test;
 
 public class HTMLErrorReporterTest {

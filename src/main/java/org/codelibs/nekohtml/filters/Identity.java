@@ -15,10 +15,10 @@
  */
 package org.codelibs.nekohtml.filters;
 
-import org.apache.xerces.xni.Augmentations;
-import org.apache.xerces.xni.QName;
-import org.apache.xerces.xni.XMLAttributes;
 import org.codelibs.nekohtml.HTMLEventInfo;
+import org.codelibs.xerces.xni.Augmentations;
+import org.codelibs.xerces.xni.QName;
+import org.codelibs.xerces.xni.XMLAttributes;
 
 /**
  * This filter performs the identity operation of the original

@@ -18,9 +18,9 @@ package org.codelibs.nekohtml;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.xerces.xni.Augmentations;
-import org.apache.xerces.xni.XMLDocumentHandler;
-import org.apache.xerces.xni.XMLString;
+import org.codelibs.xerces.xni.Augmentations;
+import org.codelibs.xerces.xni.XMLDocumentHandler;
+import org.codelibs.xerces.xni.XMLString;
 
 /**
  * Container for text that should be hold and re-feed later like text before &lt;html&gt; that will be re-feed
