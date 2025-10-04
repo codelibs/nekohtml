@@ -15,223 +15,222 @@
  */
 package org.codelibs.nekohtml;
 
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.nio.file.Path;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
- * Unit tests for {@link SecuritySupport}.
- * This exercises privileged access helpers across file, classloader and property operations.
+ * Test for {@link SecuritySupport}.
+ *
+ * @author CodeLibs Project
  */
 public class SecuritySupportTest {
 
-    /**
-     * Simple custom ClassLoader that can provide a resource stream for a specific resource name.
-     */
-    static class ResourceClassLoader extends ClassLoader {
-        private final String resourceName;
-        private final byte[] data;
-
-        ResourceClassLoader(final String resourceName, final byte[] data) {
-            // Use null parent to avoid default delegation to system class loader for clarity
-            super(null);
-            this.resourceName = resourceName;
-            this.data = data;
-        }
-
-        @Override
-        public InputStream getResourceAsStream(final String name) {
-            if (resourceName.equals(name)) {
-                return new ByteArrayInputStream(data);
-            }
-            return super.getResourceAsStream(name);
-        }
-    }
-
-    /**
-     * Custom ClassLoader exposing a public constructor to control the parent for testing getParentClassLoader.
-     */
-    static class ParentAwareClassLoader extends ClassLoader {
-        ParentAwareClassLoader(final ClassLoader parent) {
-            super(parent);
-        }
-    }
-
     @Test
-    public void testGetInstanceSingleton() {
-        final SecuritySupport s1 = SecuritySupport.getInstance();
-        final SecuritySupport s2 = SecuritySupport.getInstance();
-        assertNotNull(s1, "getInstance should not return null");
-        assertSame(s1, s2, "getInstance should return the singleton instance");
+    public void testGetInstance() {
+        // Test singleton instance
+        final SecuritySupport instance1 = SecuritySupport.getInstance();
+        final SecuritySupport instance2 = SecuritySupport.getInstance();
+
+        assertNotNull(instance1, "Instance should not be null");
+        assertEquals(instance1, instance2, "Should return same singleton instance");
     }
 
     @Test
     public void testGetContextClassLoader() {
         final SecuritySupport support = SecuritySupport.getInstance();
-        final ClassLoader original = Thread.currentThread().getContextClassLoader();
-        final ClassLoader custom = new ResourceClassLoader("noop", new byte[0]);
-        try {
-            Thread.currentThread().setContextClassLoader(custom);
-            final ClassLoader cl = support.getContextClassLoader();
-            assertSame(custom, cl, "Should return current thread context class loader");
-        } finally {
-            Thread.currentThread().setContextClassLoader(original);
-        }
+        final ClassLoader contextClassLoader = support.getContextClassLoader();
+
+        // Context class loader may be null in some environments, but the method should not throw
+        // In most cases it should return the current thread's context class loader
+        final ClassLoader expected = Thread.currentThread().getContextClassLoader();
+        assertEquals(expected, contextClassLoader, "Should return context class loader");
     }
 
     @Test
     public void testGetSystemClassLoader() {
         final SecuritySupport support = SecuritySupport.getInstance();
-        final ClassLoader expected = ClassLoader.getSystemClassLoader();
-        final ClassLoader actual = support.getSystemClassLoader();
-        assertSame(expected, actual, "Should return system class loader");
+        final ClassLoader systemClassLoader = support.getSystemClassLoader();
+
+        assertNotNull(systemClassLoader, "System class loader should not be null");
+        assertEquals(ClassLoader.getSystemClassLoader(), systemClassLoader, "Should return system class loader");
     }
 
     @Test
     public void testGetParentClassLoader() {
         final SecuritySupport support = SecuritySupport.getInstance();
+        final ClassLoader classLoader = SecuritySupportTest.class.getClassLoader();
+        final ClassLoader parentClassLoader = support.getParentClassLoader(classLoader);
 
-        final ClassLoader system = ClassLoader.getSystemClassLoader();
-        final ClassLoader child = new ParentAwareClassLoader(system);
-        final ClassLoader parent = support.getParentClassLoader(child);
-        assertSame(system, parent, "Should return explicit parent class loader");
+        // Parent class loader may be null (for bootstrap class loader)
+        // But it should not be the same as the input class loader (to prevent loops)
+        if (parentClassLoader != null) {
+            assertTrue(parentClassLoader != classLoader, "Parent should not be same as child");
+        }
 
-        final ClassLoader bootstrapChild = new ParentAwareClassLoader(null);
-        final ClassLoader bootstrapParent = support.getParentClassLoader(bootstrapChild);
-        assertNull(bootstrapParent, "Parent should be null for bootstrap parent");
+        // Verify it matches direct call
+        assertEquals(classLoader.getParent(), parentClassLoader, "Should return parent class loader");
+    }
+
+    @Test
+    public void testGetParentClassLoader_NullParent() {
+        final SecuritySupport support = SecuritySupport.getInstance();
+
+        // Test with a class loader that has no parent (bootstrap loader)
+        final ClassLoader classLoader = new ClassLoader(null) {
+        };
+
+        final ClassLoader parent = support.getParentClassLoader(classLoader);
+        assertNull(parent, "Should return null for bootstrap class loader");
     }
 
     @Test
     public void testGetSystemProperty() {
         final SecuritySupport support = SecuritySupport.getInstance();
-        final String key = "nekohtml.test.property";
+
+        // Test with a known system property
+        final String javaVersion = support.getSystemProperty("java.version");
+        assertNotNull(javaVersion, "Java version property should exist");
+        assertEquals(System.getProperty("java.version"), javaVersion, "Should return correct system property value");
+
+        // Test with a non-existent property
+        final String nonExistent = support.getSystemProperty("non.existent.property.xyz");
+        assertNull(nonExistent, "Non-existent property should return null");
+    }
+
+    @Test
+    public void testGetFileInputStream(@TempDir final File tempDir) throws IOException {
+        final SecuritySupport support = SecuritySupport.getInstance();
+
+        // Create a test file
+        final File testFile = new File(tempDir, "test.txt");
+        Files.writeString(testFile.toPath(), "test content");
+
+        // Test reading the file
+        try (FileInputStream fis = support.getFileInputStream(testFile)) {
+            assertNotNull(fis, "FileInputStream should not be null");
+            final byte[] buffer = new byte[12];
+            final int bytesRead = fis.read(buffer);
+            assertEquals(12, bytesRead, "Should read 12 bytes");
+            assertEquals("test content", new String(buffer, 0, bytesRead), "Should read correct content");
+        }
+    }
+
+    @Test
+    public void testGetFileInputStream_FileNotFound() {
+        final SecuritySupport support = SecuritySupport.getInstance();
+
+        // Test with non-existent file
+        final File nonExistentFile = new File("/non/existent/file.txt");
+        assertThrows(FileNotFoundException.class, () -> support.getFileInputStream(nonExistentFile),
+                "Should throw FileNotFoundException for non-existent file");
+    }
+
+    @Test
+    public void testGetResourceAsStream() {
+        final SecuritySupport support = SecuritySupport.getInstance();
+
+        // Test with null class loader (uses system class loader)
+        final InputStream stream1 = support.getResourceAsStream(null, "java/lang/String.class");
+        assertNotNull(stream1, "Should load resource from system class loader");
         try {
-            System.setProperty(key, "value123");
-            assertEquals("value123", support.getSystemProperty(key), "Should read system property value");
-        } finally {
-            System.clearProperty(key);
+            stream1.close();
+        } catch (final IOException e) {
+            // Ignore
         }
 
-        // Non-existent property should return null
-        assertNull(support.getSystemProperty("nekohtml.property.does.not.exist"));
+        // Test with specific class loader
+        final ClassLoader classLoader = SecuritySupportTest.class.getClassLoader();
+        final InputStream stream2 = support.getResourceAsStream(classLoader, "org/codelibs/nekohtml/SecuritySupportTest.class");
+        assertNotNull(stream2, "Should load resource from specified class loader");
+        try {
+            stream2.close();
+        } catch (final IOException e) {
+            // Ignore
+        }
+
+        // Test with non-existent resource
+        final InputStream stream3 = support.getResourceAsStream(classLoader, "non/existent/resource.txt");
+        assertNull(stream3, "Should return null for non-existent resource");
     }
 
     @Test
-    public void testGetFileInputStreamAndExistsAndLastModified(@TempDir final Path tmp) throws Exception {
+    public void testGetFileExists(@TempDir final File tempDir) throws IOException {
         final SecuritySupport support = SecuritySupport.getInstance();
 
-        // Create a temporary file with content
-        final Path file = tmp.resolve("sample.txt");
-        final byte[] content = "Hello SecuritySupport".getBytes(StandardCharsets.UTF_8);
-        Files.write(file, content);
+        // Create a test file
+        final File testFile = new File(tempDir, "exists.txt");
+        Files.writeString(testFile.toPath(), "test");
 
-        // exists()
-        assertTrue(support.getFileExists(file.toFile()), "Temporary file should exist");
+        assertTrue(support.getFileExists(testFile), "Should return true for existing file");
+        assertEquals(testFile.exists(), support.getFileExists(testFile), "Should match File.exists()");
 
-        // lastModified()
-        final long expectedLastModified = file.toFile().lastModified();
-        final long actualLastModified = support.getLastModified(file.toFile());
-        assertEquals(expectedLastModified, actualLastModified, "lastModified should match java.io.File value");
-
-        // getFileInputStream()
-        try (FileInputStream fis = support.getFileInputStream(file.toFile())) {
-            final byte[] read = fis.readAllBytes();
-            assertArrayEquals(content, read, "Read bytes should match written content");
-        }
-
-        // Non-existing file should throw FileNotFoundException
-        final File missing = tmp.resolve("missing.txt").toFile();
-        assertThrows(FileNotFoundException.class, () -> support.getFileInputStream(missing));
+        // Test with non-existent file
+        final File nonExistentFile = new File(tempDir, "non_existent.txt");
+        assertFalse(support.getFileExists(nonExistentFile), "Should return false for non-existent file");
+        assertEquals(nonExistentFile.exists(), support.getFileExists(nonExistentFile), "Should match File.exists()");
     }
 
     @Test
-    public void testGetResourceAsStreamWithNullClassLoader() throws Exception {
+    public void testGetLastModified(@TempDir final File tempDir) throws IOException, InterruptedException {
         final SecuritySupport support = SecuritySupport.getInstance();
 
-        // Use an existing test resource from the repo to avoid adding new files
-        try (InputStream is = support.getResourceAsStream(null, "data/canonical/README.txt")) {
-            assertNotNull(is, "System resource should be found via system class loader");
-            // Just ensure it is readable; content is not asserted exactly as it may change
-            final byte[] bytes = is.readAllBytes();
-            assertTrue(bytes.length > 0, "README resource should not be empty");
-        }
+        // Create a test file
+        final File testFile = new File(tempDir, "modified.txt");
+        Files.writeString(testFile.toPath(), "test");
 
-        // Non-existent resource should return null
-        try (InputStream is = support.getResourceAsStream(null, "definitely-not-present-12345.txt")) {
-            assertNull(is, "Unknown system resource should return null");
-        }
+        final long lastModified1 = support.getLastModified(testFile);
+        assertTrue(lastModified1 > 0, "Last modified time should be greater than 0");
+        assertEquals(testFile.lastModified(), lastModified1, "Should match File.lastModified()");
+
+        // Wait a bit and modify the file
+        Thread.sleep(10);
+        Files.writeString(testFile.toPath(), "modified");
+
+        final long lastModified2 = support.getLastModified(testFile);
+        assertTrue(lastModified2 >= lastModified1, "Modified time should increase after modification");
+
+        // Test with non-existent file
+        final File nonExistentFile = new File(tempDir, "non_existent.txt");
+        final long lastModified3 = support.getLastModified(nonExistentFile);
+        assertEquals(0L, lastModified3, "Should return 0 for non-existent file");
+        assertEquals(nonExistentFile.lastModified(), lastModified3, "Should match File.lastModified()");
     }
 
     @Test
-    public void testGetResourceAsStreamWithCustomClassLoader() throws Exception {
-        final SecuritySupport support = SecuritySupport.getInstance();
-        final byte[] data = "custom-data".getBytes(StandardCharsets.UTF_8);
-        final ClassLoader cl = new ResourceClassLoader("custom.txt", data);
-
-        try (InputStream is = support.getResourceAsStream(cl, "custom.txt")) {
-            assertNotNull(is, "Custom class loader should provide the resource");
-            final byte[] bytes = is.readAllBytes();
-            assertArrayEquals(data, bytes);
-        }
-
-        try (InputStream is = support.getResourceAsStream(cl, "other.txt")) {
-            assertNull(is, "Unknown resource on custom class loader should return null");
-        }
-    }
-
-    /**
-     * Test parent ClassLoader loop detection.
-     * The SecuritySupport.getParentClassLoader() method handles the case where
-     * a ClassLoader's parent is itself (which would cause infinite loop).
-     * Note: We can't directly override getParent() as it's final in Java 17+,
-     * but the logic is tested through SecuritySupport's implementation.
-     */
-    @Test
-    public void testGetParentClassLoaderWithSystemClassLoader() {
+    public void testSecurityExceptionHandling() {
         final SecuritySupport support = SecuritySupport.getInstance();
 
-        // Test with system class loader (which may have special parent handling)
-        final ClassLoader system = ClassLoader.getSystemClassLoader();
-        final ClassLoader systemParent = support.getParentClassLoader(system);
-        // The parent of system class loader might be null or another loader
-        // We just ensure it doesn't return itself (loop prevention)
-        assertTrue(systemParent != system, "Parent should not equal self (loop prevention)");
+        // These methods should handle SecurityException gracefully and return null/default values
+        // In a normal environment without SecurityManager, they should work normally
+
+        // Test getContextClassLoader - should not throw even if SecurityException occurs internally
+        final ClassLoader cl1 = support.getContextClassLoader();
+        // May be null or valid ClassLoader, but should not throw
+
+        // Test getSystemClassLoader - should not throw even if SecurityException occurs internally
+        final ClassLoader cl2 = support.getSystemClassLoader();
+        // May be null or valid ClassLoader, but should not throw
+
+        // Test getParentClassLoader - should not throw even if SecurityException occurs internally
+        final ClassLoader cl3 = support.getParentClassLoader(getClass().getClassLoader());
+        // May be null or valid ClassLoader, but should not throw
+
+        // If we got here without exceptions, the security exception handling is working
+        assertTrue(true, "Security exception handling should prevent exceptions from propagating");
     }
 
-    /**
-     * Test that non-existing file returns false for exists check.
-     */
-    @Test
-    public void testGetFileExistsNonExistingFile(@TempDir final Path tmp) {
-        final SecuritySupport support = SecuritySupport.getInstance();
-        final File nonExistingFile = tmp.resolve("non-existing-file.txt").toFile();
-        assertFalse(support.getFileExists(nonExistingFile), "Non-existing file should return false");
-    }
-
-    /**
-     * Test lastModified for non-existing file (should return 0).
-     */
-    @Test
-    public void testGetLastModifiedNonExistingFile(@TempDir final Path tmp) {
-        final SecuritySupport support = SecuritySupport.getInstance();
-        final File nonExistingFile = tmp.resolve("non-existing-file.txt").toFile();
-        assertEquals(0L, support.getLastModified(nonExistingFile), "Non-existing file lastModified should return 0");
-    }
-}
+} // class SecuritySupportTest

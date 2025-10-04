@@ -154,11 +154,6 @@
 	</build>
 	<dependencies>
 		<dependency>
-			<groupId>org.codelibs</groupId>
-			<artifactId>xerces</artifactId>
-			<version>3.0.0-SNAPSHOT</version>
-		</dependency>
-		<dependency>
 			<groupId>org.junit.jupiter</groupId>
 			<artifactId>junit-jupiter</artifactId>
 			<version>5.11.3</version>
@@ -177,17 +172,4 @@
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
-	<repositories>
-		<repository>
-			<id>central-portal-snapshots</id>
-			<name>Central Portal Snapshots</name>
-			<url>https://central.sonatype.com/repository/maven-snapshots</url>
-			<releases>
-				<enabled>false</enabled>
-			</releases>
-			<snapshots>
-				<enabled>true</enabled>
-			</snapshots>
-		</repository>
-	</repositories>
 </project>
