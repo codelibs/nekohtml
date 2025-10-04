@@ -15,100 +15,156 @@
  */
 package org.codelibs.nekohtml.parsers;
 
-import org.codelibs.nekohtml.HTMLConfiguration;
-import org.codelibs.nekohtml.xercesbridge.XercesBridge;
-import org.codelibs.xerces.xni.Augmentations;
+import java.io.IOException;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+
+import org.codelibs.nekohtml.sax.HTMLSAXParser;
+import org.w3c.dom.Document;
+import org.xml.sax.EntityResolver;
+import org.xml.sax.ErrorHandler;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
+import org.xml.sax.helpers.DefaultHandler;
 
 /**
- * A DOM parser for HTML documents.
+ * DOM parser for HTML documents using SAX and standard JAXP.
+ * This implementation uses the SAX-based HTML parser and converts the events to a DOM tree.
  *
- * @author Andy Clark
- *
- * @version $Id: DOMParser.java,v 1.5 2005/02/14 03:56:54 andyc Exp $
+ * @author CodeLibs Project
  */
-public class DOMParser
-/***/
-extends org.codelibs.xerces.parsers.DOMParser {
-    /***
-    // NOTE: It would be better to extend from AbstractDOMParser but
-    //       most users will find it easier if the API is just like the
-    //       Xerces DOM parser. By extending directly from DOMParser,
-    //       users can register SAX error handlers, entity resolvers,
-    //       and the like. -Ac
-    extends org.codelibs.xerces.parsers.AbstractDOMParser {
-    /***/
+public class DOMParser {
 
-    //
-    // Constructors
-    //
+    /** The SAX parser. */
+    protected final HTMLSAXParser saxParser;
 
-    /** Default constructor. */
-    public DOMParser() {
-        super(new HTMLConfiguration());
-        /*** extending DOMParser ***/
+    /** The DOM document builder. */
+    protected final DocumentBuilder documentBuilder;
+
+    /** The resulting DOM document. */
+    protected Document document;
+
+    /**
+     * Default constructor.
+     *
+     * @throws ParserConfigurationException If a DocumentBuilder cannot be created
+     */
+    public DOMParser() throws ParserConfigurationException {
+        saxParser = new HTMLSAXParser();
+
+        // Create a DOM builder using standard JAXP
+        final DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        factory.setNamespaceAware(false);
+        documentBuilder = factory.newDocumentBuilder();
+    }
+
+    /**
+     * Parses an HTML document and builds a DOM tree.
+     *
+     * @param source The input source
+     * @throws SAXException If a SAX error occurs
+     * @throws IOException If an I/O error occurs
+     */
+    public void parse(final InputSource source) throws SAXException, IOException {
+        // Create a SAX to DOM handler
+        final SAXToDOMHandler handler = new SAXToDOMHandler(documentBuilder);
+
+        saxParser.setContentHandler(handler);
+        saxParser.setProperty("http://xml.org/sax/properties/lexical-handler", handler);
+        saxParser.parse(source);
+
+        document = handler.getDocument();
+    }
+
+    /**
+     * Gets the parsed DOM document.
+     *
+     * @return The DOM document
+     */
+    public Document getDocument() {
+        return document;
+    }
+
+    /**
+     * Sets the error handler.
+     *
+     * @param errorHandler The error handler
+     */
+    public void setErrorHandler(final ErrorHandler errorHandler) {
+        saxParser.setErrorHandler(errorHandler);
+        documentBuilder.setErrorHandler(errorHandler);
+    }
+
+    /**
+     * Sets the entity resolver.
+     *
+     * @param entityResolver The entity resolver
+     */
+    public void setEntityResolver(final EntityResolver entityResolver) {
+        saxParser.setEntityResolver(entityResolver);
+        documentBuilder.setEntityResolver(entityResolver);
+    }
+
+    /**
+     * Sets a feature on the underlying SAX parser.
+     *
+     * @param name The feature name
+     * @param value The feature value
+     * @throws SAXException If the feature cannot be set
+     */
+    public void setFeature(final String name, final boolean value) throws SAXException {
         try {
-            setProperty("http://apache.org/xml/properties/dom/document-class-name", "org.codelibs.xerces.html.dom.HTMLDocumentImpl");
-        } catch (final org.xml.sax.SAXNotRecognizedException e) {
-            throw new RuntimeException("http://apache.org/xml/properties/dom/document-class-name property not recognized");
-        } catch (final org.xml.sax.SAXNotSupportedException e) {
-            throw new RuntimeException("http://apache.org/xml/properties/dom/document-class-name property not supported");
-        }
-        /*** extending AbstractDOMParser ***
-        fConfiguration.setProperty("http://apache.org/xml/properties/dom/document-class-name",
-                                   "org.codelibs.xerces.html.dom.HTMLDocumentImpl");
-        /***/
-    } // <init>()
-
-    //
-    // XMLDocumentHandler methods
-    //
-
-    /** Doctype declaration. */
-    @Override
-    public void doctypeDecl(final String root, final String pubid, final String sysid, final Augmentations augs) {
-
-        // NOTE: Xerces HTML DOM implementation (up to and including
-        //       2.5.0) throws a heirarchy request error exception
-        //       when a doctype node is appended to the tree. So,
-        //       don't insert this node into the tree for those
-        //       versions... -Ac
-
-        final String VERSION = XercesBridge.getInstance().getVersion();
-        boolean okay = true;
-        if (VERSION.startsWith("Xerces-J 2.")) {
-            okay = getParserSubVersion() > 5;
-        }
-        // REVISIT: As soon as XML4J is updated with the latest code
-        //          from Xerces, then this needs to be updated to
-        //          check XML4J's version. -Ac
-        else if (VERSION.startsWith("XML4J")) {
-            okay = false;
-        }
-
-        // if okay, insert doctype; otherwise, don't risk it
-        if (okay) {
-            super.doctypeDecl(root, pubid, sysid, augs);
-        }
-
-    } // doctypeDecl(String,String,String,Augmentations)
-
-    //
-    // Private static methods
-    //
-
-    /** Returns the parser's sub-version number. */
-    private static int getParserSubVersion() {
-        try {
-            final String VERSION = XercesBridge.getInstance().getVersion();
-            final int index1 = VERSION.indexOf('.') + 1;
-            int index2 = VERSION.indexOf('.', index1);
-            if (index2 == -1) {
-                index2 = VERSION.length();
-            }
-            return Integer.parseInt(VERSION.substring(index1, index2));
+            saxParser.setFeature(name, value);
         } catch (final Exception e) {
-            return -1;
+            throw new SAXException("Feature not supported: " + name, e);
         }
-    } // getParserSubVersion():int
+    }
+
+    /**
+     * Gets a feature from the underlying SAX parser.
+     *
+     * @param name The feature name
+     * @return The feature value
+     * @throws SAXException If the feature cannot be retrieved
+     */
+    public boolean getFeature(final String name) throws SAXException {
+        try {
+            return saxParser.getFeature(name);
+        } catch (final Exception e) {
+            throw new SAXException("Feature not supported: " + name, e);
+        }
+    }
+
+    /**
+     * Sets a property on the underlying SAX parser.
+     *
+     * @param name The property name
+     * @param value The property value
+     * @throws SAXException If the property cannot be set
+     */
+    public void setProperty(final String name, final Object value) throws SAXException {
+        try {
+            saxParser.setProperty(name, value);
+        } catch (final Exception e) {
+            throw new SAXException("Property not supported: " + name, e);
+        }
+    }
+
+    /**
+     * Gets a property from the underlying SAX parser.
+     *
+     * @param name The property name
+     * @return The property value
+     * @throws SAXException If the property cannot be retrieved
+     */
+    public Object getProperty(final String name) throws SAXException {
+        try {
+            return saxParser.getProperty(name);
+        } catch (final Exception e) {
+            throw new SAXException("Property not supported: " + name, e);
+        }
+    }
 
 } // class DOMParser

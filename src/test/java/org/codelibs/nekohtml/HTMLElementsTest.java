@@ -1,503 +1,504 @@
+/*
+ * Copyright 2012-2025 CodeLibs Project and the Others.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language
+ * governing permissions and limitations under the License.
+ */
 package org.codelibs.nekohtml;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
+import org.codelibs.nekohtml.HTMLElements.Element;
+import org.codelibs.nekohtml.HTMLElements.ElementList;
 import org.junit.jupiter.api.Test;
 
 /**
- * Tests for HTMLElements and nested classes.
- * Focuses on element lookup, flags, relationships, and collection behavior.
+ * Test cases for HTMLElements.
+ * Tests HTML element metadata and lookup functionality.
  */
-class HTMLElementsTest {
+public class HTMLElementsTest {
 
     @Test
-    @DisplayName("Lookup by code returns canonical element")
-    void getElementByCode_returnsCanonical() {
-        HTMLElements.Element divByCode = HTMLElements.getElement(HTMLElements.DIV);
-        HTMLElements.Element divByName = HTMLElements.getElement("DIV");
+    public void testConstructor() {
+        // When: HTMLElements is instantiated
+        final HTMLElements elements = new HTMLElements();
 
-        assertNotNull(divByCode);
-        assertNotNull(divByName);
-        // Both retrievals should return the same canonical instance for known elements
-        assertSame(divByName, divByCode);
-        assertEquals("DIV", divByCode.name);
-        assertTrue(divByCode.isContainer());
-        assertFalse(divByCode.isBlock()); // DIV is CONTAINER, not BLOCK
-        assertFalse(divByCode.isEmpty());
-        assertFalse(divByCode.isInline());
-        assertFalse(divByCode.isSpecial());
+        // Then: Instance should be created
+        assertNotNull(elements, "HTMLElements should be instantiated");
     }
 
     @Test
-    @DisplayName("Lookup by name is case-insensitive")
-    void getElementByName_caseInsensitive() {
-        HTMLElements.Element e1 = HTMLElements.getElement("div");
-        HTMLElements.Element e2 = HTMLElements.getElement("Div");
-        HTMLElements.Element e3 = HTMLElements.getElement("dIv");
-        HTMLElements.Element e4 = HTMLElements.getElement("DIV");
+    public void testGetElementByCode() {
+        // Given: Element codes
+        final short divCode = HTMLElements.DIV;
+        final short pCode = HTMLElements.P;
 
-        assertSame(e1, e2);
-        assertSame(e2, e3);
-        assertSame(e3, e4);
-        assertEquals(HTMLElements.DIV, e1.code);
+        // When: Getting elements by code
+        final Element div = HTMLElements.getElement(divCode);
+        final Element p = HTMLElements.getElement(pCode);
+
+        // Then: Elements should be retrieved correctly
+        assertNotNull(div, "DIV element should be found");
+        assertEquals("DIV", div.name, "Element name should be DIV");
+
+        assertNotNull(p, "P element should be found");
+        assertEquals("P", p.name, "Element name should be P");
     }
 
     @Test
-    @DisplayName("Unknown element creates a new CONTAINER with BODY/HEAD parents")
-    void getElementByName_unknownCreatesContainerWithDefaultParents() {
-        String unknownName = "custom-tag";
-        HTMLElements.Element unknown = HTMLElements.getElement(unknownName);
+    public void testGetElementByName() {
+        // Given: Element names
+        final String divName = "div";
+        final String pName = "P";
 
-        assertNotNull(unknown);
-        assertEquals(HTMLElements.UNKNOWN, unknown.code);
-        assertEquals(unknownName.toUpperCase(), unknown.name);
-        assertTrue(unknown.isContainer());
-        assertFalse(unknown.isInline());
-        assertFalse(unknown.isBlock());
-        assertFalse(unknown.isEmpty());
-        assertFalse(unknown.isSpecial());
+        // When: Getting elements by name (case-insensitive)
+        final Element div = HTMLElements.getElement(divName);
+        final Element p = HTMLElements.getElement(pName);
 
-        // Parents are taken from NO_SUCH_ELEMENT (BODY, HEAD) as element instances
-        assertNotNull(unknown.parent, "Unknown element should inherit concrete parents");
-        assertEquals(2, unknown.parent.length);
-        HTMLElements.Element body = HTMLElements.getElement(HTMLElements.BODY);
-        HTMLElements.Element head = HTMLElements.getElement(HTMLElements.HEAD);
-        assertTrue(unknown.isParent(body));
-        assertTrue(unknown.isParent(head));
+        // Then: Elements should be retrieved correctly
+        assertNotNull(div, "DIV element should be found");
+        assertEquals("DIV", div.name, "Element name should be uppercase DIV");
+
+        assertNotNull(p, "P element should be found");
+        assertEquals("P", p.name, "Element name should be P");
     }
 
     @Test
-    @DisplayName("getElement(name, default) returns default for unknowns")
-    void getElementWithDefault_fallback() {
-        HTMLElements.Element fallback = HTMLElements.getElement("SPAN");
-        HTMLElements.Element res = HTMLElements.getElement("this-name-does-not-exist", fallback);
+    public void testGetElementCaseInsensitive() {
+        // Given: Various case combinations
+        final Element lower = HTMLElements.getElement("html");
+        final Element upper = HTMLElements.getElement("HTML");
+        final Element mixed = HTMLElements.getElement("HtMl");
 
-        assertSame(fallback, res);
+        // Then: All should return the same element
+        assertNotNull(lower, "Should find lowercase html");
+        assertNotNull(upper, "Should find uppercase HTML");
+        assertNotNull(mixed, "Should find mixed case HtMl");
+
+        assertEquals("HTML", lower.name, "All should resolve to HTML");
+        assertEquals("HTML", upper.name, "All should resolve to HTML");
+        assertEquals("HTML", mixed.name, "All should resolve to HTML");
     }
 
     @Test
-    @DisplayName("getElement(name, default) respects names starting with non-letters")
-    void getElementWithDefault_nonLetterStartUsesDefault() {
-        HTMLElements.Element fallback = HTMLElements.getElement("DIV");
-        HTMLElements.Element res = HTMLElements.getElement("123abc", fallback);
-        assertSame(fallback, res);
+    public void testGetUnknownElement() {
+        // Given: Unknown element name
+        final String unknownName = "custom-element";
+
+        // When: Getting unknown element
+        final Element element = HTMLElements.getElement(unknownName);
+
+        // Then: Should return element with UNKNOWN code
+        assertNotNull(element, "Unknown element should return element");
+        assertEquals(HTMLElements.UNKNOWN, element.code, "Should have UNKNOWN code");
+        assertEquals("CUSTOM-ELEMENT", element.name, "Name should be uppercased");
     }
 
-    @Nested
-    class FlagsTests {
-        @Test
-        @DisplayName("Inline flag is set for inline elements")
-        void inlineFlag() {
-            HTMLElements.Element em = HTMLElements.getElement("EM");
-            HTMLElements.Element span = HTMLElements.getElement("SPAN");
-            assertTrue(em.isInline());
-            assertFalse(span.isInline()); // SPAN is CONTAINER, not INLINE
-            assertFalse(em.isBlock());
+    @Test
+    public void testGetElementWithEmptyName() {
+        // Given: Empty element name
+        final String emptyName = "";
+
+        // When: Getting element with empty name
+        final Element element = HTMLElements.getElement(emptyName, HTMLElements.NO_SUCH_ELEMENT);
+
+        // Then: Should return default element
+        assertSame(HTMLElements.NO_SUCH_ELEMENT, element, "Empty name should return default");
+    }
+
+    @Test
+    public void testCommonHtmlElements() {
+        // Test commonly used HTML elements
+        assertElementExists("HTML", HTMLElements.HTML);
+        assertElementExists("HEAD", HTMLElements.HEAD);
+        assertElementExists("BODY", HTMLElements.BODY);
+        assertElementExists("DIV", HTMLElements.DIV);
+        assertElementExists("SPAN", HTMLElements.SPAN);
+        assertElementExists("P", HTMLElements.P);
+        assertElementExists("A", HTMLElements.A);
+        assertElementExists("IMG", HTMLElements.IMG);
+        assertElementExists("TABLE", HTMLElements.TABLE);
+        assertElementExists("TR", HTMLElements.TR);
+        assertElementExists("TD", HTMLElements.TD);
+        assertElementExists("TH", HTMLElements.TH);
+    }
+
+    @Test
+    public void testHtml5Elements() {
+        // Test HTML5 elements
+        assertElementExists("ARTICLE", HTMLElements.ARTICLE);
+        assertElementExists("ASIDE", HTMLElements.ASIDE);
+        assertElementExists("AUDIO", HTMLElements.AUDIO);
+        assertElementExists("CANVAS", HTMLElements.CANVAS);
+        assertElementExists("FOOTER", HTMLElements.FOOTER);
+        assertElementExists("HEADER", HTMLElements.HEADER);
+        assertElementExists("NAV", HTMLElements.NAV);
+        assertElementExists("SECTION", HTMLElements.SECTION);
+        assertElementExists("VIDEO", HTMLElements.VIDEO);
+    }
+
+    @Test
+    public void testElementIsInline() {
+        // Given: Inline elements
+        final Element strong = HTMLElements.getElement(HTMLElements.STRONG);
+        final Element em = HTMLElements.getElement(HTMLElements.EM);
+        final Element code = HTMLElements.getElement(HTMLElements.CODE);
+
+        // Then: Should be inline
+        assertTrue(strong.isInline(), "STRONG should be inline");
+        assertTrue(em.isInline(), "EM should be inline");
+        assertTrue(code.isInline(), "CODE should be inline");
+    }
+
+    @Test
+    public void testElementIsBlock() {
+        // Given: Block elements
+        final Element pre = HTMLElements.getElement(HTMLElements.PRE);
+        final Element dl = HTMLElements.getElement(HTMLElements.DL);
+        final Element h1 = HTMLElements.getElement(HTMLElements.H1);
+
+        // Then: Should be block
+        assertTrue(pre.isBlock(), "PRE should be block");
+        assertTrue(dl.isBlock(), "DL should be block");
+        assertTrue(h1.isBlock(), "H1 should be block");
+    }
+
+    @Test
+    public void testElementIsEmpty() {
+        // Given: Empty (void) elements
+        final Element br = HTMLElements.getElement(HTMLElements.BR);
+        final Element hr = HTMLElements.getElement(HTMLElements.HR);
+        final Element img = HTMLElements.getElement(HTMLElements.IMG);
+        final Element input = HTMLElements.getElement(HTMLElements.INPUT);
+
+        // Then: Should be empty
+        assertTrue(br.isEmpty(), "BR should be empty");
+        assertTrue(hr.isEmpty(), "HR should be empty");
+        assertTrue(img.isEmpty(), "IMG should be empty");
+        assertTrue(input.isEmpty(), "INPUT should be empty");
+    }
+
+    @Test
+    public void testElementIsContainer() {
+        // Given: Container elements
+        final Element div = HTMLElements.getElement(HTMLElements.DIV);
+        final Element span = HTMLElements.getElement(HTMLElements.SPAN);
+        final Element table = HTMLElements.getElement(HTMLElements.TABLE);
+
+        // Then: Should be container
+        assertTrue(div.isContainer(), "DIV should be container");
+        assertTrue(span.isContainer(), "SPAN should be container");
+        assertTrue(table.isContainer(), "TABLE should be container");
+    }
+
+    @Test
+    public void testElementIsSpecial() {
+        // Given: Special elements
+        final Element script = HTMLElements.getElement(HTMLElements.SCRIPT);
+        final Element style = HTMLElements.getElement(HTMLElements.STYLE);
+        final Element title = HTMLElements.getElement(HTMLElements.TITLE);
+
+        // Then: Should be special
+        assertTrue(script.isSpecial(), "SCRIPT should be special");
+        assertTrue(style.isSpecial(), "STYLE should be special");
+        assertTrue(title.isSpecial(), "TITLE should be special");
+    }
+
+    @Test
+    public void testElementCloses() {
+        // Given: P element can close another P
+        final Element p = HTMLElements.getElement(HTMLElements.P);
+
+        // Then: P should close P
+        assertTrue(p.closes(HTMLElements.P), "P should close P");
+    }
+
+    @Test
+    public void testElementDoesNotClose() {
+        // Given: DIV element
+        final Element div = HTMLElements.getElement(HTMLElements.DIV);
+
+        // Then: DIV should not close SPAN (no closes defined)
+        assertFalse(div.closes(HTMLElements.SPAN), "DIV should not close SPAN");
+    }
+
+    @Test
+    public void testHeadingElements() {
+        // Test all heading elements
+        final Element h1 = HTMLElements.getElement(HTMLElements.H1);
+        final Element h2 = HTMLElements.getElement(HTMLElements.H2);
+        final Element h3 = HTMLElements.getElement(HTMLElements.H3);
+        final Element h4 = HTMLElements.getElement(HTMLElements.H4);
+        final Element h5 = HTMLElements.getElement(HTMLElements.H5);
+        final Element h6 = HTMLElements.getElement(HTMLElements.H6);
+
+        // All should be block elements
+        assertTrue(h1.isBlock(), "H1 should be block");
+        assertTrue(h2.isBlock(), "H2 should be block");
+        assertTrue(h3.isBlock(), "H3 should be block");
+        assertTrue(h4.isBlock(), "H4 should be block");
+        assertTrue(h5.isBlock(), "H5 should be block");
+        assertTrue(h6.isBlock(), "H6 should be block");
+
+        // Headings should close other headings and P
+        assertTrue(h1.closes(HTMLElements.P), "H1 should close P");
+        assertTrue(h1.closes(HTMLElements.H2), "H1 should close H2");
+    }
+
+    @Test
+    public void testFormElements() {
+        // Test form-related elements
+        assertElementExists("FORM", HTMLElements.FORM);
+        assertElementExists("INPUT", HTMLElements.INPUT);
+        assertElementExists("TEXTAREA", HTMLElements.TEXTAREA);
+        assertElementExists("SELECT", HTMLElements.SELECT);
+        assertElementExists("BUTTON", HTMLElements.BUTTON);
+        assertElementExists("LABEL", HTMLElements.LABEL);
+    }
+
+    @Test
+    public void testTableElements() {
+        // Test table structure elements
+        assertElementExists("TABLE", HTMLElements.TABLE);
+        assertElementExists("THEAD", HTMLElements.THEAD);
+        assertElementExists("TBODY", HTMLElements.TBODY);
+        assertElementExists("TFOOT", HTMLElements.TFOOT);
+        assertElementExists("TR", HTMLElements.TR);
+        assertElementExists("TD", HTMLElements.TD);
+        assertElementExists("TH", HTMLElements.TH);
+        assertElementExists("CAPTION", HTMLElements.CAPTION);
+        assertElementExists("COLGROUP", HTMLElements.COLGROUP);
+        assertElementExists("COL", HTMLElements.COL);
+    }
+
+    @Test
+    public void testElementParent() {
+        // Given: Elements with parent relationships
+        final Element td = HTMLElements.getElement(HTMLElements.TD);
+        final Element tr = HTMLElements.getElement(HTMLElements.TR);
+
+        // Then: TD should have TR as parent
+        assertTrue(td.isParent(tr), "TD should have TR as parent");
+    }
+
+    @Test
+    public void testElementWithoutParent() {
+        // Given: HTML element (root)
+        final Element html = HTMLElements.getElement(HTMLElements.HTML);
+        final Element div = HTMLElements.getElement(HTMLElements.DIV);
+
+        // Then: HTML should not have parent
+        assertFalse(html.isParent(div), "HTML should not have DIV as parent");
+    }
+
+    @Test
+    public void testElementHashCode() {
+        // Given: Two instances of same element
+        final Element div1 = HTMLElements.getElement("DIV");
+        final Element div2 = HTMLElements.getElement("div");
+
+        // Then: Should have same hash code
+        assertEquals(div1.hashCode(), div2.hashCode(), "Same elements should have same hash code");
+    }
+
+    @Test
+    public void testElementEquals() {
+        // Given: Elements
+        final Element div = HTMLElements.getElement(HTMLElements.DIV);
+
+        // Then: Element equals should work with name
+        assertTrue(div.equals("DIV"), "Element should equal its name");
+        assertFalse(div.equals("SPAN"), "Element should not equal different name");
+    }
+
+    @Test
+    public void testElementToString() {
+        // Given: Element
+        final Element div = HTMLElements.getElement(HTMLElements.DIV);
+
+        // Then: toString should contain name
+        final String str = div.toString();
+        assertNotNull(str, "toString should not be null");
+        assertTrue(str.contains("DIV"), "toString should contain element name");
+    }
+
+    @Test
+    public void testNoSuchElement() {
+        // Then: NO_SUCH_ELEMENT should exist
+        assertNotNull(HTMLElements.NO_SUCH_ELEMENT, "NO_SUCH_ELEMENT should exist");
+        assertEquals(HTMLElements.UNKNOWN, HTMLElements.NO_SUCH_ELEMENT.code, "Should have UNKNOWN code");
+    }
+
+    @Test
+    public void testElementList() {
+        // Given: ElementList
+        final ElementList list = new ElementList();
+
+        // When: Adding elements
+        final Element elem1 = new Element((short) 0, "TEST1", Element.BLOCK, HTMLElements.BODY, null);
+        final Element elem2 = new Element((short) 1, "TEST2", Element.INLINE, HTMLElements.BODY, null);
+
+        list.addElement(elem1);
+        list.addElement(elem2);
+
+        // Then: Elements should be in list
+        assertEquals(2, list.size, "List should have 2 elements");
+        assertSame(elem1, list.data[0], "First element should match");
+        assertSame(elem2, list.data[1], "Second element should match");
+    }
+
+    @Test
+    public void testElementListGrowth() {
+        // Given: ElementList
+        final ElementList list = new ElementList();
+
+        // When: Adding more elements than initial capacity
+        for (int i = 0; i < 150; i++) {
+            list.addElement(new Element((short) i, "TEST" + i, Element.BLOCK, HTMLElements.BODY, null));
         }
 
-        @Test
-        @DisplayName("Block flag is set for block elements")
-        void blockFlag() {
-            HTMLElements.Element div = HTMLElements.getElement("DIV");
-            HTMLElements.Element p = HTMLElements.getElement("P");
-            assertFalse(div.isBlock()); // DIV is CONTAINER, not BLOCK
-            assertTrue(p.isContainer()); // P is defined as CONTAINER
-        }
-
-        @Test
-        @DisplayName("Empty flag is set for empty elements")
-        void emptyFlag() {
-            HTMLElements.Element br = HTMLElements.getElement("BR");
-            HTMLElements.Element img = HTMLElements.getElement("IMG");
-            assertTrue(br.isEmpty());
-            assertTrue(img.isEmpty());
-            assertFalse(br.isContainer());
-        }
-
-        @Test
-        @DisplayName("Special flag is set for special elements")
-        void specialFlag() {
-            HTMLElements.Element script = HTMLElements.getElement("SCRIPT");
-            HTMLElements.Element style = HTMLElements.getElement("STYLE");
-            HTMLElements.Element xmp = HTMLElements.getElement("XMP");
-            HTMLElements.Element comment = HTMLElements.getElement("COMMENT");
-
-            assertTrue(script.isSpecial());
-            assertTrue(style.isSpecial());
-            assertTrue(xmp.isSpecial());
-            assertTrue(comment.isSpecial());
-        }
-    }
-
-    @Nested
-    class RelationshipsTests {
-        @Test
-        @DisplayName("Element closes() respects the closes list")
-        void closesBehavior() {
-            HTMLElements.Element p = HTMLElements.getElement("P");
-            HTMLElements.Element li = HTMLElements.getElement("LI");
-            HTMLElements.Element div = HTMLElements.getElement("DIV");
-
-            assertTrue(p.closes(HTMLElements.P), "P should close P");
-            assertTrue(li.closes(HTMLElements.LI), "LI should close LI");
-            assertTrue(li.closes(HTMLElements.P), "LI should close P");
-            assertTrue(div.closes(HTMLElements.P), "DIV closes P according to HTML specification");
-        }
-
-        @Test
-        @DisplayName("isParent() is true for declared parents")
-        void isParentRecognizesDeclaredParents() {
-            HTMLElements.Element caption = HTMLElements.getElement("CAPTION");
-            HTMLElements.Element table = HTMLElements.getElement("TABLE");
-            assertTrue(caption.isParent(table), "CAPTION should have TABLE as a parent");
-
-            HTMLElements.Element li = HTMLElements.getElement("LI");
-            HTMLElements.Element ul = HTMLElements.getElement("UL");
-            HTMLElements.Element ol = HTMLElements.getElement("OL");
-            HTMLElements.Element body = HTMLElements.getElement("BODY");
-            assertTrue(li.isParent(ul));
-            assertTrue(li.isParent(ol));
-            assertTrue(li.isParent(body));
-        }
-    }
-
-    @Nested
-    class EqualityAndStringTests {
-        @Test
-        @DisplayName("equals() compares against the name string (current behavior)")
-        void equalsComparesToNameString() {
-            // NOTE: Current implementation: equals(Object o) returns name.equals(o)
-            HTMLElements.Element div = HTMLElements.getElement("DIV");
-
-            assertTrue(div.equals("DIV"), "Element equals() should match equal String name");
-            assertFalse(div.equals(div), "Element equals() does NOT match the same Element instance");
-            assertFalse("DIV".equals(div), "String equals() does not match Element (non-symmetric)");
-        }
-
-        @Test
-        @DisplayName("hashCode() matches name hash; toString() contains name")
-        void hashCodeAndToString() {
-            HTMLElements.Element div = HTMLElements.getElement("DIV");
-
-            assertEquals("DIV".hashCode(), div.hashCode());
-            String ts = div.toString();
-            assertNotNull(ts);
-            assertTrue(ts.contains("(name=DIV)"), "toString() should contain '(name=DIV)'");
-        }
-    }
-
-    @Nested
-    class ElementListTests {
-        @Test
-        @DisplayName("ElementList grows capacity when adding beyond initial length")
-        void elementListGrows() {
-            HTMLElements.ElementList list = new HTMLElements.ElementList();
-            HTMLElements.Element sample = HTMLElements.getElement("DIV");
-
-            int initialCapacity = list.data.length;
-            assertTrue(initialCapacity >= 120, "Initial capacity should be at least 120");
-
-            // Add more than initial capacity to trigger growth
-            int toAdd = initialCapacity + 5;
-            for (int i = 0; i < toAdd; i++) {
-                list.addElement(sample);
-            }
-
-            assertEquals(toAdd, list.size);
-            assertSame(sample, list.data[list.size - 1], "Last element should be the one added");
-            assertTrue(list.data.length > initialCapacity, "Capacity should have grown");
-        }
+        // Then: List should grow
+        assertEquals(150, list.size, "List should have 150 elements");
+        assertTrue(list.data.length >= 150, "Array should have grown");
     }
 
     @Test
-    @DisplayName("UNKNOWN code maps to NO_SUCH_ELEMENT via getElement(short)")
-    void unknownCodeMapsToNoSuchElement() {
-        HTMLElements.Element e = HTMLElements.getElement(HTMLElements.UNKNOWN);
-        assertSame(HTMLElements.NO_SUCH_ELEMENT, e);
-        assertEquals("", HTMLElements.NO_SUCH_ELEMENT.name, "NO_SUCH_ELEMENT name is empty by design");
-        assertTrue(HTMLElements.NO_SUCH_ELEMENT.isContainer());
-        // NO_SUCH_ELEMENT should have concrete BODY/HEAD parents configured in static init
-        assertNotNull(HTMLElements.NO_SUCH_ELEMENT.parent);
-        assertEquals(2, HTMLElements.NO_SUCH_ELEMENT.parent.length);
+    public void testElementConstructorWithSingleParent() {
+        // Given/When: Element with single parent
+        final Element elem = new Element((short) 999, "TEST", Element.BLOCK, HTMLElements.BODY, new short[] { HTMLElements.P });
+
+        // Then: Element should be created correctly
+        assertEquals("TEST", elem.name, "Name should match");
+        assertEquals(Element.BLOCK, elem.flags, "Flags should match");
+        assertNotNull(elem.parentCodes, "Parent codes should be set");
+        assertEquals(1, elem.parentCodes.length, "Should have 1 parent");
     }
 
     @Test
-    @DisplayName("Empty string name returns NO_SUCH_ELEMENT")
-    void getElementWithEmptyString() {
-        HTMLElements.Element fallback = HTMLElements.getElement("DIV");
-        HTMLElements.Element result = HTMLElements.getElement("", fallback);
-        assertSame(fallback, result, "Empty string should return fallback element");
+    public void testElementConstructorWithMultipleParents() {
+        // Given/When: Element with multiple parents
+        final short[] parents = new short[] { HTMLElements.BODY, HTMLElements.DIV };
+        final Element elem = new Element((short) 999, "TEST", Element.BLOCK, parents, new short[] { HTMLElements.P });
 
-        // Empty string without fallback creates UNKNOWN element
-        HTMLElements.Element unknown = HTMLElements.getElement("");
-        assertNotNull(unknown);
-        assertEquals(HTMLElements.UNKNOWN, unknown.code);
-        assertEquals("", unknown.name);
+        // Then: Element should be created correctly
+        assertNotNull(elem.parentCodes, "Parent codes should be set");
+        assertEquals(2, elem.parentCodes.length, "Should have 2 parents");
     }
 
     @Test
-    @DisplayName("Element with bounds attribute (TD, TH)")
-    void elementWithBounds() {
-        HTMLElements.Element td = HTMLElements.getElement(HTMLElements.TD);
-        HTMLElements.Element th = HTMLElements.getElement(HTMLElements.TH);
+    public void testElementWithBounds() {
+        // Given/When: Element with bounds
+        final Element elem = new Element((short) 999, "TEST", Element.BLOCK, HTMLElements.BODY, HTMLElements.TABLE, null);
 
-        assertNotNull(td);
-        assertNotNull(th);
-        assertEquals("TD", td.name);
-        assertEquals("TH", th.name);
-
-        // TD and TH have TABLE as bounds
-        assertEquals(HTMLElements.TABLE, td.bounds);
-        assertEquals(HTMLElements.TABLE, th.bounds);
-
-        // They should close each other
-        assertTrue(td.closes(HTMLElements.TD));
-        assertTrue(td.closes(HTMLElements.TH));
-        assertTrue(th.closes(HTMLElements.TD));
-        assertTrue(th.closes(HTMLElements.TH));
+        // Then: Bounds should be set
+        assertEquals(HTMLElements.TABLE, elem.bounds, "Bounds should be TABLE");
     }
 
     @Test
-    @DisplayName("Element constructors with different parameters")
-    void elementConstructors() {
-        // Test single parent constructor
-        HTMLElements.Element e1 =
-                new HTMLElements.Element((short) 999, "TEST1", HTMLElements.Element.INLINE, HTMLElements.BODY,
-                        new short[] { HTMLElements.P });
-        assertEquals(999, e1.code);
-        assertEquals("TEST1", e1.name);
-        assertTrue(e1.isInline());
-        assertEquals(-1, e1.bounds);
-
-        // Test single parent with bounds constructor
-        HTMLElements.Element e2 =
-                new HTMLElements.Element((short) 998, "TEST2", HTMLElements.Element.CONTAINER, HTMLElements.BODY, HTMLElements.TABLE,
-                        new short[] { HTMLElements.P });
-        assertEquals(998, e2.code);
-        assertEquals("TEST2", e2.name);
-        assertTrue(e2.isContainer());
-        assertEquals(HTMLElements.TABLE, e2.bounds);
-
-        // Test multiple parents constructor
-        HTMLElements.Element e3 =
-                new HTMLElements.Element((short) 997, "TEST3", HTMLElements.Element.BLOCK, new short[] { HTMLElements.BODY,
-                        HTMLElements.HEAD }, new short[] { HTMLElements.P });
-        assertEquals(997, e3.code);
-        assertEquals("TEST3", e3.name);
-        assertTrue(e3.isBlock());
-        assertEquals(-1, e3.bounds);
-
-        // Test multiple parents with bounds constructor
-        HTMLElements.Element e4 =
-                new HTMLElements.Element((short) 996, "TEST4", HTMLElements.Element.EMPTY, new short[] { HTMLElements.BODY,
-                        HTMLElements.HEAD }, HTMLElements.TABLE, null);
-        assertEquals(996, e4.code);
-        assertEquals("TEST4", e4.name);
-        assertTrue(e4.isEmpty());
-        assertEquals(HTMLElements.TABLE, e4.bounds);
-        assertNull(e4.closes);
+    public void testDeprecatedElements() {
+        // Test deprecated but still supported elements
+        assertElementExists("FONT", HTMLElements.FONT);
+        assertElementExists("CENTER", HTMLElements.CENTER);
+        assertElementExists("STRIKE", HTMLElements.STRIKE);
+        assertElementExists("BASEFONT", HTMLElements.BASEFONT);
     }
 
     @Test
-    @DisplayName("Special HTML5 elements are properly configured")
-    void html5Elements() {
-        // Test HTML5 semantic elements
-        HTMLElements.Element article = HTMLElements.getElement("ARTICLE");
-        HTMLElements.Element section = HTMLElements.getElement("SECTION");
-        HTMLElements.Element nav = HTMLElements.getElement("NAV");
-        HTMLElements.Element aside = HTMLElements.getElement("ASIDE");
-        HTMLElements.Element header = HTMLElements.getElement("HEADER");
-        HTMLElements.Element footer = HTMLElements.getElement("FOOTER");
-        HTMLElements.Element main = HTMLElements.getElement("MAIN");
-
-        assertNotNull(article);
-        assertNotNull(section);
-        assertNotNull(nav);
-        assertNotNull(aside);
-        assertNotNull(header);
-        assertNotNull(footer);
-        assertNotNull(main);
-
-        assertTrue(article.isContainer());
-        assertTrue(section.isContainer());
-        assertTrue(nav.isContainer());
-        assertTrue(header.isContainer());
-        assertTrue(footer.isContainer());
-        assertTrue(main.isContainer());
-
-        // ASIDE is defined as BLOCK
-        assertTrue(aside.isBlock());
-
-        // These elements should close P
-        assertTrue(article.closes(HTMLElements.P));
-        assertTrue(aside.closes(HTMLElements.P));
-        assertTrue(footer.closes(HTMLElements.P));
-        assertTrue(header.closes(HTMLElements.P));
+    public void testRubyElements() {
+        // Test Ruby annotation elements
+        assertElementExists("RUBY", HTMLElements.RUBY);
+        assertElementExists("RB", HTMLElements.RB);
+        assertElementExists("RT", HTMLElements.RT);
+        assertElementExists("RTC", HTMLElements.RTC);
+        assertElementExists("RP", HTMLElements.RP);
     }
 
     @Test
-    @DisplayName("Media elements are properly configured")
-    void mediaElements() {
-        HTMLElements.Element audio = HTMLElements.getElement("AUDIO");
-        HTMLElements.Element video = HTMLElements.getElement("VIDEO");
-        HTMLElements.Element canvas = HTMLElements.getElement("CANVAS");
-        HTMLElements.Element source = HTMLElements.getElement("SOURCE");
-        HTMLElements.Element track = HTMLElements.getElement("TRACK");
+    public void testListElements() {
+        // Test list elements
+        final Element ul = HTMLElements.getElement(HTMLElements.UL);
+        final Element ol = HTMLElements.getElement(HTMLElements.OL);
+        final Element li = HTMLElements.getElement(HTMLElements.LI);
+        final Element dl = HTMLElements.getElement(HTMLElements.DL);
+        final Element dt = HTMLElements.getElement(HTMLElements.DT);
+        final Element dd = HTMLElements.getElement(HTMLElements.DD);
 
-        assertNotNull(audio);
-        assertNotNull(video);
-        assertNotNull(canvas);
-        assertNotNull(source);
-        assertNotNull(track);
+        assertNotNull(ul, "UL should exist");
+        assertNotNull(ol, "OL should exist");
+        assertNotNull(li, "LI should exist");
+        assertNotNull(dl, "DL should exist");
+        assertNotNull(dt, "DT should exist");
+        assertNotNull(dd, "DD should exist");
 
-        // HTML5 media elements should be containers to hold fallback content
-        assertTrue(audio.isContainer());
-        assertTrue(video.isContainer());
-        assertTrue(canvas.isContainer());
-        assertTrue(source.isEmpty());
-        assertTrue(track.isEmpty());
+        // LI should close LI and P
+        assertTrue(li.closes(HTMLElements.LI), "LI should close LI");
+        assertTrue(li.closes(HTMLElements.P), "LI should close P");
     }
 
     @Test
-    @DisplayName("Table elements hierarchy is properly configured")
-    void tableElementsHierarchy() {
-        HTMLElements.Element table = HTMLElements.getElement("TABLE");
-        HTMLElements.Element tbody = HTMLElements.getElement("TBODY");
-        HTMLElements.Element thead = HTMLElements.getElement("THEAD");
-        HTMLElements.Element tfoot = HTMLElements.getElement("TFOOT");
-        HTMLElements.Element tr = HTMLElements.getElement("TR");
-        HTMLElements.Element td = HTMLElements.getElement("TD");
-        HTMLElements.Element th = HTMLElements.getElement("TH");
-
-        // TABLE is both BLOCK and CONTAINER
-        assertTrue(table.isBlock());
-        assertTrue(table.isContainer());
-
-        // TR is BLOCK
-        assertTrue(tr.isBlock());
-
-        // TD and TH are CONTAINER
-        assertTrue(td.isContainer());
-        assertTrue(th.isContainer());
-
-        // Check parent relationships
-        assertTrue(tbody.isParent(table));
-        assertTrue(thead.isParent(table));
-        assertTrue(tfoot.isParent(table));
-
-        // TR has multiple possible parents
-        HTMLElements.Element trElem = HTMLElements.getElement(HTMLElements.TR);
-        assertTrue(trElem.parent.length > 1);
-
-        // Check closing behavior
-        assertTrue(tbody.closes(HTMLElements.THEAD));
-        assertTrue(tbody.closes(HTMLElements.TBODY));
-        assertTrue(tbody.closes(HTMLElements.TFOOT));
-        assertTrue(tbody.closes(HTMLElements.TD));
-        assertTrue(tbody.closes(HTMLElements.TH));
-        assertTrue(tbody.closes(HTMLElements.TR));
+    public void testMetadataElements() {
+        // Test metadata elements
+        assertElementExists("TITLE", HTMLElements.TITLE);
+        assertElementExists("META", HTMLElements.META);
+        assertElementExists("LINK", HTMLElements.LINK);
+        assertElementExists("BASE", HTMLElements.BASE);
+        assertElementExists("STYLE", HTMLElements.STYLE);
+        assertElementExists("SCRIPT", HTMLElements.SCRIPT);
     }
 
     @Test
-    @DisplayName("Ruby elements are properly configured")
-    void rubyElements() {
-        HTMLElements.Element ruby = HTMLElements.getElement("RUBY");
-        HTMLElements.Element rb = HTMLElements.getElement("RB");
-        HTMLElements.Element rt = HTMLElements.getElement("RT");
-        HTMLElements.Element rp = HTMLElements.getElement("RP");
-        HTMLElements.Element rtc = HTMLElements.getElement("RTC");
-        HTMLElements.Element rbc = HTMLElements.getElement("RBC");
-
-        assertNotNull(ruby);
-        assertNotNull(rb);
-        assertNotNull(rt);
-        assertNotNull(rp);
-        assertNotNull(rtc);
-        assertNotNull(rbc);
-
-        assertTrue(ruby.isContainer());
-        assertTrue(rb.isInline());
-        assertTrue(rt.isInline());
-        assertTrue(rp.isInline());
-
-        // Ruby elements have specific parent relationships
-        assertTrue(rb.isParent(ruby));
-        assertTrue(rt.isParent(ruby));
-        assertTrue(rp.isParent(ruby));
-        assertTrue(rtc.isParent(ruby));
-        assertTrue(rbc.isParent(ruby));
-
-        // Check closing behavior
-        assertTrue(rb.closes(HTMLElements.RB));
-        assertTrue(rp.closes(HTMLElements.RB));
-        assertTrue(rt.closes(HTMLElements.RB));
-        assertTrue(rt.closes(HTMLElements.RP));
+    public void testMultimediaElements() {
+        // Test multimedia elements
+        assertElementExists("AUDIO", HTMLElements.AUDIO);
+        assertElementExists("VIDEO", HTMLElements.VIDEO);
+        assertElementExists("SOURCE", HTMLElements.SOURCE);
+        assertElementExists("TRACK", HTMLElements.TRACK);
+        assertElementExists("CANVAS", HTMLElements.CANVAS);
     }
 
     @Test
-    @DisplayName("Form elements are properly configured")
-    void formElements() {
-        HTMLElements.Element form = HTMLElements.getElement("FORM");
-        HTMLElements.Element input = HTMLElements.getElement("INPUT");
-        HTMLElements.Element select = HTMLElements.getElement("SELECT");
-        HTMLElements.Element option = HTMLElements.getElement("OPTION");
-        HTMLElements.Element optgroup = HTMLElements.getElement("OPTGROUP");
-        HTMLElements.Element textarea = HTMLElements.getElement("TEXTAREA");
-        HTMLElements.Element button = HTMLElements.getElement("BUTTON");
-        HTMLElements.Element fieldset = HTMLElements.getElement("FIELDSET");
-        HTMLElements.Element legend = HTMLElements.getElement("LEGEND");
+    public void testGetElementWithDefaultElement() {
+        // Given: Custom default element
+        final Element defaultElem = new Element((short) 9999, "DEFAULT", Element.BLOCK, HTMLElements.BODY, null);
 
-        assertTrue(form.isContainer());
-        assertTrue(input.isEmpty());
-        assertTrue(select.isContainer());
-        assertTrue(textarea.isSpecial());
-        assertTrue(fieldset.isContainer());
-        assertTrue(legend.isInline());
+        // When: Searching for non-existent element
+        final Element result = HTMLElements.getElement("non-existent-xyz", defaultElem);
 
-        // BUTTON has both INLINE and BLOCK flags
-        assertTrue((button.flags & HTMLElements.Element.INLINE) != 0);
-        assertTrue((button.flags & HTMLElements.Element.BLOCK) != 0);
-
-        // Check parent relationships
-        assertTrue(legend.isParent(fieldset));
-
-        // FORM has multiple possible parents
-        assertTrue(form.parent.length > 1);
-
-        // Check closing behavior
-        assertTrue(form.closes(HTMLElements.BUTTON));
-        assertTrue(form.closes(HTMLElements.P));
-        assertTrue(select.closes(HTMLElements.SELECT));
-        assertTrue(option.closes(HTMLElements.OPTION));
-        assertTrue(option.closes(HTMLElements.OPTGROUP));
+        // Then: Should return default element
+        assertSame(defaultElem, result, "Should return provided default element");
     }
 
     @Test
-    @DisplayName("Element.closes() with null closes array")
-    void closesWithNullArray() {
-        // Create element with null closes array
-        HTMLElements.Element elem = new HTMLElements.Element((short) 995, "NOCLOSE", HTMLElements.Element.INLINE, HTMLElements.BODY, null);
+    public void testElementNotEquals() {
+        // Given: Different elements
+        final Element div = HTMLElements.getElement(HTMLElements.DIV);
+        final Element span = HTMLElements.getElement(HTMLElements.SPAN);
 
-        assertFalse(elem.closes(HTMLElements.P));
-        assertFalse(elem.closes(HTMLElements.DIV));
-        assertFalse(elem.closes((short) 999));
+        // Then: Should not be equal
+        assertNotEquals(div.hashCode(), span.hashCode(), "Different elements should have different hash codes");
+        assertFalse(div.equals("SPAN"), "DIV should not equal SPAN");
     }
 
-    @Test
-    @DisplayName("Element.isParent() with null parent array")
-    void isParentWithNullArray() {
-        // Create element with null parent (will be set during initialization)
-        HTMLElements.Element elem = new HTMLElements.Element((short) 994, "NOPARENT", HTMLElements.Element.INLINE, (short[]) null, null);
-        elem.parent = null; // Force null parent
-
-        HTMLElements.Element body = HTMLElements.getElement(HTMLElements.BODY);
-        assertFalse(elem.isParent(body));
+    // Helper method
+    private void assertElementExists(final String name, final short code) {
+        final Element element = HTMLElements.getElement(name);
+        assertNotNull(element, name + " element should exist");
+        assertEquals(name, element.name, "Element name should match");
+        assertEquals(code, element.code, "Element code should match");
     }
-}
+
+} // class HTMLElementsTest

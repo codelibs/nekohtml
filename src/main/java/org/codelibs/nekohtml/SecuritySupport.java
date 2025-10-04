@@ -19,10 +19,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
-import java.security.PrivilegedActionException;
-import java.security.PrivilegedExceptionAction;
 
 /**
  * This class is duplicated for each JAXP subpackage so keep it in sync.
@@ -44,82 +40,62 @@ class SecuritySupport {
     }
 
     ClassLoader getContextClassLoader() {
-        final PrivilegedAction<ClassLoader> action = () -> {
-            ClassLoader cl = null;
-            try {
-                cl = Thread.currentThread().getContextClassLoader();
-            } catch (final SecurityException ex) {
-                // nothing
-            }
-            return cl;
-        };
-        return AccessController.doPrivileged(action);
+        ClassLoader cl = null;
+        try {
+            cl = Thread.currentThread().getContextClassLoader();
+        } catch (final SecurityException ex) {
+            // nothing
+        }
+        return cl;
     }
 
     ClassLoader getSystemClassLoader() {
-        final PrivilegedAction<ClassLoader> action = () -> {
-            ClassLoader cl = null;
-            try {
-                cl = ClassLoader.getSystemClassLoader();
-            } catch (final SecurityException ex) {
-                // nothing
-            }
-            return cl;
-        };
-        return AccessController.doPrivileged(action);
+        ClassLoader cl = null;
+        try {
+            cl = ClassLoader.getSystemClassLoader();
+        } catch (final SecurityException ex) {
+            // nothing
+        }
+        return cl;
     }
 
     ClassLoader getParentClassLoader(final ClassLoader cl) {
-        final PrivilegedAction<ClassLoader> action = () -> {
-            ClassLoader parent = null;
-            try {
-                parent = cl.getParent();
-            } catch (final SecurityException ex) {
-                // nothing
-            }
+        ClassLoader parent = null;
+        try {
+            parent = cl.getParent();
+        } catch (final SecurityException ex) {
+            // nothing
+        }
 
-            // eliminate loops in case of the boot
-            // ClassLoader returning itself as a parent
-            return (parent == cl) ? null : parent;
-        };
-        return AccessController.doPrivileged(action);
+        // eliminate loops in case of the boot
+        // ClassLoader returning itself as a parent
+        return (parent == cl) ? null : parent;
     }
 
     String getSystemProperty(final String propName) {
-        final PrivilegedAction<String> action = () -> System.getProperty(propName);
-        return AccessController.doPrivileged(action);
+        return System.getProperty(propName);
     }
 
     FileInputStream getFileInputStream(final File file) throws FileNotFoundException {
-        try {
-            final PrivilegedExceptionAction<FileInputStream> action = () -> new FileInputStream(file);
-            return AccessController.doPrivileged(action);
-        } catch (final PrivilegedActionException e) {
-            throw (FileNotFoundException) e.getException();
-        }
+        return new FileInputStream(file);
     }
 
     InputStream getResourceAsStream(final ClassLoader cl, final String name) {
-        final PrivilegedAction<InputStream> action = () -> {
-            InputStream ris;
-            if (cl == null) {
-                ris = ClassLoader.getSystemResourceAsStream(name);
-            } else {
-                ris = cl.getResourceAsStream(name);
-            }
-            return ris;
-        };
-        return AccessController.doPrivileged(action);
+        InputStream ris;
+        if (cl == null) {
+            ris = ClassLoader.getSystemResourceAsStream(name);
+        } else {
+            ris = cl.getResourceAsStream(name);
+        }
+        return ris;
     }
 
     boolean getFileExists(final File f) {
-        final PrivilegedAction<Boolean> action = f::exists;
-        return AccessController.doPrivileged(action);
+        return f.exists();
     }
 
     long getLastModified(final File f) {
-        final PrivilegedAction<Long> action = f::lastModified;
-        return AccessController.doPrivileged(action);
+        return f.lastModified();
     }
 
 }

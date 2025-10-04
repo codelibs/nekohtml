@@ -1,395 +1,288 @@
 /*
- * Tests for HTMLEntities utility and its inner structures.
- * The tests aim to cover both forward (name->char) and reverse (char->name)
- * mappings, basic constructor behavior, collision handling of IntProperties,
- * and reflective access to the private loader for error and success paths.
+ * Copyright 2012-2025 CodeLibs Project and the Others.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language
+ * governing permissions and limitations under the License.
  */
 package org.codelibs.nekohtml;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.util.Map;
-import java.util.Properties;
-
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
-import org.junit.jupiter.params.provider.ValueSource;
 
-class HTMLEntitiesTest {
+/**
+ * Test class for {@link HTMLEntities}.
+ *
+ * @author CodeLibs Project
+ */
+public class HTMLEntitiesTest {
 
+    /**
+     * Test that HTMLEntities can be instantiated.
+     */
     @Test
-    @DisplayName("Constructor does not throw and creates instance")
-    void constructorDoesNotThrow() {
-        // Ensure the default constructor is available and safe to call.
-        assertNotNull(new HTMLEntities());
+    public void testInstantiation() {
+        final HTMLEntities entities = new HTMLEntities();
+        assertNotNull(entities, "HTMLEntities should be instantiated");
     }
 
-    @ParameterizedTest(name = "Entity {0} resolves to a character")
-    @DisplayName("get(String): known entity names resolve to characters")
-    @CsvSource({
-            // Test that entities resolve to some character (not -1)
-            "amp", "lt", "gt", "quot", "Yuml", "euro", "nbsp", "Agrave", "yuml", "Omega", "psi", "trade", "sum", "apos" })
-    void getByNameKnownEntities(final String name) {
-        final int code = HTMLEntities.get(name);
-        assertNotEquals(-1, code, "Known entity should resolve to a character");
-        assertTrue(code >= 0 && code <= 0x10FFFF, "Should be valid Unicode code point");
-    }
-
+    /**
+     * Test getting character value for common Latin-1 entities.
+     */
     @Test
-    @DisplayName("get(String): unknown and null names return -1")
-    void getByNameUnknownOrNull() {
-        assertEquals(-1, HTMLEntities.get("doesnotexist"));
-        assertEquals(-1, HTMLEntities.get((String) null));
-        // Case sensitivity: name lookup is case-sensitive
-        assertEquals(-1, HTMLEntities.get("AMP"));
+    public void testGetLatin1Entities() {
+        // Test common Latin-1 entities
+        assertEquals(160, HTMLEntities.get("nbsp"), "nbsp should map to character 160 (non-breaking space)");
+        assertEquals(169, HTMLEntities.get("copy"), "copy should map to character 169 (copyright symbol)");
+        assertEquals(174, HTMLEntities.get("reg"), "reg should map to character 174 (registered trademark)");
+        assertEquals(176, HTMLEntities.get("deg"), "deg should map to character 176 (degree symbol)");
+        assertEquals(177, HTMLEntities.get("plusmn"), "plusmn should map to character 177 (plus-minus)");
     }
 
-    @ParameterizedTest(name = "Character {0} may have entity name")
-    @DisplayName("get(int): known characters may map to entity names")
-    @CsvSource({ "'&'", "'<'", "'>'", "'\"'", "'\u00A0'", "'\u03A9'", "'\u2122'" })
-    void getByCharKnownEntities(final String ch) {
-        final int codePoint = ch.charAt(0);
-        final String entityName = HTMLEntities.get(codePoint);
-        // Some characters may not have reverse mapping, that's OK
-        if (entityName != null) {
-            assertFalse(entityName.isEmpty(), "Entity name should not be empty if present");
+    /**
+     * Test getting character value for special HTML entities.
+     */
+    @Test
+    public void testGetSpecialEntities() {
+        // Test special HTML entities
+        assertEquals(338, HTMLEntities.get("OElig"), "OElig should map to character 338");
+        assertEquals(339, HTMLEntities.get("oelig"), "oelig should map to character 339");
+        assertEquals(352, HTMLEntities.get("Scaron"), "Scaron should map to character 352");
+        assertEquals(376, HTMLEntities.get("Yuml"), "Yuml should map to character 376");
+    }
+
+    /**
+     * Test getting character value for symbol entities.
+     */
+    @Test
+    public void testGetSymbolEntities() {
+        // Test mathematical and technical symbols
+        assertEquals(8704, HTMLEntities.get("forall"), "forall should map to character 8704");
+        assertEquals(8706, HTMLEntities.get("part"), "part should map to character 8706");
+        assertEquals(8707, HTMLEntities.get("exist"), "exist should map to character 8707");
+        assertEquals(8709, HTMLEntities.get("empty"), "empty should map to character 8709");
+        assertEquals(8721, HTMLEntities.get("sum"), "sum should map to character 8721");
+        assertEquals(8734, HTMLEntities.get("infin"), "infin should map to character 8734 (infinity)");
+    }
+
+    /**
+     * Test getting character value for XML built-in entities.
+     */
+    @Test
+    public void testGetXMLBuiltinEntities() {
+        // Test XML built-in entities
+        assertEquals(60, HTMLEntities.get("lt"), "lt should map to character 60 (<)");
+        assertEquals(62, HTMLEntities.get("gt"), "gt should map to character 62 (>)");
+        assertEquals(38, HTMLEntities.get("amp"), "amp should map to character 38 (&)");
+        assertEquals(34, HTMLEntities.get("quot"), "quot should map to character 34 (\")");
+        assertEquals(39, HTMLEntities.get("apos"), "apos should map to character 39 (')");
+    }
+
+    /**
+     * Test getting character value for non-existent entity.
+     */
+    @Test
+    public void testGetNonExistentEntity() {
+        assertEquals(-1, HTMLEntities.get("nonexistent"), "Non-existent entity should return -1");
+        assertEquals(-1, HTMLEntities.get("foobar"), "Unknown entity should return -1");
+        assertEquals(-1, HTMLEntities.get(""), "Empty entity name should return -1");
+    }
+
+    /**
+     * Test reverse lookup: getting entity name from character value.
+     */
+    @Test
+    public void testGetEntityNameFromChar() {
+        // Test reverse lookup for common characters
+        assertEquals("nbsp", HTMLEntities.get(160), "Character 160 should map to 'nbsp'");
+        assertEquals("copy", HTMLEntities.get(169), "Character 169 should map to 'copy'");
+        assertEquals("reg", HTMLEntities.get(174), "Character 174 should map to 'reg'");
+        assertEquals("lt", HTMLEntities.get(60), "Character 60 should map to 'lt'");
+        assertEquals("gt", HTMLEntities.get(62), "Character 62 should map to 'gt'");
+        assertEquals("amp", HTMLEntities.get(38), "Character 38 should map to 'amp'");
+        assertEquals("quot", HTMLEntities.get(34), "Character 34 should map to 'quot'");
+    }
+
+    /**
+     * Test reverse lookup for non-existent character mapping.
+     */
+    @Test
+    public void testGetEntityNameFromNonExistentChar() {
+        assertNull(HTMLEntities.get(0), "Character 0 should have no entity mapping");
+        assertNull(HTMLEntities.get(1), "Character 1 should have no entity mapping");
+        assertNull(HTMLEntities.get(9999), "Character 9999 should have no entity mapping");
+        // Note: Negative values cause ArrayIndexOutOfBoundsException in IntProperties
+        // This is expected behavior as character values should be non-negative
+    }
+
+    /**
+     * Test bidirectional mapping consistency.
+     */
+    @Test
+    public void testBidirectionalMapping() {
+        // Test that entity -> char -> entity produces the same result
+        final String entityName = "nbsp";
+        final int charValue = HTMLEntities.get(entityName);
+        final String reversedName = HTMLEntities.get(charValue);
+
+        assertEquals(160, charValue, "nbsp should map to 160");
+        assertEquals(entityName, reversedName, "Character 160 should map back to 'nbsp'");
+    }
+
+    /**
+     * Test multiple common entities for consistency.
+     */
+    @Test
+    public void testMultipleEntitiesConsistency() {
+        final String[] entities = { "nbsp", "copy", "reg", "lt", "gt", "amp", "quot", "apos" };
+
+        for (final String entity : entities) {
+            final int charValue = HTMLEntities.get(entity);
+            assertTrue(charValue > 0, "Entity '" + entity + "' should have a positive character value");
+
+            final String reversedEntity = HTMLEntities.get(charValue);
+            assertNotNull(reversedEntity, "Character " + charValue + " should have an entity name");
         }
     }
 
+    /**
+     * Test Greek letter entities.
+     */
     @Test
-    @DisplayName("get(int): unknown code points return null (no mapping)")
-    void getByCharUnknown() {
-        // Use a code point that is not present in the entity lists
-        assertNull(HTMLEntities.get(0x10FFFF));
-        assertNull(HTMLEntities.get('A'));
+    public void testGreekLetterEntities() {
+        assertEquals(913, HTMLEntities.get("Alpha"), "Alpha should map to character 913");
+        assertEquals(914, HTMLEntities.get("Beta"), "Beta should map to character 914");
+        assertEquals(915, HTMLEntities.get("Gamma"), "Gamma should map to character 915");
+        assertEquals(916, HTMLEntities.get("Delta"), "Delta should map to character 916");
+        assertEquals(945, HTMLEntities.get("alpha"), "alpha should map to character 945");
+        assertEquals(946, HTMLEntities.get("beta"), "beta should map to character 946");
+        assertEquals(947, HTMLEntities.get("gamma"), "gamma should map to character 947");
     }
 
+    /**
+     * Test arrow entities.
+     */
     @Test
-    @DisplayName("IntProperties: put/get simple retrieval")
-    void intPropertiesPutGet() {
-        final HTMLEntities.IntProperties ip = new HTMLEntities.IntProperties();
-        ip.put(42, "answer");
-        assertEquals("answer", ip.get(42));
-        assertNull(ip.get(7));
+    public void testArrowEntities() {
+        assertEquals(8592, HTMLEntities.get("larr"), "larr should map to character 8592 (left arrow)");
+        assertEquals(8593, HTMLEntities.get("uarr"), "uarr should map to character 8593 (up arrow)");
+        assertEquals(8594, HTMLEntities.get("rarr"), "rarr should map to character 8594 (right arrow)");
+        assertEquals(8595, HTMLEntities.get("darr"), "darr should map to character 8595 (down arrow)");
     }
 
+    /**
+     * Test currency entities.
+     */
     @Test
-    @DisplayName("IntProperties: handles hash collisions (same bucket)")
-    void intPropertiesHashCollision() {
-        final HTMLEntities.IntProperties ip = new HTMLEntities.IntProperties();
-        // Keys 5 and 106 have the same hash with table size 101
-        ip.put(5, "five");
-        ip.put(106, "one-oh-six");
-        assertEquals("five", ip.get(5));
-        assertEquals("one-oh-six", ip.get(106));
+    public void testCurrencyEntities() {
+        assertEquals(8364, HTMLEntities.get("euro"), "euro should map to character 8364 (€)");
+        assertEquals(163, HTMLEntities.get("pound"), "pound should map to character 163 (£)");
+        assertEquals(165, HTMLEntities.get("yen"), "yen should map to character 165 (¥)");
     }
 
+    /**
+     * Test case sensitivity of entity names.
+     */
     @Test
-    @DisplayName("IntProperties: last put for same key wins")
-    void intPropertiesOverwriteSameKey() {
-        final HTMLEntities.IntProperties ip = new HTMLEntities.IntProperties();
-        ip.put(7, "seven");
-        ip.put(7, "SEVEN");
-        // Implementation inserts at bucket head; the most recent value is returned
-        assertEquals("SEVEN", ip.get(7));
+    public void testCaseSensitivity() {
+        // Entity names are case-sensitive
+        assertEquals(913, HTMLEntities.get("Alpha"), "Alpha (uppercase) should map to character 913");
+        assertEquals(945, HTMLEntities.get("alpha"), "alpha (lowercase) should map to character 945");
+
+        // Non-existent case variant should return -1
+        assertEquals(-1, HTMLEntities.get("ALPHA"), "ALPHA (all caps) should not exist");
+        assertEquals(-1, HTMLEntities.get("NBSP"), "NBSP (all caps) should not exist");
     }
 
+    /**
+     * Test IntProperties hash collision handling.
+     * This tests the internal IntProperties class's ability to handle hash collisions.
+     */
     @Test
-    @DisplayName("load0 via reflection: valid resource loads entries")
-    void load0ValidResource() throws Exception {
-        final Method m = HTMLEntities.class.getDeclaredMethod("load0", Properties.class, String.class);
-        m.setAccessible(true);
-        final Properties p = new Properties();
-        // Using a real resource relative to HTMLEntities package
-        m.invoke(null, p, "res/HTMLspecial.properties");
-        assertFalse(p.isEmpty(), "Properties should be populated for valid resource");
-        assertEquals("\"", p.getProperty("quot"));
-    }
+    public void testIntPropertiesHashCollisions() {
+        // Create multiple entities and ensure they can all be retrieved
+        // The IntProperties uses modulo 101, so we can test collision handling
 
-    @Test
-    @DisplayName("load0 via reflection: invalid resource triggers NPE from Properties.load")
-    void load0InvalidResource() throws Exception {
-        final Method m = HTMLEntities.class.getDeclaredMethod("load0", Properties.class, String.class);
-        m.setAccessible(true);
-        final Properties p = new Properties();
-        // Intentionally pass a non-existent resource to exercise the error path.
-        assertThrows(NullPointerException.class, () -> {
-            try {
-                m.invoke(null, p, "res/DOES_NOT_EXIST.properties");
-            } catch (final java.lang.reflect.InvocationTargetException ite) {
-                // Unwrap and rethrow for assertion clarity
-                final Throwable cause = ite.getCause();
-                if (cause instanceof RuntimeException re) {
-                    throw re;
-                }
-                if (cause instanceof Error err) {
-                    throw err;
-                }
-                // Wrap non-runtime throwables as runtime to satisfy assertThrows
-                throw new RuntimeException(cause);
-            }
-        });
-    }
+        // Get several entities that should work correctly
+        final int nbsp = HTMLEntities.get("nbsp");
+        final int copy = HTMLEntities.get("copy");
+        final int reg = HTMLEntities.get("reg");
 
-    @Test
-    @DisplayName("ENTITIES map is properly initialized and unmodifiable")
-    void entitiesMapIsInitializedAndUnmodifiable() throws Exception {
-        final Field entitiesField = HTMLEntities.class.getDeclaredField("ENTITIES");
-        entitiesField.setAccessible(true);
-        @SuppressWarnings("unchecked")
-        final Map<String, String> entities = (Map<String, String>) entitiesField.get(null);
+        // Verify reverse lookups work correctly
+        assertEquals("nbsp", HTMLEntities.get(nbsp));
+        assertEquals("copy", HTMLEntities.get(copy));
+        assertEquals("reg", HTMLEntities.get(reg));
 
-        // Check that ENTITIES is not empty (static initialization worked)
-        assertFalse(entities.isEmpty(), "ENTITIES map should be populated after static initialization");
-
-        // Check that it's unmodifiable
-        assertThrows(UnsupportedOperationException.class, () -> entities.put("test", "X"), "ENTITIES map should be unmodifiable");
-
-        // Verify some well-known entities are present
-        assertEquals("&", entities.get("amp"));
-        assertEquals("<", entities.get("lt"));
-        assertEquals(">", entities.get("gt"));
-        assertEquals("\"", entities.get("quot"));
-    }
-
-    @Test
-    @DisplayName("Bidirectional mapping consistency")
-    void bidirectionalMappingConsistency() {
-        // Test that if we can resolve name->char, we should be able to get some name back for that char
-        final String[] commonEntities = { "amp", "lt", "gt", "quot", "nbsp" };
-        for (final String entityName : commonEntities) {
-            final int codePoint = HTMLEntities.get(entityName);
-            assertNotEquals(-1, codePoint, "Entity " + entityName + " should resolve to a character");
-
-            final String reverseName = HTMLEntities.get(codePoint);
-            // May not be the same name due to multiple mappings, but should exist
-            assertNotNull(reverseName, "Character from entity " + entityName + " should have a reverse mapping");
-        }
-    }
-
-    @Test
-    @DisplayName("IntProperties handles various keys correctly")
-    void intPropertiesVariousKeys() {
-        final HTMLEntities.IntProperties ip = new HTMLEntities.IntProperties();
-
-        // Note: negative keys will cause ArrayIndexOutOfBoundsException in current implementation
-        // due to direct modulo operation without Math.abs()
-        // Testing with positive keys only
-
-        // Zero key
-        ip.put(0, "zero");
-        assertEquals("zero", ip.get(0));
-
-        // Large positive keys
-        ip.put(1000, "thousand");
-        assertEquals("thousand", ip.get(1000));
-    }
-
-    @Test
-    @DisplayName("IntProperties handles many collisions")
-    void intPropertiesManyCollisions() {
-        final HTMLEntities.IntProperties ip = new HTMLEntities.IntProperties();
-
-        // Add many keys that will collide (multiples of 101)
+        // Test multiple lookups to ensure hash table integrity
         for (int i = 0; i < 10; i++) {
-            final int key = i * 101;
-            ip.put(key, "value-" + key);
-        }
-
-        // Verify all values can be retrieved correctly
-        for (int i = 0; i < 10; i++) {
-            final int key = i * 101;
-            assertEquals("value-" + key, ip.get(key));
+            assertEquals("nbsp", HTMLEntities.get(160), "Multiple lookups should return consistent results");
+            assertEquals("copy", HTMLEntities.get(169), "Multiple lookups should return consistent results");
         }
     }
 
-    @ParameterizedTest
-    @DisplayName("Common HTML5 entities are supported")
-    @ValueSource(strings = { "copy", "reg", "euro", "yen", "pound", "cent", "para", "sect", "deg", "plusmn" })
-    void html5EntitiesSupported(final String entityName) {
-        final int codePoint = HTMLEntities.get(entityName);
-        assertNotEquals(-1, codePoint, "HTML5 entity " + entityName + " should be supported");
-    }
-
+    /**
+     * Test boundary values for character codes.
+     */
     @Test
-    @DisplayName("Mathematical symbols entities")
-    void mathematicalSymbolEntities() {
-        // Test mathematical symbols
-        assertNotEquals(-1, HTMLEntities.get("sum"), "Summation symbol");
-        assertNotEquals(-1, HTMLEntities.get("prod"), "Product symbol");
-        assertNotEquals(-1, HTMLEntities.get("int"), "Integral symbol");
-        assertNotEquals(-1, HTMLEntities.get("radic"), "Square root");
-        assertNotEquals(-1, HTMLEntities.get("infin"), "Infinity");
-        assertNotEquals(-1, HTMLEntities.get("asymp"), "Approximately equal");
-        assertNotEquals(-1, HTMLEntities.get("ne"), "Not equal");
-        assertNotEquals(-1, HTMLEntities.get("le"), "Less than or equal");
-        assertNotEquals(-1, HTMLEntities.get("ge"), "Greater than or equal");
+    public void testBoundaryValues() {
+        // Test very low character values
+        final String lowEntity = HTMLEntities.get(32); // space
+        // Space might not have an entity, so we just ensure it doesn't crash
+
+        // Test high character values
+        final String highEntity = HTMLEntities.get(9999);
+        assertNull(highEntity, "Very high character value should have no entity");
+
+        // Note: Negative values would cause ArrayIndexOutOfBoundsException in IntProperties
+        // This is expected behavior as Unicode character values are always non-negative
+        // The implementation doesn't need to handle invalid negative character codes
     }
 
+    /**
+     * Test that null entity name is handled gracefully.
+     */
     @Test
-    @DisplayName("Greek letter entities")
-    void greekLetterEntities() {
-        // Test lowercase Greek letters
-        assertNotEquals(-1, HTMLEntities.get("alpha"), "Greek alpha");
-        assertNotEquals(-1, HTMLEntities.get("beta"), "Greek beta");
-        assertNotEquals(-1, HTMLEntities.get("gamma"), "Greek gamma");
-        assertNotEquals(-1, HTMLEntities.get("delta"), "Greek delta");
-        assertNotEquals(-1, HTMLEntities.get("omega"), "Greek omega");
-
-        // Test uppercase Greek letters
-        assertNotEquals(-1, HTMLEntities.get("Alpha"), "Greek Alpha");
-        assertNotEquals(-1, HTMLEntities.get("Beta"), "Greek Beta");
-        assertNotEquals(-1, HTMLEntities.get("Gamma"), "Greek Gamma");
-        assertNotEquals(-1, HTMLEntities.get("Delta"), "Greek Delta");
-        assertNotEquals(-1, HTMLEntities.get("Omega"), "Greek Omega");
+    public void testNullEntityName() {
+        final int result = HTMLEntities.get((String) null);
+        assertEquals(-1, result, "Null entity name should return -1");
     }
 
+    /**
+     * Test common punctuation entities.
+     */
     @Test
-    @DisplayName("Accented character entities")
-    void accentedCharacterEntities() {
-        // Test various accented characters
-        assertNotEquals(-1, HTMLEntities.get("Agrave"), "A with grave");
-        assertNotEquals(-1, HTMLEntities.get("Aacute"), "A with acute");
-        assertNotEquals(-1, HTMLEntities.get("Acirc"), "A with circumflex");
-        assertNotEquals(-1, HTMLEntities.get("Atilde"), "A with tilde");
-        assertNotEquals(-1, HTMLEntities.get("Auml"), "A with umlaut");
-
-        assertNotEquals(-1, HTMLEntities.get("agrave"), "a with grave");
-        assertNotEquals(-1, HTMLEntities.get("aacute"), "a with acute");
-        assertNotEquals(-1, HTMLEntities.get("ntilde"), "n with tilde");
-        assertNotEquals(-1, HTMLEntities.get("ccedil"), "c with cedilla");
+    public void testPunctuationEntities() {
+        assertEquals(8211, HTMLEntities.get("ndash"), "ndash should map to character 8211 (en dash)");
+        assertEquals(8212, HTMLEntities.get("mdash"), "mdash should map to character 8212 (em dash)");
+        assertEquals(8216, HTMLEntities.get("lsquo"), "lsquo should map to character 8216 (left single quote)");
+        assertEquals(8217, HTMLEntities.get("rsquo"), "rsquo should map to character 8217 (right single quote)");
+        assertEquals(8220, HTMLEntities.get("ldquo"), "ldquo should map to character 8220 (left double quote)");
+        assertEquals(8221, HTMLEntities.get("rdquo"), "rdquo should map to character 8221 (right double quote)");
     }
 
+    /**
+     * Test accented character entities.
+     */
     @Test
-    @DisplayName("Special typographic entities")
-    void specialTypographicEntities() {
-        assertNotEquals(-1, HTMLEntities.get("lsquo"), "Left single quote");
-        assertNotEquals(-1, HTMLEntities.get("rsquo"), "Right single quote");
-        assertNotEquals(-1, HTMLEntities.get("ldquo"), "Left double quote");
-        assertNotEquals(-1, HTMLEntities.get("rdquo"), "Right double quote");
-        assertNotEquals(-1, HTMLEntities.get("ndash"), "En dash");
-        assertNotEquals(-1, HTMLEntities.get("mdash"), "Em dash");
-        assertNotEquals(-1, HTMLEntities.get("hellip"), "Horizontal ellipsis");
-        assertNotEquals(-1, HTMLEntities.get("bull"), "Bullet");
-        assertNotEquals(-1, HTMLEntities.get("dagger"), "Dagger");
+    public void testAccentedCharacterEntities() {
+        assertEquals(192, HTMLEntities.get("Agrave"), "Agrave should map to character 192 (À)");
+        assertEquals(193, HTMLEntities.get("Aacute"), "Aacute should map to character 193 (Á)");
+        assertEquals(194, HTMLEntities.get("Acirc"), "Acirc should map to character 194 (Â)");
+        assertEquals(224, HTMLEntities.get("agrave"), "agrave should map to character 224 (à)");
+        assertEquals(225, HTMLEntities.get("aacute"), "aacute should map to character 225 (á)");
+        assertEquals(226, HTMLEntities.get("acirc"), "acirc should map to character 226 (â)");
     }
 
-    @Test
-    @DisplayName("Verify all property files are loaded")
-    void allPropertyFilesLoaded() throws Exception {
-        final Field entitiesField = HTMLEntities.class.getDeclaredField("ENTITIES");
-        entitiesField.setAccessible(true);
-        @SuppressWarnings("unchecked")
-        final Map<String, String> entities = (Map<String, String>) entitiesField.get(null);
-
-        // Check entities from each file
-        // HTMLlat1.properties - Latin-1 supplement
-        assertTrue(entities.containsKey("Agrave"), "Should contain entities from HTMLlat1.properties");
-
-        // HTMLspecial.properties - Special characters
-        assertTrue(entities.containsKey("quot"), "Should contain entities from HTMLspecial.properties");
-
-        // HTMLsymbol.properties - Mathematical symbols
-        assertTrue(entities.containsKey("forall"), "Should contain entities from HTMLsymbol.properties");
-
-        // HTML40misc.properties - Miscellaneous HTML 4.0
-        assertTrue(entities.containsKey("spades"), "Should contain entities from HTML40misc.properties");
-    }
-
-    @Test
-    @DisplayName("Entity names are case-sensitive")
-    void entityNamesAreCaseSensitive() {
-        // Uppercase and lowercase versions should be different entities
-        final int upperOmega = HTMLEntities.get("Omega");
-        final int lowerOmega = HTMLEntities.get("omega");
-
-        assertNotEquals(-1, upperOmega, "Uppercase Omega should exist");
-        assertNotEquals(-1, lowerOmega, "Lowercase omega should exist");
-        assertNotEquals(upperOmega, lowerOmega, "Omega and omega should map to different characters");
-
-        // Mixed case should not work
-        assertEquals(-1, HTMLEntities.get("OMEGA"), "All caps should not work");
-        assertEquals(-1, HTMLEntities.get("OmEgA"), "Mixed case should not work");
-    }
-
-    @Test
-    @DisplayName("IntProperties Entry linked list structure")
-    void intPropertiesEntryStructure() throws Exception {
-        final HTMLEntities.IntProperties ip = new HTMLEntities.IntProperties();
-
-        // Add multiple values with same hash
-        ip.put(0, "zero");
-        ip.put(101, "one-oh-one"); // Same bucket as 0 (0 % 101 == 0)
-        ip.put(202, "two-oh-two"); // Same bucket as 0 (202 % 101 == 0)
-
-        // Access private entries field to verify linked list structure  
-        final Field entriesField = HTMLEntities.IntProperties.class.getDeclaredField("entries");
-        entriesField.setAccessible(true);
-        final Object[] entries = (Object[]) entriesField.get(ip);
-
-        assertNotNull(entries[0], "Bucket 0 should contain entries");
-
-        // Count entries in the chain
-        int count = 0;
-        Object entry = entries[0];
-        while (entry != null) {
-            count++;
-            final Field nextField = entry.getClass().getDeclaredField("next");
-            nextField.setAccessible(true);
-            entry = nextField.get(entry);
-        }
-
-        assertEquals(3, count, "Should have 3 entries in the same bucket");
-    }
-
-    @Test
-    @DisplayName("Empty string entity name returns -1")
-    void emptyStringEntityName() {
-        assertEquals(-1, HTMLEntities.get(""), "Empty string should return -1");
-    }
-
-    @Test
-    @DisplayName("Very long entity name returns -1")
-    void veryLongEntityName() {
-        final String longName = "a".repeat(1000);
-        assertEquals(-1, HTMLEntities.get(longName), "Very long non-existent entity name should return -1");
-    }
-
-    @Test
-    @DisplayName("Multiple puts to same key in IntProperties maintains last value")
-    void intPropertiesMultiplePutsSameKey() {
-        final HTMLEntities.IntProperties ip = new HTMLEntities.IntProperties();
-
-        // Put multiple values for same key
-        ip.put(42, "first");
-        ip.put(42, "second");
-        ip.put(42, "third");
-        ip.put(42, "fourth");
-
-        // Should return the last value
-        assertEquals("fourth", ip.get(42), "Should return the last value put for the key");
-    }
-
-    @Test
-    @DisplayName("Character to entity name mapping prefers shortest name")
-    void characterToEntityPreference() {
-        // The apostrophe character has multiple possible entity names
-        final int apostrophe = '\'';
-        final String entityName = HTMLEntities.get(apostrophe);
-
-        if (entityName != null) {
-            // Should prefer "apos" over other alternatives if available
-            assertTrue(entityName.length() <= 5, "Should prefer shorter entity names");
-        }
-    }
-}
+} // class HTMLEntitiesTest

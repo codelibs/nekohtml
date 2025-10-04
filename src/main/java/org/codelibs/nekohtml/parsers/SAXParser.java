@@ -15,25 +15,21 @@
  */
 package org.codelibs.nekohtml.parsers;
 
-import org.codelibs.nekohtml.HTMLConfiguration;
-import org.codelibs.xerces.parsers.AbstractSAXParser;
+import org.codelibs.nekohtml.sax.HTMLSAXParser;
 
 /**
  * A SAX parser for HTML documents.
+ * This is a simple wrapper around HTMLSAXParser for backward compatibility.
  *
- * @author Andy Clark
- *
- * @version $Id: SAXParser.java,v 1.4 2005/02/14 03:56:54 andyc Exp $
+ * @author CodeLibs Project
  */
-public class SAXParser extends AbstractSAXParser {
+public class SAXParser extends HTMLSAXParser {
 
-    //
-    // Constructors
-    //
-
-    /** Default constructor. */
+    /**
+     * Default constructor.
+     */
     public SAXParser() {
-        super(new HTMLConfiguration());
-    } // <init>()
+        super();
+    }
 
 } // class SAXParser
