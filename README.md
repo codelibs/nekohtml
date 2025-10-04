@@ -66,13 +66,6 @@ parser.setContentHandler(new DefaultHandler() {
 parser.parse(new InputSource(new StringReader(html)));
 ```
 
-## 📚 Documentation
-
-- **[USAGE_EXAMPLES.md](USAGE_EXAMPLES.md)** - Comprehensive code examples
-- **[MIGRATION_GUIDE.md](MIGRATION_GUIDE.md)** - Upgrading from v2.x
-- **[SAX_MIGRATION_STATUS.md](SAX_MIGRATION_STATUS.md)** - v3.0 architecture details
-- **API Docs** - `doc/usage.html`, `doc/settings.html`, `doc/filters.html`
-
 ## 🏗️ Project Structure
 
 ```
