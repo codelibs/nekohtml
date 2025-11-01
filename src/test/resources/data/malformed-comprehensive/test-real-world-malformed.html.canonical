@@ -1,0 +1,109 @@
+(HTML
+(HEAD
+"\n"
+(META
+Acharset "utf-8"
+)META
+"\n"
+(TITLE
+"Real World Example\n"
+)TITLE
+)HEAD
+(BODY
+"\n"
+(DIV
+Aid "header"
+"\n"
+(H1
+"Welcome"
+)H1
+"\n"
+)DIV
+"\n"
+(DIV
+Aid "content"
+"\n"
+(P
+"This is a "
+(B
+"bold "
+(I
+"and italic"
+)I
+)B
+(I
+)I
+" text.\n"
+)P
+(UL
+"\n"
+(LI
+"First item\n"
+)LI
+(LI
+"Second item\n"
+(UL
+"\n"
+(LI
+"Nested item\n"
+)LI
+)UL
+)LI
+)UL
+"\n"
+(TABLE
+Aborder "1"
+"\n"
+(TBODY
+(TR
+"\n"
+(TH
+"Header 1"
+)TH
+(TH
+"Header 2\n"
+)TH
+)TR
+(TR
+"\n"
+(TD
+"Data 1"
+)TD
+(TD
+"Data 2\n"
+)TD
+)TR
+)TBODY
+)TABLE
+"\n"
+(FORM
+Aaction "submit.php"
+Amethod "post"
+"\n"
+(INPUT
+Atype "text"
+Aname "username"
+)INPUT
+"\n"
+(INPUT
+Atype "password"
+Aname "password"
+)INPUT
+"\n"
+(BUTTON
+"Submit\n"
+)BUTTON
+)FORM
+"\n"
+)DIV
+"\n"
+(DIV
+Aid "footer"
+"\n"
+(P
+"© 2024 Example\n"
+)P
+)DIV
+"\n"
+)BODY
+)HTML

@@ -1,0 +1,18 @@
+(HTML
+(HEAD
+"\n"
+(SCRIPT
+"\n"
+"function test() {\n"
+"  console.log(\"test\");\n"
+"}\n"
+)SCRIPT
+)HEAD
+(BODY
+"\n"
+(P
+"Content"
+)P
+"\n"
+)BODY
+)HTML

@@ -1,0 +1,13 @@
+(HTML
+(HEAD
+)HEAD
+(BODY
+"\n"
+^COMMENT
+"\n"
+(P
+"Content after unclosed comment"
+)P
+"\n"
+)BODY
+)HTML

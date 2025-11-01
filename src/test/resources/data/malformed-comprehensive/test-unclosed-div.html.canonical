@@ -1,0 +1,19 @@
+(HTML
+(HEAD
+(TITLE
+"Test"
+)TITLE
+)HEAD
+(BODY
+"\n"
+(DIV
+"\n"
+(P
+"This div is never closed\n"
+(SPAN
+"Another unclosed span\n"
+)SPAN
+)P
+)DIV
+)BODY
+)HTML

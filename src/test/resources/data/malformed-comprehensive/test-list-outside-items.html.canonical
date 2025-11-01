@@ -1,0 +1,36 @@
+(HTML
+(HEAD
+)HEAD
+(BODY
+"\n"
+(LI
+"Item outside list"
+)LI
+"\n"
+(UL
+"\n"
+(DIV
+"Div inside ul"
+)DIV
+"\n"
+(LI
+"Item 1\n"
+(P
+"Paragraph in li"
+)P
+"\n"
+)LI
+(LI
+"Item 2\n"
+)LI
+)UL
+"\n"
+(OL
+"\nText directly in ol\n"
+(LI
+"Numbered item\n"
+)LI
+)OL
+"\n"
+)BODY
+)HTML

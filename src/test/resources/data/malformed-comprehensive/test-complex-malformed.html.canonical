@@ -1,0 +1,46 @@
+(HTML
+(HEAD
+)HEAD
+(BODY
+"\n"
+(DIV
+Aclass "container"
+Aid "main>"
+"\n"
+(P
+"Unclosed quote in attribute\n"
+(SECTION
+"\n"
+(H1
+"Title"
+)H1
+"\n"
+(UL
+"\n"
+(LI
+"Item 1\n"
+)LI
+(LI
+"Item 2\n"
+)LI
+)UL
+"\n"
+(TABLE
+"\n"
+(TBODY
+(TR
+(TD
+"Cell\n"
+)TD
+)TR
+)TBODY
+)TABLE
+)SECTION
+)P
+)DIV
+"\n"
+(SPAN
+"After div close\n"
+)SPAN
+)BODY
+)HTML

@@ -1,0 +1,23 @@
+(HTML
+(HEAD
+)HEAD
+(BODY
+"\n"
+(B
+(I
+"Bold and italic"
+)I
+)B
+(I
+)I
+"\n"
+(STRONG
+(EM
+"Strong and emphasis"
+)EM
+)STRONG
+(EM
+)EM
+"\n"
+)BODY
+)HTML

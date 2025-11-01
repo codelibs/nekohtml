@@ -1,0 +1,41 @@
+(HTML
+(HEAD
+)HEAD
+(BODY
+"\n"
+(TABLE
+"\n"
+(TBODY
+"\n"
+(TR
+(TD
+"Body 1"
+)TD
+)TR
+"\n"
+)TBODY
+"\n"
+(THEAD
+"\n"
+(TR
+(TH
+"Header 1"
+)TH
+)TR
+"\n"
+)THEAD
+"\n"
+(TFOOT
+"\n"
+(TR
+(TD
+"Footer 1"
+)TD
+)TR
+"\n"
+)TFOOT
+"\n"
+)TABLE
+"\n"
+)BODY
+)HTML

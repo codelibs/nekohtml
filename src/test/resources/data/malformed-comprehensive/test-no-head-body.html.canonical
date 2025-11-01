@@ -1,0 +1,19 @@
+(HTML
+"\n"
+(HEAD
+(TITLE
+"No head or body tags"
+)TITLE
+)HEAD
+(BODY
+"\n"
+(P
+"Paragraph directly in html"
+)P
+"\n"
+(DIV
+"Div directly in html"
+)DIV
+"\n"
+)BODY
+)HTML

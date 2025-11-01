@@ -1,0 +1,38 @@
+(HTML
+(HEAD
+)HEAD
+(BODY
+"\n"
+(FORM
+"\n"
+(DIV
+"\n"
+(LABEL
+"Name: "
+(INPUT
+Atype "text"
+)INPUT
+"\n"
+)LABEL
+(SELECT
+"\n"
+(OPTION
+"Option 1\n"
+)OPTION
+(OPTION
+"Option 2\n"
+)OPTION
+)SELECT
+"\n"
+(TEXTAREA
+"Text area content\n"
+)TEXTAREA
+)DIV
+"\n"
+(BUTTON
+"Submit\n"
+)BUTTON
+)FORM
+"\n"
+)BODY
+)HTML

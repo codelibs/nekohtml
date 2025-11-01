@@ -21,6 +21,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.xml.sax.ContentHandler;
 import org.xml.sax.DTDHandler;
@@ -42,6 +44,9 @@ import org.xml.sax.helpers.DefaultHandler;
  * @author CodeLibs Project
  */
 public class HTMLSAXConfiguration implements XMLReader {
+
+    /** Logger for this class. */
+    private static final Logger logger = Logger.getLogger(HTMLSAXConfiguration.class.getName());
 
     // Feature identifiers
 
@@ -119,6 +124,10 @@ public class HTMLSAXConfiguration implements XMLReader {
      * Default constructor.
      */
     public HTMLSAXConfiguration() {
+        if (logger.isLoggable(Level.FINE)) {
+            logger.fine("Initializing HTMLSAXConfiguration");
+        }
+
         fFeatures = new HashMap<>();
         fProperties = new HashMap<>();
         fPipeline = new ArrayList<>();
@@ -137,17 +146,28 @@ public class HTMLSAXConfiguration implements XMLReader {
 
         // Build the default pipeline: Scanner -> TagBalancer
         buildPipeline();
+
+        if (logger.isLoggable(Level.FINE)) {
+            logger.fine("HTMLSAXConfiguration initialized with " + fPipeline.size() + " filters");
+        }
     }
 
     /**
      * Builds the SAX filter pipeline.
      */
     protected void buildPipeline() {
+        if (logger.isLoggable(Level.FINE)) {
+            logger.fine("Building SAX filter pipeline");
+        }
+
         fPipeline.clear();
 
         // Create scanner (first in pipeline)
         if (fScanner == null) {
             fScanner = createScanner();
+            if (logger.isLoggable(Level.FINER)) {
+                logger.finer("Created HTML scanner");
+            }
         }
         fPipeline.add(fScanner);
 
@@ -155,6 +175,9 @@ public class HTMLSAXConfiguration implements XMLReader {
         if (Boolean.TRUE.equals(fFeatures.get(BALANCE_TAGS))) {
             if (fTagBalancer == null) {
                 fTagBalancer = new HTMLTagBalancerFilter();
+                if (logger.isLoggable(Level.FINER)) {
+                    logger.finer("Created tag balancer filter");
+                }
             }
             fPipeline.add(fTagBalancer);
 
@@ -171,6 +194,10 @@ public class HTMLSAXConfiguration implements XMLReader {
             if (lastFilter != null) {
                 lastFilter.setContentHandler(fContentHandler);
             }
+        }
+
+        if (logger.isLoggable(Level.FINE)) {
+            logger.fine("Pipeline built with " + fPipeline.size() + " filters");
         }
     }
 
@@ -196,6 +223,10 @@ public class HTMLSAXConfiguration implements XMLReader {
 
     @Override
     public void setContentHandler(final ContentHandler handler) {
+        if (logger.isLoggable(Level.FINER)) {
+            logger.finer("Setting content handler: " + (handler != null ? handler.getClass().getName() : "null"));
+        }
+
         fContentHandler = handler;
 
         // Set the content handler on the last filter in the pipeline
@@ -286,6 +317,10 @@ public class HTMLSAXConfiguration implements XMLReader {
 
     @Override
     public void parse(final InputSource input) throws IOException, SAXException {
+        if (logger.isLoggable(Level.FINE)) {
+            logger.fine("Starting parse with " + fPipeline.size() + " filters in pipeline");
+        }
+
         if (fScanner == null) {
             throw new SAXException("Parser not configured");
         }
@@ -298,6 +333,10 @@ public class HTMLSAXConfiguration implements XMLReader {
         // Parse through the scanner (first filter in pipeline)
         // The scanner will generate SAX events that flow through the filters to the content handler
         fScanner.parse(input);
+
+        if (logger.isLoggable(Level.FINE)) {
+            logger.fine("Parse completed");
+        }
     }
 
     @Override
@@ -318,10 +357,17 @@ public class HTMLSAXConfiguration implements XMLReader {
 
     @Override
     public void setFeature(final String name, final boolean value) throws SAXNotRecognizedException, SAXNotSupportedException {
+        if (logger.isLoggable(Level.FINER)) {
+            logger.finer("Setting feature: " + name + " = " + value);
+        }
+
         fFeatures.put(name, value);
 
         // Handle feature changes that affect pipeline
         if (BALANCE_TAGS.equals(name)) {
+            if (logger.isLoggable(Level.FINER)) {
+                logger.finer("BALANCE_TAGS feature changed, rebuilding pipeline");
+            }
             buildPipeline();
             if (fContentHandler != null) {
                 setContentHandler(fContentHandler);

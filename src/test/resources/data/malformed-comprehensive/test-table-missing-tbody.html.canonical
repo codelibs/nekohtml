@@ -1,0 +1,31 @@
+(HTML
+(HEAD
+)HEAD
+(BODY
+"\n"
+(TABLE
+"\n"
+(TBODY
+(TR
+(TD
+"Cell 1"
+)TD
+(TD
+"Cell 2"
+)TD
+)TR
+"\n"
+(TR
+(TD
+"Cell 3"
+)TD
+(TD
+"Cell 4"
+)TD
+)TR
+"\n"
+)TBODY
+)TABLE
+"\n"
+)BODY
+)HTML

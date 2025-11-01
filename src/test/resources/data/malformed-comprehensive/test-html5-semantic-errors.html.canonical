@@ -1,0 +1,53 @@
+(HTML
+(HEAD
+)HEAD
+(BODY
+"\n"
+(ARTICLE
+"\n"
+(HEADER
+"\n"
+(H1
+"Article Title\n"
+)H1
+(NAV
+"\n"
+(A
+Ahref "#"
+"Link 1"
+)A
+"\n"
+(A
+Ahref "#"
+"Link 2"
+)A
+"\n"
+)NAV
+)HEADER
+"\n"
+(SECTION
+"\n"
+(H2
+"Section Title\n"
+)H2
+(P
+"Content\n"
+)P
+(ASIDE
+"\n"
+(P
+"Sidebar\n"
+)P
+)ASIDE
+)SECTION
+"\n"
+(FOOTER
+"\n"
+(P
+"Footer\n"
+)P
+)FOOTER
+)ARTICLE
+"\n"
+)BODY
+)HTML
