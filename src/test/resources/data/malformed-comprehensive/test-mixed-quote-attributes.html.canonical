@@ -1,0 +1,25 @@
+(HTML
+(HEAD
+)HEAD
+(BODY
+"\n"
+(DIV
+Aclass "container"
+Aid "main"
+"\n"
+(A
+Ahref "page.html"
+Atarget "_blank"
+"Link"
+)A
+"\n"
+(INPUT
+Atype "text"
+Aname "username"
+Avalue "default"
+)INPUT
+"\n"
+)DIV
+"\n"
+)BODY
+)HTML

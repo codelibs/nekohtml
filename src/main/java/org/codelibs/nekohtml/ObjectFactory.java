@@ -23,6 +23,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.Properties;
+import java.util.logging.Logger;
 
 /**
  * This class is duplicated for each JAXP subpackage so keep it in sync.
@@ -39,6 +40,9 @@ import java.util.Properties;
  * @version $Id: ObjectFactory.java,v 1.1 2004/03/31 20:00:21 andyc Exp $
  */
 class ObjectFactory {
+
+    /** Logger for this class. */
+    private static final Logger logger = Logger.getLogger(ObjectFactory.class.getName());
 
     //
     // Constants
@@ -237,7 +241,7 @@ class ObjectFactory {
     /** Prints a message to standard error if debugging is enabled. */
     private static void debugPrintln(final String msg) {
         if (DEBUG) {
-            System.err.println("JAXP: " + msg);
+            logger.fine("JAXP: " + msg);
         }
     } // debugPrintln(String)
 

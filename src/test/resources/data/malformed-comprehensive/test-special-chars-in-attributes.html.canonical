@@ -1,0 +1,22 @@
+(HTML
+(HEAD
+)HEAD
+(BODY
+"\n"
+(A
+Ahref "page.html?foo=bar&baz=qux"
+"Link with ampersand"
+)A
+"\n"
+(DIV
+Atitle "It's a test"
+"Title with apostrophe"
+)DIV
+"\n"
+(SPAN
+Adata-value "<>&\""
+"Special chars"
+)SPAN
+"\n"
+)BODY
+)HTML

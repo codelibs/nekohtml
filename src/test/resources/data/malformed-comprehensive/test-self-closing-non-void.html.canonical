@@ -1,0 +1,19 @@
+(HTML
+(HEAD
+)HEAD
+(BODY
+"\n"
+(DIV
+)DIV
+"\n"
+(P
+)P
+"\n"
+(SPAN
+)SPAN
+"Content after self-closing span\n"
+(SECTION
+)SECTION
+"\n"
+)BODY
+)HTML

@@ -16,6 +16,8 @@
 package org.codelibs.nekohtml.parsers;
 
 import java.util.Stack;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.xml.parsers.DocumentBuilder;
 
@@ -36,6 +38,9 @@ import org.xml.sax.helpers.DefaultHandler;
  */
 class SAXToDOMHandler extends DefaultHandler implements LexicalHandler {
 
+    /** Logger for this class. */
+    private static final Logger logger = Logger.getLogger(SAXToDOMHandler.class.getName());
+
     /** The document builder. */
     private final DocumentBuilder documentBuilder;
 
@@ -47,6 +52,9 @@ class SAXToDOMHandler extends DefaultHandler implements LexicalHandler {
 
     /** Current text buffer. */
     private StringBuilder textBuffer;
+
+    /** Skip depth for elements that couldn't be added to DOM. */
+    private int skipDepth;
 
     /**
      * Constructor.
@@ -69,24 +77,43 @@ class SAXToDOMHandler extends DefaultHandler implements LexicalHandler {
 
     @Override
     public void startDocument() throws SAXException {
+        if (logger.isLoggable(Level.FINE)) {
+            logger.fine("Starting DOM document building");
+        }
         document = documentBuilder.newDocument();
         elementStack.clear();
         elementStack.push(document);
         textBuffer = new StringBuilder();
+        skipDepth = 0;
     }
 
     @Override
     public void endDocument() throws SAXException {
         flushText();
         elementStack.clear();
+        if (logger.isLoggable(Level.FINE)) {
+            logger.fine("Completed DOM document building");
+        }
     }
 
     @Override
     public void startElement(final String uri, final String localName, final String qName, final Attributes attributes) throws SAXException {
         flushText();
 
+        // If we're already skipping elements, increment skip depth and return
+        if (skipDepth > 0) {
+            skipDepth++;
+            if (logger.isLoggable(Level.FINER)) {
+                logger.finer("Skipping element (skip depth " + skipDepth + "): " + qName);
+            }
+            return;
+        }
+
         // Create element
         final Element element = document.createElement(qName);
+        if (logger.isLoggable(Level.FINER)) {
+            logger.finer("Creating DOM element: " + qName);
+        }
 
         // Add attributes
         for (int i = 0; i < attributes.getLength(); i++) {
@@ -95,7 +122,24 @@ class SAXToDOMHandler extends DefaultHandler implements LexicalHandler {
 
         // Add to parent
         final Node parent = elementStack.peek();
-        parent.appendChild(element);
+        try {
+            parent.appendChild(element);
+        } catch (final org.w3c.dom.DOMException e) {
+            // Handle HIERARCHY_REQUEST_ERR and other DOM exceptions gracefully
+            // This can occur when HTML structure violates DOM hierarchy rules
+            // (e.g., block elements inside inline elements)
+            if (System.getProperty("nekohtml.dom.strict") == null) {
+                // In lenient mode (default), skip this element and all its children
+                logger.warning("Could not append element <" + qName + "> to parent <" + parent.getNodeName() + ">: " + e.getMessage()
+                        + " (Use -Dnekohtml.dom.strict=true to fail on such errors)");
+                // Start skipping this element and its children
+                skipDepth = 1;
+                return;
+            } else {
+                // In strict mode, propagate the exception
+                throw new SAXException("DOM hierarchy violation: " + e.getMessage(), e);
+            }
+        }
 
         // Push onto stack
         elementStack.push(element);
@@ -104,7 +148,23 @@ class SAXToDOMHandler extends DefaultHandler implements LexicalHandler {
     @Override
     public void endElement(final String uri, final String localName, final String qName) throws SAXException {
         flushText();
-        elementStack.pop();
+
+        // If we're skipping elements, decrement skip depth and return
+        if (skipDepth > 0) {
+            skipDepth--;
+            if (logger.isLoggable(Level.FINER)) {
+                logger.finer("Unskipping element (skip depth " + skipDepth + "): " + qName);
+            }
+            return;
+        }
+
+        // Defensive check: ensure stack is not empty
+        if (!elementStack.isEmpty()) {
+            elementStack.pop();
+            if (logger.isLoggable(Level.FINER)) {
+                logger.finer("Popped element from DOM stack: " + qName + " (stack depth: " + elementStack.size() + ")");
+            }
+        }
     }
 
     @Override
@@ -119,6 +179,11 @@ class SAXToDOMHandler extends DefaultHandler implements LexicalHandler {
         if (textBuffer.length() > 0) {
             String text = textBuffer.toString();
             textBuffer.setLength(0);
+
+            // If we're skipping elements, don't add text
+            if (skipDepth > 0) {
+                return;
+            }
 
             // Check if element stack is empty
             if (elementStack.isEmpty()) {
@@ -138,6 +203,9 @@ class SAXToDOMHandler extends DefaultHandler implements LexicalHandler {
                 if (!text.isEmpty()) {
                     final Text textNode = document.createTextNode(text);
                     parent.appendChild(textNode);
+                    if (logger.isLoggable(Level.FINEST)) {
+                        logger.finest("Added text node (" + text.length() + " chars) to element: " + parent.getNodeName());
+                    }
                 }
             }
         }
@@ -179,11 +247,29 @@ class SAXToDOMHandler extends DefaultHandler implements LexicalHandler {
     public void comment(final char[] ch, final int start, final int length) throws SAXException {
         flushText();
 
+        // If we're skipping elements, don't add comments
+        if (skipDepth > 0) {
+            return;
+        }
+
         final String commentText = new String(ch, start, length);
         final Comment commentNode = document.createComment(commentText);
+        if (logger.isLoggable(Level.FINER)) {
+            logger.finer("Creating comment node (" + commentText.length() + " chars)");
+        }
 
         final Node parent = elementStack.peek();
-        parent.appendChild(commentNode);
+        try {
+            parent.appendChild(commentNode);
+        } catch (final org.w3c.dom.DOMException e) {
+            // Handle DOM exceptions gracefully when appending comments
+            if (System.getProperty("nekohtml.dom.strict") == null) {
+                // In lenient mode, skip the problematic comment
+                logger.warning("Could not append comment to parent <" + parent.getNodeName() + ">: " + e.getMessage());
+            } else {
+                throw new SAXException("DOM hierarchy violation: " + e.getMessage(), e);
+            }
+        }
     }
 
 } // class SAXToDOMHandler

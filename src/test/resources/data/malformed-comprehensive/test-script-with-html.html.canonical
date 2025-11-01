@@ -1,0 +1,22 @@
+(HTML
+(HEAD
+"\n"
+(SCRIPT
+"\n"
+"var html = \""
+)SCRIPT
+)HEAD
+(BODY
+(DIV
+"test"
+)DIV
+"\";\n"
+"var tag = \""
+"\n"
+"\n"
+(P
+"Content"
+)P
+"\n"
+)BODY
+)HTML

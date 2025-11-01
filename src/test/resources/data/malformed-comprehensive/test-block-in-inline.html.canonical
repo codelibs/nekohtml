@@ -1,0 +1,38 @@
+(HTML
+(HEAD
+)HEAD
+(BODY
+"\n"
+(SPAN
+)SPAN
+(DIV
+"Block inside inline"
+)DIV
+(SPAN
+)SPAN
+"\n"
+(A
+Ahref "#"
+)A
+(P
+(A
+Ahref "#"
+"Paragraph inside link"
+)A
+)P
+(A
+Ahref "#"
+)A
+"\n"
+(EM
+)EM
+(SECTION
+(EM
+"Section inside em"
+)EM
+)SECTION
+(EM
+)EM
+"\n"
+)BODY
+)HTML

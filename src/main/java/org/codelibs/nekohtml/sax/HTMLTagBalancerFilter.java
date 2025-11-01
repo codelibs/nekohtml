@@ -18,6 +18,8 @@ package org.codelibs.nekohtml.sax;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.Stack;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;
@@ -34,6 +36,9 @@ import org.xml.sax.helpers.XMLFilterImpl;
  * @author CodeLibs Project
  */
 public class HTMLTagBalancerFilter extends XMLFilterImpl implements LexicalHandler {
+
+    /** Logger for this class. */
+    private static final Logger logger = Logger.getLogger(HTMLTagBalancerFilter.class.getName());
 
     /** Lexical handler for DTD and CDATA events. */
     protected LexicalHandler lexicalHandler;
@@ -120,6 +125,9 @@ public class HTMLTagBalancerFilter extends XMLFilterImpl implements LexicalHandl
 
     @Override
     public void startDocument() throws SAXException {
+        if (logger.isLoggable(Level.FINE)) {
+            logger.fine("Starting document - initializing tag balancer");
+        }
         elementStack.clear();
         documentInitialized = false;
         if (getContentHandler() != null) {
@@ -130,8 +138,14 @@ public class HTMLTagBalancerFilter extends XMLFilterImpl implements LexicalHandl
     @Override
     public void endDocument() throws SAXException {
         // Close any remaining open elements
+        if (logger.isLoggable(Level.FINE)) {
+            logger.fine("Ending document - closing " + elementStack.size() + " remaining open elements");
+        }
         while (!elementStack.isEmpty()) {
             final String element = elementStack.pop();
+            if (logger.isLoggable(Level.FINER)) {
+                logger.finer("Auto-closing unclosed element at document end: " + element);
+            }
             if (getContentHandler() != null) {
                 getContentHandler().endElement("", element, element);
             }
@@ -186,6 +200,9 @@ public class HTMLTagBalancerFilter extends XMLFilterImpl implements LexicalHandl
         // Track non-void elements
         if (!VOID_ELEMENTS.contains(tagName)) {
             elementStack.push(tagName);
+            if (logger.isLoggable(Level.FINER)) {
+                logger.finer("Pushed element onto stack: " + tagName + " (stack depth: " + elementStack.size() + ")");
+            }
         }
     }
 
@@ -204,15 +221,28 @@ public class HTMLTagBalancerFilter extends XMLFilterImpl implements LexicalHandl
             final int index = elementStack.lastIndexOf(tagName);
             if (index >= 0) {
                 // Close all elements above this one first (auto-close)
+                final int elementsToClose = elementStack.size() - index - 1;
+                if (elementsToClose > 0 && logger.isLoggable(Level.FINER)) {
+                    logger.finer("Auto-closing " + elementsToClose + " elements above " + tagName);
+                }
                 while (elementStack.size() > index + 1) {
                     final String elem = elementStack.pop();
+                    if (logger.isLoggable(Level.FINER)) {
+                        logger.finer("Auto-closing element: " + elem);
+                    }
                     handler.endElement("", elem, elem);
                 }
                 // Now close the target element
                 elementStack.pop();
+                if (logger.isLoggable(Level.FINER)) {
+                    logger.finer("Popped element from stack: " + tagName + " (stack depth: " + elementStack.size() + ")");
+                }
                 handler.endElement(uri, localName, qName);
             } else {
                 // Element not on stack - might be a void element or already closed
+                if (logger.isLoggable(Level.FINER)) {
+                    logger.finer("End element not on stack (void or already closed): " + tagName);
+                }
                 // Just pass through the end tag
                 handler.endElement(uri, localName, qName);
             }
@@ -236,9 +266,15 @@ public class HTMLTagBalancerFilter extends XMLFilterImpl implements LexicalHandl
 
         final int index = elementStack.lastIndexOf(tagName);
         if (index >= 0) {
+            if (logger.isLoggable(Level.FINER)) {
+                logger.finer("Closing element and " + (elementStack.size() - index - 1) + " elements above it: " + tagName);
+            }
             // Close all elements from the top down to and including the target
             while (elementStack.size() > index) {
                 final String elem = elementStack.pop();
+                if (logger.isLoggable(Level.FINER)) {
+                    logger.finer("Auto-closing element: " + elem);
+                }
                 handler.endElement("", elem, elem);
             }
         }

@@ -1,0 +1,18 @@
+(HTML
+(HEAD
+(TITLE
+"Test"
+)TITLE
+)HEAD
+(BODY
+(DIV
+"Content before HTML tag"
+)DIV
+"\n\n"
+"\n"
+(P
+"Normal content"
+)P
+"\n"
+)BODY
+)HTML

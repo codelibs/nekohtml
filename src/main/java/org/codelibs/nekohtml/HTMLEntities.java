@@ -21,6 +21,7 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.Map;
 import java.util.Properties;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 /**
@@ -32,6 +33,9 @@ import java.util.stream.Collectors;
  * @version $Id: HTMLEntities.java,v 1.5 2005/02/14 03:56:54 andyc Exp $
  */
 public class HTMLEntities {
+
+    /** Logger for this class. */
+    private static final Logger logger = Logger.getLogger(HTMLEntities.class.getName());
 
     /**
      * Default constructor. This class provides static utility methods for HTML entity handling.
@@ -114,7 +118,7 @@ public class HTMLEntities {
             props.load(stream);
             stream.close();
         } catch (final IOException e) {
-            System.err.println("error: unable to load resource \"" + filename + "\"");
+            logger.warning("Unable to load resource \"" + filename + "\": " + e.getMessage());
         }
     } // load0(String)
 

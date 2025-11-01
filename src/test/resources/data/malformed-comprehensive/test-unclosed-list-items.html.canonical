@@ -1,0 +1,28 @@
+(HTML
+(HEAD
+)HEAD
+(BODY
+(UL
+"\n"
+(LI
+"First item\n"
+)LI
+(LI
+"Second item\n"
+(OL
+"\n"
+(LI
+"Nested item 1\n"
+)LI
+(LI
+"Nested item 2\n"
+)LI
+)OL
+)LI
+(LI
+"Third item\n"
+)LI
+)UL
+"\n"
+)BODY
+)HTML

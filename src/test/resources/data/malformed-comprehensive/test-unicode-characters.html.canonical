@@ -1,0 +1,28 @@
+(HTML
+(HEAD
+"\n"
+(META
+Acharset "UTF-8"
+)META
+"\n"
+(TITLE
+"日本語テスト"
+)TITLE
+"\n"
+)HEAD
+(BODY
+"\n"
+(P
+"こんにちは世界"
+)P
+"\n"
+(DIV
+"中文测试 한국어 テスト"
+)DIV
+"\n"
+(SPAN
+"Emoji: 😀 🎉 ✨"
+)SPAN
+"\n"
+)BODY
+)HTML

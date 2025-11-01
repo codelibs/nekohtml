@@ -1,0 +1,29 @@
+(HTML
+"\n"
+(BODY
+"\n"
+(BR
+)BR
+"Content after br"
+)BR
+"\n"
+(IMG
+Asrc "test.jpg"
+)IMG
+"Alt text"
+)IMG
+"\n"
+(INPUT
+Atype "text"
+)INPUT
+"Input content"
+)INPUT
+"\n"
+(HR
+)HR
+"Content after hr"
+)HR
+"\n"
+)BODY
+"\n"
+)HTML

@@ -21,6 +21,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -45,6 +47,9 @@ import org.xml.sax.helpers.AttributesImpl;
  * @author CodeLibs Project
  */
 public class SimpleHTMLScanner implements XMLReader {
+
+    /** Logger for this class. */
+    private static final Logger logger = Logger.getLogger(SimpleHTMLScanner.class.getName());
 
     /** Content handler. */
     protected ContentHandler fContentHandler;
@@ -159,6 +164,10 @@ public class SimpleHTMLScanner implements XMLReader {
 
     @Override
     public void parse(final InputSource input) throws IOException, SAXException {
+        if (logger.isLoggable(Level.FINE)) {
+            logger.fine("Starting HTML parsing from InputSource");
+        }
+
         if (fContentHandler == null) {
             return;
         }
@@ -193,7 +202,11 @@ public class SimpleHTMLScanner implements XMLReader {
         }
 
         // Parse HTML
-        parseHTML(content.toString());
+        final String htmlContent = content.toString();
+        if (logger.isLoggable(Level.FINE)) {
+            logger.fine("Parsing HTML content (" + htmlContent.length() + " characters)");
+        }
+        parseHTML(htmlContent);
     }
 
     @Override
@@ -208,6 +221,10 @@ public class SimpleHTMLScanner implements XMLReader {
      * @throws SAXException If a SAX error occurs
      */
     protected void parseHTML(final String html) throws SAXException {
+        if (logger.isLoggable(Level.FINE)) {
+            logger.fine("Begin HTML parsing");
+        }
+
         fContentHandler.startDocument();
 
         int pos = 0;
@@ -247,6 +264,9 @@ public class SimpleHTMLScanner implements XMLReader {
                 final Matcher endMatcher = END_TAG.matcher(html.substring(pos));
                 if (endMatcher.find() && endMatcher.start() == 0) {
                     final String tagName = normalizeElementName(endMatcher.group(1));
+                    if (logger.isLoggable(Level.FINER)) {
+                        logger.finer("End element: " + tagName);
+                    }
                     fContentHandler.endElement("", tagName, tagName);
                     pos += endMatcher.end();
                     continue;
@@ -259,10 +279,16 @@ public class SimpleHTMLScanner implements XMLReader {
                     final String attrString = startMatcher.group(2);
 
                     final AttributesImpl attrs = parseAttributes(attrString);
+                    if (logger.isLoggable(Level.FINER)) {
+                        logger.finer("Start element: " + tagName + " (attributes: " + attrs.getLength() + ")");
+                    }
                     fContentHandler.startElement("", tagName, tagName, attrs);
 
                     // Immediately close void elements
                     if (VOID_ELEMENTS.contains(tagName.toUpperCase())) {
+                        if (logger.isLoggable(Level.FINER)) {
+                            logger.finer("Auto-closing void element: " + tagName);
+                        }
                         fContentHandler.endElement("", tagName, tagName);
                     }
 
@@ -289,6 +315,9 @@ public class SimpleHTMLScanner implements XMLReader {
         }
 
         fContentHandler.endDocument();
+        if (logger.isLoggable(Level.FINE)) {
+            logger.fine("Completed HTML parsing");
+        }
     }
 
     /**
