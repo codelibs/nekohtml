@@ -41,6 +41,9 @@ class SAXToDOMHandler extends DefaultHandler implements LexicalHandler {
     /** Logger for this class. */
     private static final Logger logger = Logger.getLogger(SAXToDOMHandler.class.getName());
 
+    /** System property name for strict DOM mode. */
+    private static final String PROPERTY_DOM_STRICT = "nekohtml.dom.strict";
+
     /** The document builder. */
     private final DocumentBuilder documentBuilder;
 
@@ -128,10 +131,10 @@ class SAXToDOMHandler extends DefaultHandler implements LexicalHandler {
             // Handle HIERARCHY_REQUEST_ERR and other DOM exceptions gracefully
             // This can occur when HTML structure violates DOM hierarchy rules
             // (e.g., block elements inside inline elements)
-            if (System.getProperty("nekohtml.dom.strict") == null) {
+            if (System.getProperty(PROPERTY_DOM_STRICT) == null) {
                 // In lenient mode (default), skip this element and all its children
                 logger.warning("Could not append element <" + qName + "> to parent <" + parent.getNodeName() + ">: " + e.getMessage()
-                        + " (Use -Dnekohtml.dom.strict=true to fail on such errors)");
+                        + " (Use -D" + PROPERTY_DOM_STRICT + "=true to fail on such errors)");
                 // Start skipping this element and its children
                 skipDepth = 1;
                 return;
@@ -164,6 +167,11 @@ class SAXToDOMHandler extends DefaultHandler implements LexicalHandler {
             if (logger.isLoggable(Level.FINER)) {
                 logger.finer("Popped element from DOM stack: " + qName + " (stack depth: " + elementStack.size() + ")");
             }
+        } else {
+            // Log warning when attempting to pop from empty stack
+            // This indicates a potential parsing inconsistency
+            logger.warning("Attempted to pop element <" + qName + "> from empty element stack. "
+                    + "This may indicate mismatched start/end tags in the HTML document.");
         }
     }
 
@@ -263,7 +271,7 @@ class SAXToDOMHandler extends DefaultHandler implements LexicalHandler {
             parent.appendChild(commentNode);
         } catch (final org.w3c.dom.DOMException e) {
             // Handle DOM exceptions gracefully when appending comments
-            if (System.getProperty("nekohtml.dom.strict") == null) {
+            if (System.getProperty(PROPERTY_DOM_STRICT) == null) {
                 // In lenient mode, skip the problematic comment
                 logger.warning("Could not append comment to parent <" + parent.getNodeName() + ">: " + e.getMessage());
             } else {
