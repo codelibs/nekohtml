@@ -382,10 +382,10 @@ public class HTMLElements {
                 new Element(APPLET, "APPLET", Element.CONTAINER, BODY, null),
                 // AREA - O EMPTY
                 new Element(AREA, "AREA", Element.EMPTY, MAP, null),
-                // ARTICLE
-                new Element(ARTICLE, "ARTICLE", Element.CONTAINER, BODY, new short[] { P }),
-                // ASIDE
-                new Element(ASIDE, "ASIDE", Element.BLOCK, BODY, new short[] { P }),
+                // ARTICLE - flexible parent for real-world HTML patterns
+                new Element(ARTICLE, "ARTICLE", Element.CONTAINER, new short[] { BODY, MAIN, SECTION, ARTICLE, ASIDE }, new short[] { P }),
+                // ASIDE - flexible parent for real-world HTML patterns; closes P
+                new Element(ASIDE, "ASIDE", Element.CONTAINER, new short[] { BODY, MAIN, ARTICLE, SECTION }, new short[] { P }),
                 // AUDIO
                 new Element(AUDIO, "AUDIO", Element.CONTAINER, BODY, null), };
         ELEMENTS_ARRAY['B' - 'A'] = new Element[] {
@@ -458,23 +458,25 @@ public class HTMLElements {
                 new Element(EM, "EM", Element.INLINE, BODY, null),
                 // EMBED
                 new Element(EMBED, "EMBED", Element.EMPTY, BODY, null), };
-        ELEMENTS_ARRAY['F' - 'A'] = new Element[] {
-                // FIELDSET - - (#PCDATA,LEGEND,(%flow;)*)
-                new Element(FIELDSET, "FIELDSET", Element.CONTAINER, BODY, new short[] { P }),
-                // FIGCAPTION
-                new Element(FIGCAPTION, "FIGCAPTION", Element.BLOCK, BODY, new short[] { P }),
-                // FIGURE
-                new Element(FIGURE, "FIGURE", Element.BLOCK, BODY, new short[] { P }),
-                // FONT
-                new Element(FONT, "FONT", Element.CONTAINER, BODY, null),
-                // FOOTER
-                new Element(FOOTER, "FOOTER", Element.CONTAINER, BODY, new short[] { P }),
-                // FORM - - (%block;|SCRIPT)+ -(FORM)
-                new Element(FORM, "FORM", Element.CONTAINER, new short[] { BODY, TD, DIV }, new short[] { BUTTON, P }),
-                // FRAME - O EMPTY
-                new Element(FRAME, "FRAME", Element.EMPTY, FRAMESET, null),
-                // FRAMESET - - ((FRAMESET|FRAME)+ & NOFRAMES?)
-                new Element(FRAMESET, "FRAMESET", Element.CONTAINER, HTML, null), };
+        ELEMENTS_ARRAY['F' - 'A'] =
+                new Element[] {
+                        // FIELDSET - - (#PCDATA,LEGEND,(%flow;)*)
+                        new Element(FIELDSET, "FIELDSET", Element.CONTAINER, BODY, new short[] { P }),
+                        // FIGCAPTION
+                        new Element(FIGCAPTION, "FIGCAPTION", Element.BLOCK, BODY, new short[] { P }),
+                        // FIGURE
+                        new Element(FIGURE, "FIGURE", Element.BLOCK, BODY, new short[] { P }),
+                        // FONT
+                        new Element(FONT, "FONT", Element.CONTAINER, BODY, null),
+                        // FOOTER - flexible parent for real-world HTML patterns; closes P, FOOTER
+                        new Element(FOOTER, "FOOTER", Element.CONTAINER, new short[] { BODY, MAIN, ARTICLE, SECTION, ASIDE }, new short[] {
+                                P, FOOTER }),
+                        // FORM - - (%block;|SCRIPT)+ -(FORM)
+                        new Element(FORM, "FORM", Element.CONTAINER, new short[] { BODY, TD, DIV }, new short[] { BUTTON, P }),
+                        // FRAME - O EMPTY
+                        new Element(FRAME, "FRAME", Element.EMPTY, FRAMESET, null),
+                        // FRAMESET - - ((FRAMESET|FRAME)+ & NOFRAMES?)
+                        new Element(FRAMESET, "FRAMESET", Element.CONTAINER, HTML, null), };
         ELEMENTS_ARRAY['H' - 'A'] =
                 new Element[] {
                         // (H1|H2|H3|H4|H5|H6) - - (%inline;)*
@@ -486,8 +488,9 @@ public class HTMLElements {
                         new Element(H6, "H6", Element.BLOCK, new short[] { BODY, A }, new short[] { H1, H2, H3, H4, H5, H6, P }),
                         // HEAD O O (%head.content;) +(%head.misc;)
                         new Element(HEAD, "HEAD", 0, HTML, null),
-                        // HEADER
-                        new Element(HEADER, "HEADER", Element.CONTAINER, BODY, new short[] { P }),
+                        // HEADER - flexible parent for real-world HTML patterns; closes P, HEADER
+                        new Element(HEADER, "HEADER", Element.CONTAINER, new short[] { BODY, MAIN, ARTICLE, SECTION, ASIDE }, new short[] {
+                                P, HEADER }),
                         // HR - O EMPTY
                         new Element(HR, "HR", Element.EMPTY, BODY, new short[] { P }),
                         // HTML O O (%html.content;)
@@ -526,8 +529,8 @@ public class HTMLElements {
                 // LISTING
                 new Element(LISTING, "LISTING", Element.BLOCK, BODY, new short[] { P }), };
         ELEMENTS_ARRAY['M' - 'A'] = new Element[] {
-                // MAIN
-                new Element(MAIN, "MAIN", Element.CONTAINER, BODY, null),
+                // MAIN - closes P, ASIDE, HEADER, FOOTER, NAV (body-level sections)
+                new Element(MAIN, "MAIN", Element.CONTAINER, BODY, new short[] { P, ASIDE, HEADER, FOOTER, NAV }),
                 // MAP - - ((%block;) | AREA)+
                 new Element(MAP, "MAP", Element.INLINE, BODY, null),
                 // MARK
@@ -542,21 +545,23 @@ public class HTMLElements {
                 new Element(METER, "METER", Element.CONTAINER, BODY, null),
                 // MULTICOL
                 new Element(MULTICOL, "MULTICOL", Element.CONTAINER, BODY, null), };
-        ELEMENTS_ARRAY['N' - 'A'] = new Element[] {
-                // NAV
-                new Element(NAV, "NAV", Element.CONTAINER, BODY, null),
-                // NEXTID
-                new Element(NEXTID, "NEXTID", Element.EMPTY, BODY, null),
-                // NOBR
-                new Element(NOBR, "NOBR", Element.INLINE, BODY, new short[] { NOBR }),
-                // NOEMBED
-                new Element(NOEMBED, "NOEMBED", Element.CONTAINER, BODY, null),
-                // NOFRAMES - - (BODY) -(NOFRAMES)
-                new Element(NOFRAMES, "NOFRAMES", Element.CONTAINER, null, null),
-                // NOLAYER
-                new Element(NOLAYER, "NOLAYER", Element.CONTAINER, BODY, null),
-                // NOSCRIPT - - (%block;)+
-                new Element(NOSCRIPT, "NOSCRIPT", Element.CONTAINER, new short[] { BODY }, null), };
+        ELEMENTS_ARRAY['N' - 'A'] =
+                new Element[] {
+                        // NAV - flexible parent for real-world HTML patterns; closes P, NAV
+                        new Element(NAV, "NAV", Element.CONTAINER, new short[] { BODY, MAIN, ARTICLE, SECTION, ASIDE, HEADER, FOOTER },
+                                new short[] { P, NAV }),
+                        // NEXTID
+                        new Element(NEXTID, "NEXTID", Element.EMPTY, BODY, null),
+                        // NOBR
+                        new Element(NOBR, "NOBR", Element.INLINE, BODY, new short[] { NOBR }),
+                        // NOEMBED
+                        new Element(NOEMBED, "NOEMBED", Element.CONTAINER, BODY, null),
+                        // NOFRAMES - - (BODY) -(NOFRAMES)
+                        new Element(NOFRAMES, "NOFRAMES", Element.CONTAINER, null, null),
+                        // NOLAYER
+                        new Element(NOLAYER, "NOLAYER", Element.CONTAINER, BODY, null),
+                        // NOSCRIPT - - (%block;)+
+                        new Element(NOSCRIPT, "NOSCRIPT", Element.CONTAINER, new short[] { BODY }, null), };
         ELEMENTS_ARRAY['O' - 'A'] = new Element[] {
                 // OBJECT - - (PARAM | %flow;)*
                 new Element(OBJECT, "OBJECT", Element.CONTAINER, BODY, null),
@@ -604,8 +609,8 @@ public class HTMLElements {
                 new Element(SAMP, "SAMP", Element.INLINE, BODY, null),
                 // SCRIPT - - %Script;
                 new Element(SCRIPT, "SCRIPT", Element.SPECIAL, new short[] { HEAD, BODY }, null),
-                // SECTION
-                new Element(SECTION, "SECTION", Element.CONTAINER, BODY, new short[] { SELECT }),
+                // SECTION - can be in BODY, MAIN, ARTICLE, SECTION, ASIDE, NAV (flexible for real-world HTML)
+                new Element(SECTION, "SECTION", Element.CONTAINER, new short[] { BODY, MAIN, ARTICLE, ASIDE }, new short[] { P }),
                 // SELECT - - (OPTGROUP|OPTION)+
                 new Element(SELECT, "SELECT", Element.CONTAINER, BODY, new short[] { SELECT }),
                 // SMALL - - (%inline;)*
