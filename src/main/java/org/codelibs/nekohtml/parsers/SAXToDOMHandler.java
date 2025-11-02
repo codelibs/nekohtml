@@ -44,6 +44,34 @@ class SAXToDOMHandler extends DefaultHandler implements LexicalHandler {
     /** System property name for strict DOM mode. */
     private static final String PROPERTY_DOM_STRICT = "nekohtml.dom.strict";
 
+    /**
+     * Enum representing the DOM strict mode state.
+     */
+    private enum DOMStrictMode {
+        /** Property not set - use DEBUG level for warnings */
+        NOT_SET,
+        /** Property explicitly set to "false" - use WARN level */
+        FALSE,
+        /** Property set to "true" - throw exceptions */
+        TRUE
+    }
+
+    /**
+     * Determines the current DOM strict mode based on system property.
+     *
+     * @return The DOM strict mode state
+     */
+    private static DOMStrictMode getDOMStrictMode() {
+        final String propertyValue = System.getProperty(PROPERTY_DOM_STRICT);
+        if (propertyValue == null) {
+            return DOMStrictMode.NOT_SET;
+        } else if ("true".equalsIgnoreCase(propertyValue)) {
+            return DOMStrictMode.TRUE;
+        } else {
+            return DOMStrictMode.FALSE;
+        }
+    }
+
     /** The document builder. */
     private final DocumentBuilder documentBuilder;
 
@@ -112,6 +140,34 @@ class SAXToDOMHandler extends DefaultHandler implements LexicalHandler {
             return;
         }
 
+        // Defensive check: ensure document is initialized (startDocument was called)
+        if (document == null) {
+            final DOMStrictMode strictMode = getDOMStrictMode();
+            if (strictMode == DOMStrictMode.TRUE) {
+                // In strict mode, throw exception
+                throw new SAXException("Attempted to start element <" + qName + "> before startDocument() was called. "
+                        + "The DOM document has not been initialized.");
+            } else {
+                // In lenient mode, log and return early
+                final String message =
+                        "Attempted to start element <" + qName + "> before startDocument() was called. "
+                                + "The DOM document has not been initialized. Skipping this element and its children. " + "(Use -D"
+                                + PROPERTY_DOM_STRICT + "=true to fail on such errors)";
+                if (strictMode == DOMStrictMode.FALSE) {
+                    // Property explicitly set to false - log as warning
+                    logger.warning(message);
+                } else {
+                    // Property not set - log as debug
+                    if (logger.isLoggable(Level.FINE)) {
+                        logger.fine(message);
+                    }
+                }
+                // Start skipping this element and its children
+                skipDepth = 1;
+                return;
+            }
+        }
+
         // Create element
         final Element element = document.createElement(qName);
         if (logger.isLoggable(Level.FINER)) {
@@ -123,6 +179,34 @@ class SAXToDOMHandler extends DefaultHandler implements LexicalHandler {
             element.setAttribute(attributes.getQName(i), attributes.getValue(i));
         }
 
+        // Defensive check: ensure stack is not empty before peeking
+        if (elementStack.isEmpty()) {
+            final DOMStrictMode strictMode = getDOMStrictMode();
+            if (strictMode == DOMStrictMode.TRUE) {
+                // In strict mode, throw exception
+                throw new SAXException("Attempted to start element <" + qName + "> with empty element stack. "
+                        + "This may indicate startElement() was called before startDocument() or due to unbalanced tags.");
+            } else {
+                // In lenient mode, skip this element and its children
+                final String message =
+                        "Attempted to start element <" + qName + "> with empty element stack. "
+                                + "This may indicate startElement() was called before startDocument() or due to unbalanced tags. "
+                                + "Skipping this element and its children. (Use -D" + PROPERTY_DOM_STRICT + "=true to fail on such errors)";
+                if (strictMode == DOMStrictMode.FALSE) {
+                    // Property explicitly set to false - log as warning
+                    logger.warning(message);
+                } else {
+                    // Property not set - log as debug
+                    if (logger.isLoggable(Level.FINE)) {
+                        logger.fine(message);
+                    }
+                }
+                // Start skipping this element and its children
+                skipDepth = 1;
+                return;
+            }
+        }
+
         // Add to parent
         final Node parent = elementStack.peek();
         try {
@@ -131,16 +215,27 @@ class SAXToDOMHandler extends DefaultHandler implements LexicalHandler {
             // Handle HIERARCHY_REQUEST_ERR and other DOM exceptions gracefully
             // This can occur when HTML structure violates DOM hierarchy rules
             // (e.g., block elements inside inline elements)
-            if (System.getProperty(PROPERTY_DOM_STRICT) == null) {
-                // In lenient mode (default), skip this element and all its children
-                logger.warning("Could not append element <" + qName + "> to parent <" + parent.getNodeName() + ">: " + e.getMessage()
-                        + " (Use -D" + PROPERTY_DOM_STRICT + "=true to fail on such errors)");
+            final DOMStrictMode strictMode = getDOMStrictMode();
+            if (strictMode == DOMStrictMode.TRUE) {
+                // In strict mode, propagate the exception
+                throw new SAXException("DOM hierarchy violation: " + e.getMessage(), e);
+            } else {
+                // In lenient mode, skip this element and all its children
+                final String message =
+                        "Could not append element <" + qName + "> to parent <" + parent.getNodeName() + ">: " + e.getMessage() + " (Use -D"
+                                + PROPERTY_DOM_STRICT + "=true to fail on such errors)";
+                if (strictMode == DOMStrictMode.FALSE) {
+                    // Property explicitly set to false - log as warning
+                    logger.warning(message);
+                } else {
+                    // Property not set - log as debug
+                    if (logger.isLoggable(Level.FINE)) {
+                        logger.fine(message);
+                    }
+                }
                 // Start skipping this element and its children
                 skipDepth = 1;
                 return;
-            } else {
-                // In strict mode, propagate the exception
-                throw new SAXException("DOM hierarchy violation: " + e.getMessage(), e);
             }
         }
 
@@ -161,22 +256,57 @@ class SAXToDOMHandler extends DefaultHandler implements LexicalHandler {
             return;
         }
 
-        // Defensive check: ensure stack is not empty
+        // Defensive check: ensure stack is not empty and top matches the element being closed
         if (!elementStack.isEmpty()) {
-            elementStack.pop();
-            if (logger.isLoggable(Level.FINER)) {
-                logger.finer("Popped element from DOM stack: " + qName + " (stack depth: " + elementStack.size() + ")");
+            final Node topElement = elementStack.peek();
+            // Only pop if the top element matches the closing tag
+            if (topElement.getNodeName().equals(qName)) {
+                elementStack.pop();
+                if (logger.isLoggable(Level.FINER)) {
+                    logger.finer("Popped element from DOM stack: " + qName + " (stack depth: " + elementStack.size() + ")");
+                }
+            } else {
+                // Top element doesn't match - this is a mismatched tag
+                final DOMStrictMode strictMode = getDOMStrictMode();
+                final String message =
+                        "Mismatched end tag: expected </" + topElement.getNodeName() + "> but found </" + qName + ">. "
+                                + "Ignoring this end tag. This may indicate malformed HTML.";
+                if (strictMode == DOMStrictMode.FALSE) {
+                    // Property explicitly set to false - log as warning
+                    logger.warning(message);
+                } else {
+                    // Property not set - log as debug
+                    if (logger.isLoggable(Level.FINE)) {
+                        logger.fine(message);
+                    }
+                }
+                // Don't pop - just ignore this mismatched end tag
             }
         } else {
             // Log warning when attempting to pop from empty stack
             // This indicates a potential parsing inconsistency
-            logger.warning("Attempted to pop element <" + qName + "> from empty element stack. "
-                    + "This may indicate mismatched start/end tags in the HTML document.");
+            final DOMStrictMode strictMode = getDOMStrictMode();
+            final String message =
+                    "Attempted to pop element <" + qName + "> from empty element stack. "
+                            + "This may indicate mismatched start/end tags in the HTML document.";
+            if (strictMode == DOMStrictMode.FALSE) {
+                // Property explicitly set to false - log as warning
+                logger.warning(message);
+            } else {
+                // Property not set - log as debug
+                if (logger.isLoggable(Level.FINE)) {
+                    logger.fine(message);
+                }
+            }
         }
     }
 
     @Override
     public void characters(final char[] ch, final int start, final int length) throws SAXException {
+        // Defensive check: ensure textBuffer is initialized (startDocument was called)
+        if (textBuffer == null) {
+            return;
+        }
         textBuffer.append(ch, start, length);
     }
 
@@ -184,6 +314,11 @@ class SAXToDOMHandler extends DefaultHandler implements LexicalHandler {
      * Flushes accumulated text to the current element.
      */
     private void flushText() {
+        // Defensive check: ensure textBuffer is initialized (startDocument was called)
+        if (textBuffer == null) {
+            return;
+        }
+
         if (textBuffer.length() > 0) {
             String text = textBuffer.toString();
             textBuffer.setLength(0);
@@ -271,11 +406,21 @@ class SAXToDOMHandler extends DefaultHandler implements LexicalHandler {
             parent.appendChild(commentNode);
         } catch (final org.w3c.dom.DOMException e) {
             // Handle DOM exceptions gracefully when appending comments
-            if (System.getProperty(PROPERTY_DOM_STRICT) == null) {
-                // In lenient mode, skip the problematic comment
-                logger.warning("Could not append comment to parent <" + parent.getNodeName() + ">: " + e.getMessage());
-            } else {
+            final DOMStrictMode strictMode = getDOMStrictMode();
+            if (strictMode == DOMStrictMode.TRUE) {
                 throw new SAXException("DOM hierarchy violation: " + e.getMessage(), e);
+            } else {
+                // In lenient mode, skip the problematic comment
+                final String message = "Could not append comment to parent <" + parent.getNodeName() + ">: " + e.getMessage();
+                if (strictMode == DOMStrictMode.FALSE) {
+                    // Property explicitly set to false - log as warning
+                    logger.warning(message);
+                } else {
+                    // Property not set - log as debug
+                    if (logger.isLoggable(Level.FINE)) {
+                        logger.fine(message);
+                    }
+                }
             }
         }
     }

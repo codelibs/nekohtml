@@ -67,6 +67,69 @@ public class HTMLTagBalancerFilter extends XMLFilterImpl implements LexicalHandl
         HEAD_ELEMENTS.add("BASE");
     }
 
+    /** Generic container elements that can contain almost any child element. */
+    protected static final Set<String> GENERIC_CONTAINERS = new HashSet<>();
+    static {
+        // Basic containers
+        GENERIC_CONTAINERS.add("DIV");
+        GENERIC_CONTAINERS.add("SPAN");
+        GENERIC_CONTAINERS.add("P");
+        GENERIC_CONTAINERS.add("BLOCKQUOTE");
+        GENERIC_CONTAINERS.add("ADDRESS");
+        GENERIC_CONTAINERS.add("PRE");
+
+        // HTML5 semantic elements
+        GENERIC_CONTAINERS.add("ARTICLE");
+        GENERIC_CONTAINERS.add("SECTION");
+        GENERIC_CONTAINERS.add("NAV");
+        GENERIC_CONTAINERS.add("HEADER");
+        GENERIC_CONTAINERS.add("FOOTER");
+        GENERIC_CONTAINERS.add("ASIDE");
+        GENERIC_CONTAINERS.add("MAIN");
+
+        // List elements
+        GENERIC_CONTAINERS.add("LI");
+        GENERIC_CONTAINERS.add("DD");
+        GENERIC_CONTAINERS.add("DT");
+        GENERIC_CONTAINERS.add("UL");
+        GENERIC_CONTAINERS.add("OL");
+        GENERIC_CONTAINERS.add("DL");
+        GENERIC_CONTAINERS.add("MENU");
+
+        // Table elements
+        GENERIC_CONTAINERS.add("TABLE");
+        GENERIC_CONTAINERS.add("TBODY");
+        GENERIC_CONTAINERS.add("THEAD");
+        GENERIC_CONTAINERS.add("TFOOT");
+        GENERIC_CONTAINERS.add("TR");
+        GENERIC_CONTAINERS.add("TD");
+        GENERIC_CONTAINERS.add("TH");
+        GENERIC_CONTAINERS.add("CAPTION");
+        GENERIC_CONTAINERS.add("COLGROUP");
+
+        // Form elements
+        GENERIC_CONTAINERS.add("FORM");
+        GENERIC_CONTAINERS.add("FIELDSET");
+        GENERIC_CONTAINERS.add("LABEL");
+        GENERIC_CONTAINERS.add("BUTTON");
+        GENERIC_CONTAINERS.add("LEGEND");
+
+        // Other semantic containers
+        GENERIC_CONTAINERS.add("FIGURE");
+        GENERIC_CONTAINERS.add("FIGCAPTION");
+        GENERIC_CONTAINERS.add("DETAILS");
+        GENERIC_CONTAINERS.add("SUMMARY");
+        GENERIC_CONTAINERS.add("DIALOG");
+
+        // Legacy containers
+        GENERIC_CONTAINERS.add("CENTER");
+        GENERIC_CONTAINERS.add("MARQUEE");
+
+        // Special containers
+        GENERIC_CONTAINERS.add("NOSCRIPT");
+        GENERIC_CONTAINERS.add("A"); // HTML5 allows block elements in <a>
+    }
+
     /** Self-closing elements (void elements). */
     protected static final Set<String> VOID_ELEMENTS = new HashSet<>();
     static {
@@ -190,9 +253,6 @@ public class HTMLTagBalancerFilter extends XMLFilterImpl implements LexicalHandl
             closeElement("HEAD");
             closeElement("TITLE"); // Close any unclosed title
         }
-
-        // If starting a HEAD element and we're in BODY, don't close HEAD
-        // (this is malformed HTML, but we handle it gracefully)
 
         // Start the element
         handler.startElement(uri, localName, qName, atts);
