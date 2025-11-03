@@ -1,0 +1,29 @@
+(HTML
+(HEAD
+(TEMPLATE
+@id
+"my-template
+"\n
+(DIV
+"\n
+(H2
+(SLOT
+@name
+"title
+"Default Title
+)SLOT
+)H2
+"\n
+(P
+(SLOT
+"Default content
+)SLOT
+)P
+"\n
+)DIV
+"\n
+)TEMPLATE
+)HEAD
+(BODY
+)BODY
+)HTML
