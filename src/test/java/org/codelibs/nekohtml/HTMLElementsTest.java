@@ -146,8 +146,11 @@ public class HTMLElementsTest {
         assertElementExists("CANVAS", HTMLElements.CANVAS);
         assertElementExists("FOOTER", HTMLElements.FOOTER);
         assertElementExists("HEADER", HTMLElements.HEADER);
+        assertElementExists("HGROUP", HTMLElements.HGROUP);
         assertElementExists("NAV", HTMLElements.NAV);
+        assertElementExists("SEARCH", HTMLElements.SEARCH);
         assertElementExists("SECTION", HTMLElements.SECTION);
+        assertElementExists("SLOT", HTMLElements.SLOT);
         assertElementExists("VIDEO", HTMLElements.VIDEO);
     }
 
@@ -480,6 +483,31 @@ public class HTMLElementsTest {
 
         // Then: Should return default element
         assertSame(defaultElem, result, "Should return provided default element");
+    }
+
+    @Test
+    public void testNewHtml5Elements() {
+        // Test newly added HTML Living Standard elements
+        // SEARCH element
+        final Element search = HTMLElements.getElement(HTMLElements.SEARCH);
+        assertNotNull(search, "SEARCH element should exist");
+        assertEquals("SEARCH", search.name, "SEARCH name should match");
+        assertTrue(search.isContainer(), "SEARCH should be a container");
+        assertFalse(search.isEmpty(), "SEARCH should not be empty");
+
+        // SLOT element
+        final Element slot = HTMLElements.getElement(HTMLElements.SLOT);
+        assertNotNull(slot, "SLOT element should exist");
+        assertEquals("SLOT", slot.name, "SLOT name should match");
+        assertTrue(slot.isContainer(), "SLOT should be a container");
+        assertFalse(slot.isEmpty(), "SLOT should not be empty");
+
+        // HGROUP element
+        final Element hgroup = HTMLElements.getElement(HTMLElements.HGROUP);
+        assertNotNull(hgroup, "HGROUP element should exist");
+        assertEquals("HGROUP", hgroup.name, "HGROUP name should match");
+        assertTrue(hgroup.isBlock(), "HGROUP should be a block element");
+        assertFalse(hgroup.isEmpty(), "HGROUP should not be empty");
     }
 
     @Test

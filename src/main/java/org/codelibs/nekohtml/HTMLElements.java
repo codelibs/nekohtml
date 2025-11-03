@@ -156,8 +156,10 @@ public class HTMLElements {
     public static final short H5 = H4 + 1;
     /** Element code for H6 (heading level 6) element. */
     public static final short H6 = H5 + 1;
+    /** Element code for HGROUP (heading group) element. */
+    public static final short HGROUP = H6 + 1;
     /** Element code for HEAD element. */
-    public static final short HEAD = H6 + 1;
+    public static final short HEAD = HGROUP + 1;
     /** Element code for HEADER element. */
     public static final short HEADER = HEAD + 1;
     /** Element code for HR (horizontal rule) element. */
@@ -268,10 +270,14 @@ public class HTMLElements {
     public static final short SCRIPT = SAMP + 1;
     /** Element code for SECTION element. */
     public static final short SECTION = SCRIPT + 1;
+    /** Element code for SEARCH (search section) element. */
+    public static final short SEARCH = SECTION + 1;
     /** Element code for SELECT element. */
-    public static final short SELECT = SECTION + 1;
+    public static final short SELECT = SEARCH + 1;
+    /** Element code for SLOT (Web Components slot) element. */
+    public static final short SLOT = SELECT + 1;
     /** Element code for SMALL element. */
-    public static final short SMALL = SELECT + 1;
+    public static final short SMALL = SLOT + 1;
     /** Element code for SOUND element. */
     public static final short SOUND = SMALL + 1;
     /** Element code for SOURCE element. */
@@ -486,6 +492,8 @@ public class HTMLElements {
                         new Element(H4, "H4", Element.BLOCK, new short[] { BODY, A }, new short[] { H1, H2, H3, H4, H5, H6, P }),
                         new Element(H5, "H5", Element.BLOCK, new short[] { BODY, A }, new short[] { H1, H2, H3, H4, H5, H6, P }),
                         new Element(H6, "H6", Element.BLOCK, new short[] { BODY, A }, new short[] { H1, H2, H3, H4, H5, H6, P }),
+                        // HGROUP - - heading group
+                        new Element(HGROUP, "HGROUP", Element.BLOCK, new short[] { BODY, SECTION, ARTICLE }, new short[] { P }),
                         // HEAD O O (%head.content;) +(%head.misc;)
                         new Element(HEAD, "HEAD", 0, HTML, null),
                         // HEADER - flexible parent for real-world HTML patterns; closes P, HEADER
@@ -611,8 +619,12 @@ public class HTMLElements {
                 new Element(SCRIPT, "SCRIPT", Element.SPECIAL, new short[] { HEAD, BODY }, null),
                 // SECTION - can be in BODY, MAIN, ARTICLE, SECTION, ASIDE, NAV (flexible for real-world HTML)
                 new Element(SECTION, "SECTION", Element.CONTAINER, new short[] { BODY, MAIN, ARTICLE, ASIDE }, new short[] { P }),
+                // SEARCH - search section
+                new Element(SEARCH, "SEARCH", Element.CONTAINER, BODY, new short[] { P }),
                 // SELECT - - (OPTGROUP|OPTION)+
                 new Element(SELECT, "SELECT", Element.CONTAINER, BODY, new short[] { SELECT }),
+                // SLOT - Web Components slot
+                new Element(SLOT, "SLOT", Element.CONTAINER, BODY, null),
                 // SMALL - - (%inline;)*
                 new Element(SMALL, "SMALL", Element.INLINE, BODY, null),
                 // SOUND
@@ -765,6 +777,35 @@ public class HTMLElements {
         return element;
 
     } // getElement(String):Element
+
+    /**
+     * Checks if the specified element is a formatting element according to HTML Living Standard.
+     * Formatting elements are subject to the Adoption Agency Algorithm.
+     *
+     * @param ename The element name (case-insensitive).
+     * @return true if the element is a formatting element, false otherwise
+     */
+    public static final boolean isFormattingElement(final String ename) {
+        if (ename == null || ename.isEmpty()) {
+            return false;
+        }
+        final String upperName = ename.toUpperCase();
+        return "A".equals(upperName) || "B".equals(upperName) || "BIG".equals(upperName) || "CODE".equals(upperName)
+                || "EM".equals(upperName) || "FONT".equals(upperName) || "I".equals(upperName) || "NOBR".equals(upperName)
+                || "S".equals(upperName) || "SMALL".equals(upperName) || "STRIKE".equals(upperName) || "STRONG".equals(upperName)
+                || "TT".equals(upperName) || "U".equals(upperName);
+    } // isFormattingElement(String):boolean
+
+    /**
+     * Checks if the specified element code is a formatting element.
+     *
+     * @param code The element code.
+     * @return true if the element is a formatting element, false otherwise
+     */
+    public static final boolean isFormattingElement(final short code) {
+        return code == A || code == B || code == BIG || code == CODE || code == EM || code == FONT || code == I || code == NOBR
+                || code == S || code == SMALL || code == STRIKE || code == STRONG || code == TT || code == U;
+    } // isFormattingElement(short):boolean
 
     //
     // Classes

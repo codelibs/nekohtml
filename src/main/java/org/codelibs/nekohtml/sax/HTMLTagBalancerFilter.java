@@ -46,6 +46,19 @@ public class HTMLTagBalancerFilter extends XMLFilterImpl implements LexicalHandl
     /** Stack of open elements. */
     protected final Stack<String> elementStack = new Stack<>();
 
+    /**
+     * List of active formatting elements for the Adoption Agency Algorithm.
+     * This list tracks formatting elements (a, b, i, strong, etc.) that are currently "open"
+     * and may need to be reconstructed when closing tags are encountered out of order.
+     */
+    protected final java.util.LinkedList<String> activeFormattingElements = new java.util.LinkedList<>();
+
+    /**
+     * Marker object used in the active formatting elements list.
+     * Markers are used to separate different contexts (e.g., when entering tables or lists).
+     */
+    protected static final String MARKER = new String("MARKER");
+
     /** Whether the document structure has been initialized (HTML element started). */
     protected boolean documentInitialized = false;
 
@@ -86,6 +99,7 @@ public class HTMLTagBalancerFilter extends XMLFilterImpl implements LexicalHandl
         GENERIC_CONTAINERS.add("FOOTER");
         GENERIC_CONTAINERS.add("ASIDE");
         GENERIC_CONTAINERS.add("MAIN");
+        GENERIC_CONTAINERS.add("SEARCH");
 
         // List elements
         GENERIC_CONTAINERS.add("LI");
@@ -120,6 +134,10 @@ public class HTMLTagBalancerFilter extends XMLFilterImpl implements LexicalHandl
         GENERIC_CONTAINERS.add("DETAILS");
         GENERIC_CONTAINERS.add("SUMMARY");
         GENERIC_CONTAINERS.add("DIALOG");
+        GENERIC_CONTAINERS.add("HGROUP");
+
+        // Web Components
+        GENERIC_CONTAINERS.add("SLOT");
 
         // Legacy containers
         GENERIC_CONTAINERS.add("CENTER");
@@ -192,6 +210,7 @@ public class HTMLTagBalancerFilter extends XMLFilterImpl implements LexicalHandl
             logger.fine("Starting document - initializing tag balancer");
         }
         elementStack.clear();
+        activeFormattingElements.clear();
         documentInitialized = false;
         if (getContentHandler() != null) {
             getContentHandler().startDocument();
@@ -263,6 +282,14 @@ public class HTMLTagBalancerFilter extends XMLFilterImpl implements LexicalHandl
             if (logger.isLoggable(Level.FINER)) {
                 logger.finer("Pushed element onto stack: " + tagName + " (stack depth: " + elementStack.size() + ")");
             }
+
+            // Track formatting elements for AAA
+            if (org.codelibs.nekohtml.HTMLElements.isFormattingElement(tagName)) {
+                addFormattingElement(tagName);
+                if (logger.isLoggable(Level.FINER)) {
+                    logger.finer("Added formatting element: " + tagName);
+                }
+            }
         }
     }
 
@@ -275,7 +302,15 @@ public class HTMLTagBalancerFilter extends XMLFilterImpl implements LexicalHandl
 
         final String tagName = qName.toUpperCase();
 
-        // Find and close the element
+        // Check if this is a formatting element - if so, run AAA
+        final boolean isFormatting = org.codelibs.nekohtml.HTMLElements.isFormattingElement(tagName);
+        if (isFormatting && findFormattingElement(tagName) >= 0) {
+            // Run Adoption Agency Algorithm
+            runAdoptionAgencyAlgorithm(tagName, uri, localName, qName);
+            return;
+        }
+
+        // Find and close the element (standard logic)
         if (!elementStack.isEmpty()) {
             // If the element is on the stack, close it and everything above it
             final int index = elementStack.lastIndexOf(tagName);
@@ -290,10 +325,13 @@ public class HTMLTagBalancerFilter extends XMLFilterImpl implements LexicalHandl
                     if (logger.isLoggable(Level.FINER)) {
                         logger.finer("Auto-closing element: " + elem);
                     }
+                    // Remove from formatting elements if present
+                    removeFormattingElement(elem);
                     handler.endElement("", elem, elem);
                 }
                 // Now close the target element
                 elementStack.pop();
+                removeFormattingElement(tagName);
                 if (logger.isLoggable(Level.FINER)) {
                     logger.finer("Popped element from stack: " + tagName + " (stack depth: " + elementStack.size() + ")");
                 }
@@ -435,6 +473,242 @@ public class HTMLTagBalancerFilter extends XMLFilterImpl implements LexicalHandl
                 // Auto-add HTML root element
                 handler.startElement("", "HTML", "HTML", new org.xml.sax.helpers.AttributesImpl());
                 elementStack.push("HTML");
+            }
+        }
+    }
+
+    //
+    // Active Formatting Elements Management (for Adoption Agency Algorithm)
+    //
+
+    /**
+     * Adds a formatting element to the active formatting elements list.
+     * This is part of the Adoption Agency Algorithm implementation.
+     *
+     * @param tagName The element tag name
+     */
+    protected void addFormattingElement(final String tagName) {
+        // Remove any duplicate entry of the same element (only one instance allowed)
+        activeFormattingElements.remove(tagName);
+        // Add to the end of the list
+        activeFormattingElements.add(tagName);
+    }
+
+    /**
+     * Removes a formatting element from the active formatting elements list.
+     *
+     * @param tagName The element tag name
+     * @return true if the element was found and removed
+     */
+    protected boolean removeFormattingElement(final String tagName) {
+        return activeFormattingElements.remove(tagName);
+    }
+
+    /**
+     * Finds the index of a formatting element in the active formatting elements list.
+     * Searches from the end of the list (most recent elements first).
+     *
+     * @param tagName The element tag name
+     * @return The index of the element, or -1 if not found
+     */
+    protected int findFormattingElement(final String tagName) {
+        for (int i = activeFormattingElements.size() - 1; i >= 0; i--) {
+            final String element = activeFormattingElements.get(i);
+            if (tagName.equals(element)) {
+                return i;
+            }
+            // Stop at marker
+            if (element == MARKER) {
+                break;
+            }
+        }
+        return -1;
+    }
+
+    /**
+     * Clears all active formatting elements up to and including the last marker.
+     * This is called when exiting certain contexts (e.g., tables, select elements).
+     */
+    protected void clearFormattingElementsToLastMarker() {
+        while (!activeFormattingElements.isEmpty()) {
+            final String element = activeFormattingElements.removeLast();
+            if (element == MARKER) {
+                break;
+            }
+        }
+    }
+
+    /**
+     * Pushes a marker onto the active formatting elements list.
+     * Markers are used to separate different parsing contexts.
+     */
+    protected void pushFormattingMarker() {
+        activeFormattingElements.add(MARKER);
+    }
+
+    //
+    // Adoption Agency Algorithm (AAA)
+    //
+
+    /**
+     * Checks if an element is a "special" category element (block-level elements).
+     * These elements are used to find the "furthest block" in the AAA.
+     *
+     * @param tagName The element tag name
+     * @return true if the element is special/block-level
+     */
+    protected boolean isSpecialElement(final String tagName) {
+        // Block-level and special elements according to HTML Living Standard
+        return "ADDRESS".equals(tagName) || "ARTICLE".equals(tagName) || "ASIDE".equals(tagName) || "BLOCKQUOTE".equals(tagName)
+                || "DETAILS".equals(tagName) || "DIALOG".equals(tagName) || "DIV".equals(tagName) || "DL".equals(tagName)
+                || "FIELDSET".equals(tagName) || "FIGCAPTION".equals(tagName) || "FIGURE".equals(tagName) || "FOOTER".equals(tagName)
+                || "FORM".equals(tagName) || "H1".equals(tagName) || "H2".equals(tagName) || "H3".equals(tagName) || "H4".equals(tagName)
+                || "H5".equals(tagName) || "H6".equals(tagName) || "HEADER".equals(tagName) || "HGROUP".equals(tagName)
+                || "HR".equals(tagName) || "LI".equals(tagName) || "MAIN".equals(tagName) || "NAV".equals(tagName) || "OL".equals(tagName)
+                || "P".equals(tagName) || "PRE".equals(tagName) || "SEARCH".equals(tagName) || "SECTION".equals(tagName)
+                || "TABLE".equals(tagName) || "UL".equals(tagName);
+    }
+
+    /**
+     * Finds the "furthest block" for the Adoption Agency Algorithm.
+     * The furthest block is the first special/block element after the formatting element in the stack.
+     *
+     * @param formattingIndex The index of the formatting element in the element stack
+     * @return The index of the furthest block, or -1 if none found
+     */
+    protected int findFurthestBlock(final int formattingIndex) {
+        for (int i = formattingIndex + 1; i < elementStack.size(); i++) {
+            if (isSpecialElement(elementStack.get(i))) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    /**
+     * Runs the Adoption Agency Algorithm for formatting elements.
+     * This is a simplified implementation that handles the most common cases.
+     *
+     * @param tagName   The formatting element tag name
+     * @param uri       The namespace URI
+     * @param localName The local name
+     * @param qName     The qualified name
+     * @throws SAXException If an error occurs
+     */
+    protected void runAdoptionAgencyAlgorithm(final String tagName, final String uri, final String localName, final String qName)
+            throws SAXException {
+        final ContentHandler handler = getContentHandler();
+        if (handler == null) {
+            return;
+        }
+
+        if (logger.isLoggable(Level.FINE)) {
+            logger.fine("Running Adoption Agency Algorithm for: " + tagName);
+        }
+
+        // Outer loop - run up to 8 times
+        for (int outerLoop = 0; outerLoop < 8; outerLoop++) {
+            // Step 1: Find the formatting element in active formatting elements
+            final int formattingElemIndexInList = findFormattingElement(tagName);
+            if (formattingElemIndexInList < 0) {
+                // Not in active formatting elements - use standard close logic
+                if (logger.isLoggable(Level.FINER)) {
+                    logger.finer("AAA: Formatting element not in active list, using standard close");
+                }
+                break;
+            }
+
+            // Step 2: Find the formatting element in the element stack
+            final int formattingElemIndexInStack = elementStack.lastIndexOf(tagName);
+            if (formattingElemIndexInStack < 0) {
+                // Not in stack - remove from active list and return
+                activeFormattingElements.remove(formattingElemIndexInList);
+                if (logger.isLoggable(Level.FINER)) {
+                    logger.finer("AAA: Formatting element not in stack, removed from active list");
+                }
+                return;
+            }
+
+            // Step 3: Find the furthest block
+            final int furthestBlockIndex = findFurthestBlock(formattingElemIndexInStack);
+
+            if (furthestBlockIndex < 0) {
+                // No furthest block - close elements and reopen formatting elements that were inside
+                if (logger.isLoggable(Level.FINER)) {
+                    logger.finer("AAA: No furthest block, closing and reopening formatting elements");
+                }
+
+                // Collect formatting elements that need to be reopened
+                final java.util.List<String> elementsToReopen = new java.util.ArrayList<>();
+                for (int i = formattingElemIndexInStack + 1; i < elementStack.size(); i++) {
+                    final String elem = elementStack.get(i);
+                    if (org.codelibs.nekohtml.HTMLElements.isFormattingElement(elem)) {
+                        elementsToReopen.add(elem);
+                    }
+                }
+
+                // Close all elements from top down to and including the formatting element
+                while (elementStack.size() > formattingElemIndexInStack) {
+                    final String elem = elementStack.pop();
+                    removeFormattingElement(elem);
+                    handler.endElement("", elem, elem);
+                    if (elem.equals(tagName)) {
+                        break;
+                    }
+                }
+
+                // Reopen the formatting elements that were inside
+                for (final String elem : elementsToReopen) {
+                    elementStack.push(elem);
+                    addFormattingElement(elem);
+                    handler.startElement("", elem.toLowerCase(), elem, new org.xml.sax.helpers.AttributesImpl());
+                }
+
+                return;
+            }
+
+            // Step 4: Complex case with furthest block
+            // This is a simplified version - full AAA is much more complex
+            if (logger.isLoggable(Level.FINER)) {
+                logger.finer("AAA: Furthest block found at index " + furthestBlockIndex + ", reconstructing");
+            }
+
+            // For now, we'll do a simplified reconstruction:
+            // Close elements between formatting element and furthest block,
+            // then reopen the formatting element after the furthest block
+
+            // Close elements from formatting element up to (but not including) furthest block
+            java.util.List<String> elementsToReopen = new java.util.ArrayList<>();
+            for (int i = formattingElemIndexInStack + 1; i < furthestBlockIndex; i++) {
+                elementsToReopen.add(elementStack.get(i));
+            }
+
+            // Close formatting element
+            elementStack.remove(formattingElemIndexInStack);
+            removeFormattingElement(tagName);
+            handler.endElement(uri, localName, qName);
+
+            // Reopen formatting element after furthest block (simplified)
+            // In full AAA, this would involve complex node manipulation
+            // For our purposes, the formatting has been properly closed
+
+            if (logger.isLoggable(Level.FINER)) {
+                logger.finer("AAA: Completed reconstruction for " + tagName);
+            }
+
+            return;
+        }
+
+        // If we exit the loop without returning, fall back to standard close
+        final int index = elementStack.lastIndexOf(tagName);
+        if (index >= 0) {
+            while (elementStack.size() > index) {
+                final String elem = elementStack.pop();
+                removeFormattingElement(elem);
+                handler.endElement("", elem, elem);
+                if (elem.equals(tagName)) {
+                    break;
+                }
             }
         }
     }

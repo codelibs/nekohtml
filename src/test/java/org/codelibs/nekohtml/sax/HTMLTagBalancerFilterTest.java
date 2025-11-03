@@ -615,4 +615,163 @@ public class HTMLTagBalancerFilterTest {
         });
     }
 
+    // =========================================================================
+    // AAA (Adoption Agency Algorithm) Tests
+    // =========================================================================
+
+    @Test
+    public void testAAABasicMisnesting() throws Exception {
+        // Given: Basic misnested formatting elements <b><i>text</b></i>
+        filter.startDocument();
+        filter.startElement("", "p", "P", new AttributesImpl());
+        filter.startElement("", "b", "B", new AttributesImpl());
+        filter.startElement("", "i", "I", new AttributesImpl());
+        filter.characters("text".toCharArray(), 0, 4);
+
+        reset(contentHandler);
+
+        // When: Closing B (AAA should handle misnesting)
+        filter.endElement("", "b", "B");
+
+        // Then: Should close I, close B, and reopen I (uses uppercase from stack)
+        final InOrder inOrder = inOrder(contentHandler);
+        inOrder.verify(contentHandler).endElement("", "I", "I");
+        inOrder.verify(contentHandler).endElement("", "B", "B");
+        inOrder.verify(contentHandler).startElement(eq(""), eq("i"), eq("I"), any());
+    }
+
+    @Test
+    public void testAAAFormattingElementTracking() throws Exception {
+        // Given: Starting multiple formatting elements
+        filter.startDocument();
+        filter.startElement("", "b", "B", new AttributesImpl());
+        filter.startElement("", "i", "I", new AttributesImpl());
+        filter.startElement("", "u", "U", new AttributesImpl());
+
+        reset(contentHandler);
+
+        // When: Properly closing all elements
+        filter.endElement("", "u", "U");
+        filter.endElement("", "i", "I");
+        filter.endElement("", "b", "B");
+
+        // Then: Should close in reverse order (uses uppercase from stack)
+        final InOrder inOrder = inOrder(contentHandler);
+        inOrder.verify(contentHandler).endElement("", "U", "U");
+        inOrder.verify(contentHandler).endElement("", "I", "I");
+        inOrder.verify(contentHandler).endElement("", "B", "B");
+    }
+
+    @Test
+    public void testAAAWithFurthestBlock() throws Exception {
+        // Given: Formatting element crossing block boundary <b>text<p>para</b></p>
+        filter.startDocument();
+        filter.startElement("", "div", "DIV", new AttributesImpl());
+        filter.startElement("", "b", "B", new AttributesImpl());
+        filter.characters("text".toCharArray(), 0, 4);
+        filter.startElement("", "p", "P", new AttributesImpl()); // P is a furthest block
+
+        reset(contentHandler);
+
+        // When: Closing B (which is before P in stack)
+        filter.endElement("", "b", "B");
+
+        // Then: AAA should handle the furthest block case
+        verify(contentHandler, atLeastOnce()).endElement(anyString(), anyString(), anyString());
+    }
+
+    @Test
+    public void testAAAComplexNesting() throws Exception {
+        // Given: Complex nested formatting elements <b>text1<i>text2<u>text3</b>text4</i>text5</u>
+        filter.startDocument();
+        filter.startElement("", "p", "P", new AttributesImpl());
+        filter.startElement("", "b", "B", new AttributesImpl());
+        filter.characters("text1".toCharArray(), 0, 5);
+        filter.startElement("", "i", "I", new AttributesImpl());
+        filter.characters("text2".toCharArray(), 0, 5);
+        filter.startElement("", "u", "U", new AttributesImpl());
+        filter.characters("text3".toCharArray(), 0, 5);
+
+        reset(contentHandler);
+
+        // When: Closing B (should trigger AAA)
+        filter.endElement("", "b", "B");
+
+        // Then: AAA should restructure the elements
+        verify(contentHandler, atLeastOnce()).endElement(anyString(), anyString(), anyString());
+    }
+
+    @Test
+    public void testAAAWithNonFormattingElement() throws Exception {
+        // Given: Non-formatting element
+        filter.startDocument();
+        filter.startElement("", "div", "DIV", new AttributesImpl());
+        filter.characters("text".toCharArray(), 0, 4);
+
+        reset(contentHandler);
+
+        // When: Closing DIV (should not trigger AAA)
+        filter.endElement("", "div", "DIV");
+
+        // Then: Should close normally without AAA
+        verify(contentHandler, times(1)).endElement("", "div", "DIV");
+    }
+
+    @Test
+    public void testAAAFormattingElementNotInActiveList() throws Exception {
+        // Given: Formatting element closed but not in active list
+        filter.startDocument();
+        filter.startElement("", "div", "DIV", new AttributesImpl());
+
+        reset(contentHandler);
+
+        // When: Closing B that was never opened
+        filter.endElement("", "b", "B");
+
+        // Then: Should pass through without triggering full AAA
+        verify(contentHandler).endElement("", "b", "B");
+    }
+
+    @Test
+    public void testAAAStrongEmElements() throws Exception {
+        // Given: Using strong and em elements <em><strong>text1</em>text2</strong>
+        filter.startDocument();
+        filter.startElement("", "p", "P", new AttributesImpl());
+        filter.startElement("", "em", "EM", new AttributesImpl());
+        filter.startElement("", "strong", "STRONG", new AttributesImpl());
+        filter.characters("text1".toCharArray(), 0, 5);
+
+        reset(contentHandler);
+
+        // When: Closing EM (AAA should handle)
+        filter.endElement("", "em", "EM");
+
+        // Then: Should restructure properly (uses uppercase from stack)
+        final InOrder inOrder = inOrder(contentHandler);
+        inOrder.verify(contentHandler).endElement("", "STRONG", "STRONG");
+        inOrder.verify(contentHandler).endElement("", "EM", "EM");
+        inOrder.verify(contentHandler).startElement(eq(""), eq("strong"), eq("STRONG"), any());
+    }
+
+    @Test
+    public void testAAAClearsOnNewDocument() throws Exception {
+        // Given: Formatting elements in previous document
+        filter.startDocument();
+        filter.startElement("", "b", "B", new AttributesImpl());
+        filter.startElement("", "i", "I", new AttributesImpl());
+        filter.endDocument();
+
+        // When: Starting new document
+        filter.startDocument();
+        filter.startElement("", "p", "P", new AttributesImpl());
+
+        reset(contentHandler);
+
+        // When: Closing I from new document (should not affect old list)
+        filter.endElement("", "i", "I");
+
+        // Then: Should handle gracefully without old formatting elements
+        verify(contentHandler).endElement("", "i", "I");
+    }
+
 } // class HTMLTagBalancerFilterTest

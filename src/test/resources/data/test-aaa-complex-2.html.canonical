@@ -1,0 +1,16 @@
+(HTML
+(HEAD
+)HEAD
+(BODY
+(DIV
+(B
+"bold
+)B
+(P
+(B
+"paragraph in bold
+)B
+)P
+)DIV
+)BODY
+)HTML

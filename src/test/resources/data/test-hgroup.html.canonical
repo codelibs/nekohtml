@@ -1,0 +1,25 @@
+(HTML
+(HEAD
+)HEAD
+(BODY
+(ARTICLE
+"\n
+(HGROUP
+"\n
+(H1
+"Main Title
+)H1
+"\n
+(H2
+"Subtitle or Tagline
+)H2
+"\n
+)HGROUP
+"\n
+(P
+"Article content
+)P
+"\n
+)ARTICLE
+)BODY
+)HTML
