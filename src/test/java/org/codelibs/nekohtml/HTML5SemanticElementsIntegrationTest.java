@@ -38,7 +38,7 @@ public class HTML5SemanticElementsIntegrationTest {
     private DOMParser parser;
 
     @BeforeEach
-    public void setUp() {
+    public void setUp() throws Exception {
         parser = new DOMParser();
     }
 

@@ -41,7 +41,7 @@ public class EncodingEdgeCasesTest {
     private DOMParser parser;
 
     @BeforeEach
-    public void setUp() {
+    public void setUp() throws Exception {
         parser = new DOMParser();
     }
 
