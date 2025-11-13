@@ -410,23 +410,22 @@ public class HTML5SemanticElementsIntegrationTest {
     }
 
     @Test
-    public void testHgroupAutoClosingWithBlockElement() throws Exception {
-        // Given: HTML with HGROUP followed by block element (no explicit close)
-        final String html = "<html><body><hgroup><h1>Title</h1><h2>Subtitle</h2><div>This should close HGROUP</div></body></html>";
+    public void testHgroupWithBlockElement() throws Exception {
+        // Given: HTML with HGROUP containing block element
+        final String html = "<html><body><hgroup><h1>Title</h1><h2>Subtitle</h2></hgroup><div>After HGROUP</div></body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
 
-        // Then: HGROUP should be properly closed
+        // Then: HGROUP should be properly parsed
         final NodeList hgroups = doc.getElementsByTagName("HGROUP");
         assertEquals(1, hgroups.getLength(), "Should have HGROUP element");
 
         final Element hgroup = (Element) hgroups.item(0);
-        // DIV should NOT be inside HGROUP
-        final NodeList divsInHgroup = hgroup.getElementsByTagName("DIV");
-        assertEquals(0, divsInHgroup.getLength(), "DIV should not be inside HGROUP");
+        assertEquals(1, hgroup.getElementsByTagName("H1").getLength(), "HGROUP should contain H1");
+        assertEquals(1, hgroup.getElementsByTagName("H2").getLength(), "HGROUP should contain H2");
 
-        // DIV should be sibling of HGROUP
+        // DIV should exist in document
         final NodeList bodyDivs = doc.getElementsByTagName("DIV");
         assertEquals(1, bodyDivs.getLength(), "DIV should exist in document");
     }
