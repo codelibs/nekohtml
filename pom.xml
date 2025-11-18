@@ -142,6 +142,7 @@
 					</execution>
 				</executions>
 			</plugin>
+			<!-- Temporarily commented out due to repository access issues
 			<plugin>
 				<groupId>org.sonatype.central</groupId>
 				<artifactId>central-publishing-maven-plugin</artifactId>
@@ -149,8 +150,10 @@
 				<extensions>true</extensions>
 				<configuration>
 					<publishingServerId>central</publishingServerId>
+					<autoPublish>false</autoPublish>
 				</configuration>
 			</plugin>
+			-->
 		</plugins>
 	</build>
 	<dependencies>
