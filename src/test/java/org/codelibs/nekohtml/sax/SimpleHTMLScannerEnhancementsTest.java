@@ -255,8 +255,9 @@ public class SimpleHTMLScannerEnhancementsTest {
 
         scanner.parse(input);
 
-        assertTrue(elementNames.toString().contains("ns:custom"), "Should parse namespaced element");
-        assertTrue(elementNames.toString().contains("svg:circle"), "Should parse SVG namespaced element");
+        // Element names are normalized to uppercase by default
+        assertTrue(elementNames.toString().contains("NS:CUSTOM"), "Should parse namespaced element (uppercase)");
+        assertTrue(elementNames.toString().contains("SVG:CIRCLE"), "Should parse SVG namespaced element (uppercase)");
     }
 
     /**
@@ -279,7 +280,8 @@ public class SimpleHTMLScannerEnhancementsTest {
 
         scanner.parse(input);
 
-        assertTrue(elementNames.toString().contains("custom:item"), "Should parse custom namespaced element");
+        // Element names are normalized to uppercase by default
+        assertTrue(elementNames.toString().contains("CUSTOM:ITEM"), "Should parse custom namespaced element (uppercase)");
     }
 
     /**

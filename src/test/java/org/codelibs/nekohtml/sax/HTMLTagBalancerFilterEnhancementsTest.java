@@ -117,14 +117,18 @@ public class HTMLTagBalancerFilterEnhancementsTest {
     public void testNormalOperationAfterNullQName() throws Exception {
         filter.startDocument();
 
+        // Start with HTML to avoid auto-initialization
+        filter.startElement("", "html", "HTML", new AttributesImpl());
+
         // Try null qName
         filter.startElement("", "test", null, new AttributesImpl());
 
         // Then normal element
         filter.startElement("", "div", "DIV", new AttributesImpl());
 
-        assertEquals(1, startElements.size(), "Only valid element should be added");
-        assertEquals("DIV", startElements.get(0), "Valid element should be DIV");
+        assertEquals(2, startElements.size(), "HTML and DIV should be added");
+        assertEquals("HTML", startElements.get(0), "First element should be HTML");
+        assertEquals("DIV", startElements.get(1), "Second element should be DIV");
     }
 
     /**
@@ -241,19 +245,23 @@ public class HTMLTagBalancerFilterEnhancementsTest {
     public void testBalancingWithNullQNameInMiddle() throws Exception {
         filter.startDocument();
 
+        // Start with HTML to prevent auto-initialization
+        filter.startElement("", "html", "HTML", new AttributesImpl());
         filter.startElement("", "div", "DIV", new AttributesImpl());
         filter.startElement("", "p", "P", new AttributesImpl());
-        filter.endElement("", "invalid", null); // null qName
+        filter.endElement("", "invalid", null); // null qName - should be ignored
         filter.endElement("", "p", "P");
         filter.endElement("", "div", "DIV");
+        filter.endElement("", "html", "HTML");
 
         filter.endDocument();
 
         // Verify proper balancing despite null qName
-        assertEquals(2, startElements.size(), "Should have 2 start elements");
-        assertEquals(2, endElements.size(), "Should have 2 end elements");
+        assertEquals(3, startElements.size(), "Should have HTML, DIV, P");
+        assertEquals(3, endElements.size(), "Should have P, DIV, HTML");
         assertEquals("P", endElements.get(0), "First end should be P");
         assertEquals("DIV", endElements.get(1), "Second end should be DIV");
+        assertEquals("HTML", endElements.get(2), "Third end should be HTML");
     }
 
     /**
@@ -263,18 +271,22 @@ public class HTMLTagBalancerFilterEnhancementsTest {
     public void testEmptyQNameDoesNotBreakStack() throws Exception {
         filter.startDocument();
 
+        // Start with HTML to prevent auto-initialization
+        filter.startElement("", "html", "HTML", new AttributesImpl());
         filter.startElement("", "div", "DIV", new AttributesImpl());
-        filter.startElement("", "", "", new AttributesImpl()); // empty qName
+        filter.startElement("", "", "", new AttributesImpl()); // empty qName - should be ignored
         filter.startElement("", "span", "SPAN", new AttributesImpl());
         filter.endElement("", "span", "SPAN");
         filter.endElement("", "div", "DIV");
+        filter.endElement("", "html", "HTML");
 
         filter.endDocument();
 
         // Stack should be properly maintained
+        assertTrue(startElements.contains("HTML"), "HTML should be in start elements");
         assertTrue(startElements.contains("DIV"), "DIV should be in start elements");
         assertTrue(startElements.contains("SPAN"), "SPAN should be in start elements");
-        assertEquals(2, startElements.size(), "Should have exactly 2 start elements");
+        assertEquals(3, startElements.size(), "Should have exactly 3 start elements");
     }
 
     /**
@@ -284,14 +296,17 @@ public class HTMLTagBalancerFilterEnhancementsTest {
     public void testMultipleConsecutiveNullQNames() throws Exception {
         filter.startDocument();
 
+        // Start with HTML to prevent auto-initialization
+        filter.startElement("", "html", "HTML", new AttributesImpl());
         filter.startElement("", "div", "DIV", new AttributesImpl());
-        filter.startElement("", null, null, new AttributesImpl());
-        filter.startElement("", null, null, new AttributesImpl());
-        filter.startElement("", "", "", new AttributesImpl());
+        filter.startElement("", null, null, new AttributesImpl()); // ignored
+        filter.startElement("", null, null, new AttributesImpl()); // ignored
+        filter.startElement("", "", "", new AttributesImpl()); // ignored
         filter.startElement("", "span", "SPAN", new AttributesImpl());
 
-        assertEquals(2, startElements.size(), "Should only have valid elements");
-        assertEquals("DIV", startElements.get(0));
-        assertEquals("SPAN", startElements.get(1));
+        assertEquals(3, startElements.size(), "Should only have valid elements");
+        assertEquals("HTML", startElements.get(0));
+        assertEquals("DIV", startElements.get(1));
+        assertEquals("SPAN", startElements.get(2));
     }
 }

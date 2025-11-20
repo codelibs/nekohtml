@@ -189,7 +189,7 @@ public class SimpleHTMLScanner implements XMLReader {
                     if (logger.isLoggable(Level.FINE)) {
                         logger.fine("Opened input stream from SystemId: " + input.getSystemId());
                     }
-                } catch (final java.net.URISyntaxException | java.net.MalformedURLException e) {
+                } catch (final java.net.URISyntaxException | java.net.MalformedURLException | IllegalArgumentException e) {
                     // Try as a file path
                     try {
                         stream = new java.io.FileInputStream(input.getSystemId());
