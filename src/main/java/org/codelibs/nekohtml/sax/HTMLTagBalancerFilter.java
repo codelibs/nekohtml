@@ -697,20 +697,8 @@ public class HTMLTagBalancerFilter extends XMLFilterImpl implements LexicalHandl
                 elementsToReopen.add(elementStack.get(i));
             }
 
-            // Close formatting element - use pop/push operations instead of remove(index) for better performance
-            // Save elements after the formatting element
-            final java.util.List<String> elementsAfter = new java.util.ArrayList<>();
-            for (int i = formattingElemIndexInStack + 1; i < elementStack.size(); i++) {
-                elementsAfter.add(elementStack.get(i));
-            }
-            // Pop all elements down to and including the formatting element
-            while (elementStack.size() > formattingElemIndexInStack) {
-                elementStack.pop();
-            }
-            // Restore elements that were after
-            for (final String elem : elementsAfter) {
-                elementStack.push(elem);
-            }
+            // Close formatting element
+            elementStack.remove(formattingElemIndexInStack);
             removeFormattingElement(tagName);
             handler.endElement(uri, localName, qName);
 

@@ -490,16 +490,17 @@ public class SimpleHTMLScannerTest {
 
     @Test
     public void testParseSystemIdNotSupported() {
-        // Given: InputSource with only systemId
+        // Given: InputSource with only systemId that cannot be opened
         scanner.setContentHandler(contentHandler);
         final InputSource input = new InputSource();
-        input.setSystemId("http://example.com/test.html");
+        input.setSystemId("http://example.com/nonexistent.html");
 
-        // When/Then: Should throw SAXException for unsupported systemId
+        // When/Then: Should throw SAXException when SystemId cannot be opened
         final SAXException exception = assertThrows(SAXException.class, () -> {
             scanner.parse(input);
         });
-        assertTrue(exception.getMessage().contains("SystemId not yet supported"));
+        assertTrue(exception.getMessage().contains("Cannot open SystemId"),
+                "Expected message about unable to open SystemId, got: " + exception.getMessage());
     }
 
     @Test
@@ -517,13 +518,15 @@ public class SimpleHTMLScannerTest {
 
     @Test
     public void testParseStringSystemId() throws Exception {
-        // Given: System ID string
+        // Given: System ID string that cannot be opened
         scanner.setContentHandler(contentHandler);
 
-        // When/Then: Should throw exception (systemId not implemented)
-        assertThrows(SAXException.class, () -> {
-            scanner.parse("http://example.com/test.html");
+        // When/Then: Should throw SAXException when SystemId cannot be opened
+        final SAXException exception = assertThrows(SAXException.class, () -> {
+            scanner.parse("http://example.com/nonexistent.html");
         });
+        assertTrue(exception.getMessage().contains("Cannot open SystemId"),
+                "Expected message about unable to open SystemId, got: " + exception.getMessage());
     }
 
     @Test

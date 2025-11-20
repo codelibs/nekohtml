@@ -79,7 +79,7 @@ public class SimpleHTMLScanner implements XMLReader {
     protected String fAttributeCase = "lower";
 
     // HTML element patterns
-    private static final Pattern START_TAG = Pattern.compile("<([a-zA-Z][a-zA-Z0-9-:]*)([^>]*)>", Pattern.DOTALL);
+    private static final Pattern START_TAG = Pattern.compile("<([a-zA-Z][a-zA-Z0-9-:]*)([^>]*)>");
     private static final Pattern END_TAG = Pattern.compile("</([a-zA-Z][a-zA-Z0-9-:]*)\\s*>");
     private static final Pattern COMMENT = Pattern.compile("<!--(.*?)-->", Pattern.DOTALL);
     private static final Pattern DOCTYPE = Pattern.compile("<!DOCTYPE\\s+([^>]+)>", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
