@@ -321,11 +321,16 @@ public class HTMLElementsTest {
     @Test
     public void testElementEquals() {
         // Given: Elements
-        final Element div = HTMLElements.getElement(HTMLElements.DIV);
+        final Element div1 = HTMLElements.getElement(HTMLElements.DIV);
+        final Element div2 = HTMLElements.getElement("DIV");
+        final Element span = HTMLElements.getElement(HTMLElements.SPAN);
 
-        // Then: Element equals should work with name
-        assertTrue(div.equals("DIV"), "Element should equal its name");
-        assertFalse(div.equals("SPAN"), "Element should not equal different name");
+        // Then: Element equals should work with other elements
+        assertTrue(div1.equals(div2), "Elements with same name should be equal");
+        assertTrue(div1.equals(div1), "Element should equal itself");
+        assertFalse(div1.equals(span), "Elements with different names should not be equal");
+        assertFalse(div1.equals(null), "Element should not equal null");
+        assertFalse(div1.equals("DIV"), "Element should not equal String (type mismatch)");
     }
 
     @Test

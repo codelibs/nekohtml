@@ -79,11 +79,12 @@ public class SimpleHTMLScanner implements XMLReader {
     protected String fAttributeCase = "lower";
 
     // HTML element patterns
-    private static final Pattern START_TAG = Pattern.compile("<([a-zA-Z][a-zA-Z0-9-]*)([^>]*)>");
-    private static final Pattern END_TAG = Pattern.compile("</([a-zA-Z][a-zA-Z0-9-]*)>");
+    private static final Pattern START_TAG = Pattern.compile("<([a-zA-Z][a-zA-Z0-9-:]*)([^>]*)>");
+    private static final Pattern END_TAG = Pattern.compile("</([a-zA-Z][a-zA-Z0-9-:]*)\\s*>");
     private static final Pattern COMMENT = Pattern.compile("<!--(.*?)-->", Pattern.DOTALL);
-    private static final Pattern DOCTYPE = Pattern.compile("<!DOCTYPE\\s+([^>]+)>", Pattern.CASE_INSENSITIVE);
+    private static final Pattern DOCTYPE = Pattern.compile("<!DOCTYPE\\s+([^>]+)>", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
     private static final Pattern ATTRIBUTE = Pattern.compile("([a-zA-Z][a-zA-Z0-9:._-]*)(?:=(\"([^\"]*)\"|'([^']*)'|([^\\s>]+)))?");
+    private static final Pattern CDATA = Pattern.compile("<!\\[CDATA\\[(.*?)\\]\\]>", Pattern.DOTALL);
 
     // Void elements (self-closing in HTML5)
     private static final java.util.Set<String> VOID_ELEMENTS = new java.util.HashSet<>();
@@ -164,6 +165,10 @@ public class SimpleHTMLScanner implements XMLReader {
 
     @Override
     public void parse(final InputSource input) throws IOException, SAXException {
+        if (input == null) {
+            throw new SAXException("InputSource cannot be null");
+        }
+
         if (logger.isLoggable(Level.FINE)) {
             logger.fine("Starting HTML parsing from InputSource");
         }
@@ -177,8 +182,27 @@ public class SimpleHTMLScanner implements XMLReader {
         if (reader == null) {
             InputStream stream = input.getByteStream();
             if (stream == null && input.getSystemId() != null) {
-                // TODO: Open stream from systemId
-                throw new SAXException("SystemId not yet supported");
+                // Open stream from systemId
+                try {
+                    final java.net.URI uri = new java.net.URI(input.getSystemId());
+                    stream = uri.toURL().openStream();
+                    if (logger.isLoggable(Level.FINE)) {
+                        logger.fine("Opened input stream from SystemId: " + input.getSystemId());
+                    }
+                } catch (final java.net.URISyntaxException | java.net.MalformedURLException | IllegalArgumentException e) {
+                    // Try as a file path
+                    try {
+                        stream = new java.io.FileInputStream(input.getSystemId());
+                        if (logger.isLoggable(Level.FINE)) {
+                            logger.fine("Opened file input stream from SystemId: " + input.getSystemId());
+                        }
+                    } catch (final java.io.FileNotFoundException fnfe) {
+                        throw new SAXException("Cannot open SystemId: " + input.getSystemId(), fnfe);
+                    }
+                } catch (final IOException ioe) {
+                    // Wrap all IOExceptions (including FileNotFoundException from URL.openStream())
+                    throw new SAXException("Cannot open SystemId: " + input.getSystemId(), ioe);
+                }
             }
             if (stream != null) {
                 String encoding = input.getEncoding();
@@ -221,6 +245,10 @@ public class SimpleHTMLScanner implements XMLReader {
      * @throws SAXException If a SAX error occurs
      */
     protected void parseHTML(final String html) throws SAXException {
+        if (html == null) {
+            throw new SAXException("HTML content cannot be null");
+        }
+
         if (logger.isLoggable(Level.FINE)) {
             logger.fine("Begin HTML parsing");
         }
@@ -234,6 +262,29 @@ public class SimpleHTMLScanner implements XMLReader {
             final char ch = html.charAt(pos);
 
             if (ch == '<') {
+                // Check for CDATA section
+                if (html.startsWith("<![CDATA[", pos)) {
+                    final Matcher m = CDATA.matcher(html.substring(pos));
+                    if (m.find() && m.start() == 0) {
+                        if (fLexicalHandler != null) {
+                            fLexicalHandler.startCDATA();
+                            final String cdataText = m.group(1);
+                            if (cdataText.length() > 0) {
+                                fContentHandler.characters(cdataText.toCharArray(), 0, cdataText.length());
+                            }
+                            fLexicalHandler.endCDATA();
+                        } else {
+                            // If no lexical handler, just emit the CDATA content as text
+                            final String cdataText = m.group(1);
+                            if (cdataText.length() > 0) {
+                                fContentHandler.characters(cdataText.toCharArray(), 0, cdataText.length());
+                            }
+                        }
+                        pos += m.end();
+                        continue;
+                    }
+                }
+
                 // Check for comment
                 if (html.startsWith("<!--", pos)) {
                     final Matcher m = COMMENT.matcher(html.substring(pos));
@@ -360,6 +411,9 @@ public class SimpleHTMLScanner implements XMLReader {
      * @return The normalized name
      */
     protected String normalizeElementName(final String name) {
+        if (name == null || name.isEmpty()) {
+            return name;
+        }
         if (!fNormalizeElements) {
             return name;
         }
@@ -373,6 +427,9 @@ public class SimpleHTMLScanner implements XMLReader {
      * @return The normalized name
      */
     protected String normalizeAttributeName(final String name) {
+        if (name == null || name.isEmpty()) {
+            return name;
+        }
         if (!fNormalizeAttributes) {
             return name;
         }

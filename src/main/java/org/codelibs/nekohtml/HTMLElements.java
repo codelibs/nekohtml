@@ -1002,7 +1002,14 @@ public class HTMLElements {
         /** Returns true if the objects are equal. */
         @Override
         public boolean equals(final Object o) {
-            return name.equals(o);
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
+            final Element element = (Element) o;
+            return name.equals(element.name);
         } // equals(Object):boolean
 
         /**

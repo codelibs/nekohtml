@@ -258,6 +258,13 @@ public class HTMLTagBalancerFilter extends XMLFilterImpl implements LexicalHandl
             return;
         }
 
+        if (qName == null || qName.isEmpty()) {
+            if (logger.isLoggable(Level.WARNING)) {
+                logger.warning("Ignoring element with null or empty qName");
+            }
+            return;
+        }
+
         final String tagName = qName.toUpperCase();
 
         // If this is an HTML element, mark document as initialized but don't auto-add
@@ -297,6 +304,13 @@ public class HTMLTagBalancerFilter extends XMLFilterImpl implements LexicalHandl
     public void endElement(final String uri, final String localName, final String qName) throws SAXException {
         final ContentHandler handler = getContentHandler();
         if (handler == null) {
+            return;
+        }
+
+        if (qName == null || qName.isEmpty()) {
+            if (logger.isLoggable(Level.WARNING)) {
+                logger.warning("Ignoring end element with null or empty qName");
+            }
             return;
         }
 
