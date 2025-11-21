@@ -199,6 +199,9 @@ public class SimpleHTMLScanner implements XMLReader {
                     } catch (final java.io.FileNotFoundException fnfe) {
                         throw new SAXException("Cannot open SystemId: " + input.getSystemId(), fnfe);
                     }
+                } catch (final IOException ioe) {
+                    // Wrap all IOExceptions (including FileNotFoundException from URL.openStream())
+                    throw new SAXException("Cannot open SystemId: " + input.getSystemId(), ioe);
                 }
             }
             if (stream != null) {
