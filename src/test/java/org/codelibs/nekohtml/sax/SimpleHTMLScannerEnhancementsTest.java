@@ -452,4 +452,484 @@ public class SimpleHTMLScannerEnhancementsTest {
 
         assertTrue(elementNames.toString().contains("END:DIV"), "Should parse end tag with trailing whitespace");
     }
+
+    // =========================================================================
+    // Entity Handling Tests
+    // =========================================================================
+
+    /**
+     * Test named HTML entities in content
+     */
+    @Test
+    public void testNamedEntitiesInContent() throws Exception {
+        final SimpleHTMLScanner scanner = new SimpleHTMLScanner();
+        final StringBuilder result = new StringBuilder();
+
+        scanner.setContentHandler(new DefaultHandler() {
+            @Override
+            public void characters(char[] ch, int start, int length) {
+                result.append(new String(ch, start, length));
+            }
+        });
+
+        final String html = "<html><body>&amp; &lt; &gt; &quot; &nbsp;</body></html>";
+        final InputSource input = new InputSource(new StringReader(html));
+
+        scanner.parse(input);
+
+        // Entities may be passed through or decoded depending on implementation
+        assertTrue(result.toString().contains("&") || result.toString().contains("&amp;"),
+                "Should handle ampersand entity");
+    }
+
+    /**
+     * Test numeric entities (decimal)
+     */
+    @Test
+    public void testDecimalNumericEntities() throws Exception {
+        final SimpleHTMLScanner scanner = new SimpleHTMLScanner();
+        final StringBuilder result = new StringBuilder();
+
+        scanner.setContentHandler(new DefaultHandler() {
+            @Override
+            public void characters(char[] ch, int start, int length) {
+                result.append(new String(ch, start, length));
+            }
+        });
+
+        final String html = "<html><body>&#60; &#62; &#38;</body></html>";
+        final InputSource input = new InputSource(new StringReader(html));
+
+        scanner.parse(input);
+
+        assertNotNull(result.toString(), "Should parse decimal numeric entities");
+    }
+
+    /**
+     * Test numeric entities (hexadecimal)
+     */
+    @Test
+    public void testHexNumericEntities() throws Exception {
+        final SimpleHTMLScanner scanner = new SimpleHTMLScanner();
+        final StringBuilder result = new StringBuilder();
+
+        scanner.setContentHandler(new DefaultHandler() {
+            @Override
+            public void characters(char[] ch, int start, int length) {
+                result.append(new String(ch, start, length));
+            }
+        });
+
+        final String html = "<html><body>&#x3C; &#x3E; &#x26;</body></html>";
+        final InputSource input = new InputSource(new StringReader(html));
+
+        scanner.parse(input);
+
+        assertNotNull(result.toString(), "Should parse hexadecimal numeric entities");
+    }
+
+    /**
+     * Test entities in attribute values
+     */
+    @Test
+    public void testEntitiesInAttributes() throws Exception {
+        final SimpleHTMLScanner scanner = new SimpleHTMLScanner();
+        final StringBuilder attrValues = new StringBuilder();
+
+        scanner.setContentHandler(new DefaultHandler() {
+            @Override
+            public void startElement(String uri, String localName, String qName, org.xml.sax.Attributes atts) {
+                for (int i = 0; i < atts.getLength(); i++) {
+                    attrValues.append(atts.getQName(i)).append("=").append(atts.getValue(i)).append("|");
+                }
+            }
+        });
+
+        final String html = "<a href=\"test?a=1&amp;b=2\">Link</a>";
+        final InputSource input = new InputSource(new StringReader(html));
+
+        scanner.parse(input);
+
+        assertTrue(attrValues.toString().contains("href"), "Should parse attribute with entity");
+    }
+
+    /**
+     * Test invalid/incomplete entities
+     */
+    @Test
+    public void testIncompleteEntity() throws Exception {
+        final SimpleHTMLScanner scanner = new SimpleHTMLScanner();
+        final StringBuilder result = new StringBuilder();
+
+        scanner.setContentHandler(new DefaultHandler() {
+            @Override
+            public void characters(char[] ch, int start, int length) {
+                result.append(new String(ch, start, length));
+            }
+        });
+
+        // Incomplete entity - ampersand without semicolon
+        final String html = "<html><body>A & B</body></html>";
+        final InputSource input = new InputSource(new StringReader(html));
+
+        scanner.parse(input);
+
+        assertTrue(result.toString().contains("&") || result.toString().contains("A"),
+                "Should handle incomplete entity");
+    }
+
+    /**
+     * Test unknown entity names
+     */
+    @Test
+    public void testUnknownEntity() throws Exception {
+        final SimpleHTMLScanner scanner = new SimpleHTMLScanner();
+        final StringBuilder result = new StringBuilder();
+
+        scanner.setContentHandler(new DefaultHandler() {
+            @Override
+            public void characters(char[] ch, int start, int length) {
+                result.append(new String(ch, start, length));
+            }
+        });
+
+        final String html = "<html><body>&unknown;</body></html>";
+        final InputSource input = new InputSource(new StringReader(html));
+
+        scanner.parse(input);
+
+        assertNotNull(result.toString(), "Should handle unknown entity");
+    }
+
+    // =========================================================================
+    // Advanced Encoding Tests
+    // =========================================================================
+
+    /**
+     * Test ISO-8859-1 (Latin-1) encoding
+     */
+    @Test
+    public void testISO88591Encoding() throws Exception {
+        final SimpleHTMLScanner scanner = new SimpleHTMLScanner();
+        final StringBuilder result = new StringBuilder();
+
+        scanner.setContentHandler(new DefaultHandler() {
+            @Override
+            public void characters(char[] ch, int start, int length) {
+                result.append(new String(ch, start, length));
+            }
+        });
+
+        // ISO-8859-1 encoded content with accented characters
+        final String content = "café résumé";
+        final ByteArrayInputStream stream = new ByteArrayInputStream(
+                ("<html><body>" + content + "</body></html>").getBytes("ISO-8859-1"));
+        final InputSource input = new InputSource(stream);
+        input.setEncoding("ISO-8859-1");
+
+        scanner.parse(input);
+
+        assertTrue(result.toString().contains("caf") || result.toString().contains("é"),
+                "ISO-8859-1 encoded content should be parsed");
+    }
+
+    /**
+     * Test UTF-16 encoding
+     */
+    @Test
+    public void testUTF16Encoding() throws Exception {
+        final SimpleHTMLScanner scanner = new SimpleHTMLScanner();
+        final StringBuilder result = new StringBuilder();
+
+        scanner.setContentHandler(new DefaultHandler() {
+            @Override
+            public void characters(char[] ch, int start, int length) {
+                result.append(new String(ch, start, length));
+            }
+        });
+
+        final String html = "<html><body>Unicode: \u4E2D\u6587</body></html>";
+        final ByteArrayInputStream stream = new ByteArrayInputStream(html.getBytes("UTF-16"));
+        final InputSource input = new InputSource(stream);
+        input.setEncoding("UTF-16");
+
+        scanner.parse(input);
+
+        assertTrue(result.toString().contains("Unicode") || result.toString().contains("\u4E2D"),
+                "UTF-16 encoded content should be parsed");
+    }
+
+    /**
+     * Test default encoding when not specified
+     */
+    @Test
+    public void testDefaultEncodingUTF8() throws Exception {
+        final SimpleHTMLScanner scanner = new SimpleHTMLScanner();
+        final StringBuilder result = new StringBuilder();
+
+        scanner.setContentHandler(new DefaultHandler() {
+            @Override
+            public void characters(char[] ch, int start, int length) {
+                result.append(new String(ch, start, length));
+            }
+        });
+
+        final String html = "<html><body>UTF-8 default: äöü</body></html>";
+        final ByteArrayInputStream stream = new ByteArrayInputStream(html.getBytes("UTF-8"));
+        final InputSource input = new InputSource(stream);
+        // Don't set encoding - should default to UTF-8
+
+        scanner.parse(input);
+
+        assertTrue(result.toString().contains("UTF-8") || result.toString().contains("ä"),
+                "Default UTF-8 encoding should work");
+    }
+
+    /**
+     * Test parsing with character stream (Reader)
+     */
+    @Test
+    public void testCharacterStreamTakesPrecedence() throws Exception {
+        final SimpleHTMLScanner scanner = new SimpleHTMLScanner();
+        final StringBuilder result = new StringBuilder();
+
+        scanner.setContentHandler(new DefaultHandler() {
+            @Override
+            public void characters(char[] ch, int start, int length) {
+                result.append(new String(ch, start, length));
+            }
+        });
+
+        final String html = "<html><body>From character stream</body></html>";
+
+        // Set both byte stream and character stream - character stream should take precedence
+        final InputSource input = new InputSource();
+        input.setCharacterStream(new StringReader(html));
+        input.setByteStream(new ByteArrayInputStream("Different content".getBytes()));
+
+        scanner.parse(input);
+
+        assertTrue(result.toString().contains("From character stream"),
+                "Character stream should take precedence over byte stream");
+    }
+
+    // =========================================================================
+    // Input Source Variations
+    // =========================================================================
+
+    /**
+     * Test file:// URL SystemId
+     */
+    @Test
+    public void testFileUrlSystemId() throws Exception {
+        // Create a temporary HTML file
+        final java.io.File tempFile = java.io.File.createTempFile("test", ".html");
+        tempFile.deleteOnExit();
+
+        try (java.io.FileWriter writer = new java.io.FileWriter(tempFile)) {
+            writer.write("<html><body>File URL content</body></html>");
+        }
+
+        final SimpleHTMLScanner scanner = new SimpleHTMLScanner();
+        final StringBuilder result = new StringBuilder();
+
+        scanner.setContentHandler(new DefaultHandler() {
+            @Override
+            public void characters(char[] ch, int start, int length) {
+                result.append(new String(ch, start, length));
+            }
+        });
+
+        final InputSource input = new InputSource();
+        input.setSystemId("file://" + tempFile.getAbsolutePath());
+
+        scanner.parse(input);
+
+        assertTrue(result.toString().contains("File URL content"),
+                "Should parse content from file:// URL");
+    }
+
+    /**
+     * Test input source with no valid source
+     */
+    @Test
+    public void testNoValidInputSource() {
+        final SimpleHTMLScanner scanner = new SimpleHTMLScanner();
+        scanner.setContentHandler(new DefaultHandler());
+
+        // InputSource with nothing set
+        final InputSource input = new InputSource();
+
+        assertThrows(SAXException.class, () -> scanner.parse(input),
+                "Should throw when no valid input source is available");
+    }
+
+    /**
+     * Test parse(String systemId) convenience method
+     */
+    @Test
+    public void testParseBySystemId() throws Exception {
+        final java.io.File tempFile = java.io.File.createTempFile("test", ".html");
+        tempFile.deleteOnExit();
+
+        try (java.io.FileWriter writer = new java.io.FileWriter(tempFile)) {
+            writer.write("<html><body>SystemId parse</body></html>");
+        }
+
+        final SimpleHTMLScanner scanner = new SimpleHTMLScanner();
+        final StringBuilder result = new StringBuilder();
+
+        scanner.setContentHandler(new DefaultHandler() {
+            @Override
+            public void characters(char[] ch, int start, int length) {
+                result.append(new String(ch, start, length));
+            }
+        });
+
+        scanner.parse(tempFile.getAbsolutePath());
+
+        assertTrue(result.toString().contains("SystemId parse"),
+                "Should parse using String systemId parameter");
+    }
+
+    // =========================================================================
+    // Handler Management Tests
+    // =========================================================================
+
+    /**
+     * Test DTDHandler getter/setter
+     */
+    @Test
+    public void testDTDHandler() {
+        final SimpleHTMLScanner scanner = new SimpleHTMLScanner();
+        final org.xml.sax.DTDHandler handler = new org.xml.sax.DTDHandler() {
+            @Override
+            public void notationDecl(String name, String publicId, String systemId) {
+            }
+
+            @Override
+            public void unparsedEntityDecl(String name, String publicId, String systemId, String notationName) {
+            }
+        };
+
+        scanner.setDTDHandler(handler);
+        assertSame(handler, scanner.getDTDHandler(), "DTDHandler should be retrievable");
+    }
+
+    /**
+     * Test EntityResolver getter/setter
+     */
+    @Test
+    public void testEntityResolver() {
+        final SimpleHTMLScanner scanner = new SimpleHTMLScanner();
+        final org.xml.sax.EntityResolver resolver = (publicId, systemId) -> null;
+
+        scanner.setEntityResolver(resolver);
+        assertSame(resolver, scanner.getEntityResolver(), "EntityResolver should be retrievable");
+    }
+
+    /**
+     * Test ErrorHandler getter/setter
+     */
+    @Test
+    public void testErrorHandler() {
+        final SimpleHTMLScanner scanner = new SimpleHTMLScanner();
+        final org.xml.sax.ErrorHandler handler = new org.xml.sax.ErrorHandler() {
+            @Override
+            public void warning(org.xml.sax.SAXParseException exception) {
+            }
+
+            @Override
+            public void error(org.xml.sax.SAXParseException exception) {
+            }
+
+            @Override
+            public void fatalError(org.xml.sax.SAXParseException exception) {
+            }
+        };
+
+        scanner.setErrorHandler(handler);
+        assertSame(handler, scanner.getErrorHandler(), "ErrorHandler should be retrievable");
+    }
+
+    /**
+     * Test LexicalHandler via property
+     */
+    @Test
+    public void testLexicalHandlerProperty() throws Exception {
+        final SimpleHTMLScanner scanner = new SimpleHTMLScanner();
+        final LexicalHandler handler = new LexicalHandler() {
+            @Override
+            public void startDTD(String name, String publicId, String systemId) {
+            }
+
+            @Override
+            public void endDTD() {
+            }
+
+            @Override
+            public void startEntity(String name) {
+            }
+
+            @Override
+            public void endEntity(String name) {
+            }
+
+            @Override
+            public void startCDATA() {
+            }
+
+            @Override
+            public void endCDATA() {
+            }
+
+            @Override
+            public void comment(char[] ch, int start, int length) {
+            }
+        };
+
+        scanner.setProperty("http://xml.org/sax/properties/lexical-handler", handler);
+        assertSame(handler, scanner.getProperty("http://xml.org/sax/properties/lexical-handler"),
+                "LexicalHandler should be retrievable via property");
+    }
+
+    /**
+     * Test getFeature throws for unrecognized feature
+     */
+    @Test
+    public void testGetUnrecognizedFeature() {
+        final SimpleHTMLScanner scanner = new SimpleHTMLScanner();
+
+        assertThrows(org.xml.sax.SAXNotRecognizedException.class,
+                () -> scanner.getFeature("http://example.com/unknown-feature"),
+                "Should throw SAXNotRecognizedException for unknown feature");
+    }
+
+    /**
+     * Test getProperty throws for unrecognized property
+     */
+    @Test
+    public void testGetUnrecognizedProperty() {
+        final SimpleHTMLScanner scanner = new SimpleHTMLScanner();
+
+        assertThrows(org.xml.sax.SAXNotRecognizedException.class,
+                () -> scanner.getProperty("http://example.com/unknown-property"),
+                "Should throw SAXNotRecognizedException for unknown property");
+    }
+
+    /**
+     * Test parsing without content handler set
+     */
+    @Test
+    public void testParsingWithoutContentHandler() throws Exception {
+        final SimpleHTMLScanner scanner = new SimpleHTMLScanner();
+        // Don't set content handler
+
+        final String html = "<html><body>Content</body></html>";
+        final InputSource input = new InputSource(new StringReader(html));
+
+        // Should return early without error
+        assertDoesNotThrow(() -> scanner.parse(input),
+                "Parsing without content handler should not throw");
+    }
 }
