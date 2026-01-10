@@ -580,4 +580,300 @@ public class PerformanceStressTest {
         assertTrue(doc.getElementsByTagName("UL").getLength() > 0, "Should have lists");
         assertTrue(doc.getElementsByTagName("TABLE").getLength() > 0, "Should have tables");
     }
+
+    // ========================================================================
+    // Additional Stress Tests
+    // ========================================================================
+
+    @Test
+    @Timeout(15)
+    public void testVeryDeeplyNestedFormatting1000Levels() throws Exception {
+        // Given: 1000 levels of nested formatting elements
+        final StringBuilder html = new StringBuilder("<html><body>");
+        for (int i = 0; i < 1000; i++) {
+            html.append("<b>");
+        }
+        html.append("Deep text");
+        for (int i = 0; i < 1000; i++) {
+            html.append("</b>");
+        }
+        html.append("</body></html>");
+
+        // When: Parsing
+        final Document doc = parseHTML(html.toString());
+
+        // Then: Should handle extreme nesting without stack overflow
+        assertNotNull(doc, "Document should be parsed without stack overflow");
+    }
+
+    @Test
+    @Timeout(10)
+    public void testParseEmptyDocument() throws Exception {
+        // Given: Empty document
+        final String html = "";
+
+        // When: Parsing
+        final Document doc = parseHTML(html);
+
+        // Then: Should create document
+        assertNotNull(doc, "Empty document should be parsed");
+    }
+
+    @Test
+    @Timeout(10)
+    public void testParseWhitespaceOnlyDocument() throws Exception {
+        // Given: Whitespace-only document
+        final String html = "   \n\t\n   ";
+
+        // When: Parsing
+        final Document doc = parseHTML(html);
+
+        // Then: Should create document
+        assertNotNull(doc, "Whitespace document should be parsed");
+    }
+
+    @Test
+    @Timeout(15)
+    public void testManyNestedFormsWithInputs() throws Exception {
+        // Given: Many forms with inputs (stress test for form handling)
+        final StringBuilder html = new StringBuilder("<html><body>");
+        for (int i = 0; i < 500; i++) {
+            html.append("<form id=\"form").append(i).append("\">");
+            html.append("<input type=\"text\" name=\"field1\">");
+            html.append("<input type=\"text\" name=\"field2\">");
+            html.append("<input type=\"submit\" value=\"Submit\">");
+            html.append("</form>");
+        }
+        html.append("</body></html>");
+
+        // When: Parsing
+        final Document doc = parseHTML(html.toString());
+
+        // Then: Should handle many forms
+        assertNotNull(doc, "Document should be parsed");
+        assertEquals(500, doc.getElementsByTagName("FORM").getLength(), "Should have 500 forms");
+        assertEquals(1500, doc.getElementsByTagName("INPUT").getLength(), "Should have 1500 inputs");
+    }
+
+    @Test
+    @Timeout(10)
+    public void testHugeAttributeCount() throws Exception {
+        // Given: Element with 5000 attributes
+        final StringBuilder html = new StringBuilder("<html><body><div ");
+        for (int i = 0; i < 5000; i++) {
+            html.append("data-attr").append(i).append("=\"").append(i).append("\" ");
+        }
+        html.append(">Content</div></body></html>");
+
+        // When: Parsing
+        final Document doc = parseHTML(html.toString());
+
+        // Then: Should handle huge attribute count
+        assertNotNull(doc, "Document should be parsed");
+        final Element div = (Element) doc.getElementsByTagName("DIV").item(0);
+        assertNotNull(div, "DIV should exist");
+    }
+
+    @Test
+    @Timeout(20)
+    public void testConcurrentParsing() throws Exception {
+        // Given: Multiple parse operations
+        final int threadCount = 10;
+        final java.util.concurrent.CountDownLatch latch = new java.util.concurrent.CountDownLatch(threadCount);
+        final java.util.concurrent.atomic.AtomicInteger successCount = new java.util.concurrent.atomic.AtomicInteger(0);
+        final java.util.concurrent.atomic.AtomicInteger errorCount = new java.util.concurrent.atomic.AtomicInteger(0);
+
+        for (int t = 0; t < threadCount; t++) {
+            final int threadId = t;
+            new Thread(() -> {
+                try {
+                    final DOMParser threadParser = new DOMParser();
+                    final StringBuilder html = new StringBuilder("<html><body>");
+                    for (int i = 0; i < 100; i++) {
+                        html.append("<div>Thread ").append(threadId).append(" Element ").append(i).append("</div>");
+                    }
+                    html.append("</body></html>");
+
+                    threadParser.parse(new InputSource(new StringReader(html.toString())));
+                    final Document doc = threadParser.getDocument();
+
+                    if (doc != null && doc.getElementsByTagName("DIV").getLength() == 100) {
+                        successCount.incrementAndGet();
+                    } else {
+                        errorCount.incrementAndGet();
+                    }
+                } catch (final Exception e) {
+                    errorCount.incrementAndGet();
+                } finally {
+                    latch.countDown();
+                }
+            }).start();
+        }
+
+        latch.await();
+
+        // Then: All threads should succeed
+        assertEquals(threadCount, successCount.get(), "All threads should succeed");
+        assertEquals(0, errorCount.get(), "No errors should occur");
+    }
+
+    @Test
+    @Timeout(15)
+    public void testMisnestingStressTest() throws Exception {
+        // Given: Extremely misnested document
+        final StringBuilder html = new StringBuilder("<html><body>");
+        for (int i = 0; i < 100; i++) {
+            html.append("<b><i><u><div>");
+        }
+        html.append("Content");
+        // Close in completely wrong order
+        for (int i = 0; i < 100; i++) {
+            html.append("</b></u></div></i>");
+        }
+        html.append("</body></html>");
+
+        // When: Parsing
+        final Document doc = parseHTML(html.toString());
+
+        // Then: Should handle extreme misnesting
+        assertNotNull(doc, "Document should be parsed despite misnesting");
+    }
+
+    @Test
+    @Timeout(15)
+    public void testAlternatingBlockInline() throws Exception {
+        // Given: Rapidly alternating block and inline elements
+        final StringBuilder html = new StringBuilder("<html><body>");
+        for (int i = 0; i < 1000; i++) {
+            if (i % 2 == 0) {
+                html.append("<div>Block ").append(i).append("</div>");
+            } else {
+                html.append("<span>Inline ").append(i).append("</span>");
+            }
+        }
+        html.append("</body></html>");
+
+        // When: Parsing
+        final Document doc = parseHTML(html.toString());
+
+        // Then: Should handle alternating pattern
+        assertNotNull(doc, "Document should be parsed");
+        assertEquals(500, doc.getElementsByTagName("DIV").getLength(), "Should have 500 DIVs");
+        assertEquals(500, doc.getElementsByTagName("SPAN").getLength(), "Should have 500 SPANs");
+    }
+
+    @Test
+    @Timeout(15)
+    public void testVeryLongElementName() throws Exception {
+        // Given: Element with very long custom name (1000 chars)
+        final StringBuilder longName = new StringBuilder();
+        for (int i = 0; i < 1000; i++) {
+            longName.append("x");
+        }
+        final String html = "<html><body><" + longName + ">Content</" + longName + "></body></html>";
+
+        // When: Parsing
+        final Document doc = parseHTML(html);
+
+        // Then: Should handle long element name
+        assertNotNull(doc, "Document should be parsed");
+    }
+
+    @Test
+    @Timeout(15)
+    public void testManyVoidElements() throws Exception {
+        // Given: Many void elements in sequence
+        final StringBuilder html = new StringBuilder("<html><body>");
+        for (int i = 0; i < 5000; i++) {
+            html.append("<br><hr><img src=\"test.png\"><input type=\"hidden\">");
+        }
+        html.append("</body></html>");
+
+        // When: Parsing
+        final Document doc = parseHTML(html.toString());
+
+        // Then: Should handle many void elements
+        assertNotNull(doc, "Document should be parsed");
+        assertEquals(5000, doc.getElementsByTagName("BR").getLength(), "Should have 5000 BRs");
+        assertEquals(5000, doc.getElementsByTagName("HR").getLength(), "Should have 5000 HRs");
+    }
+
+    @Test
+    @Timeout(20)
+    public void testComplexRealWorldSimulation() throws Exception {
+        // Given: Simulated real-world complex page
+        final StringBuilder html = new StringBuilder();
+        html.append("<!DOCTYPE html><html lang=\"en\"><head>");
+        html.append("<meta charset=\"UTF-8\">");
+        html.append("<title>Complex Page</title>");
+        html.append("<style>body { margin: 0; }</style>");
+        html.append("<script>console.log('init');</script>");
+        html.append("</head><body>");
+
+        // Header with nav
+        html.append("<header><nav><ul>");
+        for (int i = 0; i < 20; i++) {
+            html.append("<li><a href=\"#").append(i).append("\">Link ").append(i).append("</a></li>");
+        }
+        html.append("</ul></nav></header>");
+
+        // Main content with multiple sections
+        html.append("<main>");
+        for (int section = 0; section < 50; section++) {
+            html.append("<section id=\"section").append(section).append("\">");
+            html.append("<h2>Section ").append(section).append("</h2>");
+            for (int para = 0; para < 5; para++) {
+                html.append("<p>Lorem ipsum dolor sit amet, <b>consectetur</b> adipiscing elit.</p>");
+            }
+            html.append("<table><thead><tr><th>Col1</th><th>Col2</th></tr></thead><tbody>");
+            for (int row = 0; row < 5; row++) {
+                html.append("<tr><td>Data ").append(row).append("</td><td>Value ").append(row).append("</td></tr>");
+            }
+            html.append("</tbody></table>");
+            html.append("</section>");
+        }
+        html.append("</main>");
+
+        // Sidebar
+        html.append("<aside>");
+        for (int widget = 0; widget < 10; widget++) {
+            html.append("<div class=\"widget\"><h3>Widget ").append(widget).append("</h3><p>Content</p></div>");
+        }
+        html.append("</aside>");
+
+        // Footer
+        html.append("<footer><p>&copy; 2024</p></footer>");
+        html.append("</body></html>");
+
+        // When: Parsing
+        final long startTime = System.currentTimeMillis();
+        final Document doc = parseHTML(html.toString());
+        final long elapsedTime = System.currentTimeMillis() - startTime;
+
+        // Then: Should handle complex real-world structure
+        assertNotNull(doc, "Document should be parsed");
+        assertEquals(1, doc.getElementsByTagName("HEADER").getLength(), "Should have HEADER");
+        assertEquals(1, doc.getElementsByTagName("MAIN").getLength(), "Should have MAIN");
+        assertEquals(1, doc.getElementsByTagName("FOOTER").getLength(), "Should have FOOTER");
+        assertEquals(50, doc.getElementsByTagName("SECTION").getLength(), "Should have 50 SECTIONs");
+        assertEquals(50, doc.getElementsByTagName("TABLE").getLength(), "Should have 50 TABLEs");
+
+        System.out.println("Parsed complex real-world simulation in " + elapsedTime + "ms");
+    }
+
+    @Test
+    @Timeout(10)
+    public void testRepeatedParsingWithSameParser() throws Exception {
+        // Given: Same parser instance used multiple times
+        final DOMParser reusableParser = new DOMParser();
+
+        for (int iteration = 0; iteration < 100; iteration++) {
+            final String html = "<html><body><div>Iteration " + iteration + "</div></body></html>";
+            reusableParser.parse(new InputSource(new StringReader(html)));
+            final Document doc = reusableParser.getDocument();
+
+            assertNotNull(doc, "Document should be parsed on iteration " + iteration);
+            assertEquals(1, doc.getElementsByTagName("DIV").getLength(), "Should have 1 DIV on iteration " + iteration);
+        }
+    }
 }

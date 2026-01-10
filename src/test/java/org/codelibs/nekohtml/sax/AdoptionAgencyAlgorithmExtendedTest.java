@@ -570,4 +570,420 @@ public class AdoptionAgencyAlgorithmExtendedTest {
         assertTrue(doc.getElementsByTagName("B").getLength() >= 1, "Should have B elements");
         assertEquals(3, doc.getElementsByTagName("DIV").getLength(), "Should have 3 DIVs");
     }
+
+    // ========================================================================
+    // AAA Outer Loop Limit Tests (HTML5 spec: max 8 iterations)
+    // ========================================================================
+
+    @Test
+    public void testAAAOuterLoopWithManyFormattingElements() throws Exception {
+        // Given: More than 8 nested formatting elements to test outer loop limit
+        final String html = "<html><body>"
+                + "<b><i><u><s><em><strong><code><tt><big><small>"
+                + "Text"
+                + "</b>" // Close B early to trigger AAA
+                + "</small></big></tt></code></strong></em></s></u></i>"
+                + "</body></html>";
+
+        // When: Parsing
+        final Document doc = parseHTML(html);
+
+        // Then: Should handle without infinite loop
+        assertNotNull(doc, "Document should be parsed without infinite loop");
+    }
+
+    @Test
+    public void testAAAWithExtremeNesting() throws Exception {
+        // Given: Very deeply nested formatting elements
+        final StringBuilder html = new StringBuilder("<html><body>");
+        final int depth = 20; // Well beyond the 8 iteration limit
+
+        for (int i = 0; i < depth; i++) {
+            html.append("<b>");
+        }
+        html.append("Text");
+        // Close only some, leaving mismatched structure
+        for (int i = 0; i < depth / 2; i++) {
+            html.append("</b>");
+        }
+        html.append("</body></html>");
+
+        // When: Parsing
+        final Document doc = parseHTML(html.toString());
+
+        // Then: Should handle extreme nesting gracefully
+        assertNotNull(doc, "Document should be parsed with extreme nesting");
+    }
+
+    @Test
+    public void testAAAWithAlternatingFormattingElements() throws Exception {
+        // Given: Alternating formatting elements beyond loop limit
+        final String html = "<html><body>"
+                + "<b><i><b><i><b><i><b><i><b><i><b><i>"
+                + "Deep text"
+                + "</b>" // Early close
+                + "</i></b></i></b></i></b></i></b></i></b></i>"
+                + "</body></html>";
+
+        // When: Parsing
+        final Document doc = parseHTML(html);
+
+        // Then: Should handle alternating pattern
+        assertNotNull(doc, "Document should be parsed with alternating patterns");
+    }
+
+    // ========================================================================
+    // Formatting Marker Tests (Table/Caption/TD/TH context boundaries)
+    // ========================================================================
+
+    @Test
+    public void testFormattingMarkerInTable() throws Exception {
+        // Given: Formatting elements crossing table cell boundaries
+        final String html = "<html><body>"
+                + "<b>Before table"
+                + "<table>"
+                + "<tr><td>Cell 1 <i>Italic in cell</td>"
+                + "<td>Cell 2</i></td></tr>"
+                + "</table>"
+                + "After table</b>"
+                + "</body></html>";
+
+        // When: Parsing
+        final Document doc = parseHTML(html);
+
+        // Then: Table should act as a formatting marker boundary
+        assertNotNull(doc, "Document should be parsed");
+        assertEquals(1, doc.getElementsByTagName("TABLE").getLength(), "Should have TABLE");
+        assertEquals(2, doc.getElementsByTagName("TD").getLength(), "Should have 2 TDs");
+    }
+
+    @Test
+    public void testFormattingMarkerInCaption() throws Exception {
+        // Given: Formatting elements in table caption
+        final String html = "<html><body>"
+                + "<table>"
+                + "<caption><b>Bold caption <div>Block in caption</div> continues</b></caption>"
+                + "<tr><td>Cell</td></tr>"
+                + "</table>"
+                + "</body></html>";
+
+        // When: Parsing
+        final Document doc = parseHTML(html);
+
+        // Then: Should handle caption as marker boundary
+        assertNotNull(doc, "Document should be parsed");
+        assertEquals(1, doc.getElementsByTagName("CAPTION").getLength(), "Should have CAPTION");
+    }
+
+    @Test
+    public void testFormattingMarkerInTH() throws Exception {
+        // Given: Formatting elements in table header
+        final String html = "<html><body>"
+                + "<table>"
+                + "<tr><th><b>Header <p>Para in header</p> continues</b></th></tr>"
+                + "<tr><td>Cell</td></tr>"
+                + "</table>"
+                + "</body></html>";
+
+        // When: Parsing
+        final Document doc = parseHTML(html);
+
+        // Then: Should handle TH as marker boundary
+        assertNotNull(doc, "Document should be parsed");
+        assertEquals(1, doc.getElementsByTagName("TH").getLength(), "Should have TH");
+    }
+
+    @Test
+    public void testFormattingAcrossMultipleTableCells() throws Exception {
+        // Given: Formatting spanning multiple cells (invalid but should be handled)
+        final String html = "<html><body>"
+                + "<table>"
+                + "<tr>"
+                + "<td><b>Start bold</td>"
+                + "<td>Middle cell</b></td>"
+                + "<td>Third cell</td>"
+                + "</tr>"
+                + "</table>"
+                + "</body></html>";
+
+        // When: Parsing
+        final Document doc = parseHTML(html);
+
+        // Then: Should handle cross-cell formatting
+        assertNotNull(doc, "Document should be parsed");
+        assertEquals(3, doc.getElementsByTagName("TD").getLength(), "Should have 3 TDs");
+    }
+
+    // ========================================================================
+    // AAA with Select Elements
+    // ========================================================================
+
+    @Test
+    public void testFormattingInSelectOption() throws Exception {
+        // Given: Formatting in select option (should be stripped)
+        final String html = "<html><body>"
+                + "<select>"
+                + "<option><b>Bold option</b></option>"
+                + "<option><i>Italic option</i></option>"
+                + "</select>"
+                + "</body></html>";
+
+        // When: Parsing
+        final Document doc = parseHTML(html);
+
+        // Then: Should parse select with options
+        assertNotNull(doc, "Document should be parsed");
+        assertEquals(1, doc.getElementsByTagName("SELECT").getLength(), "Should have SELECT");
+        assertEquals(2, doc.getElementsByTagName("OPTION").getLength(), "Should have 2 OPTIONs");
+    }
+
+    @Test
+    public void testFormattingSpanningSelect() throws Exception {
+        // Given: Formatting spanning across select (invalid)
+        final String html = "<html><body>"
+                + "<b>Before select"
+                + "<select><option>Option 1</option></select>"
+                + "After select</b>"
+                + "</body></html>";
+
+        // When: Parsing
+        final Document doc = parseHTML(html);
+
+        // Then: Should handle select boundary
+        assertNotNull(doc, "Document should be parsed");
+        assertEquals(1, doc.getElementsByTagName("SELECT").getLength(), "Should have SELECT");
+    }
+
+    // ========================================================================
+    // AAA with Button Elements
+    // ========================================================================
+
+    @Test
+    public void testFormattingInButton() throws Exception {
+        // Given: Formatting inside button
+        final String html = "<html><body>"
+                + "<button><b>Bold button <div>Block in button</div> text</b></button>"
+                + "</body></html>";
+
+        // When: Parsing
+        final Document doc = parseHTML(html);
+
+        // Then: Should handle button content
+        assertNotNull(doc, "Document should be parsed");
+        assertEquals(1, doc.getElementsByTagName("BUTTON").getLength(), "Should have BUTTON");
+    }
+
+    @Test
+    public void testFormattingSpanningButton() throws Exception {
+        // Given: Formatting spanning across button
+        final String html = "<html><body>"
+                + "<b>Before button"
+                + "<button>Click me</button>"
+                + "After button</b>"
+                + "</body></html>";
+
+        // When: Parsing
+        final Document doc = parseHTML(html);
+
+        // Then: Should handle button boundary
+        assertNotNull(doc, "Document should be parsed");
+        assertEquals(1, doc.getElementsByTagName("BUTTON").getLength(), "Should have BUTTON");
+    }
+
+    // ========================================================================
+    // AAA with Applet/Object/Marquee (obsolete marker elements)
+    // ========================================================================
+
+    @Test
+    public void testFormattingInObject() throws Exception {
+        // Given: Formatting inside object element
+        final String html = "<html><body>"
+                + "<object><b>Fallback <div>Block</div> content</b></object>"
+                + "</body></html>";
+
+        // When: Parsing
+        final Document doc = parseHTML(html);
+
+        // Then: Should handle object content
+        assertNotNull(doc, "Document should be parsed");
+        assertEquals(1, doc.getElementsByTagName("OBJECT").getLength(), "Should have OBJECT");
+    }
+
+    @Test
+    public void testFormattingInMarquee() throws Exception {
+        // Given: Formatting in marquee (deprecated but may appear)
+        final String html = "<html><body>"
+                + "<marquee><b>Scrolling <div>Block</div> text</b></marquee>"
+                + "</body></html>";
+
+        // When: Parsing
+        final Document doc = parseHTML(html);
+
+        // Then: Should handle marquee content
+        assertNotNull(doc, "Document should be parsed");
+        assertEquals(1, doc.getElementsByTagName("MARQUEE").getLength(), "Should have MARQUEE");
+    }
+
+    // ========================================================================
+    // AAA with Special Scope Elements
+    // ========================================================================
+
+    @Test
+    public void testFormattingWithFormElement() throws Exception {
+        // Given: Formatting crossing form boundary
+        final String html = "<html><body>"
+                + "<b>Before form"
+                + "<form><input type=\"text\"><div>Form content</div></form>"
+                + "After form</b>"
+                + "</body></html>";
+
+        // When: Parsing
+        final Document doc = parseHTML(html);
+
+        // Then: Should handle form boundary
+        assertNotNull(doc, "Document should be parsed");
+        assertEquals(1, doc.getElementsByTagName("FORM").getLength(), "Should have FORM");
+    }
+
+    @Test
+    public void testFormattingWithFieldset() throws Exception {
+        // Given: Formatting in fieldset with legend
+        final String html = "<html><body>"
+                + "<fieldset>"
+                + "<legend><b>Bold legend <div>Block</div></b></legend>"
+                + "<input type=\"text\">"
+                + "</fieldset>"
+                + "</body></html>";
+
+        // When: Parsing
+        final Document doc = parseHTML(html);
+
+        // Then: Should handle fieldset content
+        assertNotNull(doc, "Document should be parsed");
+        assertEquals(1, doc.getElementsByTagName("FIELDSET").getLength(), "Should have FIELDSET");
+        assertEquals(1, doc.getElementsByTagName("LEGEND").getLength(), "Should have LEGEND");
+    }
+
+    // ========================================================================
+    // AAA Inner Loop Limit Tests
+    // ========================================================================
+
+    @Test
+    public void testAAAInnerLoopWithManyActiveElements() throws Exception {
+        // Given: Many active formatting elements in list
+        final StringBuilder html = new StringBuilder("<html><body>");
+        // Create many formatting elements
+        for (int i = 0; i < 10; i++) {
+            html.append("<b>b").append(i).append(" ");
+        }
+        // Add a block to trigger reconstruction
+        html.append("<div>Block</div>");
+        // Close in reverse
+        for (int i = 0; i < 10; i++) {
+            html.append("</b>");
+        }
+        html.append("</body></html>");
+
+        // When: Parsing
+        final Document doc = parseHTML(html.toString());
+
+        // Then: Should handle many active elements
+        assertNotNull(doc, "Document should be parsed");
+        assertEquals(1, doc.getElementsByTagName("DIV").getLength(), "Should have DIV");
+    }
+
+    // ========================================================================
+    // AAA with Furthest Block Variations
+    // ========================================================================
+
+    @Test
+    public void testAAAWithMultipleFurthestBlockCandidates() throws Exception {
+        // Given: Multiple potential furthest blocks
+        final String html = "<html><body>"
+                + "<b>Bold <p>Para 1</p> <div>Div</div> <p>Para 2</p> continues</b>"
+                + "</body></html>";
+
+        // When: Parsing
+        final Document doc = parseHTML(html);
+
+        // Then: Should handle multiple blocks
+        assertNotNull(doc, "Document should be parsed");
+        assertEquals(2, doc.getElementsByTagName("P").getLength(), "Should have 2 P elements");
+        assertEquals(1, doc.getElementsByTagName("DIV").getLength(), "Should have DIV");
+    }
+
+    @Test
+    public void testAAAWithNoFurthestBlock() throws Exception {
+        // Given: Formatting element closed when no block is present
+        final String html = "<html><body><b><i><u>Text</u></i></b></body></html>";
+
+        // When: Parsing
+        final Document doc = parseHTML(html);
+
+        // Then: Should close normally (no AAA needed)
+        assertNotNull(doc, "Document should be parsed");
+        assertEquals(1, doc.getElementsByTagName("B").getLength(), "Should have B");
+        assertEquals(1, doc.getElementsByTagName("I").getLength(), "Should have I");
+        assertEquals(1, doc.getElementsByTagName("U").getLength(), "Should have U");
+    }
+
+    @Test
+    public void testAAAFurthestBlockIsImmediateChild() throws Exception {
+        // Given: Furthest block is immediate child of formatting element
+        final String html = "<html><body><b><div>Direct block child</div></b></body></html>";
+
+        // When: Parsing
+        final Document doc = parseHTML(html);
+
+        // Then: Should handle direct block child
+        assertNotNull(doc, "Document should be parsed");
+        assertEquals(1, doc.getElementsByTagName("DIV").getLength(), "Should have DIV");
+    }
+
+    // ========================================================================
+    // Stress Tests for AAA
+    // ========================================================================
+
+    @Test
+    public void testAAAWithManyInterleavedElements() throws Exception {
+        // Given: Many interleaved formatting and block elements
+        final StringBuilder html = new StringBuilder("<html><body>");
+        for (int i = 0; i < 50; i++) {
+            if (i % 2 == 0) {
+                html.append("<b>b").append(i);
+            } else {
+                html.append("<div>d").append(i).append("</div>");
+            }
+        }
+        for (int i = 0; i < 25; i++) {
+            html.append("</b>");
+        }
+        html.append("</body></html>");
+
+        // When: Parsing
+        final Document doc = parseHTML(html.toString());
+
+        // Then: Should handle interleaved pattern
+        assertNotNull(doc, "Document should be parsed with interleaved elements");
+    }
+
+    @Test
+    public void testAAAWithVeryLongFormattingElementList() throws Exception {
+        // Given: Very long active formatting element list
+        final StringBuilder html = new StringBuilder("<html><body>");
+        for (int i = 0; i < 100; i++) {
+            html.append("<b>");
+        }
+        html.append("<div>Block</div>");
+        for (int i = 0; i < 100; i++) {
+            html.append("</b>");
+        }
+        html.append("</body></html>");
+
+        // When: Parsing
+        final Document doc = parseHTML(html.toString());
+
+        // Then: Should handle long list without stack overflow
+        assertNotNull(doc, "Document should be parsed without stack overflow");
+    }
 }
