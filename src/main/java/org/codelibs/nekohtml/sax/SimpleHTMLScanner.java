@@ -26,6 +26,7 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.codelibs.nekohtml.HTMLEntities;
 import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.DTDHandler;
@@ -353,11 +354,12 @@ public class SimpleHTMLScanner implements XMLReader {
                 // Text content
                 final int nextTag = html.indexOf('<', pos);
                 final int endPos = nextTag >= 0 ? nextTag : length;
-                final String text = html.substring(pos, endPos);
+                final String rawText = html.substring(pos, endPos);
 
                 // Always emit text content, including whitespace
                 // This preserves spacing between elements for proper text extraction
-                if (text.length() > 0) {
+                if (rawText.length() > 0) {
+                    final String text = resolveEntities(rawText);
                     fContentHandler.characters(text.toCharArray(), 0, text.length());
                 }
 
@@ -398,7 +400,7 @@ public class SimpleHTMLScanner implements XMLReader {
                 value = ""; // No value
             }
 
-            attrs.addAttribute("", name, name, "CDATA", value);
+            attrs.addAttribute("", name, name, "CDATA", resolveEntities(value, true));
         }
 
         return attrs;
@@ -434,6 +436,125 @@ public class SimpleHTMLScanner implements XMLReader {
             return name;
         }
         return "upper".equals(fAttributeCase) ? name.toUpperCase() : "lower".equals(fAttributeCase) ? name.toLowerCase() : name;
+    }
+
+    // Pattern for HTML character references: &#decimal; or &#xhex; or &name;
+    // Semicolon is optional to handle common malformed HTML
+    private static final Pattern ENTITY_PATTERN = Pattern.compile("&(?:#([0-9]+)|#[xX]([0-9a-fA-F]+)|([a-zA-Z][a-zA-Z0-9]*));?");
+
+    /**
+     * Resolves HTML character entities in text content.
+     * Semicolon-less named entities are decoded in text context.
+     *
+     * @param text The text containing entities
+     * @return The text with entities resolved to their character equivalents
+     */
+    protected String resolveEntities(final String text) {
+        return resolveEntities(text, false);
+    }
+
+    /**
+     * Resolves HTML character entities in the given text.
+     * Handles numeric decimal (&#214;), numeric hex (&#xD6;), and named (&Ouml;) entities.
+     * In attribute context, semicolon-less named entities followed by [A-Za-z0-9=] are not decoded
+     * per HTML5 attribute value state rules, preventing corruption of URLs like &not=, &copy=.
+     *
+     * @param text The text containing entities
+     * @param inAttribute Whether this text is an attribute value
+     * @return The text with entities resolved to their character equivalents
+     */
+    protected String resolveEntities(final String text, final boolean inAttribute) {
+        if (text == null || text.indexOf('&') < 0) {
+            return text;
+        }
+
+        final Matcher m = ENTITY_PATTERN.matcher(text);
+        final StringBuilder sb = new StringBuilder(text.length());
+        int lastEnd = 0;
+
+        while (m.find()) {
+            sb.append(text, lastEnd, m.start());
+
+            if (m.group(1) != null) {
+                // Numeric decimal: &#214;
+                try {
+                    final int codePoint = Integer.parseInt(m.group(1));
+                    sb.append(resolveCodePoint(codePoint, m.group(0)));
+                } catch (final NumberFormatException e) {
+                    sb.append(m.group(0));
+                }
+            } else if (m.group(2) != null) {
+                // Numeric hex: &#xD6;
+                try {
+                    final int codePoint = Integer.parseInt(m.group(2), 16);
+                    sb.append(resolveCodePoint(codePoint, m.group(0)));
+                } catch (final NumberFormatException e) {
+                    sb.append(m.group(0));
+                }
+            } else if (m.group(3) != null) {
+                // Named entity: &Ouml;
+                final String matched = m.group(0);
+                final boolean hasSemicolon = matched.endsWith(";");
+
+                // HTML5 attribute value state: if no semicolon and next char is [A-Za-z0-9=],
+                // do not decode (prevents corruption of URLs like &not=2, &copy=, &reg=)
+                if (inAttribute && !hasSemicolon) {
+                    final int afterEnd = m.end();
+                    if (afterEnd < text.length()) {
+                        final char nextChar = text.charAt(afterEnd);
+                        if (Character.isLetterOrDigit(nextChar) || nextChar == '=') {
+                            sb.append(matched);
+                            lastEnd = m.end();
+                            continue;
+                        }
+                    }
+                }
+
+                final int c = HTMLEntities.get(m.group(3));
+                if (c != -1) {
+                    sb.appendCodePoint(c);
+                } else {
+                    sb.append(matched);
+                }
+            }
+
+            lastEnd = m.end();
+        }
+
+        sb.append(text, lastEnd, text.length());
+        return sb.toString();
+    }
+
+    /**
+     * Validates a numeric code point and returns the resolved character or replacement.
+     * Invalid code points (null char, surrogates, out of range, XML-illegal) are replaced with U+FFFD.
+     */
+    private static String resolveCodePoint(final int codePoint, final String original) {
+        if (codePoint == 0) {
+            // Null character: replace with U+FFFD per HTML5 spec
+            return "\uFFFD";
+        }
+        if (codePoint >= 0xD800 && codePoint <= 0xDFFF) {
+            // Surrogate range: invalid Unicode scalar value
+            return "\uFFFD";
+        }
+        if (codePoint > 0x10FFFF) {
+            // Out of Unicode range
+            return "\uFFFD";
+        }
+        // XML 1.0 illegal characters (except tab, newline, carriage return)
+        if (codePoint < 0x20 && codePoint != 0x9 && codePoint != 0xA && codePoint != 0xD) {
+            return "\uFFFD";
+        }
+        if (codePoint >= 0xFDD0 && codePoint <= 0xFDEF) {
+            // Unicode noncharacters
+            return "\uFFFD";
+        }
+        if ((codePoint & 0xFFFE) == 0xFFFE) {
+            // U+xFFFE and U+xFFFF are noncharacters
+            return "\uFFFD";
+        }
+        return new String(Character.toChars(codePoint));
     }
 
     @Override

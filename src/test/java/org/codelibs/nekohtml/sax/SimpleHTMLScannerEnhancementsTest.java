@@ -477,9 +477,13 @@ public class SimpleHTMLScannerEnhancementsTest {
 
         scanner.parse(input);
 
-        // Entities may be passed through or decoded depending on implementation
-        assertTrue(result.toString().contains("&") || result.toString().contains("&amp;"),
-                "Should handle ampersand entity");
+        // Entity decoding should produce actual characters
+        final String decoded = result.toString();
+        assertTrue(decoded.contains("&"), "Should decode &amp; to &");
+        assertTrue(decoded.contains("<"), "Should decode &lt; to <");
+        assertTrue(decoded.contains(">"), "Should decode &gt; to >");
+        assertTrue(decoded.contains("\""), "Should decode &quot; to \"");
+        assertTrue(decoded.contains("\u00A0"), "Should decode &nbsp; to non-breaking space");
     }
 
     /**
@@ -502,7 +506,11 @@ public class SimpleHTMLScannerEnhancementsTest {
 
         scanner.parse(input);
 
-        assertNotNull(result.toString(), "Should parse decimal numeric entities");
+        // &#60; = <, &#62; = >, &#38; = &
+        final String decoded = result.toString();
+        assertTrue(decoded.contains("<"), "Should decode &#60; to <");
+        assertTrue(decoded.contains(">"), "Should decode &#62; to >");
+        assertTrue(decoded.contains("&"), "Should decode &#38; to &");
     }
 
     /**
@@ -525,7 +533,11 @@ public class SimpleHTMLScannerEnhancementsTest {
 
         scanner.parse(input);
 
-        assertNotNull(result.toString(), "Should parse hexadecimal numeric entities");
+        // &#x3C; = <, &#x3E; = >, &#x26; = &
+        final String decoded = result.toString();
+        assertTrue(decoded.contains("<"), "Should decode &#x3C; to <");
+        assertTrue(decoded.contains(">"), "Should decode &#x3E; to >");
+        assertTrue(decoded.contains("&"), "Should decode &#x26; to &");
     }
 
     /**
@@ -550,7 +562,8 @@ public class SimpleHTMLScannerEnhancementsTest {
 
         scanner.parse(input);
 
-        assertTrue(attrValues.toString().contains("href"), "Should parse attribute with entity");
+        final String attrs = attrValues.toString();
+        assertTrue(attrs.contains("href=test?a=1&b=2"), "Should decode &amp; in attribute to &");
     }
 
     /**
@@ -574,8 +587,7 @@ public class SimpleHTMLScannerEnhancementsTest {
 
         scanner.parse(input);
 
-        assertTrue(result.toString().contains("&") || result.toString().contains("A"),
-                "Should handle incomplete entity");
+        assertTrue(result.toString().contains("A & B"), "Should preserve incomplete entity as literal text");
     }
 
     /**
@@ -598,7 +610,91 @@ public class SimpleHTMLScannerEnhancementsTest {
 
         scanner.parse(input);
 
-        assertNotNull(result.toString(), "Should handle unknown entity");
+        assertTrue(result.toString().contains("&unknown;"), "Should preserve unknown entity as literal text");
+    }
+
+    /**
+     * Test that semicolon-less named entities in URL attributes are NOT decoded
+     * (HTML5 attribute value state rule: &not=, &copy=, &reg= must be preserved)
+     */
+    @Test
+    public void testSemicolonlessEntitiesInUrlAttributes() throws Exception {
+        final SimpleHTMLScanner scanner = new SimpleHTMLScanner();
+        final StringBuilder attrValues = new StringBuilder();
+
+        scanner.setContentHandler(new DefaultHandler() {
+            @Override
+            public void startElement(String uri, String localName, String qName, org.xml.sax.Attributes atts) {
+                for (int i = 0; i < atts.getLength(); i++) {
+                    attrValues.append(atts.getQName(i)).append("=").append(atts.getValue(i)).append("|");
+                }
+            }
+        });
+
+        final String html = "<a href=\"/x?a=1&not=2&copy=3&reg=4\">Link</a>";
+        final InputSource input = new InputSource(new StringReader(html));
+
+        scanner.parse(input);
+
+        final String attrs = attrValues.toString();
+        assertTrue(attrs.contains("href=/x?a=1&not=2&copy=3&reg=4"),
+                "Semicolon-less named entities in attributes should be preserved as-is, got: " + attrs);
+    }
+
+    /**
+     * Test that invalid numeric references produce U+FFFD replacement character
+     */
+    @Test
+    public void testInvalidNumericReferences() throws Exception {
+        final SimpleHTMLScanner scanner = new SimpleHTMLScanner();
+        final StringBuilder result = new StringBuilder();
+
+        scanner.setContentHandler(new DefaultHandler() {
+            @Override
+            public void characters(char[] ch, int start, int length) {
+                result.append(new String(ch, start, length));
+            }
+        });
+
+        // &#0; (null), &#xD800; (surrogate), &#x1; (control char)
+        final String html = "<html><body>&#0; &#xD800; &#x1;</body></html>";
+        final InputSource input = new InputSource(new StringReader(html));
+
+        scanner.parse(input);
+
+        final String decoded = result.toString();
+        // All invalid code points should be replaced with U+FFFD
+        assertEquals(
+                3,
+                decoded.chars().filter(c -> c == 0xFFFD).count(),
+                "Invalid numeric references should be replaced with U+FFFD, got: "
+                        + decoded.codePoints().mapToObj(cp -> String.format("U+%04X", cp)).reduce("", (a, b) -> a + " " + b));
+    }
+
+    /**
+     * Test that semicolon-less named entities ARE decoded in text context
+     */
+    @Test
+    public void testSemicolonlessEntitiesInTextContent() throws Exception {
+        final SimpleHTMLScanner scanner = new SimpleHTMLScanner();
+        final StringBuilder result = new StringBuilder();
+
+        scanner.setContentHandler(new DefaultHandler() {
+            @Override
+            public void characters(char[] ch, int start, int length) {
+                result.append(new String(ch, start, length));
+            }
+        });
+
+        final String html = "<html><body>&amp &lt &gt</body></html>";
+        final InputSource input = new InputSource(new StringReader(html));
+
+        scanner.parse(input);
+
+        final String decoded = result.toString();
+        assertTrue(decoded.contains("&"), "Should decode &amp (without semicolon) in text");
+        assertTrue(decoded.contains("<"), "Should decode &lt (without semicolon) in text");
+        assertTrue(decoded.contains(">"), "Should decode &gt (without semicolon) in text");
     }
 
     // =========================================================================
@@ -622,15 +718,13 @@ public class SimpleHTMLScannerEnhancementsTest {
 
         // ISO-8859-1 encoded content with accented characters
         final String content = "café résumé";
-        final ByteArrayInputStream stream = new ByteArrayInputStream(
-                ("<html><body>" + content + "</body></html>").getBytes("ISO-8859-1"));
+        final ByteArrayInputStream stream = new ByteArrayInputStream(("<html><body>" + content + "</body></html>").getBytes("ISO-8859-1"));
         final InputSource input = new InputSource(stream);
         input.setEncoding("ISO-8859-1");
 
         scanner.parse(input);
 
-        assertTrue(result.toString().contains("caf") || result.toString().contains("é"),
-                "ISO-8859-1 encoded content should be parsed");
+        assertTrue(result.toString().contains("caf") || result.toString().contains("é"), "ISO-8859-1 encoded content should be parsed");
     }
 
     /**
@@ -655,8 +749,7 @@ public class SimpleHTMLScannerEnhancementsTest {
 
         scanner.parse(input);
 
-        assertTrue(result.toString().contains("Unicode") || result.toString().contains("\u4E2D"),
-                "UTF-16 encoded content should be parsed");
+        assertTrue(result.toString().contains("Unicode") || result.toString().contains("\u4E2D"), "UTF-16 encoded content should be parsed");
     }
 
     /**
@@ -681,8 +774,7 @@ public class SimpleHTMLScannerEnhancementsTest {
 
         scanner.parse(input);
 
-        assertTrue(result.toString().contains("UTF-8") || result.toString().contains("ä"),
-                "Default UTF-8 encoding should work");
+        assertTrue(result.toString().contains("UTF-8") || result.toString().contains("ä"), "Default UTF-8 encoding should work");
     }
 
     /**
@@ -709,8 +801,7 @@ public class SimpleHTMLScannerEnhancementsTest {
 
         scanner.parse(input);
 
-        assertTrue(result.toString().contains("From character stream"),
-                "Character stream should take precedence over byte stream");
+        assertTrue(result.toString().contains("From character stream"), "Character stream should take precedence over byte stream");
     }
 
     // =========================================================================
@@ -745,8 +836,7 @@ public class SimpleHTMLScannerEnhancementsTest {
 
         scanner.parse(input);
 
-        assertTrue(result.toString().contains("File URL content"),
-                "Should parse content from file:// URL");
+        assertTrue(result.toString().contains("File URL content"), "Should parse content from file:// URL");
     }
 
     /**
@@ -760,8 +850,7 @@ public class SimpleHTMLScannerEnhancementsTest {
         // InputSource with nothing set
         final InputSource input = new InputSource();
 
-        assertThrows(SAXException.class, () -> scanner.parse(input),
-                "Should throw when no valid input source is available");
+        assertThrows(SAXException.class, () -> scanner.parse(input), "Should throw when no valid input source is available");
     }
 
     /**
@@ -788,8 +877,7 @@ public class SimpleHTMLScannerEnhancementsTest {
 
         scanner.parse(tempFile.getAbsolutePath());
 
-        assertTrue(result.toString().contains("SystemId parse"),
-                "Should parse using String systemId parameter");
+        assertTrue(result.toString().contains("SystemId parse"), "Should parse using String systemId parameter");
     }
 
     // =========================================================================
@@ -900,8 +988,7 @@ public class SimpleHTMLScannerEnhancementsTest {
     public void testGetUnrecognizedFeature() {
         final SimpleHTMLScanner scanner = new SimpleHTMLScanner();
 
-        assertThrows(org.xml.sax.SAXNotRecognizedException.class,
-                () -> scanner.getFeature("http://example.com/unknown-feature"),
+        assertThrows(org.xml.sax.SAXNotRecognizedException.class, () -> scanner.getFeature("http://example.com/unknown-feature"),
                 "Should throw SAXNotRecognizedException for unknown feature");
     }
 
@@ -912,8 +999,7 @@ public class SimpleHTMLScannerEnhancementsTest {
     public void testGetUnrecognizedProperty() {
         final SimpleHTMLScanner scanner = new SimpleHTMLScanner();
 
-        assertThrows(org.xml.sax.SAXNotRecognizedException.class,
-                () -> scanner.getProperty("http://example.com/unknown-property"),
+        assertThrows(org.xml.sax.SAXNotRecognizedException.class, () -> scanner.getProperty("http://example.com/unknown-property"),
                 "Should throw SAXNotRecognizedException for unknown property");
     }
 
@@ -929,7 +1015,6 @@ public class SimpleHTMLScannerEnhancementsTest {
         final InputSource input = new InputSource(new StringReader(html));
 
         // Should return early without error
-        assertDoesNotThrow(() -> scanner.parse(input),
-                "Parsing without content handler should not throw");
+        assertDoesNotThrow(() -> scanner.parse(input), "Parsing without content handler should not throw");
     }
 }

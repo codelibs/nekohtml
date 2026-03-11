@@ -58,22 +58,11 @@ public class AdoptionAgencyAlgorithmExtendedTest {
     @Test
     public void testAllFormattingElementsBasic() throws Exception {
         // Given: HTML with all formatting elements
-        final String html = "<html><body>"
-                + "<a href=\"#\">Link</a>"
-                + "<b>Bold</b>"
-                + "<big>Big</big>"
-                + "<code>Code</code>"
-                + "<em>Emphasis</em>"
-                + "<font>Font</font>"
-                + "<i>Italic</i>"
-                + "<nobr>NoBreak</nobr>"
-                + "<s>Strike</s>"
-                + "<small>Small</small>"
-                + "<strike>Strike</strike>"
-                + "<strong>Strong</strong>"
-                + "<tt>Teletype</tt>"
-                + "<u>Underline</u>"
-                + "</body></html>";
+        final String html =
+                "<html><body>" + "<a href=\"#\">Link</a>" + "<b>Bold</b>" + "<big>Big</big>" + "<code>Code</code>" + "<em>Emphasis</em>"
+                        + "<font>Font</font>" + "<i>Italic</i>" + "<nobr>NoBreak</nobr>" + "<s>Strike</s>" + "<small>Small</small>"
+                        + "<strike>Strike</strike>" + "<strong>Strong</strong>" + "<tt>Teletype</tt>" + "<u>Underline</u>"
+                        + "</body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -170,15 +159,9 @@ public class AdoptionAgencyAlgorithmExtendedTest {
     @Test
     public void testFormattingElementsWithComplexBlockStructure() throws Exception {
         // Given: Formatting elements with complex block structure
-        final String html = "<html><body>"
-                + "<b>Start"
-                + "<div>Div 1"
-                + "<p>Para 1</p>"
-                + "<blockquote>Quote</blockquote>"
-                + "</div>"
-                + "<section>Section</section>"
-                + "End</b>"
-                + "</body></html>";
+        final String html =
+                "<html><body>" + "<b>Start" + "<div>Div 1" + "<p>Para 1</p>" + "<blockquote>Quote</blockquote>" + "</div>"
+                        + "<section>Section</section>" + "End</b>" + "</body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -199,10 +182,9 @@ public class AdoptionAgencyAlgorithmExtendedTest {
     @Test
     public void testFormattingElementsWithIdenticalAttributes() throws Exception {
         // Given: Multiple formatting elements with same attributes
-        final String html = "<html><body>"
-                + "<a href=\"#1\" class=\"link\">Link 1 <div>Block</div> continues</a>"
-                + "<a href=\"#2\" class=\"link\">Link 2 <p>Para</p> continues</a>"
-                + "</body></html>";
+        final String html =
+                "<html><body>" + "<a href=\"#1\" class=\"link\">Link 1 <div>Block</div> continues</a>"
+                        + "<a href=\"#2\" class=\"link\">Link 2 <p>Para</p> continues</a>" + "</body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -216,9 +198,7 @@ public class AdoptionAgencyAlgorithmExtendedTest {
     @Test
     public void testFontElementWithAttributes() throws Exception {
         // Given: FONT element with attributes crossing block
-        final String html = "<html><body>"
-                + "<font color=\"red\" size=\"3\">Red text <div>Block</div> continues</font>"
-                + "</body></html>";
+        final String html = "<html><body>" + "<font color=\"red\" size=\"3\">Red text <div>Block</div> continues</font>" + "</body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -271,10 +251,10 @@ public class AdoptionAgencyAlgorithmExtendedTest {
     @Test
     public void testComplexTableWithFormattingElements() throws Exception {
         // Given: Complex table with formatting elements
-        final String html = "<html><body><table>"
-                + "<tr><td><b>Bold</b></td><td><i>Italic</i></td></tr>"
-                + "<tr><td><strong>Strong <p>Para</p></strong></td><td><em>Em <div>Div</div></em></td></tr>"
-                + "</table></body></html>";
+        final String html =
+                "<html><body><table>" + "<tr><td><b>Bold</b></td><td><i>Italic</i></td></tr>"
+                        + "<tr><td><strong>Strong <p>Para</p></strong></td><td><em>Em <div>Div</div></em></td></tr>"
+                        + "</table></body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -309,10 +289,9 @@ public class AdoptionAgencyAlgorithmExtendedTest {
     @Test
     public void testFormattingElementInListItems() throws Exception {
         // Given: Formatting elements in list items
-        final String html = "<html><body><ul>"
-                + "<li><b>Bold <div>Block</div> continues</b></li>"
-                + "<li><i>Italic <p>Para</p> continues</i></li>"
-                + "</ul></body></html>";
+        final String html =
+                "<html><body><ul>" + "<li><b>Bold <div>Block</div> continues</b></li>" + "<li><i>Italic <p>Para</p> continues</i></li>"
+                        + "</ul></body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -345,11 +324,9 @@ public class AdoptionAgencyAlgorithmExtendedTest {
     @Test
     public void testFormattingElementsAcrossSemanticElements() throws Exception {
         // Given: Formatting elements crossing semantic boundaries
-        final String html = "<html><body><b>Bold "
-                + "<article>Article</article> "
-                + "<section>Section</section> "
-                + "<nav>Nav</nav> "
-                + "end</b></body></html>";
+        final String html =
+                "<html><body><b>Bold " + "<article>Article</article> " + "<section>Section</section> " + "<nav>Nav</nav> "
+                        + "end</b></body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -365,13 +342,10 @@ public class AdoptionAgencyAlgorithmExtendedTest {
     @Test
     public void testComplexSemanticStructureWithFormatting() throws Exception {
         // Given: Complex semantic structure with formatting
-        final String html = "<html><body>"
-                + "<article>"
-                + "<header><b>Header <h1>Title</h1> continues</b></header>"
-                + "<section><i>Section <p>Para</p> continues</i></section>"
-                + "<footer><strong>Footer <div>Div</div> continues</strong></footer>"
-                + "</article>"
-                + "</body></html>";
+        final String html =
+                "<html><body>" + "<article>" + "<header><b>Header <h1>Title</h1> continues</b></header>"
+                        + "<section><i>Section <p>Para</p> continues</i></section>"
+                        + "<footer><strong>Footer <div>Div</div> continues</strong></footer>" + "</article>" + "</body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -455,9 +429,7 @@ public class AdoptionAgencyAlgorithmExtendedTest {
     @Test
     public void testComplexMisnestingPattern() throws Exception {
         // Given: Very complex misnesting
-        final String html = "<html><body>"
-                + "<b><i><u><strong>Text<div>Block</strong></u></i></div></b>"
-                + "</body></html>";
+        final String html = "<html><body>" + "<b><i><u><strong>Text<div>Block</strong></u></i></div></b>" + "</body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -537,11 +509,9 @@ public class AdoptionAgencyAlgorithmExtendedTest {
     @Test
     public void testAllFormattingElementsTogether() throws Exception {
         // Given: All formatting elements used together
-        final String html = "<html><body>"
-                + "<b><i><u><strong><em><small><big><code><tt><s><strike>"
-                + "Text <div>Block</div> continues"
-                + "</strike></s></tt></code></big></small></em></strong></u></i></b>"
-                + "</body></html>";
+        final String html =
+                "<html><body>" + "<b><i><u><strong><em><small><big><code><tt><s><strike>" + "Text <div>Block</div> continues"
+                        + "</strike></s></tt></code></big></small></em></strong></u></i></b>" + "</body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -554,13 +524,9 @@ public class AdoptionAgencyAlgorithmExtendedTest {
     @Test
     public void testFormattingElementsAcrossNestedBlocks() throws Exception {
         // Given: Formatting elements across deeply nested blocks
-        final String html = "<html><body><b>Start"
-                + "<div>Level 1"
-                + "<div>Level 2"
-                + "<div>Level 3"
-                + "<p>Para</p>"
-                + "</div></div></div>"
-                + "End</b></body></html>";
+        final String html =
+                "<html><body><b>Start" + "<div>Level 1" + "<div>Level 2" + "<div>Level 3" + "<p>Para</p>" + "</div></div></div>"
+                        + "End</b></body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -578,12 +544,8 @@ public class AdoptionAgencyAlgorithmExtendedTest {
     @Test
     public void testAAAOuterLoopWithManyFormattingElements() throws Exception {
         // Given: More than 8 nested formatting elements to test outer loop limit
-        final String html = "<html><body>"
-                + "<b><i><u><s><em><strong><code><tt><big><small>"
-                + "Text"
-                + "</b>" // Close B early to trigger AAA
-                + "</small></big></tt></code></strong></em></s></u></i>"
-                + "</body></html>";
+        final String html = "<html><body>" + "<b><i><u><s><em><strong><code><tt><big><small>" + "Text" + "</b>" // Close B early to trigger AAA
+                + "</small></big></tt></code></strong></em></s></u></i>" + "</body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -618,12 +580,8 @@ public class AdoptionAgencyAlgorithmExtendedTest {
     @Test
     public void testAAAWithAlternatingFormattingElements() throws Exception {
         // Given: Alternating formatting elements beyond loop limit
-        final String html = "<html><body>"
-                + "<b><i><b><i><b><i><b><i><b><i><b><i>"
-                + "Deep text"
-                + "</b>" // Early close
-                + "</i></b></i></b></i></b></i></b></i></b></i>"
-                + "</body></html>";
+        final String html = "<html><body>" + "<b><i><b><i><b><i><b><i><b><i><b><i>" + "Deep text" + "</b>" // Early close
+                + "</i></b></i></b></i></b></i></b></i></b></i>" + "</body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -639,14 +597,9 @@ public class AdoptionAgencyAlgorithmExtendedTest {
     @Test
     public void testFormattingMarkerInTable() throws Exception {
         // Given: Formatting elements crossing table cell boundaries
-        final String html = "<html><body>"
-                + "<b>Before table"
-                + "<table>"
-                + "<tr><td>Cell 1 <i>Italic in cell</td>"
-                + "<td>Cell 2</i></td></tr>"
-                + "</table>"
-                + "After table</b>"
-                + "</body></html>";
+        final String html =
+                "<html><body>" + "<b>Before table" + "<table>" + "<tr><td>Cell 1 <i>Italic in cell</td>" + "<td>Cell 2</i></td></tr>"
+                        + "</table>" + "After table</b>" + "</body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -660,12 +613,9 @@ public class AdoptionAgencyAlgorithmExtendedTest {
     @Test
     public void testFormattingMarkerInCaption() throws Exception {
         // Given: Formatting elements in table caption
-        final String html = "<html><body>"
-                + "<table>"
-                + "<caption><b>Bold caption <div>Block in caption</div> continues</b></caption>"
-                + "<tr><td>Cell</td></tr>"
-                + "</table>"
-                + "</body></html>";
+        final String html =
+                "<html><body>" + "<table>" + "<caption><b>Bold caption <div>Block in caption</div> continues</b></caption>"
+                        + "<tr><td>Cell</td></tr>" + "</table>" + "</body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -678,12 +628,9 @@ public class AdoptionAgencyAlgorithmExtendedTest {
     @Test
     public void testFormattingMarkerInTH() throws Exception {
         // Given: Formatting elements in table header
-        final String html = "<html><body>"
-                + "<table>"
-                + "<tr><th><b>Header <p>Para in header</p> continues</b></th></tr>"
-                + "<tr><td>Cell</td></tr>"
-                + "</table>"
-                + "</body></html>";
+        final String html =
+                "<html><body>" + "<table>" + "<tr><th><b>Header <p>Para in header</p> continues</b></th></tr>" + "<tr><td>Cell</td></tr>"
+                        + "</table>" + "</body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -696,15 +643,9 @@ public class AdoptionAgencyAlgorithmExtendedTest {
     @Test
     public void testFormattingAcrossMultipleTableCells() throws Exception {
         // Given: Formatting spanning multiple cells (invalid but should be handled)
-        final String html = "<html><body>"
-                + "<table>"
-                + "<tr>"
-                + "<td><b>Start bold</td>"
-                + "<td>Middle cell</b></td>"
-                + "<td>Third cell</td>"
-                + "</tr>"
-                + "</table>"
-                + "</body></html>";
+        final String html =
+                "<html><body>" + "<table>" + "<tr>" + "<td><b>Start bold</td>" + "<td>Middle cell</b></td>" + "<td>Third cell</td>"
+                        + "</tr>" + "</table>" + "</body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -721,12 +662,9 @@ public class AdoptionAgencyAlgorithmExtendedTest {
     @Test
     public void testFormattingInSelectOption() throws Exception {
         // Given: Formatting in select option (should be stripped)
-        final String html = "<html><body>"
-                + "<select>"
-                + "<option><b>Bold option</b></option>"
-                + "<option><i>Italic option</i></option>"
-                + "</select>"
-                + "</body></html>";
+        final String html =
+                "<html><body>" + "<select>" + "<option><b>Bold option</b></option>" + "<option><i>Italic option</i></option>" + "</select>"
+                        + "</body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -740,11 +678,8 @@ public class AdoptionAgencyAlgorithmExtendedTest {
     @Test
     public void testFormattingSpanningSelect() throws Exception {
         // Given: Formatting spanning across select (invalid)
-        final String html = "<html><body>"
-                + "<b>Before select"
-                + "<select><option>Option 1</option></select>"
-                + "After select</b>"
-                + "</body></html>";
+        final String html =
+                "<html><body>" + "<b>Before select" + "<select><option>Option 1</option></select>" + "After select</b>" + "</body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -761,9 +696,7 @@ public class AdoptionAgencyAlgorithmExtendedTest {
     @Test
     public void testFormattingInButton() throws Exception {
         // Given: Formatting inside button
-        final String html = "<html><body>"
-                + "<button><b>Bold button <div>Block in button</div> text</b></button>"
-                + "</body></html>";
+        final String html = "<html><body>" + "<button><b>Bold button <div>Block in button</div> text</b></button>" + "</body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -776,11 +709,7 @@ public class AdoptionAgencyAlgorithmExtendedTest {
     @Test
     public void testFormattingSpanningButton() throws Exception {
         // Given: Formatting spanning across button
-        final String html = "<html><body>"
-                + "<b>Before button"
-                + "<button>Click me</button>"
-                + "After button</b>"
-                + "</body></html>";
+        final String html = "<html><body>" + "<b>Before button" + "<button>Click me</button>" + "After button</b>" + "</body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -797,9 +726,7 @@ public class AdoptionAgencyAlgorithmExtendedTest {
     @Test
     public void testFormattingInObject() throws Exception {
         // Given: Formatting inside object element
-        final String html = "<html><body>"
-                + "<object><b>Fallback <div>Block</div> content</b></object>"
-                + "</body></html>";
+        final String html = "<html><body>" + "<object><b>Fallback <div>Block</div> content</b></object>" + "</body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -812,9 +739,7 @@ public class AdoptionAgencyAlgorithmExtendedTest {
     @Test
     public void testFormattingInMarquee() throws Exception {
         // Given: Formatting in marquee (deprecated but may appear)
-        final String html = "<html><body>"
-                + "<marquee><b>Scrolling <div>Block</div> text</b></marquee>"
-                + "</body></html>";
+        final String html = "<html><body>" + "<marquee><b>Scrolling <div>Block</div> text</b></marquee>" + "</body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -831,11 +756,9 @@ public class AdoptionAgencyAlgorithmExtendedTest {
     @Test
     public void testFormattingWithFormElement() throws Exception {
         // Given: Formatting crossing form boundary
-        final String html = "<html><body>"
-                + "<b>Before form"
-                + "<form><input type=\"text\"><div>Form content</div></form>"
-                + "After form</b>"
-                + "</body></html>";
+        final String html =
+                "<html><body>" + "<b>Before form" + "<form><input type=\"text\"><div>Form content</div></form>" + "After form</b>"
+                        + "</body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -848,12 +771,9 @@ public class AdoptionAgencyAlgorithmExtendedTest {
     @Test
     public void testFormattingWithFieldset() throws Exception {
         // Given: Formatting in fieldset with legend
-        final String html = "<html><body>"
-                + "<fieldset>"
-                + "<legend><b>Bold legend <div>Block</div></b></legend>"
-                + "<input type=\"text\">"
-                + "</fieldset>"
-                + "</body></html>";
+        final String html =
+                "<html><body>" + "<fieldset>" + "<legend><b>Bold legend <div>Block</div></b></legend>" + "<input type=\"text\">"
+                        + "</fieldset>" + "</body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -899,9 +819,7 @@ public class AdoptionAgencyAlgorithmExtendedTest {
     @Test
     public void testAAAWithMultipleFurthestBlockCandidates() throws Exception {
         // Given: Multiple potential furthest blocks
-        final String html = "<html><body>"
-                + "<b>Bold <p>Para 1</p> <div>Div</div> <p>Para 2</p> continues</b>"
-                + "</body></html>";
+        final String html = "<html><body>" + "<b>Bold <p>Para 1</p> <div>Div</div> <p>Para 2</p> continues</b>" + "</body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);

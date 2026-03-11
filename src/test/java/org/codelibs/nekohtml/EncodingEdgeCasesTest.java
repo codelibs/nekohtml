@@ -125,11 +125,9 @@ public class EncodingEdgeCasesTest {
     @Test
     public void testZeroWidthCharacters() throws Exception {
         // Given: HTML with zero-width characters
-        final String html = "<html><body>"
-                + "Zero\u200BWidth\u200BSpace "
-                + "Zero\u200CWidth\u200CNon\u200CJoiner "
-                + "Zero\u200DWidth\u200DJoiner"
-                + "</body></html>";
+        final String html =
+                "<html><body>" + "Zero\u200BWidth\u200BSpace " + "Zero\u200CWidth\u200CNon\u200CJoiner " + "Zero\u200DWidth\u200DJoiner"
+                        + "</body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -145,10 +143,8 @@ public class EncodingEdgeCasesTest {
     @Test
     public void testRightToLeftMarks() throws Exception {
         // Given: HTML with RTL and LTR marks
-        final String html = "<html><body>"
-                + "Text\u200Ewith\u200ELTR\u200Emarks "
-                + "Text\u200Fwith\u200FRTL\u200Fmarks"
-                + "</body></html>";
+        final String html =
+                "<html><body>" + "Text\u200Ewith\u200ELTR\u200Emarks " + "Text\u200Fwith\u200FRTL\u200Fmarks" + "</body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -163,8 +159,7 @@ public class EncodingEdgeCasesTest {
     @Test
     public void testCombiningCharacters() throws Exception {
         // Given: HTML with combining diacritics
-        final String html = "<html><body>"
-                + "e\u0301 " // é (e + combining acute)
+        final String html = "<html><body>" + "e\u0301 " // é (e + combining acute)
                 + "n\u0303 " // ñ (n + combining tilde)
                 + "a\u0308 " // ä (a + combining diaeresis)
                 + "</body></html>";
@@ -183,11 +178,7 @@ public class EncodingEdgeCasesTest {
     @Test
     public void testEmojiAndSupplementaryCharacters() throws Exception {
         // Given: HTML with emoji (supplementary characters)
-        final String html = "<html><body>"
-                + "😀😁😂🤣😃😄😅😆😉😊 "
-                + "👍👎👏🙌🎉🎊🎈 "
-                + "🌟⭐✨💫"
-                + "</body></html>";
+        final String html = "<html><body>" + "😀😁😂🤣😃😄😅😆😉😊 " + "👍👎👏🙌🎉🎊🎈 " + "🌟⭐✨💫" + "</body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -203,8 +194,7 @@ public class EncodingEdgeCasesTest {
     @Test
     public void testSurrogatePairs() throws Exception {
         // Given: HTML with characters requiring surrogate pairs
-        final String html = "<html><body>"
-                + "\uD834\uDD1E" // Musical symbol G clef (U+1D11E)
+        final String html = "<html><body>" + "\uD834\uDD1E" // Musical symbol G clef (U+1D11E)
                 + "\uD835\uDC00" // Mathematical bold capital A (U+1D400)
                 + "\uD83D\uDE00" // Grinning face emoji (U+1F600)
                 + "</body></html>";
@@ -221,9 +211,7 @@ public class EncodingEdgeCasesTest {
     @Test
     public void testControlCharacters() throws Exception {
         // Given: HTML with control characters (allowed ones)
-        final String html = "<html><body>"
-                + "Tab:\t Newline:\n CarriageReturn:\r"
-                + "</body></html>";
+        final String html = "<html><body>" + "Tab:\t Newline:\n CarriageReturn:\r" + "</body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -237,15 +225,10 @@ public class EncodingEdgeCasesTest {
     @Test
     public void testMultilingualContent() throws Exception {
         // Given: HTML with multiple languages
-        final String html = "<html><body>"
-                + "<p lang=\"ja\">日本語のテキスト</p>"
-                + "<p lang=\"zh\">中文文本</p>"
-                + "<p lang=\"ko\">한국어 텍스트</p>"
-                + "<p lang=\"ar\">نص عربي</p>"
-                + "<p lang=\"ru\">Русский текст</p>"
-                + "<p lang=\"el\">Ελληνικό κείμενο</p>"
-                + "<p lang=\"he\">טקסט עברי</p>"
-                + "</body></html>";
+        final String html =
+                "<html><body>" + "<p lang=\"ja\">日本語のテキスト</p>" + "<p lang=\"zh\">中文文本</p>" + "<p lang=\"ko\">한국어 텍스트</p>"
+                        + "<p lang=\"ar\">نص عربي</p>" + "<p lang=\"ru\">Русский текст</p>" + "<p lang=\"el\">Ελληνικό κείμενο</p>"
+                        + "<p lang=\"he\">טקסט עברי</p>" + "</body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -275,10 +258,7 @@ public class EncodingEdgeCasesTest {
     @Test
     public void testMalformedEntities() throws Exception {
         // Given: HTML with malformed entities
-        final String html = "<html><body>"
-                + "&invalid; "
-                + "&notanentity; "
-                + "&lt " // missing semicolon
+        final String html = "<html><body>" + "&invalid; " + "&notanentity; " + "&lt " // missing semicolon
                 + "&gt " // missing semicolon
                 + "&amp" // missing semicolon
                 + "</body></html>";
@@ -295,8 +275,7 @@ public class EncodingEdgeCasesTest {
     @Test
     public void testNumericEntitiesOutOfRange() throws Exception {
         // Given: HTML with out-of-range numeric entities
-        final String html = "<html><body>"
-                + "&#xFFFFFFFF; " // way out of range
+        final String html = "<html><body>" + "&#xFFFFFFFF; " // way out of range
                 + "&#999999999; " // huge decimal
                 + "&#x110000; " // just beyond Unicode range
                 + "</body></html>";
@@ -325,11 +304,10 @@ public class EncodingEdgeCasesTest {
     @Test
     public void testEntitiesInAttributeValues() throws Exception {
         // Given: HTML with entities in attribute values
-        final String html = "<html><body>"
-                + "<div title=\"&lt;Click &amp; drag&gt;\">Content</div>"
-                + "<a href=\"?param1=value1&amp;param2=value2\">Link</a>"
-                + "<input value=\"&quot;Quoted&quot;\">"
-                + "</body></html>";
+        final String html =
+                "<html><body>" + "<div title=\"&lt;Click &amp; drag&gt;\">Content</div>"
+                        + "<a href=\"?param1=value1&amp;param2=value2\">Link</a>" + "<input value=\"&quot;Quoted&quot;\">"
+                        + "</body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -355,15 +333,10 @@ public class EncodingEdgeCasesTest {
     @Test
     public void testAllCommonHTMLEntities() throws Exception {
         // Given: HTML with all common entities
-        final String html = "<html><body>"
-                + "&nbsp; &lt; &gt; &amp; &quot; &apos; "
-                + "&copy; &reg; &trade; "
-                + "&euro; &pound; &yen; &cent; "
-                + "&mdash; &ndash; &hellip; "
-                + "&laquo; &raquo; &ldquo; &rdquo; &lsquo; &rsquo; "
-                + "&deg; &plusmn; &times; &divide; "
-                + "&para; &sect; &dagger; &Dagger; "
-                + "</body></html>";
+        final String html =
+                "<html><body>" + "&nbsp; &lt; &gt; &amp; &quot; &apos; " + "&copy; &reg; &trade; " + "&euro; &pound; &yen; &cent; "
+                        + "&mdash; &ndash; &hellip; " + "&laquo; &raquo; &ldquo; &rdquo; &lsquo; &rsquo; "
+                        + "&deg; &plusmn; &times; &divide; " + "&para; &sect; &dagger; &Dagger; " + "</body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -381,8 +354,7 @@ public class EncodingEdgeCasesTest {
     @Test
     public void testNumericCharacterReferences() throws Exception {
         // Given: HTML with numeric character references
-        final String html = "<html><body>"
-                + "&#65; " // A
+        final String html = "<html><body>" + "&#65; " // A
                 + "&#x41; " // A (hex)
                 + "&#169; " // ©
                 + "&#x00A9; " // © (hex)
@@ -405,9 +377,7 @@ public class EncodingEdgeCasesTest {
     @Test
     public void testEntitiesWithoutSemicolon() throws Exception {
         // Given: HTML with entities without semicolons (legacy)
-        final String html = "<html><body>"
-                + "&lt &gt &amp &copy &reg"
-                + "</body></html>";
+        final String html = "<html><body>" + "&lt &gt &amp &copy &reg" + "</body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -424,11 +394,10 @@ public class EncodingEdgeCasesTest {
     @Test
     public void testMultipleMetaCharsetDeclarations() throws Exception {
         // Given: HTML with multiple conflicting charset declarations
-        final String html = "<html><head>"
-                + "<meta charset=\"ISO-8859-1\">"
-                + "<meta charset=\"UTF-8\">"
-                + "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=Windows-1252\">"
-                + "</head><body>Content</body></html>";
+        final String html =
+                "<html><head>" + "<meta charset=\"ISO-8859-1\">" + "<meta charset=\"UTF-8\">"
+                        + "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=Windows-1252\">"
+                        + "</head><body>Content</body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -442,11 +411,9 @@ public class EncodingEdgeCasesTest {
     @Test
     public void testMetaCharsetVariations() throws Exception {
         // Given: HTML with various meta charset formats
-        final String html = "<html><head>"
-                + "<meta charset=\"utf-8\">"
-                + "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\">"
-                + "<meta http-equiv=\"content-type\" content=\"text/html;charset=utf-8\">"
-                + "</head><body>Test</body></html>";
+        final String html =
+                "<html><head>" + "<meta charset=\"utf-8\">" + "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\">"
+                        + "<meta http-equiv=\"content-type\" content=\"text/html;charset=utf-8\">" + "</head><body>Test</body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -460,8 +427,9 @@ public class EncodingEdgeCasesTest {
     @Test
     public void testXMLDeclarationVsMetaCharset() throws Exception {
         // Given: HTML with both XML declaration and meta charset
-        final String html = "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>"
-                + "<html><head><meta charset=\"UTF-8\"></head><body>Content</body></html>";
+        final String html =
+                "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>"
+                        + "<html><head><meta charset=\"UTF-8\"></head><body>Content</body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -478,14 +446,9 @@ public class EncodingEdgeCasesTest {
     @Test
     public void testNonBreakingSpaces() throws Exception {
         // Given: HTML with various types of spaces
-        final String html = "<html><body>"
-                + "Regular space "
-                + "Non-breaking&nbsp;space "
-                + "En\u2002space "
-                + "Em\u2003space "
-                + "Thin\u2009space "
-                + "Hair\u200Aspace"
-                + "</body></html>";
+        final String html =
+                "<html><body>" + "Regular space " + "Non-breaking&nbsp;space " + "En\u2002space " + "Em\u2003space " + "Thin\u2009space "
+                        + "Hair\u200Aspace" + "</body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -504,12 +467,9 @@ public class EncodingEdgeCasesTest {
     @Test
     public void testSpecialPunctuationCharacters() throws Exception {
         // Given: HTML with special punctuation
-        final String html = "<html><body>"
-                + "Quotes: \u201C\u201D \u2018\u2019 "
-                + "Dashes: \u2013 \u2014 "
-                + "Ellipsis: \u2026 "
-                + "Bullet: \u2022 "
-                + "</body></html>";
+        final String html =
+                "<html><body>" + "Quotes: \u201C\u201D \u2018\u2019 " + "Dashes: \u2013 \u2014 " + "Ellipsis: \u2026 " + "Bullet: \u2022 "
+                        + "</body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -526,9 +486,7 @@ public class EncodingEdgeCasesTest {
     @Test
     public void testMathematicalSymbols() throws Exception {
         // Given: HTML with mathematical symbols
-        final String html = "<html><body>"
-                + "∞ ≠ ≤ ≥ ± × ÷ √ ∑ ∏ ∫ ∂ ∇"
-                + "</body></html>";
+        final String html = "<html><body>" + "∞ ≠ ≤ ≥ ± × ÷ √ ∑ ∏ ∫ ∂ ∇" + "</body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -544,9 +502,7 @@ public class EncodingEdgeCasesTest {
     @Test
     public void testCurrencySymbols() throws Exception {
         // Given: HTML with various currency symbols
-        final String html = "<html><body>"
-                + "$ € £ ¥ ₹ ₽ ₩ ¢ ฿"
-                + "</body></html>";
+        final String html = "<html><body>" + "$ € £ ¥ ₹ ₽ ₩ ¢ ฿" + "</body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -562,11 +518,9 @@ public class EncodingEdgeCasesTest {
     @Test
     public void testMixedDirectionalText() throws Exception {
         // Given: HTML with mixed LTR and RTL text
-        final String html = "<html><body>"
-                + "<p dir=\"ltr\">Left-to-right text with עברית embedded</p>"
-                + "<p dir=\"rtl\">טקסט מימין לשמאל with English embedded</p>"
-                + "<p>Mixed: Hello שלום مرحبا</p>"
-                + "</body></html>";
+        final String html =
+                "<html><body>" + "<p dir=\"ltr\">Left-to-right text with עברית embedded</p>"
+                        + "<p dir=\"rtl\">טקסט מימין לשמאל with English embedded</p>" + "<p>Mixed: Hello שלום مرحبا</p>" + "</body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);

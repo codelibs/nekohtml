@@ -439,15 +439,10 @@ public class PerformanceStressTest {
         // Given: Complex realistic document structure
         final StringBuilder html = new StringBuilder("<html><head><title>Test</title></head><body>");
         for (int i = 0; i < 100; i++) {
-            html.append("<article>")
-                    .append("<header><h1>Title ").append(i).append("</h1></header>")
-                    .append("<section>")
-                    .append("<p>Paragraph 1</p>")
-                    .append("<p>Paragraph 2</p>")
-                    .append("<ul><li>Item 1</li><li>Item 2</li><li>Item 3</li></ul>")
-                    .append("</section>")
-                    .append("<footer><p>Footer</p></footer>")
-                    .append("</article>");
+            html.append("<article>").append("<header><h1>Title ").append(i).append("</h1></header>").append("<section>")
+                    .append("<p>Paragraph 1</p>").append("<p>Paragraph 2</p>")
+                    .append("<ul><li>Item 1</li><li>Item 2</li><li>Item 3</li></ul>").append("</section>")
+                    .append("<footer><p>Footer</p></footer>").append("</article>");
         }
         html.append("</body></html>");
 

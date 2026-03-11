@@ -214,13 +214,11 @@ public class HTMLSAXConfigurationTest {
         final HTMLSAXConfiguration config = new HTMLSAXConfiguration();
 
         // Default should be false
-        assertFalse(config.getFeature(HTMLSAXConfiguration.SIMPLE_ERROR_FORMAT),
-                "Simple error format should be disabled by default");
+        assertFalse(config.getFeature(HTMLSAXConfiguration.SIMPLE_ERROR_FORMAT), "Simple error format should be disabled by default");
 
         // Enable simple error format
         config.setFeature(HTMLSAXConfiguration.SIMPLE_ERROR_FORMAT, true);
-        assertTrue(config.getFeature(HTMLSAXConfiguration.SIMPLE_ERROR_FORMAT),
-                "Should be able to enable simple error format");
+        assertTrue(config.getFeature(HTMLSAXConfiguration.SIMPLE_ERROR_FORMAT), "Should be able to enable simple error format");
     }
 
     @Test
@@ -292,13 +290,11 @@ public class HTMLSAXConfigurationTest {
         final HTMLSAXConfiguration config = new HTMLSAXConfiguration();
 
         // Default should be "upper"
-        assertEquals("upper", config.getProperty(HTMLSAXConfiguration.NAMES_ELEMS),
-                "Element names should default to upper case");
+        assertEquals("upper", config.getProperty(HTMLSAXConfiguration.NAMES_ELEMS), "Element names should default to upper case");
 
         // Change to lower
         config.setProperty(HTMLSAXConfiguration.NAMES_ELEMS, "lower");
-        assertEquals("lower", config.getProperty(HTMLSAXConfiguration.NAMES_ELEMS),
-                "Should be able to set element names to lower case");
+        assertEquals("lower", config.getProperty(HTMLSAXConfiguration.NAMES_ELEMS), "Should be able to set element names to lower case");
     }
 
     @Test
@@ -306,13 +302,11 @@ public class HTMLSAXConfigurationTest {
         final HTMLSAXConfiguration config = new HTMLSAXConfiguration();
 
         // Default should be "lower"
-        assertEquals("lower", config.getProperty(HTMLSAXConfiguration.NAMES_ATTRS),
-                "Attribute names should default to lower case");
+        assertEquals("lower", config.getProperty(HTMLSAXConfiguration.NAMES_ATTRS), "Attribute names should default to lower case");
 
         // Change to upper
         config.setProperty(HTMLSAXConfiguration.NAMES_ATTRS, "upper");
-        assertEquals("upper", config.getProperty(HTMLSAXConfiguration.NAMES_ATTRS),
-                "Should be able to set attribute names to upper case");
+        assertEquals("upper", config.getProperty(HTMLSAXConfiguration.NAMES_ATTRS), "Should be able to set attribute names to upper case");
     }
 
     @Test
@@ -328,16 +322,14 @@ public class HTMLSAXConfigurationTest {
                 "Lexical handler should be retrievable via property");
 
         // Also get via getter
-        assertSame(lexHandler, config.getLexicalHandler(),
-                "Lexical handler should be retrievable via getter");
+        assertSame(lexHandler, config.getLexicalHandler(), "Lexical handler should be retrievable via getter");
     }
 
     @Test
     public void testUnrecognizedFeature() {
         final HTMLSAXConfiguration config = new HTMLSAXConfiguration();
 
-        assertThrows(org.xml.sax.SAXNotRecognizedException.class,
-                () -> config.getFeature("http://example.com/unknown-feature"),
+        assertThrows(org.xml.sax.SAXNotRecognizedException.class, () -> config.getFeature("http://example.com/unknown-feature"),
                 "Should throw for unrecognized feature");
     }
 
@@ -345,8 +337,7 @@ public class HTMLSAXConfigurationTest {
     public void testUnrecognizedProperty() {
         final HTMLSAXConfiguration config = new HTMLSAXConfiguration();
 
-        assertThrows(org.xml.sax.SAXNotRecognizedException.class,
-                () -> config.getProperty("http://example.com/unknown-property"),
+        assertThrows(org.xml.sax.SAXNotRecognizedException.class, () -> config.getProperty("http://example.com/unknown-property"),
                 "Should throw for unrecognized property");
     }
 

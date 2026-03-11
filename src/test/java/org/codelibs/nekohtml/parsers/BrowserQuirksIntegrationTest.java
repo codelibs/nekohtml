@@ -123,8 +123,9 @@ public class BrowserQuirksIntegrationTest {
     @Test
     public void testTableWithMissingCloseTags() throws Exception {
         // Given: Table with missing close tags (common in legacy HTML)
-        final String html = "<html><body><table>" + "<tr><td>Row 1, Cell 1<td>Row 1, Cell 2" + "<tr><td>Row 2, Cell 1<td>Row 2, Cell 2"
-                + "</table></body></html>";
+        final String html =
+                "<html><body><table>" + "<tr><td>Row 1, Cell 1<td>Row 1, Cell 2" + "<tr><td>Row 2, Cell 1<td>Row 2, Cell 2"
+                        + "</table></body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -138,8 +139,9 @@ public class BrowserQuirksIntegrationTest {
     @Test
     public void testNestedTables() throws Exception {
         // Given: Nested tables
-        final String html = "<html><body>" + "<table><tr><td>" + "<table><tr><td>Inner cell</td></tr></table>" + "</td></tr></table>"
-                + "</body></html>";
+        final String html =
+                "<html><body>" + "<table><tr><td>" + "<table><tr><td>Inner cell</td></tr></table>" + "</td></tr></table>"
+                        + "</body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -151,7 +153,8 @@ public class BrowserQuirksIntegrationTest {
     @Test
     public void testTableWithCaptionAfterRows() throws Exception {
         // Given: Table with CAPTION after TR (invalid but common)
-        final String html = "<html><body><table>" + "<tr><td>Cell</td></tr>" + "<caption>Table Caption</caption>" + "</table></body></html>";
+        final String html =
+                "<html><body><table>" + "<tr><td>Cell</td></tr>" + "<caption>Table Caption</caption>" + "</table></body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -168,8 +171,9 @@ public class BrowserQuirksIntegrationTest {
     @Test
     public void testFormWithOrphanedInputs() throws Exception {
         // Given: Form with inputs outside form tag
-        final String html = "<html><body>" + "<form action=\"#\">" + "<input type=\"text\" name=\"inside\">" + "</form>"
-                + "<input type=\"text\" name=\"outside\">" + "</body></html>";
+        final String html =
+                "<html><body>" + "<form action=\"#\">" + "<input type=\"text\" name=\"inside\">" + "</form>"
+                        + "<input type=\"text\" name=\"outside\">" + "</body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -182,8 +186,9 @@ public class BrowserQuirksIntegrationTest {
     @Test
     public void testNestedForms() throws Exception {
         // Given: Nested forms (invalid HTML but may appear)
-        final String html = "<html><body>" + "<form action=\"outer\">" + "<form action=\"inner\">" + "<input type=\"text\">" + "</form>"
-                + "</form>" + "</body></html>";
+        final String html =
+                "<html><body>" + "<form action=\"outer\">" + "<form action=\"inner\">" + "<input type=\"text\">" + "</form>" + "</form>"
+                        + "</body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -196,8 +201,8 @@ public class BrowserQuirksIntegrationTest {
     @Test
     public void testFormWithSelectWithoutClosingOption() throws Exception {
         // Given: SELECT with unclosed OPTION tags
-        final String html = "<html><body>" + "<select>" + "<option>Option 1" + "<option>Option 2" + "<option>Option 3" + "</select>"
-                + "</body></html>";
+        final String html =
+                "<html><body>" + "<select>" + "<option>Option 1" + "<option>Option 2" + "<option>Option 3" + "</select>" + "</body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -227,8 +232,9 @@ public class BrowserQuirksIntegrationTest {
     @Test
     public void testNestedListsWithUnclosedItems() throws Exception {
         // Given: Nested lists with unclosed LI
-        final String html = "<html><body>" + "<ul>" + "<li>Item 1" + "<ul>" + "<li>Nested 1" + "<li>Nested 2" + "</ul>" + "<li>Item 2"
-                + "</ul>" + "</body></html>";
+        final String html =
+                "<html><body>" + "<ul>" + "<li>Item 1" + "<ul>" + "<li>Nested 1" + "<li>Nested 2" + "</ul>" + "<li>Item 2" + "</ul>"
+                        + "</body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -241,8 +247,9 @@ public class BrowserQuirksIntegrationTest {
     @Test
     public void testDefinitionListQuirks() throws Exception {
         // Given: DL with unclosed DT/DD
-        final String html = "<html><body>" + "<dl>" + "<dt>Term 1" + "<dd>Definition 1" + "<dt>Term 2" + "<dd>Definition 2" + "</dl>"
-                + "</body></html>";
+        final String html =
+                "<html><body>" + "<dl>" + "<dt>Term 1" + "<dd>Definition 1" + "<dt>Term 2" + "<dd>Definition 2" + "</dl>"
+                        + "</body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -333,8 +340,8 @@ public class BrowserQuirksIntegrationTest {
     @Test
     public void testScriptInBody() throws Exception {
         // Given: Script in body (valid but tested for quirks)
-        final String html = "<html><body>" + "<p>Before script</p>" + "<script>var x = 1;</script>" + "<p>After script</p>"
-                + "</body></html>";
+        final String html =
+                "<html><body>" + "<p>Before script</p>" + "<script>var x = 1;</script>" + "<p>After script</p>" + "</body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -431,8 +438,9 @@ public class BrowserQuirksIntegrationTest {
     @Test
     public void testHTML4StrictDoctype() throws Exception {
         // Given: HTML 4.01 Strict DOCTYPE
-        final String html = "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01//EN\" "
-                + "\"http://www.w3.org/TR/html4/strict.dtd\">" + "<html><body><p>HTML 4.01</p></body></html>";
+        final String html =
+                "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01//EN\" " + "\"http://www.w3.org/TR/html4/strict.dtd\">"
+                        + "<html><body><p>HTML 4.01</p></body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -444,8 +452,9 @@ public class BrowserQuirksIntegrationTest {
     @Test
     public void testXHTMLDoctype() throws Exception {
         // Given: XHTML DOCTYPE
-        final String html = "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\" "
-                + "\"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">" + "<html><body><p>XHTML</p></body></html>";
+        final String html =
+                "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\" " + "\"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">"
+                        + "<html><body><p>XHTML</p></body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -486,7 +495,8 @@ public class BrowserQuirksIntegrationTest {
     @Test
     public void testMetaContentType() throws Exception {
         // Given: Legacy content-type meta
-        final String html = "<html><head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\"></head><body>Test</body></html>";
+        final String html =
+                "<html><head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\"></head><body>Test</body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -516,7 +526,8 @@ public class BrowserQuirksIntegrationTest {
     @Test
     public void testVoidElementsWithSlash() throws Exception {
         // Given: Void elements with trailing slash (XHTML style)
-        final String html = "<html><body>" + "<br />" + "<hr />" + "<img src=\"test.png\" />" + "<input type=\"text\" />" + "</body></html>";
+        final String html =
+                "<html><body>" + "<br />" + "<hr />" + "<img src=\"test.png\" />" + "<input type=\"text\" />" + "</body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -533,12 +544,13 @@ public class BrowserQuirksIntegrationTest {
     @Test
     public void testTypicalWebPageStructure() throws Exception {
         // Given: Typical web page structure
-        final String html = "<!DOCTYPE html>" + "<html lang=\"en\">" + "<head>" + "<meta charset=\"UTF-8\">"
-                + "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">" + "<title>Test Page</title>"
-                + "<link rel=\"stylesheet\" href=\"style.css\">" + "<script src=\"script.js\"></script>" + "</head>" + "<body>" + "<header>"
-                + "<nav><ul><li><a href=\"#\">Home</a></li></ul></nav>" + "</header>" + "<main>" + "<article>"
-                + "<h1>Article Title</h1>" + "<p>Article content.</p>" + "</article>" + "</main>" + "<footer>"
-                + "<p>&copy; 2024</p>" + "</footer>" + "</body>" + "</html>";
+        final String html =
+                "<!DOCTYPE html>" + "<html lang=\"en\">" + "<head>" + "<meta charset=\"UTF-8\">"
+                        + "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">" + "<title>Test Page</title>"
+                        + "<link rel=\"stylesheet\" href=\"style.css\">" + "<script src=\"script.js\"></script>" + "</head>" + "<body>"
+                        + "<header>" + "<nav><ul><li><a href=\"#\">Home</a></li></ul></nav>" + "</header>" + "<main>" + "<article>"
+                        + "<h1>Article Title</h1>" + "<p>Article content.</p>" + "</article>" + "</main>" + "<footer>"
+                        + "<p>&copy; 2024</p>" + "</footer>" + "</body>" + "</html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -553,11 +565,11 @@ public class BrowserQuirksIntegrationTest {
     @Test
     public void testTypicalFormStructure() throws Exception {
         // Given: Typical form structure
-        final String html = "<html><body>" + "<form action=\"/submit\" method=\"post\">" + "<fieldset>"
-                + "<legend>User Information</legend>" + "<label for=\"name\">Name:</label>"
-                + "<input type=\"text\" id=\"name\" name=\"name\">" + "<label for=\"email\">Email:</label>"
-                + "<input type=\"email\" id=\"email\" name=\"email\">" + "</fieldset>" + "<button type=\"submit\">Submit</button>"
-                + "</form>" + "</body></html>";
+        final String html =
+                "<html><body>" + "<form action=\"/submit\" method=\"post\">" + "<fieldset>" + "<legend>User Information</legend>"
+                        + "<label for=\"name\">Name:</label>" + "<input type=\"text\" id=\"name\" name=\"name\">"
+                        + "<label for=\"email\">Email:</label>" + "<input type=\"email\" id=\"email\" name=\"email\">" + "</fieldset>"
+                        + "<button type=\"submit\">Submit</button>" + "</form>" + "</body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);

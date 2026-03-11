@@ -260,8 +260,7 @@ public class StrictModeTest {
         handler.startElement("", "div", "DIV", new org.xml.sax.helpers.AttributesImpl());
 
         // End with wrong tag - should not throw in lenient mode
-        assertDoesNotThrow(() -> handler.endElement("", "span", "SPAN"),
-                "Lenient mode should handle mismatched end tag");
+        assertDoesNotThrow(() -> handler.endElement("", "span", "SPAN"), "Lenient mode should handle mismatched end tag");
     }
 
     @Test
@@ -275,8 +274,7 @@ public class StrictModeTest {
         handler.endDocument(); // Clear stack
 
         // End element with empty stack - should not throw
-        assertDoesNotThrow(() -> handler.endElement("", "div", "DIV"),
-                "Lenient mode should handle end tag with empty stack");
+        assertDoesNotThrow(() -> handler.endElement("", "div", "DIV"), "Lenient mode should handle end tag with empty stack");
     }
 
     @Test
@@ -287,8 +285,7 @@ public class StrictModeTest {
         final SAXToDOMHandler handler = new SAXToDOMHandler(builder);
 
         // Characters before startDocument - should not throw
-        assertDoesNotThrow(() -> handler.characters("test".toCharArray(), 0, 4),
-                "Should handle characters before startDocument");
+        assertDoesNotThrow(() -> handler.characters("test".toCharArray(), 0, 4), "Should handle characters before startDocument");
     }
 
     @Test
@@ -301,8 +298,7 @@ public class StrictModeTest {
         handler.startDocument();
         handler.startElement("", "html", "HTML", new org.xml.sax.helpers.AttributesImpl());
 
-        assertDoesNotThrow(() -> handler.comment("This is a comment".toCharArray(), 0, 17),
-                "Should handle comment in document");
+        assertDoesNotThrow(() -> handler.comment("This is a comment".toCharArray(), 0, 17), "Should handle comment in document");
     }
 
     @Test
@@ -345,9 +341,8 @@ public class StrictModeTest {
         handler.endElement("", "p", "P");
         handler.endElement("", "div", "DIV");
 
-        // Should complete without throwing
-        assertDoesNotThrow(() -> {
-        }, "Skip depth should handle nested skipped elements");
+        // Should complete without throwing - verify handler accepted nested elements in skip mode
+        assertDoesNotThrow(() -> handler.endDocument(), "Skip depth should handle nested skipped elements");
     }
 
     // =========================================================================
@@ -358,8 +353,9 @@ public class StrictModeTest {
     public void testDOMParserStrictModeWellFormed() throws Exception {
         System.setProperty(PROPERTY_DOM_STRICT, "true");
 
-        final String html = "<html>" + "<head><title>Well Formed</title></head>" + "<body>"
-                + "<div id=\"container\">" + "<p class=\"content\">Hello World</p>" + "</div>" + "</body>" + "</html>";
+        final String html =
+                "<html>" + "<head><title>Well Formed</title></head>" + "<body>" + "<div id=\"container\">"
+                        + "<p class=\"content\">Hello World</p>" + "</div>" + "</body>" + "</html>";
 
         final DOMParser parser = new DOMParser();
         parser.parse(new InputSource(new StringReader(html)));
@@ -451,8 +447,7 @@ public class StrictModeTest {
         }
 
         public boolean hasWarningContaining(String substring) {
-            return records.stream()
-                    .filter(r -> r.getLevel() == Level.WARNING)
+            return records.stream().filter(r -> r.getLevel() == Level.WARNING)
                     .anyMatch(r -> r.getMessage() != null && r.getMessage().contains(substring));
         }
 

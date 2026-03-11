@@ -54,11 +54,9 @@ public class ComplexTableStructuresTest {
     @Test
     public void testTableWithAllSections() throws Exception {
         // Given: Table with THEAD, TBODY, TFOOT
-        final String html = "<html><body><table>"
-                + "<thead><tr><th>Header</th></tr></thead>"
-                + "<tbody><tr><td>Body</td></tr></tbody>"
-                + "<tfoot><tr><td>Footer</td></tr></tfoot>"
-                + "</table></body></html>";
+        final String html =
+                "<html><body><table>" + "<thead><tr><th>Header</th></tr></thead>" + "<tbody><tr><td>Body</td></tr></tbody>"
+                        + "<tfoot><tr><td>Footer</td></tr></tfoot>" + "</table></body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -74,11 +72,9 @@ public class ComplexTableStructuresTest {
     @Test
     public void testTableWithMultipleTbody() throws Exception {
         // Given: Table with multiple TBODY elements (valid HTML5)
-        final String html = "<html><body><table>"
-                + "<tbody><tr><td>Group 1 Row 1</td></tr></tbody>"
-                + "<tbody><tr><td>Group 2 Row 1</td></tr></tbody>"
-                + "<tbody><tr><td>Group 3 Row 1</td></tr></tbody>"
-                + "</table></body></html>";
+        final String html =
+                "<html><body><table>" + "<tbody><tr><td>Group 1 Row 1</td></tr></tbody>" + "<tbody><tr><td>Group 2 Row 1</td></tr></tbody>"
+                        + "<tbody><tr><td>Group 3 Row 1</td></tr></tbody>" + "</table></body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -92,10 +88,8 @@ public class ComplexTableStructuresTest {
     @Test
     public void testTableWithCaption() throws Exception {
         // Given: Table with CAPTION
-        final String html = "<html><body><table>"
-                + "<caption>Table Caption</caption>"
-                + "<tr><td>Cell</td></tr>"
-                + "</table></body></html>";
+        final String html =
+                "<html><body><table>" + "<caption>Table Caption</caption>" + "<tr><td>Cell</td></tr>" + "</table></body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -109,14 +103,10 @@ public class ComplexTableStructuresTest {
     @Test
     public void testTableWithColgroup() throws Exception {
         // Given: Table with COLGROUP and COL
-        final String html = "<html><body><table>"
-                + "<colgroup>"
-                + "<col style=\"background-color:red\">"
-                + "<col style=\"background-color:blue\">"
-                + "<col style=\"background-color:green\">"
-                + "</colgroup>"
-                + "<tr><td>Cell 1</td><td>Cell 2</td><td>Cell 3</td></tr>"
-                + "</table></body></html>";
+        final String html =
+                "<html><body><table>" + "<colgroup>" + "<col style=\"background-color:red\">" + "<col style=\"background-color:blue\">"
+                        + "<col style=\"background-color:green\">" + "</colgroup>"
+                        + "<tr><td>Cell 1</td><td>Cell 2</td><td>Cell 3</td></tr>" + "</table></body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -130,10 +120,9 @@ public class ComplexTableStructuresTest {
     @Test
     public void testTableWithColgroupSpan() throws Exception {
         // Given: COLGROUP with span attribute
-        final String html = "<html><body><table>"
-                + "<colgroup span=\"3\" style=\"background-color:yellow\"></colgroup>"
-                + "<tr><td>Cell 1</td><td>Cell 2</td><td>Cell 3</td></tr>"
-                + "</table></body></html>";
+        final String html =
+                "<html><body><table>" + "<colgroup span=\"3\" style=\"background-color:yellow\"></colgroup>"
+                        + "<tr><td>Cell 1</td><td>Cell 2</td><td>Cell 3</td></tr>" + "</table></body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -148,19 +137,11 @@ public class ComplexTableStructuresTest {
     @Test
     public void testComplexTableWithAllElements() throws Exception {
         // Given: Complex table with all possible elements
-        final String html = "<html><body><table>"
-                + "<caption>Complete Table</caption>"
-                + "<colgroup>"
-                + "<col style=\"width:100px\">"
-                + "<col style=\"width:200px\">"
-                + "</colgroup>"
-                + "<thead><tr><th>Header 1</th><th>Header 2</th></tr></thead>"
-                + "<tbody>"
-                + "<tr><td>Data 1-1</td><td>Data 1-2</td></tr>"
-                + "<tr><td>Data 2-1</td><td>Data 2-2</td></tr>"
-                + "</tbody>"
-                + "<tfoot><tr><td>Footer 1</td><td>Footer 2</td></tr></tfoot>"
-                + "</table></body></html>";
+        final String html =
+                "<html><body><table>" + "<caption>Complete Table</caption>" + "<colgroup>" + "<col style=\"width:100px\">"
+                        + "<col style=\"width:200px\">" + "</colgroup>" + "<thead><tr><th>Header 1</th><th>Header 2</th></tr></thead>"
+                        + "<tbody>" + "<tr><td>Data 1-1</td><td>Data 1-2</td></tr>" + "<tr><td>Data 2-1</td><td>Data 2-2</td></tr>"
+                        + "</tbody>" + "<tfoot><tr><td>Footer 1</td><td>Footer 2</td></tr></tfoot>" + "</table></body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -182,10 +163,7 @@ public class ComplexTableStructuresTest {
     @Test
     public void testTableWithTrDirectlyInTable() throws Exception {
         // Given: TR directly in TABLE (missing TBODY)
-        final String html = "<html><body><table>"
-                + "<tr><td>Cell 1</td></tr>"
-                + "<tr><td>Cell 2</td></tr>"
-                + "</table></body></html>";
+        final String html = "<html><body><table>" + "<tr><td>Cell 1</td></tr>" + "<tr><td>Cell 2</td></tr>" + "</table></body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -200,10 +178,7 @@ public class ComplexTableStructuresTest {
     @Test
     public void testTableWithTdDirectlyInTable() throws Exception {
         // Given: TD directly in TABLE (missing TBODY and TR)
-        final String html = "<html><body><table>"
-                + "<td>Cell 1</td>"
-                + "<td>Cell 2</td>"
-                + "</table></body></html>";
+        final String html = "<html><body><table>" + "<td>Cell 1</td>" + "<td>Cell 2</td>" + "</table></body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -217,10 +192,9 @@ public class ComplexTableStructuresTest {
     @Test
     public void testTableWithTheadAfterTbody() throws Exception {
         // Given: THEAD after TBODY (incorrect order)
-        final String html = "<html><body><table>"
-                + "<tbody><tr><td>Body</td></tr></tbody>"
-                + "<thead><tr><th>Header</th></tr></thead>"
-                + "</table></body></html>";
+        final String html =
+                "<html><body><table>" + "<tbody><tr><td>Body</td></tr></tbody>" + "<thead><tr><th>Header</th></tr></thead>"
+                        + "</table></body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -234,13 +208,9 @@ public class ComplexTableStructuresTest {
     @Test
     public void testTableWithMixedElements() throws Exception {
         // Given: Table with elements in mixed/wrong order
-        final String html = "<html><body><table>"
-                + "<tr><td>Row 1</td></tr>"
-                + "<thead><tr><th>Header</th></tr></thead>"
-                + "<tr><td>Row 2</td></tr>"
-                + "<tfoot><tr><td>Footer</td></tr></tfoot>"
-                + "<tr><td>Row 3</td></tr>"
-                + "</table></body></html>";
+        final String html =
+                "<html><body><table>" + "<tr><td>Row 1</td></tr>" + "<thead><tr><th>Header</th></tr></thead>" + "<tr><td>Row 2</td></tr>"
+                        + "<tfoot><tr><td>Footer</td></tr></tfoot>" + "<tr><td>Row 3</td></tr>" + "</table></body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -253,11 +223,9 @@ public class ComplexTableStructuresTest {
     @Test
     public void testTableWithUnclosedRows() throws Exception {
         // Given: Table with unclosed TR tags
-        final String html = "<html><body><table>"
-                + "<tr><td>Cell 1-1</td><td>Cell 1-2</td>"
-                + "<tr><td>Cell 2-1</td><td>Cell 2-2</td>"
-                + "<tr><td>Cell 3-1</td><td>Cell 3-2</td>"
-                + "</table></body></html>";
+        final String html =
+                "<html><body><table>" + "<tr><td>Cell 1-1</td><td>Cell 1-2</td>" + "<tr><td>Cell 2-1</td><td>Cell 2-2</td>"
+                        + "<tr><td>Cell 3-1</td><td>Cell 3-2</td>" + "</table></body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -271,9 +239,7 @@ public class ComplexTableStructuresTest {
     @Test
     public void testTableWithUnclosedCells() throws Exception {
         // Given: Table with unclosed TD tags
-        final String html = "<html><body><table>"
-                + "<tr><td>Cell 1<td>Cell 2<td>Cell 3</tr>"
-                + "</table></body></html>";
+        final String html = "<html><body><table>" + "<tr><td>Cell 1<td>Cell 2<td>Cell 3</tr>" + "</table></body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -290,10 +256,9 @@ public class ComplexTableStructuresTest {
     @Test
     public void testTableWithColspan() throws Exception {
         // Given: Table with COLSPAN
-        final String html = "<html><body><table>"
-                + "<tr><td colspan=\"2\">Spans 2 columns</td><td>Cell 3</td></tr>"
-                + "<tr><td>Cell 1</td><td>Cell 2</td><td>Cell 3</td></tr>"
-                + "</table></body></html>";
+        final String html =
+                "<html><body><table>" + "<tr><td colspan=\"2\">Spans 2 columns</td><td>Cell 3</td></tr>"
+                        + "<tr><td>Cell 1</td><td>Cell 2</td><td>Cell 3</td></tr>" + "</table></body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -310,10 +275,9 @@ public class ComplexTableStructuresTest {
     @Test
     public void testTableWithRowspan() throws Exception {
         // Given: Table with ROWSPAN
-        final String html = "<html><body><table>"
-                + "<tr><td rowspan=\"2\">Spans 2 rows</td><td>Cell 1-2</td></tr>"
-                + "<tr><td>Cell 2-2</td></tr>"
-                + "</table></body></html>";
+        final String html =
+                "<html><body><table>" + "<tr><td rowspan=\"2\">Spans 2 rows</td><td>Cell 1-2</td></tr>" + "<tr><td>Cell 2-2</td></tr>"
+                        + "</table></body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -330,11 +294,10 @@ public class ComplexTableStructuresTest {
     @Test
     public void testTableWithComplexSpans() throws Exception {
         // Given: Table with complex COLSPAN and ROWSPAN
-        final String html = "<html><body><table>"
-                + "<tr><td colspan=\"2\" rowspan=\"2\">Spans 2x2</td><td>Cell 1-3</td></tr>"
-                + "<tr><td>Cell 2-3</td></tr>"
-                + "<tr><td>Cell 3-1</td><td>Cell 3-2</td><td>Cell 3-3</td></tr>"
-                + "</table></body></html>";
+        final String html =
+                "<html><body><table>" + "<tr><td colspan=\"2\" rowspan=\"2\">Spans 2x2</td><td>Cell 1-3</td></tr>"
+                        + "<tr><td>Cell 2-3</td></tr>" + "<tr><td>Cell 3-1</td><td>Cell 3-2</td><td>Cell 3-3</td></tr>"
+                        + "</table></body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -352,10 +315,9 @@ public class ComplexTableStructuresTest {
     @Test
     public void testTableWithZeroSpan() throws Exception {
         // Given: Table with colspan/rowspan=0 (special value)
-        final String html = "<html><body><table>"
-                + "<tr><td colspan=\"0\">Spans to end</td></tr>"
-                + "<tr><td>Cell 1</td><td>Cell 2</td><td>Cell 3</td></tr>"
-                + "</table></body></html>";
+        final String html =
+                "<html><body><table>" + "<tr><td colspan=\"0\">Spans to end</td></tr>"
+                        + "<tr><td>Cell 1</td><td>Cell 2</td><td>Cell 3</td></tr>" + "</table></body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -369,9 +331,7 @@ public class ComplexTableStructuresTest {
     @Test
     public void testTableWithVeryLargeSpan() throws Exception {
         // Given: Table with very large span value
-        final String html = "<html><body><table>"
-                + "<tr><td colspan=\"1000\">Large span</td></tr>"
-                + "</table></body></html>";
+        final String html = "<html><body><table>" + "<tr><td colspan=\"1000\">Large span</td></tr>" + "</table></body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -389,10 +349,9 @@ public class ComplexTableStructuresTest {
     @Test
     public void testNestedTables2Levels() throws Exception {
         // Given: 2 levels of nested tables
-        final String html = "<html><body><table>"
-                + "<tr><td>Outer cell 1</td>"
-                + "<td><table><tr><td>Inner cell</td></tr></table></td>"
-                + "</tr></table></body></html>";
+        final String html =
+                "<html><body><table>" + "<tr><td>Outer cell 1</td>" + "<td><table><tr><td>Inner cell</td></tr></table></td>"
+                        + "</tr></table></body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -405,15 +364,10 @@ public class ComplexTableStructuresTest {
     @Test
     public void testNestedTables5Levels() throws Exception {
         // Given: 5 levels of nested tables
-        final String html = "<html><body><table><tr><td>"
-                + "<table><tr><td>"
-                + "<table><tr><td>"
-                + "<table><tr><td>"
-                + "<table><tr><td>Deep</td></tr></table>"
-                + "</td></tr></table>"
-                + "</td></tr></table>"
-                + "</td></tr></table>"
-                + "</td></tr></table></body></html>";
+        final String html =
+                "<html><body><table><tr><td>" + "<table><tr><td>" + "<table><tr><td>" + "<table><tr><td>"
+                        + "<table><tr><td>Deep</td></tr></table>" + "</td></tr></table>" + "</td></tr></table>" + "</td></tr></table>"
+                        + "</td></tr></table></body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -426,11 +380,10 @@ public class ComplexTableStructuresTest {
     @Test
     public void testNestedTableInTheadTbodyTfoot() throws Exception {
         // Given: Nested tables in different sections
-        final String html = "<html><body><table>"
-                + "<thead><tr><th><table><tr><td>Header table</td></tr></table></th></tr></thead>"
-                + "<tbody><tr><td><table><tr><td>Body table</td></tr></table></td></tr></tbody>"
-                + "<tfoot><tr><td><table><tr><td>Footer table</td></tr></table></td></tr></tfoot>"
-                + "</table></body></html>";
+        final String html =
+                "<html><body><table>" + "<thead><tr><th><table><tr><td>Header table</td></tr></table></th></tr></thead>"
+                        + "<tbody><tr><td><table><tr><td>Body table</td></tr></table></td></tr></tbody>"
+                        + "<tfoot><tr><td><table><tr><td>Footer table</td></tr></table></td></tr></tfoot>" + "</table></body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -460,10 +413,9 @@ public class ComplexTableStructuresTest {
     @Test
     public void testTableWithEmptyCells() throws Exception {
         // Given: Table with empty cells
-        final String html = "<html><body><table>"
-                + "<tr><td></td><td></td><td></td></tr>"
-                + "<tr><td></td><td>Content</td><td></td></tr>"
-                + "</table></body></html>";
+        final String html =
+                "<html><body><table>" + "<tr><td></td><td></td><td></td></tr>" + "<tr><td></td><td>Content</td><td></td></tr>"
+                        + "</table></body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -476,10 +428,7 @@ public class ComplexTableStructuresTest {
     @Test
     public void testTableWithOnlyTheadEmpty() throws Exception {
         // Given: Table with empty THEAD
-        final String html = "<html><body><table>"
-                + "<thead></thead>"
-                + "<tbody><tr><td>Body</td></tr></tbody>"
-                + "</table></body></html>";
+        final String html = "<html><body><table>" + "<thead></thead>" + "<tbody><tr><td>Body</td></tr></tbody>" + "</table></body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -496,12 +445,9 @@ public class ComplexTableStructuresTest {
     @Test
     public void testTableWithThInTbody() throws Exception {
         // Given: TH elements in TBODY (valid for row headers)
-        final String html = "<html><body><table>"
-                + "<tbody>"
-                + "<tr><th>Row 1 Header</th><td>Data 1</td></tr>"
-                + "<tr><th>Row 2 Header</th><td>Data 2</td></tr>"
-                + "</tbody>"
-                + "</table></body></html>";
+        final String html =
+                "<html><body><table>" + "<tbody>" + "<tr><th>Row 1 Header</th><td>Data 1</td></tr>"
+                        + "<tr><th>Row 2 Header</th><td>Data 2</td></tr>" + "</tbody>" + "</table></body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -515,9 +461,8 @@ public class ComplexTableStructuresTest {
     @Test
     public void testTableWithOnlyTh() throws Exception {
         // Given: Table with only TH elements
-        final String html = "<html><body><table>"
-                + "<tr><th>Header 1</th><th>Header 2</th><th>Header 3</th></tr>"
-                + "</table></body></html>";
+        final String html =
+                "<html><body><table>" + "<tr><th>Header 1</th><th>Header 2</th><th>Header 3</th></tr>" + "</table></body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -531,10 +476,9 @@ public class ComplexTableStructuresTest {
     @Test
     public void testTableWithThAttributes() throws Exception {
         // Given: TH with scope, headers, and colspan attributes
-        final String html = "<html><body><table>"
-                + "<thead><tr><th id=\"h1\" scope=\"col\" colspan=\"2\">Header</th></tr></thead>"
-                + "<tbody><tr><td headers=\"h1\">Data 1</td><td headers=\"h1\">Data 2</td></tr></tbody>"
-                + "</table></body></html>";
+        final String html =
+                "<html><body><table>" + "<thead><tr><th id=\"h1\" scope=\"col\" colspan=\"2\">Header</th></tr></thead>"
+                        + "<tbody><tr><td headers=\"h1\">Data 1</td><td headers=\"h1\">Data 2</td></tr></tbody>" + "</table></body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -554,17 +498,11 @@ public class ComplexTableStructuresTest {
     @Test
     public void testDataTableWithSorting() throws Exception {
         // Given: Data table with sorting attributes
-        final String html = "<html><body><table>"
-                + "<thead><tr>"
-                + "<th data-sort=\"string\">Name</th>"
-                + "<th data-sort=\"number\">Age</th>"
-                + "<th data-sort=\"date\">Date</th>"
-                + "</tr></thead>"
-                + "<tbody>"
-                + "<tr><td>John</td><td>30</td><td>2025-01-01</td></tr>"
-                + "<tr><td>Jane</td><td>25</td><td>2025-01-02</td></tr>"
-                + "</tbody>"
-                + "</table></body></html>";
+        final String html =
+                "<html><body><table>" + "<thead><tr>" + "<th data-sort=\"string\">Name</th>" + "<th data-sort=\"number\">Age</th>"
+                        + "<th data-sort=\"date\">Date</th>" + "</tr></thead>" + "<tbody>"
+                        + "<tr><td>John</td><td>30</td><td>2025-01-01</td></tr>" + "<tr><td>Jane</td><td>25</td><td>2025-01-02</td></tr>"
+                        + "</tbody>" + "</table></body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -581,11 +519,10 @@ public class ComplexTableStructuresTest {
     @Test
     public void testTableWithFormElements() throws Exception {
         // Given: Table containing form elements
-        final String html = "<html><body><table>"
-                + "<tr><td><input type=\"text\" name=\"field1\"></td></tr>"
-                + "<tr><td><select name=\"field2\"><option>Option 1</option></select></td></tr>"
-                + "<tr><td><textarea name=\"field3\"></textarea></td></tr>"
-                + "</table></body></html>";
+        final String html =
+                "<html><body><table>" + "<tr><td><input type=\"text\" name=\"field1\"></td></tr>"
+                        + "<tr><td><select name=\"field2\"><option>Option 1</option></select></td></tr>"
+                        + "<tr><td><textarea name=\"field3\"></textarea></td></tr>" + "</table></body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -600,12 +537,10 @@ public class ComplexTableStructuresTest {
     @Test
     public void testTableWithComplexContent() throws Exception {
         // Given: Table with various content types
-        final String html = "<html><body><table>"
-                + "<tr><td><img src=\"image.jpg\" alt=\"Image\"></td></tr>"
-                + "<tr><td><a href=\"#\">Link</a></td></tr>"
-                + "<tr><td><ul><li>List item</li></ul></td></tr>"
-                + "<tr><td><div><p>Nested content</p></div></td></tr>"
-                + "</table></body></html>";
+        final String html =
+                "<html><body><table>" + "<tr><td><img src=\"image.jpg\" alt=\"Image\"></td></tr>"
+                        + "<tr><td><a href=\"#\">Link</a></td></tr>" + "<tr><td><ul><li>List item</li></ul></td></tr>"
+                        + "<tr><td><div><p>Nested content</p></div></td></tr>" + "</table></body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -621,11 +556,9 @@ public class ComplexTableStructuresTest {
     @Test
     public void testTableWithMultipleCaption() throws Exception {
         // Given: Table with multiple CAPTION elements (invalid but should handle)
-        final String html = "<html><body><table>"
-                + "<caption>Caption 1</caption>"
-                + "<caption>Caption 2</caption>"
-                + "<tr><td>Cell</td></tr>"
-                + "</table></body></html>";
+        final String html =
+                "<html><body><table>" + "<caption>Caption 1</caption>" + "<caption>Caption 2</caption>" + "<tr><td>Cell</td></tr>"
+                        + "</table></body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -638,13 +571,10 @@ public class ComplexTableStructuresTest {
     @Test
     public void testTableWithIrregularRows() throws Exception {
         // Given: Table with rows of different cell counts
-        final String html = "<html><body><table>"
-                + "<tr><td>Cell 1</td></tr>"
-                + "<tr><td>Cell 1</td><td>Cell 2</td></tr>"
-                + "<tr><td>Cell 1</td><td>Cell 2</td><td>Cell 3</td></tr>"
-                + "<tr><td>Cell 1</td><td>Cell 2</td></tr>"
-                + "<tr><td>Cell 1</td></tr>"
-                + "</table></body></html>";
+        final String html =
+                "<html><body><table>" + "<tr><td>Cell 1</td></tr>" + "<tr><td>Cell 1</td><td>Cell 2</td></tr>"
+                        + "<tr><td>Cell 1</td><td>Cell 2</td><td>Cell 3</td></tr>" + "<tr><td>Cell 1</td><td>Cell 2</td></tr>"
+                        + "<tr><td>Cell 1</td></tr>" + "</table></body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
