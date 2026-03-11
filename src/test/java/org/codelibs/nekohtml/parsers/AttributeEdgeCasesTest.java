@@ -89,7 +89,8 @@ public class AttributeEdgeCasesTest {
     @Test
     public void testAttributesWithColons() throws Exception {
         // Given: Attributes with colons (namespace-like)
-        final String html = "<html><body><div xml:lang=\"en\" xlink:href=\"#\" xmlns:custom=\"http://example.com\">Content</div></body></html>";
+        final String html =
+                "<html><body><div xml:lang=\"en\" xlink:href=\"#\" xmlns:custom=\"http://example.com\">Content</div></body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -317,13 +318,9 @@ public class AttributeEdgeCasesTest {
     @Test
     public void testBooleanAttributesWithoutValues() throws Exception {
         // Given: Boolean attributes without values
-        final String html = "<html><body>"
-                + "<input type=\"checkbox\" checked>"
-                + "<input type=\"text\" disabled>"
-                + "<input type=\"text\" readonly>"
-                + "<button autofocus>Button</button>"
-                + "<script async></script>"
-                + "</body></html>";
+        final String html =
+                "<html><body>" + "<input type=\"checkbox\" checked>" + "<input type=\"text\" disabled>" + "<input type=\"text\" readonly>"
+                        + "<button autofocus>Button</button>" + "<script async></script>" + "</body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -337,12 +334,10 @@ public class AttributeEdgeCasesTest {
     @Test
     public void testBooleanAttributesWithValues() throws Exception {
         // Given: Boolean attributes with values (valid in HTML)
-        final String html = "<html><body>"
-                + "<input type=\"checkbox\" checked=\"checked\">"
-                + "<input type=\"text\" disabled=\"disabled\">"
-                + "<input type=\"text\" readonly=\"readonly\">"
-                + "<option selected=\"selected\">Option</option>"
-                + "</body></html>";
+        final String html =
+                "<html><body>" + "<input type=\"checkbox\" checked=\"checked\">" + "<input type=\"text\" disabled=\"disabled\">"
+                        + "<input type=\"text\" readonly=\"readonly\">" + "<option selected=\"selected\">Option</option>"
+                        + "</body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -356,11 +351,9 @@ public class AttributeEdgeCasesTest {
     @Test
     public void testBooleanAttributesWithInvalidValues() throws Exception {
         // Given: Boolean attributes with invalid values
-        final String html = "<html><body>"
-                + "<input type=\"checkbox\" checked=\"false\">"
-                + "<input type=\"text\" disabled=\"no\">"
-                + "<input type=\"text\" readonly=\"0\">"
-                + "</body></html>";
+        final String html =
+                "<html><body>" + "<input type=\"checkbox\" checked=\"false\">" + "<input type=\"text\" disabled=\"no\">"
+                        + "<input type=\"text\" readonly=\"0\">" + "</body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -374,18 +367,11 @@ public class AttributeEdgeCasesTest {
     @Test
     public void testAllBooleanHTMLAttributes() throws Exception {
         // Given: All common boolean HTML attributes
-        final String html = "<html><body>"
-                + "<input checked disabled readonly required autofocus>"
-                + "<button formnovalidate>Button</button>"
-                + "<video autoplay controls loop muted>Video</video>"
-                + "<ol reversed>List</ol>"
-                + "<details open>Details</details>"
-                + "<script async defer></script>"
-                + "<iframe seamless></iframe>"
-                + "<track default>"
-                + "<option selected>Option</option>"
-                + "<optgroup disabled>Group</optgroup>"
-                + "</body></html>";
+        final String html =
+                "<html><body>" + "<input checked disabled readonly required autofocus>" + "<button formnovalidate>Button</button>"
+                        + "<video autoplay controls loop muted>Video</video>" + "<ol reversed>List</ol>"
+                        + "<details open>Details</details>" + "<script async defer></script>" + "<iframe seamless></iframe>"
+                        + "<track default>" + "<option selected>Option</option>" + "<optgroup disabled>Group</optgroup>" + "</body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -434,11 +420,8 @@ public class AttributeEdgeCasesTest {
     @Test
     public void testAttributesWithNewlinesBetweenThem() throws Exception {
         // Given: Attributes on multiple lines
-        final String html = "<html><body><div\n"
-                + "id=\"test\"\n"
-                + "class=\"myclass\"\n"
-                + "title=\"title\"\n"
-                + ">Content</div></body></html>";
+        final String html =
+                "<html><body><div\n" + "id=\"test\"\n" + "class=\"myclass\"\n" + "title=\"title\"\n" + ">Content</div></body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -474,9 +457,10 @@ public class AttributeEdgeCasesTest {
     @Test
     public void testDataAttributes() throws Exception {
         // Given: Various data attributes
-        final String html = "<html><body>"
-                + "<div data-id=\"123\" data-user-name=\"John Doe\" data-timestamp=\"2025-01-01\" data-json='{\"key\":\"value\"}'>Content</div>"
-                + "</body></html>";
+        final String html =
+                "<html><body>"
+                        + "<div data-id=\"123\" data-user-name=\"John Doe\" data-timestamp=\"2025-01-01\" data-json='{\"key\":\"value\"}'>Content</div>"
+                        + "</body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -493,9 +477,10 @@ public class AttributeEdgeCasesTest {
     @Test
     public void testAriaAttributes() throws Exception {
         // Given: ARIA attributes
-        final String html = "<html><body>"
-                + "<div role=\"button\" aria-label=\"Close\" aria-hidden=\"false\" aria-expanded=\"true\" aria-controls=\"menu\">Button</div>"
-                + "</body></html>";
+        final String html =
+                "<html><body>"
+                        + "<div role=\"button\" aria-label=\"Close\" aria-hidden=\"false\" aria-expanded=\"true\" aria-controls=\"menu\">Button</div>"
+                        + "</body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -512,9 +497,10 @@ public class AttributeEdgeCasesTest {
     @Test
     public void testEventHandlerAttributes() throws Exception {
         // Given: Event handler attributes
-        final String html = "<html><body>"
-                + "<button onclick=\"alert('clicked')\" onmouseover=\"highlight()\" onmouseout=\"unhighlight()\">Button</button>"
-                + "</body></html>";
+        final String html =
+                "<html><body>"
+                        + "<button onclick=\"alert('clicked')\" onmouseover=\"highlight()\" onmouseout=\"unhighlight()\">Button</button>"
+                        + "</body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -530,9 +516,10 @@ public class AttributeEdgeCasesTest {
     @Test
     public void testStyleAttribute() throws Exception {
         // Given: Style attribute with complex CSS
-        final String html = "<html><body>"
-                + "<div style=\"color: red; background-color: blue; margin: 10px; padding: 5px 10px; font-size: 14px;\">Content</div>"
-                + "</body></html>";
+        final String html =
+                "<html><body>"
+                        + "<div style=\"color: red; background-color: blue; margin: 10px; padding: 5px 10px; font-size: 14px;\">Content</div>"
+                        + "</body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -565,11 +552,10 @@ public class AttributeEdgeCasesTest {
     @Test
     public void testAttributeWithURL() throws Exception {
         // Given: Attributes with URLs
-        final String html = "<html><body>"
-                + "<a href=\"https://example.com/path?param1=value1&param2=value2#anchor\">Link</a>"
-                + "<img src=\"/images/photo.jpg\" alt=\"Photo\">"
-                + "<link rel=\"stylesheet\" href=\"/css/styles.css\">"
-                + "</body></html>";
+        final String html =
+                "<html><body>" + "<a href=\"https://example.com/path?param1=value1&param2=value2#anchor\">Link</a>"
+                        + "<img src=\"/images/photo.jpg\" alt=\"Photo\">" + "<link rel=\"stylesheet\" href=\"/css/styles.css\">"
+                        + "</body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);

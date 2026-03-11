@@ -46,8 +46,7 @@ public class HTMLTagBalancerFilterEnhancementsTest {
 
         filter.setContentHandler(new DefaultHandler() {
             @Override
-            public void startElement(String uri, String localName, String qName, org.xml.sax.Attributes atts)
-                    throws SAXException {
+            public void startElement(String uri, String localName, String qName, org.xml.sax.Attributes atts) throws SAXException {
                 startElements.add(qName);
             }
 

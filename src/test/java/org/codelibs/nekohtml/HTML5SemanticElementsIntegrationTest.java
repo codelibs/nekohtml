@@ -91,7 +91,8 @@ public class HTML5SemanticElementsIntegrationTest {
     @Test
     public void testSearchElementInAside() throws Exception {
         // Given: HTML with SEARCH in ASIDE (common pattern for sidebar search)
-        final String html = "<html><body><main>Main content</main><aside><search><form><label>Filter:<input type=\"search\"></label></form></search></aside></body></html>";
+        final String html =
+                "<html><body><main>Main content</main><aside><search><form><label>Filter:<input type=\"search\"></label></form></search></aside></body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -108,10 +109,10 @@ public class HTML5SemanticElementsIntegrationTest {
     @Test
     public void testMultipleSearchElements() throws Exception {
         // Given: HTML with multiple SEARCH elements
-        final String html = "<html><body>"
-                + "<header><search><input type=\"search\" placeholder=\"Global search\"></search></header>"
-                + "<main><article><search><input type=\"search\" placeholder=\"Article search\"></search></article></main>"
-                + "</body></html>";
+        final String html =
+                "<html><body>" + "<header><search><input type=\"search\" placeholder=\"Global search\"></search></header>"
+                        + "<main><article><search><input type=\"search\" placeholder=\"Article search\"></search></article></main>"
+                        + "</body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -124,14 +125,10 @@ public class HTML5SemanticElementsIntegrationTest {
     @Test
     public void testSearchWithAutocompleteAndDatalist() throws Exception {
         // Given: HTML with SEARCH containing autocomplete and datalist
-        final String html = "<html><body><search>"
-                + "<input type=\"search\" list=\"suggestions\" autocomplete=\"on\">"
-                + "<datalist id=\"suggestions\">"
-                + "<option value=\"Apple\">"
-                + "<option value=\"Banana\">"
-                + "<option value=\"Cherry\">"
-                + "</datalist>"
-                + "</search></body></html>";
+        final String html =
+                "<html><body><search>" + "<input type=\"search\" list=\"suggestions\" autocomplete=\"on\">"
+                        + "<datalist id=\"suggestions\">" + "<option value=\"Apple\">" + "<option value=\"Banana\">"
+                        + "<option value=\"Cherry\">" + "</datalist>" + "</search></body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -155,11 +152,9 @@ public class HTML5SemanticElementsIntegrationTest {
     @Test
     public void testSearchClosingWithAdjacentBlockElements() throws Exception {
         // Given: HTML with SEARCH followed by other block elements
-        final String html = "<html><body>"
-                + "<search><input type=\"search\"></search>"
-                + "<nav><ul><li>Link 1</li></ul></nav>"
-                + "<article>Content</article>"
-                + "</body></html>";
+        final String html =
+                "<html><body>" + "<search><input type=\"search\"></search>" + "<nav><ul><li>Link 1</li></ul></nav>"
+                        + "<article>Content</article>" + "</body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -239,11 +234,10 @@ public class HTML5SemanticElementsIntegrationTest {
     @Test
     public void testMultipleSlotsInTemplate() throws Exception {
         // Given: HTML with multiple SLOTs in TEMPLATE
-        final String html = "<html><body><template id=\"my-template\">"
-                + "<header><slot name=\"header\">Default Header</slot></header>"
-                + "<main><slot>Default Content</slot></main>"
-                + "<footer><slot name=\"footer\">Default Footer</slot></footer>"
-                + "</template></body></html>";
+        final String html =
+                "<html><body><template id=\"my-template\">" + "<header><slot name=\"header\">Default Header</slot></header>"
+                        + "<main><slot>Default Content</slot></main>" + "<footer><slot name=\"footer\">Default Footer</slot></footer>"
+                        + "</template></body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -265,7 +259,8 @@ public class HTML5SemanticElementsIntegrationTest {
     @Test
     public void testNestedSlotElements() throws Exception {
         // Given: HTML with nested SLOTs (edge case)
-        final String html = "<html><body><template><div><slot name=\"outer\"><div><slot name=\"inner\">Fallback</slot></div></slot></div></template></body></html>";
+        final String html =
+                "<html><body><template><div><slot name=\"outer\"><div><slot name=\"inner\">Fallback</slot></div></slot></div></template></body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -302,14 +297,9 @@ public class HTML5SemanticElementsIntegrationTest {
     @Test
     public void testHgroupWithAllHeadingLevels() throws Exception {
         // Given: HTML with HGROUP containing H1-H6
-        final String html = "<html><body><hgroup>"
-                + "<h1>Level 1</h1>"
-                + "<h2>Level 2</h2>"
-                + "<h3>Level 3</h3>"
-                + "<h4>Level 4</h4>"
-                + "<h5>Level 5</h5>"
-                + "<h6>Level 6</h6>"
-                + "</hgroup></body></html>";
+        final String html =
+                "<html><body><hgroup>" + "<h1>Level 1</h1>" + "<h2>Level 2</h2>" + "<h3>Level 3</h3>" + "<h4>Level 4</h4>"
+                        + "<h5>Level 5</h5>" + "<h6>Level 6</h6>" + "</hgroup></body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -362,7 +352,8 @@ public class HTML5SemanticElementsIntegrationTest {
     @Test
     public void testHgroupInArticle() throws Exception {
         // Given: HTML with HGROUP in ARTICLE
-        final String html = "<html><body><article><hgroup><h1>Article Title</h1><h2>Author Name</h2></hgroup><p>Article content</p></article></body></html>";
+        final String html =
+                "<html><body><article><hgroup><h1>Article Title</h1><h2>Author Name</h2></hgroup><p>Article content</p></article></body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -379,7 +370,8 @@ public class HTML5SemanticElementsIntegrationTest {
     @Test
     public void testHgroupInSection() throws Exception {
         // Given: HTML with HGROUP in SECTION
-        final String html = "<html><body><section><hgroup><h2>Section Title</h2><h3>Section Subtitle</h3></hgroup><p>Content</p></section></body></html>";
+        final String html =
+                "<html><body><section><hgroup><h2>Section Title</h2><h3>Section Subtitle</h3></hgroup><p>Content</p></section></body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -396,10 +388,10 @@ public class HTML5SemanticElementsIntegrationTest {
     @Test
     public void testMultipleHgroups() throws Exception {
         // Given: HTML with multiple HGROUPs
-        final String html = "<html><body>"
-                + "<article><hgroup><h1>First Article</h1><h2>First Subtitle</h2></hgroup><p>Content 1</p></article>"
-                + "<article><hgroup><h1>Second Article</h1><h2>Second Subtitle</h2></hgroup><p>Content 2</p></article>"
-                + "</body></html>";
+        final String html =
+                "<html><body>" + "<article><hgroup><h1>First Article</h1><h2>First Subtitle</h2></hgroup><p>Content 1</p></article>"
+                        + "<article><hgroup><h1>Second Article</h1><h2>Second Subtitle</h2></hgroup><p>Content 2</p></article>"
+                        + "</body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -437,25 +429,13 @@ public class HTML5SemanticElementsIntegrationTest {
     @Test
     public void testComplexSemanticStructureWithNewElements() throws Exception {
         // Given: Complex HTML using SEARCH, SLOT, HGROUP together
-        final String html = "<html><body>"
-                + "<header>"
-                + "<hgroup><h1>Website Title</h1><h2>Tagline</h2></hgroup>"
-                + "<search><input type=\"search\" placeholder=\"Search site...\"></search>"
-                + "</header>"
-                + "<main>"
-                + "<article>"
-                + "<hgroup><h2>Article Title</h2><h3>Article Subtitle</h3></hgroup>"
-                + "<p>Article content here</p>"
-                + "</article>"
-                + "<aside>"
-                + "<search><form><input type=\"search\" placeholder=\"Filter...\"></form></search>"
-                + "</aside>"
-                + "</main>"
-                + "<template id=\"card\">"
-                + "<slot name=\"title\"><h3>Default Title</h3></slot>"
-                + "<slot name=\"content\"><p>Default content</p></slot>"
-                + "</template>"
-                + "</body></html>";
+        final String html =
+                "<html><body>" + "<header>" + "<hgroup><h1>Website Title</h1><h2>Tagline</h2></hgroup>"
+                        + "<search><input type=\"search\" placeholder=\"Search site...\"></search>" + "</header>" + "<main>" + "<article>"
+                        + "<hgroup><h2>Article Title</h2><h3>Article Subtitle</h3></hgroup>" + "<p>Article content here</p>" + "</article>"
+                        + "<aside>" + "<search><form><input type=\"search\" placeholder=\"Filter...\"></form></search>" + "</aside>"
+                        + "</main>" + "<template id=\"card\">" + "<slot name=\"title\"><h3>Default Title</h3></slot>"
+                        + "<slot name=\"content\"><p>Default content</p></slot>" + "</template>" + "</body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -477,7 +457,8 @@ public class HTML5SemanticElementsIntegrationTest {
     @Test
     public void testSearchInMain() throws Exception {
         // Given: SEARCH in MAIN element
-        final String html = "<html><body><main><search><form action=\"/search\"><input type=\"search\" name=\"q\"></form></search></main></body></html>";
+        final String html =
+                "<html><body><main><search><form action=\"/search\"><input type=\"search\" name=\"q\"></form></search></main></body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -494,7 +475,8 @@ public class HTML5SemanticElementsIntegrationTest {
     @Test
     public void testHgroupInFooter() throws Exception {
         // Given: HGROUP in FOOTER (less common but valid)
-        final String html = "<html><body><footer><hgroup><h2>Footer Section</h2><h3>Additional Info</h3></hgroup><p>Footer content</p></footer></body></html>";
+        final String html =
+                "<html><body><footer><hgroup><h2>Footer Section</h2><h3>Additional Info</h3></hgroup><p>Footer content</p></footer></body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -511,15 +493,12 @@ public class HTML5SemanticElementsIntegrationTest {
     @Test
     public void testSearchWithComplexFormElements() throws Exception {
         // Given: SEARCH with complex form containing multiple inputs
-        final String html = "<html><body><search><form>"
-                + "<fieldset>"
-                + "<legend>Advanced Search</legend>"
-                + "<label>Keyword: <input type=\"search\" name=\"keyword\"></label>"
-                + "<label>Category: <select name=\"category\"><option>All</option><option>News</option></select></label>"
-                + "<label>Date: <input type=\"date\" name=\"date\"></label>"
-                + "<button type=\"submit\">Search</button>"
-                + "</fieldset>"
-                + "</form></search></body></html>";
+        final String html =
+                "<html><body><search><form>" + "<fieldset>" + "<legend>Advanced Search</legend>"
+                        + "<label>Keyword: <input type=\"search\" name=\"keyword\"></label>"
+                        + "<label>Category: <select name=\"category\"><option>All</option><option>News</option></select></label>"
+                        + "<label>Date: <input type=\"date\" name=\"date\"></label>" + "<button type=\"submit\">Search</button>"
+                        + "</fieldset>" + "</form></search></body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
@@ -539,7 +518,8 @@ public class HTML5SemanticElementsIntegrationTest {
     @Test
     public void testSlotInCustomElement() throws Exception {
         // Given: SLOT in custom element context
-        final String html = "<html><body><template><custom-card><slot name=\"header\"></slot><slot></slot><slot name=\"footer\"></slot></custom-card></template></body></html>";
+        final String html =
+                "<html><body><template><custom-card><slot name=\"header\"></slot><slot></slot><slot name=\"footer\"></slot></custom-card></template></body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);

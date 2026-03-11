@@ -88,8 +88,9 @@ public class RawTextElementsTest {
 
     @Test
     public void testMultipleScriptElements() throws Exception {
-        final String html = "<html><head>" + "<script>var a = 1;</script>" + "<script>var b = 2;</script>"
-                + "<script>var c = 3;</script>" + "</head></html>";
+        final String html =
+                "<html><head>" + "<script>var a = 1;</script>" + "<script>var b = 2;</script>" + "<script>var c = 3;</script>"
+                        + "</head></html>";
 
         final DOMParser parser = new DOMParser();
         parser.parse(new InputSource(new StringReader(html)));
@@ -139,8 +140,7 @@ public class RawTextElementsTest {
         assertEquals(1, styles.getLength(), "Should have one style element");
 
         final String styleContent = styles.item(0).getTextContent();
-        assertTrue(styleContent.contains("color: red") || styleContent.contains("color:"),
-                "Style content should contain CSS rules");
+        assertTrue(styleContent.contains("color: red") || styleContent.contains("color:"), "Style content should contain CSS rules");
     }
 
     @Test

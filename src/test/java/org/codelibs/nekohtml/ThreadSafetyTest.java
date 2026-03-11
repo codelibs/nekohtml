@@ -44,11 +44,8 @@ import org.xml.sax.helpers.DefaultHandler;
 public class ThreadSafetyTest {
 
     private static final String SIMPLE_HTML = "<html><body><div>Content</div></body></html>";
-    private static final String COMPLEX_HTML = "<html><head><title>Test</title></head><body>"
-            + "<article><header><h1>Title</h1></header>"
-            + "<section><p>Paragraph 1</p><p>Paragraph 2</p></section>"
-            + "<footer>Footer</footer></article>"
-            + "</body></html>";
+    private static final String COMPLEX_HTML = "<html><head><title>Test</title></head><body>" + "<article><header><h1>Title</h1></header>"
+            + "<section><p>Paragraph 1</p><p>Paragraph 2</p></section>" + "<footer>Footer</footer></article>" + "</body></html>";
 
     // ========================================================================
     // Concurrent Parsing with Separate Parser Instances
@@ -104,8 +101,8 @@ public class ThreadSafetyTest {
                 public Boolean call() throws Exception {
                     try {
                         final DOMParser parser = new DOMParser();
-                        final String html = "<html><body><h1>Thread " + threadId + "</h1>"
-                                + "<p>Paragraph " + threadId + "</p></body></html>";
+                        final String html =
+                                "<html><body><h1>Thread " + threadId + "</h1>" + "<p>Paragraph " + threadId + "</p></body></html>";
                         parser.parse(new InputSource(new StringReader(html)));
                         final Document doc = parser.getDocument();
 
@@ -137,10 +134,10 @@ public class ThreadSafetyTest {
         final ExecutorService executor = Executors.newFixedThreadPool(10);
         final List<Future<Boolean>> futures = new ArrayList<>();
 
-        final String[] htmlTypes = new String[] { SIMPLE_HTML, COMPLEX_HTML,
-                "<html><body><table><tr><td>Table</td></tr></table></body></html>",
-                "<html><body><form><input type=\"text\"></form></body></html>",
-                "<html><body><ul><li>Item 1</li><li>Item 2</li></ul></body></html>" };
+        final String[] htmlTypes =
+                new String[] { SIMPLE_HTML, COMPLEX_HTML, "<html><body><table><tr><td>Table</td></tr></table></body></html>",
+                        "<html><body><form><input type=\"text\"></form></body></html>",
+                        "<html><body><ul><li>Item 1</li><li>Item 2</li></ul></body></html>" };
 
         // When: Threads parse different document types
         for (int i = 0; i < threadCount; i++) {
@@ -311,9 +308,10 @@ public class ThreadSafetyTest {
         final AtomicInteger successCount = new AtomicInteger(0);
         final List<Future<Boolean>> futures = new ArrayList<>();
 
-        final String[] malformedHTML = new String[] { "<html><body><div>Unclosed div", "<html><body><b><i></b></i></body></html>",
-                "<html><body><table><td>No TR</td></table></body></html>", "<html><body><p>Paragraph <div>Block</div> continues</p>",
-                "<html><body><ul><div>Wrong nesting</div></ul>" };
+        final String[] malformedHTML =
+                new String[] { "<html><body><div>Unclosed div", "<html><body><b><i></b></i></body></html>",
+                        "<html><body><table><td>No TR</td></table></body></html>",
+                        "<html><body><p>Paragraph <div>Block</div> continues</p>", "<html><body><ul><div>Wrong nesting</div></ul>" };
 
         // When: Threads parse malformed HTML
         for (int i = 0; i < threadCount; i++) {

@@ -407,8 +407,9 @@ public class SimpleHTMLScannerTest {
         // When: Parsing the HTML
         scanner.parse(input);
 
-        // Then: Should capture special characters (as-is, no entity decoding)
-        assertTrue(textContent.stream().anyMatch(text -> text.contains("&lt;&gt;&amp;")));
+        // Then: Should capture decoded special characters (join chunks since characters() may be called multiple times)
+        final String allText = String.join("", textContent);
+        assertTrue(allText.contains("<>&"), "Should decode &lt;&gt;&amp; to <>&");
     }
 
     @Test
@@ -499,8 +500,8 @@ public class SimpleHTMLScannerTest {
         final SAXException exception = assertThrows(SAXException.class, () -> {
             scanner.parse(input);
         });
-        assertTrue(exception.getMessage().contains("Cannot open SystemId"),
-                "Expected message about unable to open SystemId, got: " + exception.getMessage());
+        assertTrue(exception.getMessage().contains("Cannot open SystemId"), "Expected message about unable to open SystemId, got: "
+                + exception.getMessage());
     }
 
     @Test
@@ -525,8 +526,8 @@ public class SimpleHTMLScannerTest {
         final SAXException exception = assertThrows(SAXException.class, () -> {
             scanner.parse("http://example.com/nonexistent.html");
         });
-        assertTrue(exception.getMessage().contains("Cannot open SystemId"),
-                "Expected message about unable to open SystemId, got: " + exception.getMessage());
+        assertTrue(exception.getMessage().contains("Cannot open SystemId"), "Expected message about unable to open SystemId, got: "
+                + exception.getMessage());
     }
 
     @Test
