@@ -29,10 +29,20 @@ src/main/java/org/codelibs/nekohtml/
 │   ├── HTMLSAXConfiguration.java    # Pipeline orchestrator
 │   ├── SimpleHTMLScanner.java       # Regex-based tokenizer
 │   ├── HTMLTagBalancerFilter.java   # Tag balancing filter
-│   └── ...
+│   ├── HTMLSAXScanner.java          # Base scanner with encoding detection
+│   ├── HTMLAttributesImpl.java      # SAX Attributes implementation
+│   ├── HTMLDocumentHandler.java     # Document handler interface
+│   ├── EncodingMap.java             # Character encoding mappings
+│   ├── HTMLQName.java               # Qualified name representation
+│   ├── HTMLStringBuffer.java        # Mutable string buffer
+│   ├── HTMLAugmentations.java       # Augmentation info for events
+│   └── XMLChar.java                 # XML character validation
 ├── HTMLElements.java        # HTML element definitions
 ├── HTMLEntities.java        # Entity references and mapping
-└── HTMLErrorReporter.java   # Error reporting interface
+├── HTMLErrorReporter.java   # Error reporting interface
+├── HTMLEventInfo.java       # Event information interface
+├── ObjectFactory.java       # SAX parser factory (META-INF service)
+└── SecuritySupport.java     # Security manager utilities
 
 src/main/resources/org/codelibs/nekohtml/res/
 ├── HTML*.properties         # Entity definitions
@@ -44,6 +54,12 @@ src/test/
 │   └── sax/                 # SAX implementation tests
 └── resources/data/          # Test HTML fixtures
 ```
+
+## CI/CD
+
+GitHub Actions workflows in `.github/workflows/`:
+- `maven.yml` — Build and test on push/PR
+- `codeql-analysis.yml` — CodeQL security scanning
 
 ## Architecture
 
@@ -94,6 +110,12 @@ HTML Input → SimpleHTMLScanner → HTMLTagBalancerFilter → ContentHandler �
 1. Edit `HTMLSAXConfiguration.java`
 2. Update `HTMLSAXParser.java` if needed
 3. Add tests in `HTMLSAXConfigurationTest.java`
+
+## Gotchas
+
+- `mvn formatter:format` and `mvn license:format` must both pass before committing — CI will fail otherwise
+- The `ObjectFactory` class is registered as a SAX parser via `META-INF/services` — don't remove it
+- `HTMLSAXScanner` is the base scanner class; `SimpleHTMLScanner` extends it with regex-based tokenization
 
 ## Important Notes
 
