@@ -1,0 +1,20 @@
+Bundle-SymbolicName: org.codelibs.nekohtml
+Bundle-Name: Neko HTML
+Bundle-Description: An HTML parser and tag balancer.
+Bundle-License: https://www.apache.org/licenses/LICENSE-2.0.txt
+Bundle-DocURL: https://github.com/codelibs/nekohtml
+Bundle-Vendor: CodeLibs Project
+
+Export-Package: \
+    org.codelibs.nekohtml;version="${project.version}",\
+    org.codelibs.nekohtml.parsers;version="${project.version}",\
+    org.codelibs.nekohtml.sax;version="${project.version}"
+
+Import-Package: \
+    javax.xml.parsers,\
+    org.w3c.dom,\
+    org.xml.sax,\
+    org.xml.sax.ext,\
+    org.xml.sax.helpers
+
+Automatic-Module-Name: org.codelibs.nekohtml
