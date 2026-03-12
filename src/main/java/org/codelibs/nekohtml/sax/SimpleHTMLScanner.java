@@ -49,6 +49,10 @@ import org.xml.sax.helpers.AttributesImpl;
  */
 public class SimpleHTMLScanner implements XMLReader {
 
+    /** Constructs a new SimpleHTMLScanner instance. */
+    public SimpleHTMLScanner() {
+    }
+
     /** Logger for this class. */
     private static final Logger logger = Logger.getLogger(SimpleHTMLScanner.class.getName());
 
@@ -457,7 +461,7 @@ public class SimpleHTMLScanner implements XMLReader {
      * Resolves HTML character entities in the given text.
      * Handles numeric decimal (&#214;), numeric hex (&#xD6;), and named (&Ouml;) entities.
      * In attribute context, semicolon-less named entities followed by [A-Za-z0-9=] are not decoded
-     * per HTML5 attribute value state rules, preventing corruption of URLs like &not=, &copy=.
+     * per HTML5 attribute value state rules, preventing corruption of URLs like {@code &not=, &copy=}.
      *
      * @param text The text containing entities
      * @param inAttribute Whether this text is an attribute value
