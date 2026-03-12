@@ -23,6 +23,10 @@ package org.codelibs.nekohtml.sax;
  */
 public class XMLChar {
 
+    /** Private constructor to prevent instantiation of utility class. */
+    private XMLChar() {
+    }
+
     /**
      * Checks if a character is a valid XML character according to XML 1.0.
      *

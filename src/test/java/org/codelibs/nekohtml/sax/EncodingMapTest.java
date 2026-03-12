@@ -30,15 +30,6 @@ import org.junit.jupiter.api.Test;
 public class EncodingMapTest {
 
     @Test
-    public void testConstructor() {
-        // When: Creating EncodingMap instance
-        final EncodingMap map = new EncodingMap();
-
-        // Then: Instance should be created
-        assertNotNull(map, "EncodingMap should be instantiable");
-    }
-
-    @Test
     public void testGetIANA2JavaMappingUTF8() {
         // When: Getting mapping for UTF-8
         final String javaEncoding = EncodingMap.getIANA2JavaMapping("UTF-8");

@@ -29,6 +29,10 @@ import java.util.Map;
  */
 public class EncodingMap {
 
+    /** Private constructor to prevent instantiation of utility class. */
+    private EncodingMap() {
+    }
+
     /** Mapping from IANA names to Java charset names. */
     private static final Map<String, String> IANA_TO_JAVA_MAP = new HashMap<>();
 
