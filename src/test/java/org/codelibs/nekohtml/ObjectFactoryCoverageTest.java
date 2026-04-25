@@ -97,8 +97,7 @@ public class ObjectFactoryCoverageTest {
             final Object result = ObjectFactory.createObject("com.example.Factory", null, "java.lang.String");
 
             assertNotNull(result);
-            assertTrue(result instanceof StringBuilder,
-                    "System property should take precedence over jar service provider");
+            assertTrue(result instanceof StringBuilder, "System property should take precedence over jar service provider");
         } finally {
             System.clearProperty("com.example.Factory");
         }
@@ -279,8 +278,7 @@ public class ObjectFactoryCoverageTest {
         };
 
         // restrictedCl can't find ObjectFactory, but fallback (ObjectFactory's own CL) can
-        final Class<?> clazz = ObjectFactory.findProviderClass(
-                "org.codelibs.nekohtml.ObjectFactory", restrictedCl, true);
+        final Class<?> clazz = ObjectFactory.findProviderClass("org.codelibs.nekohtml.ObjectFactory", restrictedCl, true);
 
         assertNotNull(clazz);
         assertEquals("org.codelibs.nekohtml.ObjectFactory", clazz.getName());
@@ -302,8 +300,7 @@ public class ObjectFactoryCoverageTest {
         final Object result = ObjectFactory.createObject("test.coverage.factory", propsFile.toString(), "java.lang.String");
 
         assertNotNull(result);
-        assertTrue(result instanceof StringBuilder,
-                "Should use class from properties file, not fallback");
+        assertTrue(result instanceof StringBuilder, "Should use class from properties file, not fallback");
     }
 
     @Test
@@ -318,19 +315,17 @@ public class ObjectFactoryCoverageTest {
         final Object result = ObjectFactory.createObject("test.coverage.factory", propsFile.toString(), "java.lang.String");
 
         assertNotNull(result);
-        assertTrue(result instanceof String,
-                "Should fall back when key not found in properties file");
+        assertTrue(result instanceof String, "Should fall back when key not found in properties file");
     }
 
     @Test
     public void testCreateObjectWithNonExistentPropertiesFile() {
         // Explicit properties file path that doesn't exist - should skip and use fallback
-        final Object result = ObjectFactory.createObject("test.coverage.factory",
-                "/nonexistent/path/to/properties.file", "java.lang.String");
+        final Object result =
+                ObjectFactory.createObject("test.coverage.factory", "/nonexistent/path/to/properties.file", "java.lang.String");
 
         assertNotNull(result);
-        assertTrue(result instanceof String,
-                "Should fall back when properties file doesn't exist");
+        assertTrue(result instanceof String, "Should fall back when properties file doesn't exist");
     }
 
     @Test
@@ -380,8 +375,7 @@ public class ObjectFactoryCoverageTest {
         // This class is on the app classpath but not bootstrap,
         // so emptyCl can't find it. With doFallback=true, it falls back
         // to ObjectFactory.class.getClassLoader()
-        final Object result = ObjectFactory.newInstance(
-                "org.codelibs.nekohtml.testclasses.SimpleProvider", emptyCl, true);
+        final Object result = ObjectFactory.newInstance("org.codelibs.nekohtml.testclasses.SimpleProvider", emptyCl, true);
 
         assertNotNull(result);
         assertEquals("org.codelibs.nekohtml.testclasses.SimpleProvider", result.getClass().getName());
@@ -432,8 +426,7 @@ public class ObjectFactoryCoverageTest {
 
         assertNotNull(fromTwoArg);
         assertNotNull(fromThreeArg);
-        assertEquals(fromTwoArg.getClass(), fromThreeArg.getClass(),
-                "Two-arg and three-arg should produce same class");
+        assertEquals(fromTwoArg.getClass(), fromThreeArg.getClass(), "Two-arg and three-arg should produce same class");
     }
 
     // -----------------------------------------------------------------------
@@ -473,8 +466,7 @@ public class ObjectFactoryCoverageTest {
         try {
             final Object result = ObjectFactory.createObject(factoryId, null, "java.lang.String");
             assertNotNull(result);
-            assertTrue(result instanceof java.util.HashMap,
-                    "Should use class from system property");
+            assertTrue(result instanceof java.util.HashMap, "Should use class from system property");
         } finally {
             System.clearProperty(factoryId);
         }
@@ -490,12 +482,10 @@ public class ObjectFactoryCoverageTest {
 
         System.setProperty("test.coverage.factory", "java.util.LinkedList");
         try {
-            final Object result = ObjectFactory.createObject("test.coverage.factory",
-                    propsFile.toString(), "java.lang.String");
+            final Object result = ObjectFactory.createObject("test.coverage.factory", propsFile.toString(), "java.lang.String");
 
             assertNotNull(result);
-            assertTrue(result instanceof java.util.LinkedList,
-                    "System property should take precedence over properties file");
+            assertTrue(result instanceof java.util.LinkedList, "System property should take precedence over properties file");
         } finally {
             System.clearProperty("test.coverage.factory");
         }

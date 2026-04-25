@@ -98,8 +98,7 @@ public class SAXToDOMHandlerCoverageTest {
         System.setProperty(PROP_DOM_STRICT, "true");
         handler = new SAXToDOMHandler(documentBuilder);
 
-        final SAXException ex = assertThrows(SAXException.class,
-                () -> handler.startElement("", "div", "div", new AttributesImpl()));
+        final SAXException ex = assertThrows(SAXException.class, () -> handler.startElement("", "div", "div", new AttributesImpl()));
         assertTrue(ex.getMessage().contains("before startDocument()"));
     }
 
@@ -138,8 +137,7 @@ public class SAXToDOMHandlerCoverageTest {
         // But document is still set, so it goes past the null check.
         // We need document != null but stack empty.
         // After endDocument, elementStack.clear() is called, so stack is empty and document is set.
-        final SAXException ex = assertThrows(SAXException.class,
-                () -> handler.startElement("", "p", "p", new AttributesImpl()));
+        final SAXException ex = assertThrows(SAXException.class, () -> handler.startElement("", "p", "p", new AttributesImpl()));
         assertTrue(ex.getMessage().contains("empty element stack"));
     }
 
@@ -189,8 +187,7 @@ public class SAXToDOMHandlerCoverageTest {
         handler.endElement("", "html", "html");
         // Now stack has only Document. Document already has a document element.
         // Adding another element to Document should cause HIERARCHY_REQUEST_ERR.
-        final SAXException ex = assertThrows(SAXException.class,
-                () -> handler.startElement("", "extra", "extra", new AttributesImpl()));
+        final SAXException ex = assertThrows(SAXException.class, () -> handler.startElement("", "extra", "extra", new AttributesImpl()));
         assertTrue(ex.getMessage().contains("DOM hierarchy violation"));
     }
 
