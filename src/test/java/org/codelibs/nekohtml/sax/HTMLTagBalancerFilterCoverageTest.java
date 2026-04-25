@@ -147,9 +147,10 @@ public class HTMLTagBalancerFilterCoverageTest {
 
     @Test
     public void testIsSpecialElement_specialElements() {
-        String[] specialElements = { "ADDRESS", "ARTICLE", "ASIDE", "BLOCKQUOTE", "DETAILS", "DIALOG", "DIV", "DL", "FIELDSET",
-                "FIGCAPTION", "FIGURE", "FOOTER", "FORM", "H1", "H2", "H3", "H4", "H5", "H6", "HEADER", "HGROUP", "HR", "LI", "MAIN",
-                "NAV", "OL", "P", "PRE", "SEARCH", "SECTION", "TABLE", "UL" };
+        String[] specialElements =
+                { "ADDRESS", "ARTICLE", "ASIDE", "BLOCKQUOTE", "DETAILS", "DIALOG", "DIV", "DL", "FIELDSET", "FIGCAPTION", "FIGURE",
+                        "FOOTER", "FORM", "H1", "H2", "H3", "H4", "H5", "H6", "HEADER", "HGROUP", "HR", "LI", "MAIN", "NAV", "OL", "P",
+                        "PRE", "SEARCH", "SECTION", "TABLE", "UL" };
 
         for (String elem : specialElements) {
             assertTrue(filter.isSpecialElement(elem), elem + " should be special");
@@ -640,7 +641,7 @@ public class HTMLTagBalancerFilterCoverageTest {
     @Test
     public void testFindFurthestBlock_withBlock() {
         filter.elementStack.push("HTML");
-        filter.elementStack.push("B");   // index 1
+        filter.elementStack.push("B"); // index 1
         filter.elementStack.push("DIV"); // index 2 - special
 
         assertEquals(2, filter.findFurthestBlock(1));
