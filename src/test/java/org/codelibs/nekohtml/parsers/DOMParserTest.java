@@ -594,6 +594,34 @@ public class DOMParserTest {
         assertEquals("Link", title, "Title should be 'Link'");
     }
 
+    @Test
+    public void testHtml5NamedEntities() throws Exception {
+        final String html = "<html><body>&lpar;&excl;&hearts;&NotEqualTilde;</body></html>";
+
+        final DOMParser parser = new DOMParser();
+        parser.parse(new InputSource(new StringReader(html)));
+
+        final Document doc = parser.getDocument();
+        final NodeList bodyElements = doc.getElementsByTagName("BODY");
+        assertEquals(1, bodyElements.getLength(), "Should have one BODY element");
+
+        final String content = bodyElements.item(0).getTextContent();
+        assertEquals("(!♥≂̸", content, "HTML5 named entities should resolve to their WHATWG values");
+    }
+
+    @Test
+    public void testHtml5EntityInAttribute() throws Exception {
+        final String html = "<html><body><a href=\"?a=1&lpar;2\">Link</a></body></html>";
+
+        final DOMParser parser = new DOMParser();
+        parser.parse(new InputSource(new StringReader(html)));
+
+        final Document doc = parser.getDocument();
+        final Element link = (Element) doc.getElementsByTagName("A").item(0);
+        final String href = link.getAttribute("href");
+        assertEquals("?a=1(2", href, "Semicolon-terminated HTML5 named entity should resolve in an attribute value");
+    }
+
     // ========== Malformed HTML Auto-correction ==========
 
     @Test

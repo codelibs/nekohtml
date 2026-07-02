@@ -1052,9 +1052,9 @@ public class SimpleHTMLScanner implements XMLReader {
                     }
                 }
 
-                final int c = HTMLEntities.get(m.group(3));
-                if (c != -1) {
-                    sb.appendCodePoint(c);
+                final String entityValue = HTMLEntities.getEntityValue(m.group(3));
+                if (entityValue != null) {
+                    sb.append(entityValue);
                 } else {
                     sb.append(matched);
                 }

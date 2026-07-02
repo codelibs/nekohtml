@@ -300,4 +300,34 @@ public class HTMLEntitiesTest {
         assertTrue(props.isEmpty(), "Properties should be left unchanged when the resource is missing");
     }
 
+    /**
+     * Test that {@code getEntityValue} returns the full string value for HTML5 named entities,
+     * including single-character and multi-codepoint entities.
+     */
+    @Test
+    public void testGetEntityValueHtml5Entities() {
+        assertEquals("(", HTMLEntities.getEntityValue("lpar"), "lpar should resolve to '('");
+        assertEquals("!", HTMLEntities.getEntityValue("excl"), "excl should resolve to '!'");
+        assertEquals("≂̸", HTMLEntities.getEntityValue("NotEqualTilde"),
+                "NotEqualTilde should resolve to the two-character sequence U+2242 U+0338");
+        assertEquals(2, HTMLEntities.getEntityValue("NotEqualTilde").length(), "NotEqualTilde value should be two chars");
+    }
+
+    /**
+     * Test that {@code getEntityValue} returns null for unknown entity names.
+     */
+    @Test
+    public void testGetEntityValueNonExistent() {
+        assertNull(HTMLEntities.getEntityValue("nonexistent"), "Unknown entity name should return null");
+    }
+
+    /**
+     * Test that {@code get(String)} still returns the first character as an int for backward
+     * compatibility, even for entities that are also present in the HTML5 named entity table.
+     */
+    @Test
+    public void testGetStillReturnsFirstCharForBackwardCompat() {
+        assertEquals('&', HTMLEntities.get("amp"), "amp should still return '&' as an int via get(String)");
+    }
+
 } // class HTMLEntitiesTest
