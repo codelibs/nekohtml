@@ -15,6 +15,7 @@
  */
 package org.codelibs.nekohtml.sax;
 
+import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -233,11 +234,11 @@ public class SimpleHTMLScanner implements XMLReader {
                 }
             }
             if (stream != null) {
-                String encoding = input.getEncoding();
-                if (encoding == null) {
-                    encoding = "UTF-8";
-                }
-                reader = new InputStreamReader(stream, encoding);
+                // Ensure the stream supports mark/reset so encoding sniffing can rewind it
+                // without losing any bytes for the document reader that follows.
+                final InputStream markableStream = stream.markSupported() ? stream : new BufferedInputStream(stream);
+                final String javaEncoding = sniffEncoding(markableStream, input.getEncoding());
+                reader = new InputStreamReader(markableStream, javaEncoding);
                 if (opened) {
                     // We opened the underlying stream, so we are responsible for closing it.
                     readerToClose = reader;
@@ -256,6 +257,12 @@ public class SimpleHTMLScanner implements XMLReader {
             int read;
             while ((read = reader.read(buffer)) != -1) {
                 content.append(buffer, 0, read);
+            }
+
+            // A leading U+FEFF (byte-order mark) that survived decoding - e.g. from a
+            // caller-supplied Reader - is stripped so it never appears in the token stream.
+            if (content.length() > 0 && content.charAt(0) == '\uFEFF') {
+                content.deleteCharAt(0);
             }
 
             // Parse HTML
@@ -280,6 +287,148 @@ public class SimpleHTMLScanner implements XMLReader {
     @Override
     public void parse(final String systemId) throws IOException, SAXException {
         parse(new InputSource(systemId));
+    }
+
+    /** Regex used by the &lt;meta charset&gt; pre-scan; matches both the HTML5 short form
+     *  ({@code <meta charset="...">}) and the legacy {@code http-equiv="Content-Type"} form
+     *  ({@code content="text/html; charset=...">}) since both simply contain {@code charset=}. */
+    private static final Pattern META_CHARSET_PATTERN = Pattern
+            .compile("(?i)<meta[^>]*charset\\s*=\\s*[\"']?\\s*([A-Za-z0-9][A-Za-z0-9._:-]*)");
+
+    /**
+     * Determines the Java charset name to use for decoding a byte stream, consuming any
+     * byte-order mark from the stream in the process. Precedence: a UTF-8/UTF-16 BOM outranks
+     * everything (matching browser behavior); otherwise an explicit {@link InputSource} encoding
+     * wins; otherwise a {@code <meta charset>} pre-scan of the first 1024 bytes is used; otherwise
+     * UTF-8 is assumed. The stream is always left positioned so that a subsequent full read (via
+     * an {@link InputStreamReader} using the returned encoding) sees the complete document,
+     * BOM bytes excepted.
+     *
+     * @param stream A byte stream that supports {@code mark}/{@code reset}
+     * @param explicitEncoding The {@code InputSource.getEncoding()} value, or {@code null}
+     * @return The Java charset name to decode {@code stream} with
+     * @throws IOException If an I/O error occurs while sniffing the stream
+     */
+    private static String sniffEncoding(final InputStream stream, final String explicitEncoding) throws IOException {
+        stream.mark(1024);
+        final byte[] prefix = new byte[3];
+        final int n = readFully(stream, prefix);
+
+        if (n >= 3 && (prefix[0] & 0xFF) == 0xEF && (prefix[1] & 0xFF) == 0xBB && (prefix[2] & 0xFF) == 0xBF) {
+            // UTF-8 BOM: the 3-byte read above already consumed it from the stream.
+            return "UTF8";
+        }
+        if (n >= 2 && (prefix[0] & 0xFF) == 0xFE && (prefix[1] & 0xFF) == 0xFF) {
+            // UTF-16BE BOM: rewind and re-consume only the 2 BOM bytes.
+            stream.reset();
+            skipFully(stream, 2);
+            return "UnicodeBigUnmarked";
+        }
+        if (n >= 2 && (prefix[0] & 0xFF) == 0xFF && (prefix[1] & 0xFF) == 0xFE) {
+            // UTF-16LE BOM: rewind and re-consume only the 2 BOM bytes.
+            stream.reset();
+            skipFully(stream, 2);
+            return "UnicodeLittleUnmarked";
+        }
+
+        // No BOM present: rewind fully so the explicit-encoding/meta-sniff/default paths below
+        // all see the document from the beginning.
+        stream.reset();
+
+        if (explicitEncoding != null) {
+            final String mapped = EncodingMap.getIANA2JavaMapping(explicitEncoding);
+            return mapped != null ? mapped : explicitEncoding;
+        }
+
+        final String sniffed = sniffMetaCharset(stream);
+        return sniffed != null ? sniffed : "UTF8";
+    }
+
+    /**
+     * Scans up to the first 1024 bytes of {@code stream} for a {@code <meta charset>} (or
+     * {@code <meta http-equiv="Content-Type" content="...charset=...">}) declaration, decoding
+     * the prefix as ISO-8859-1 (a superset of ASCII, sufficient since charset declarations
+     * themselves are always ASCII). The stream is always reset back to its original position.
+     *
+     * @param stream A byte stream that supports {@code mark}/{@code reset}, positioned at the
+     *               start of the document
+     * @return The Java charset name for the sniffed encoding, or {@code null} if none was found
+     *         (no declaration present, or the declared name is unsupported/unrecognized)
+     * @throws IOException If an I/O error occurs while sniffing the stream
+     */
+    private static String sniffMetaCharset(final InputStream stream) throws IOException {
+        stream.mark(1024);
+        try {
+            final byte[] buf = new byte[1024];
+            final int n = readFully(stream, buf);
+            final String prefix = new String(buf, 0, n, java.nio.charset.StandardCharsets.ISO_8859_1);
+            final Matcher m = META_CHARSET_PATTERN.matcher(prefix);
+            if (m.find()) {
+                return resolveSniffedEncoding(m.group(1));
+            }
+            return null;
+        } finally {
+            stream.reset();
+        }
+    }
+
+    /**
+     * Resolves a charset name sniffed from a {@code <meta charset>} declaration to a Java
+     * charset name, applying the WHATWG {@code x-user-defined -> windows-1252} alias and
+     * rejecting anything Java cannot decode.
+     *
+     * @param rawName The charset name as written in the document (e.g. {@code "Shift_JIS"})
+     * @return The Java charset name, or {@code null} if the sniffed name is unsupported
+     */
+    private static String resolveSniffedEncoding(final String rawName) {
+        final String name = "x-user-defined".equalsIgnoreCase(rawName) ? "windows-1252" : rawName;
+        if (!EncodingMap.isSupported(name)) {
+            return null;
+        }
+        final String mapped = EncodingMap.getIANA2JavaMapping(name);
+        return mapped != null ? mapped : name;
+    }
+
+    /**
+     * Reads from {@code in} until {@code buf} is full or the stream is exhausted.
+     *
+     * @param in The stream to read from
+     * @param buf The destination buffer
+     * @return The number of bytes actually read (may be less than {@code buf.length} at EOF)
+     * @throws IOException If an I/O error occurs
+     */
+    private static int readFully(final InputStream in, final byte[] buf) throws IOException {
+        int total = 0;
+        while (total < buf.length) {
+            final int r = in.read(buf, total, buf.length - total);
+            if (r < 0) {
+                break;
+            }
+            total += r;
+        }
+        return total;
+    }
+
+    /**
+     * Skips exactly {@code count} bytes from {@code in}, falling back to single-byte reads if
+     * {@code skip} returns fewer bytes than requested. Stops early at EOF.
+     *
+     * @param in The stream to skip bytes on
+     * @param count The number of bytes to skip
+     * @throws IOException If an I/O error occurs
+     */
+    private static void skipFully(final InputStream in, final int count) throws IOException {
+        int remaining = count;
+        while (remaining > 0) {
+            final long skipped = in.skip(remaining);
+            if (skipped > 0) {
+                remaining -= skipped;
+            } else if (in.read() < 0) {
+                break;
+            } else {
+                remaining--;
+            }
+        }
     }
 
     /**
