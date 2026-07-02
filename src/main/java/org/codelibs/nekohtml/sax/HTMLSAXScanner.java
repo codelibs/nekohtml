@@ -86,6 +86,26 @@ public class HTMLSAXScanner extends XMLFilterImpl {
         return fLexicalHandler;
     }
 
+    /**
+     * Sets the element name case normalization mode on the underlying scanner.
+     *
+     * @param c {@code "upper"}, {@code "lower"}, or {@code "match"}/{@code "default"}/{@code "no-change"}
+     *          (all of the latter meaning keep the name as written)
+     */
+    public void setElementCase(final String c) {
+        fScanner.setElementCase(c);
+    }
+
+    /**
+     * Sets the attribute name case normalization mode on the underlying scanner.
+     *
+     * @param c {@code "upper"}, {@code "lower"}, or {@code "match"}/{@code "default"}/{@code "no-change"}
+     *          (all of the latter meaning keep the name as written)
+     */
+    public void setAttributeCase(final String c) {
+        fScanner.setAttributeCase(c);
+    }
+
     @Override
     public void parse(final InputSource input) throws IOException, SAXException {
         fScanner.parse(input);

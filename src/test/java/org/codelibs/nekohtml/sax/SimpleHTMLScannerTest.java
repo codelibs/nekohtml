@@ -481,12 +481,37 @@ public class SimpleHTMLScannerTest {
     }
 
     @Test
-    public void testSetFeatureDoesNotThrow() {
-        // When: Setting any feature
-        // Then: Should not throw exception (features not yet implemented)
-        assertDoesNotThrow(() -> {
+    public void testSetFeatureUnrecognizedThrows() {
+        // When: Setting an unrecognized feature
+        // Then: Should throw SAXNotRecognizedException, symmetric with getFeature
+        assertThrows(SAXNotRecognizedException.class, () -> {
             scanner.setFeature("any-feature", true);
         });
+    }
+
+    @Test
+    public void testSetFeatureNamespacesFalseDoesNotThrow() {
+        // When: Disabling the standard "namespaces" feature (its default state)
+        // Then: Should not throw
+        assertDoesNotThrow(() -> {
+            scanner.setFeature("http://xml.org/sax/features/namespaces", false);
+        });
+    }
+
+    @Test
+    public void testSetFeatureNamespacesTrueThrowsNotSupported() {
+        // When: Enabling the standard "namespaces" feature (not implemented)
+        // Then: Should throw SAXNotSupportedException
+        assertThrows(org.xml.sax.SAXNotSupportedException.class, () -> {
+            scanner.setFeature("http://xml.org/sax/features/namespaces", true);
+        });
+    }
+
+    @Test
+    public void testGetFeatureNamespacesReturnsFalse() throws Exception {
+        // When: Getting the standard "namespaces" feature
+        // Then: Should recognize it and report false
+        assertFalse(scanner.getFeature("http://xml.org/sax/features/namespaces"));
     }
 
     @Test

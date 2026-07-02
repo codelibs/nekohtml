@@ -15,10 +15,13 @@
  */
 package org.codelibs.nekohtml;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.util.Properties;
 
 import org.junit.jupiter.api.Test;
 
@@ -283,6 +286,18 @@ public class HTMLEntitiesTest {
         assertEquals(224, HTMLEntities.get("agrave"), "agrave should map to character 224 (à)");
         assertEquals(225, HTMLEntities.get("aacute"), "aacute should map to character 225 (á)");
         assertEquals(226, HTMLEntities.get("acirc"), "acirc should map to character 226 (â)");
+    }
+
+    /**
+     * Test that {@code load0} handles a missing resource gracefully (no NPE), instead of
+     * letting {@code Properties.load(null)} throw a {@link NullPointerException}.
+     */
+    @Test
+    public void testLoad0MissingResourceDoesNotThrow() {
+        final Properties props = new Properties();
+        assertDoesNotThrow(() -> HTMLEntities.load0(props, "res/DoesNotExist.properties"),
+                "A missing resource should be logged and skipped, not thrown as an NPE");
+        assertTrue(props.isEmpty(), "Properties should be left unchanged when the resource is missing");
     }
 
 } // class HTMLEntitiesTest

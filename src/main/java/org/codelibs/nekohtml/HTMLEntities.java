@@ -111,12 +111,18 @@ public class HTMLEntities {
     // Private static methods
     //
 
-    /** Loads the entity values in the specified resource. */
-    private static void load0(final Properties props, final String filename) {
-        try {
-            final InputStream stream = HTMLEntities.class.getResourceAsStream(filename);
+    /**
+     * Loads the entity values in the specified resource.
+     * Package-private (rather than {@code private}) so that tests can exercise the
+     * missing-resource path directly.
+     */
+    static void load0(final Properties props, final String filename) {
+        try (InputStream stream = HTMLEntities.class.getResourceAsStream(filename)) {
+            if (stream == null) {
+                logger.warning("Resource not found: \"" + filename + "\"");
+                return;
+            }
             props.load(stream);
-            stream.close();
         } catch (final IOException e) {
             logger.warning("Unable to load resource \"" + filename + "\": " + e.getMessage());
         }

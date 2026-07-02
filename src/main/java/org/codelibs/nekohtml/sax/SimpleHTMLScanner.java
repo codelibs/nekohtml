@@ -950,14 +950,31 @@ public class SimpleHTMLScanner implements XMLReader {
         return new String(Character.toChars(codePoint));
     }
 
+    /** SAX2 standard "namespaces" feature name. */
+    private static final String FEATURE_NAMESPACES = "http://xml.org/sax/features/namespaces";
+
+    /** SAX2 standard "namespace-prefixes" feature name. */
+    private static final String FEATURE_NAMESPACE_PREFIXES = "http://xml.org/sax/features/namespace-prefixes";
+
     @Override
     public boolean getFeature(final String name) throws SAXNotRecognizedException, SAXNotSupportedException {
+        if (FEATURE_NAMESPACES.equals(name) || FEATURE_NAMESPACE_PREFIXES.equals(name)) {
+            // Neither feature is actually implemented by this scanner; report false.
+            return false;
+        }
         throw new SAXNotRecognizedException("Feature not recognized: " + name);
     }
 
     @Override
     public void setFeature(final String name, final boolean value) throws SAXNotRecognizedException, SAXNotSupportedException {
-        // Features not yet implemented
+        if (FEATURE_NAMESPACES.equals(name) || FEATURE_NAMESPACE_PREFIXES.equals(name)) {
+            if (value) {
+                // Enabling either feature is not supported; disabling (the default) is a no-op.
+                throw new SAXNotSupportedException("Feature not supported: " + name);
+            }
+            return;
+        }
+        throw new SAXNotRecognizedException("Feature not recognized: " + name);
     }
 
     @Override

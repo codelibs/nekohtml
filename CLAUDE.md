@@ -29,7 +29,7 @@ src/main/java/org/codelibs/nekohtml/
 │   ├── HTMLSAXConfiguration.java    # Pipeline orchestrator
 │   ├── SimpleHTMLScanner.java       # Regex-based tokenizer
 │   ├── HTMLTagBalancerFilter.java   # Tag balancing filter
-│   ├── HTMLSAXScanner.java          # Base scanner with encoding detection
+│   ├── HTMLSAXScanner.java          # Thin XMLFilterImpl wrapping SimpleHTMLScanner (no byte-stream encoding sniffing yet)
 │   ├── HTMLAttributesImpl.java      # SAX Attributes implementation
 │   ├── HTMLDocumentHandler.java     # Document handler interface
 │   ├── EncodingMap.java             # Character encoding mappings
@@ -41,7 +41,7 @@ src/main/java/org/codelibs/nekohtml/
 ├── HTMLEntities.java        # Entity references and mapping
 ├── HTMLErrorReporter.java   # Error reporting interface
 ├── HTMLEventInfo.java       # Event information interface
-├── ObjectFactory.java       # SAX parser factory (META-INF service)
+├── ObjectFactory.java       # Legacy JAXP-style pluggable-factory lookup utility
 └── SecuritySupport.java     # Security manager utilities
 
 src/main/resources/org/codelibs/nekohtml/res/
@@ -114,8 +114,8 @@ HTML Input → SimpleHTMLScanner → HTMLTagBalancerFilter → ContentHandler �
 ## Gotchas
 
 - `mvn formatter:format` and `mvn license:format` must both pass before committing — CI will fail otherwise
-- The `ObjectFactory` class is registered as a SAX parser via `META-INF/services` — don't remove it
-- `HTMLSAXScanner` is the base scanner class; `SimpleHTMLScanner` extends it with regex-based tokenization
+- `ObjectFactory` is a legacy JAXP-style factory-loading utility (package-private, pre-dating this project); this repo has no `META-INF/services` resource, so it is not used as a `ServiceLoader`-discovered SAX parser — don't remove it
+- `HTMLSAXScanner` does not extend `SimpleHTMLScanner`; it is a thin `XMLFilterImpl` wrapper that *composes* one (field `fScanner`) and delegates parsing/feature/property calls to it. `SimpleHTMLScanner` does the actual regex/quote-aware tokenization and currently has no byte-stream encoding sniffing (BOM + meta charset detection is a planned follow-up)
 
 ## Important Notes
 
