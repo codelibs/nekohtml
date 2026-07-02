@@ -515,6 +515,31 @@ public class SimpleHTMLScannerTest {
     }
 
     @Test
+    public void testSetFeatureNamespacePrefixesFalseDoesNotThrow() {
+        // When: Disabling the standard "namespace-prefixes" feature (its default state)
+        // Then: Should not throw
+        assertDoesNotThrow(() -> {
+            scanner.setFeature("http://xml.org/sax/features/namespace-prefixes", false);
+        });
+    }
+
+    @Test
+    public void testSetFeatureNamespacePrefixesTrueThrowsNotSupported() {
+        // When: Enabling the standard "namespace-prefixes" feature (not implemented)
+        // Then: Should throw SAXNotSupportedException
+        assertThrows(org.xml.sax.SAXNotSupportedException.class, () -> {
+            scanner.setFeature("http://xml.org/sax/features/namespace-prefixes", true);
+        });
+    }
+
+    @Test
+    public void testGetFeatureNamespacePrefixesReturnsFalse() throws Exception {
+        // When: Getting the standard "namespace-prefixes" feature
+        // Then: Should recognize it and report false
+        assertFalse(scanner.getFeature("http://xml.org/sax/features/namespace-prefixes"));
+    }
+
+    @Test
     public void testParseSystemIdNotSupported() {
         // Given: InputSource with only systemId that cannot be opened
         scanner.setContentHandler(contentHandler);
