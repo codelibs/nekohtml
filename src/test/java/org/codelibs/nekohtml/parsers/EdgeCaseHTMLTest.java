@@ -1,3 +1,18 @@
+/*
+ * Copyright 2012-2025 CodeLibs Project and the Others.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language
+ * governing permissions and limitations under the License.
+ */
 package org.codelibs.nekohtml.parsers;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -234,7 +249,10 @@ public class EdgeCaseHTMLTest {
     @Test
     public void testDoctypeWithMalformedHTML() throws Exception {
         // DOCTYPE with malformed HTML following
-        final String html = "<!DOCTYPE html>" + "<html>" + "<head><title>Test" + // unclosed title
+        // Note: <title> is an RCDATA element per HTML5; if left unclosed it would consume the rest
+        // of the document as literal text (as browsers do), so it is closed here to exercise the
+        // intended unclosed-block-element handling.
+        final String html = "<!DOCTYPE html>" + "<html>" + "<head><title>Test</title>" + //
                 "<body>" + // no closing head
                 "<div><p>Text" + // unclosed tags
                 "</html>";

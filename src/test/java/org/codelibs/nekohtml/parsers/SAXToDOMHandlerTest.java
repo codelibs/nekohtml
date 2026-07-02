@@ -1441,10 +1441,13 @@ public class SAXToDOMHandlerTest {
      */
     @Test
     public void testXPathWithMalformedHTML() throws Exception {
-        // HTML with missing closing tags and nested structure issues
+        // HTML with missing closing tags and nested structure issues.
+        // Note: <title> is an RCDATA element per HTML5; left unclosed it would consume the rest of the
+        // document as literal text (as browsers do), so it is closed here to exercise the intended
+        // unclosed-block-element handling.
         final String html =
-                "<html>" + "<head>" + "<title>Malformed HTML Test" + "<meta name=\"description\" content=\"Test\">" + "</head>" + "<body>"
-                        + "<div class=\"outer\">" + "<div class=\"inner\">" + "<p>Unclosed paragraph" + "<div class=\"nested\">"
+                "<html>" + "<head>" + "<title>Malformed HTML Test</title>" + "<meta name=\"description\" content=\"Test\">" + "</head>"
+                        + "<body>" + "<div class=\"outer\">" + "<div class=\"inner\">" + "<p>Unclosed paragraph" + "<div class=\"nested\">"
                         + "<span>Nested content</span>" + "</div>" + "</body>";
 
         final DOMParser parser = new DOMParser();

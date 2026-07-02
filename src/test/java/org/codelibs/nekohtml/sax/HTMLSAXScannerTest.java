@@ -334,8 +334,8 @@ public class HTMLSAXScannerTest {
         // When: Parsing
         scanner.parse(input);
 
-        // Then: Should handle DTD (SimpleHTMLScanner extracts only element name, publicId/systemId are null)
-        verify(lexicalHandler).startDTD(eq("html"), isNull(), isNull());
+        // Then: Should report the DOCTYPE name along with the PUBLIC and SYSTEM identifiers
+        verify(lexicalHandler).startDTD(eq("html"), eq("-//W3C//DTD HTML 4.01//EN"), eq("http://www.w3.org/TR/html4/strict.dtd"));
         verify(lexicalHandler).endDTD();
     }
 

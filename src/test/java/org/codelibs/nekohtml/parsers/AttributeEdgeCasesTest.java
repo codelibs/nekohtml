@@ -205,16 +205,18 @@ public class AttributeEdgeCasesTest {
 
     @Test
     public void testMixedQuoteTypes() throws Exception {
-        // Given: Mixed quote types (malformed but common)
+        // Given: an unterminated double-quoted attribute value (its closing quote is missing,
+        // so the value runs to end-of-input)
         final String html = "<html><body><div title=\"value'>Content</div></body></html>";
 
         // When: Parsing
         final Document doc = parseHTML(html);
 
-        // Then: Should handle mixed quotes gracefully
+        // Then: per HTML5 (eof-in-tag), the incomplete start tag is dropped, so no DIV element is
+        // produced; parsing still completes gracefully.
         assertNotNull(doc, "Document should be parsed");
-        final Element div = (Element) doc.getElementsByTagName("DIV").item(0);
-        assertNotNull(div, "DIV should exist");
+        assertEquals(0, doc.getElementsByTagName("DIV").getLength(),
+                "An unterminated quoted attribute value reaches EOF, so the start tag is dropped");
     }
 
     @Test
