@@ -194,4 +194,38 @@ public class TagBalancerStructureTest {
         final RecordingHandler h = record("");
         assertTrue(h.events.isEmpty(), "empty document must not synthesize elements");
     }
+
+    /**
+     * Deeply nested elements plus a large run of stray end tags must be handled
+     * without quadratic blow-up: the open-element lookup is O(1), so this stays
+     * far below the (deliberately generous) time bound. Also asserts the stray
+     * end tags are still correctly suppressed and the stream stays balanced.
+     */
+    @Test
+    public void testStrayEndTagHandlingIsNotQuadratic() throws Exception {
+        final int n = 10_000;
+        final StringBuilder sb = new StringBuilder();
+        sb.append("<html><body>");
+        for (int i = 0; i < n; i++) {
+            sb.append("<div>");
+        }
+        for (int i = 0; i < n; i++) {
+            sb.append("</span>"); // stray: never opened
+        }
+        for (int i = 0; i < n; i++) {
+            sb.append("</div>");
+        }
+        sb.append("</body></html>");
+
+        final long startNanos = System.nanoTime();
+        final RecordingHandler h = record(sb.toString());
+        final long elapsedMs = (System.nanoTime() - startNanos) / 1_000_000L;
+
+        assertTrue(h.balanced, h.firstImbalance);
+        assertFalse(h.starts.containsKey("SPAN"), "stray </span> must never start a SPAN");
+        assertFalse(h.ends.containsKey("SPAN"), "stray </span> must be ignored");
+        assertEquals(Integer.valueOf(n), h.starts.get("DIV"), "all DIVs opened");
+        assertEquals(Integer.valueOf(n), h.ends.get("DIV"), "all DIVs closed");
+        assertTrue(elapsedMs < 4_000L, "stray-end handling must not be quadratic (took " + elapsedMs + "ms)");
+    }
 }

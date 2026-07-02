@@ -170,8 +170,8 @@ public class HTMLTagBalancerFilterTest {
 
         // Then: Should close open elements
         final InOrder inOrder = inOrder(contentHandler);
-        inOrder.verify(contentHandler).endElement("", "BODY", "BODY");
-        inOrder.verify(contentHandler).endElement("", "HTML", "HTML");
+        inOrder.verify(contentHandler).endElement("", "body", "BODY");
+        inOrder.verify(contentHandler).endElement("", "html", "HTML");
         inOrder.verify(contentHandler).endDocument();
     }
 
@@ -228,8 +228,8 @@ public class HTMLTagBalancerFilterTest {
 
         // Then: Should close TITLE and HEAD first, then start BODY
         final InOrder inOrder = inOrder(contentHandler);
-        inOrder.verify(contentHandler).endElement("", "TITLE", "TITLE");
-        inOrder.verify(contentHandler).endElement("", "HEAD", "HEAD");
+        inOrder.verify(contentHandler).endElement("", "title", "TITLE");
+        inOrder.verify(contentHandler).endElement("", "head", "HEAD");
         inOrder.verify(contentHandler).startElement("", "body", "BODY", bodyAttrs);
     }
 
@@ -247,7 +247,7 @@ public class HTMLTagBalancerFilterTest {
 
         // Then: Should close HEAD first, then start FRAMESET
         final InOrder inOrder = inOrder(contentHandler);
-        inOrder.verify(contentHandler).endElement("", "HEAD", "HEAD");
+        inOrder.verify(contentHandler).endElement("", "head", "HEAD");
         inOrder.verify(contentHandler).startElement("", "frameset", "FRAMESET", framesetAttrs);
     }
 
@@ -287,10 +287,10 @@ public class HTMLTagBalancerFilterTest {
         // When: Ending DIV (closing over SPAN and P)
         filter.endElement("", "div", "DIV");
 
-        // Then: Should auto-close SPAN and P first
+        // Then: Should auto-close SPAN and P first (auto-close preserves the original localName)
         final InOrder inOrder = inOrder(contentHandler);
-        inOrder.verify(contentHandler).endElement("", "SPAN", "SPAN");
-        inOrder.verify(contentHandler).endElement("", "P", "P");
+        inOrder.verify(contentHandler).endElement("", "span", "SPAN");
+        inOrder.verify(contentHandler).endElement("", "p", "P");
         inOrder.verify(contentHandler).endElement("", "div", "DIV");
     }
 
@@ -482,15 +482,15 @@ public class HTMLTagBalancerFilterTest {
         inOrder.verify(contentHandler).startElement(eq(""), eq("title"), eq("TITLE"), any());
         inOrder.verify(contentHandler).characters(any(), anyInt(), anyInt());
         inOrder.verify(contentHandler).endElement("", "title", "TITLE"); // explicit close
-        inOrder.verify(contentHandler).endElement("", "HEAD", "HEAD"); // auto-closed by BODY
+        inOrder.verify(contentHandler).endElement("", "head", "HEAD"); // auto-closed by BODY (original localName preserved)
         inOrder.verify(contentHandler).startElement(eq(""), eq("body"), eq("BODY"), any());
         inOrder.verify(contentHandler).startElement(eq(""), eq("div"), eq("DIV"), any());
         inOrder.verify(contentHandler).characters(any(), anyInt(), anyInt());
-        inOrder.verify(contentHandler).endElement("", "DIV", "DIV"); // auto-closed above BODY (uppercase from stack)
+        inOrder.verify(contentHandler).endElement("", "div", "DIV"); // auto-closed above BODY (original localName preserved)
         // BODY/HTML end tags defer their own close to end-of-document, so BODY is closed
         // (as an entry above HTML) when </html> arrives, and HTML is closed at endDocument.
-        inOrder.verify(contentHandler).endElement("", "BODY", "BODY");
-        inOrder.verify(contentHandler).endElement("", "HTML", "HTML");
+        inOrder.verify(contentHandler).endElement("", "body", "BODY");
+        inOrder.verify(contentHandler).endElement("", "html", "HTML");
         inOrder.verify(contentHandler).endDocument();
     }
 
@@ -583,7 +583,7 @@ public class HTMLTagBalancerFilterTest {
 
         // Then: Should auto-close SPAN before P
         final InOrder inOrder = inOrder(contentHandler);
-        inOrder.verify(contentHandler).endElement("", "SPAN", "SPAN");
+        inOrder.verify(contentHandler).endElement("", "span", "SPAN");
         inOrder.verify(contentHandler).endElement("", "p", "P");
     }
 
@@ -638,8 +638,8 @@ public class HTMLTagBalancerFilterTest {
         // Then: Close I then B. Formatting is one-shot: the inner formatting element I is
         // NOT reopened (it stays closed), keeping the event stream balanced.
         final InOrder inOrder = inOrder(contentHandler);
-        inOrder.verify(contentHandler).endElement("", "I", "I");
-        inOrder.verify(contentHandler).endElement("", "B", "B");
+        inOrder.verify(contentHandler).endElement("", "i", "I");
+        inOrder.verify(contentHandler).endElement("", "b", "B");
         verify(contentHandler, never()).startElement(eq(""), eq("i"), eq("I"), any());
     }
 
@@ -658,11 +658,11 @@ public class HTMLTagBalancerFilterTest {
         filter.endElement("", "i", "I");
         filter.endElement("", "b", "B");
 
-        // Then: Should close in reverse order (uses uppercase from stack)
+        // Then: Should close in reverse order (each close preserves the original localName)
         final InOrder inOrder = inOrder(contentHandler);
-        inOrder.verify(contentHandler).endElement("", "U", "U");
-        inOrder.verify(contentHandler).endElement("", "I", "I");
-        inOrder.verify(contentHandler).endElement("", "B", "B");
+        inOrder.verify(contentHandler).endElement("", "u", "U");
+        inOrder.verify(contentHandler).endElement("", "i", "I");
+        inOrder.verify(contentHandler).endElement("", "b", "B");
     }
 
     @Test
@@ -752,8 +752,8 @@ public class HTMLTagBalancerFilterTest {
         // Then: Close STRONG then EM. Formatting is one-shot: STRONG (an inner formatting
         // element) is NOT reopened, keeping the event stream balanced.
         final InOrder inOrder = inOrder(contentHandler);
-        inOrder.verify(contentHandler).endElement("", "STRONG", "STRONG");
-        inOrder.verify(contentHandler).endElement("", "EM", "EM");
+        inOrder.verify(contentHandler).endElement("", "strong", "STRONG");
+        inOrder.verify(contentHandler).endElement("", "em", "EM");
         verify(contentHandler, never()).startElement(eq(""), eq("strong"), eq("STRONG"), any());
     }
 

@@ -237,8 +237,24 @@ public class SimpleHTMLScanner implements XMLReader {
                 // Ensure the stream supports mark/reset so encoding sniffing can rewind it
                 // without losing any bytes for the document reader that follows.
                 final InputStream markableStream = stream.markSupported() ? stream : new BufferedInputStream(stream);
-                final String javaEncoding = sniffEncoding(markableStream, input.getEncoding());
-                reader = new InputStreamReader(markableStream, javaEncoding);
+                try {
+                    final String javaEncoding = sniffEncoding(markableStream, input.getEncoding());
+                    reader = new InputStreamReader(markableStream, javaEncoding);
+                } catch (final IOException | RuntimeException e) {
+                    // Encoding sniffing or reader construction failed (e.g. an unsupported
+                    // explicit encoding). If we opened the underlying stream, close it here so
+                    // it does not leak; readerToClose is only assigned once the reader exists.
+                    if (opened) {
+                        try {
+                            markableStream.close();
+                        } catch (final IOException closeError) {
+                            if (logger.isLoggable(Level.FINE)) {
+                                logger.fine("Failed to close self-opened stream after reader failure: " + closeError.getMessage());
+                            }
+                        }
+                    }
+                    throw e;
+                }
                 if (opened) {
                     // We opened the underlying stream, so we are responsible for closing it.
                     readerToClose = reader;

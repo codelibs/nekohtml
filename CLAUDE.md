@@ -27,9 +27,9 @@ src/main/java/org/codelibs/nekohtml/
 ├── sax/                     # Core SAX implementation
 │   ├── HTMLSAXParser.java           # Main SAX parser (XMLReader)
 │   ├── HTMLSAXConfiguration.java    # Pipeline orchestrator
-│   ├── SimpleHTMLScanner.java       # Regex-based tokenizer
+│   ├── SimpleHTMLScanner.java       # Single-pass hand-rolled tokenizer (+ byte-stream encoding sniffing)
 │   ├── HTMLTagBalancerFilter.java   # Tag balancing filter
-│   ├── HTMLSAXScanner.java          # Thin XMLFilterImpl wrapping SimpleHTMLScanner (no byte-stream encoding sniffing yet)
+│   ├── HTMLSAXScanner.java          # Thin XMLFilterImpl wrapping SimpleHTMLScanner
 │   ├── HTMLAttributesImpl.java      # SAX Attributes implementation
 │   ├── HTMLDocumentHandler.java     # Document handler interface
 │   ├── EncodingMap.java             # Character encoding mappings
@@ -77,7 +77,7 @@ HTML Input → SimpleHTMLScanner → HTMLTagBalancerFilter → ContentHandler �
 | `SAXParser` | Backward-compatible SAX parser wrapper |
 | `HTMLSAXParser` | Core SAX parser implementing `XMLReader` |
 | `HTMLSAXConfiguration` | Configuration and pipeline orchestration |
-| `SimpleHTMLScanner` | Regex-based HTML tokenizer |
+| `SimpleHTMLScanner` | Single-pass HTML tokenizer (with BOM + meta charset encoding sniffing) |
 | `HTMLTagBalancerFilter` | HTML5 tag balancing (Adoption Agency Algorithm) |
 | `HTMLElements` | Static HTML element definitions |
 | `HTMLEntities` | HTML entity mappings |
@@ -115,7 +115,7 @@ HTML Input → SimpleHTMLScanner → HTMLTagBalancerFilter → ContentHandler �
 
 - `mvn formatter:format` and `mvn license:format` must both pass before committing — CI will fail otherwise
 - `ObjectFactory` is a legacy JAXP-style factory-loading utility (package-private, pre-dating this project); this repo has no `META-INF/services` resource, so it is not used as a `ServiceLoader`-discovered SAX parser — don't remove it
-- `HTMLSAXScanner` does not extend `SimpleHTMLScanner`; it is a thin `XMLFilterImpl` wrapper that *composes* one (field `fScanner`) and delegates parsing/feature/property calls to it. `SimpleHTMLScanner` does the actual regex/quote-aware tokenization and currently has no byte-stream encoding sniffing (BOM + meta charset detection is a planned follow-up)
+- `HTMLSAXScanner` does not extend `SimpleHTMLScanner`; it is a thin `XMLFilterImpl` wrapper that *composes* one (field `fScanner`) and delegates parsing/feature/property calls to it. `SimpleHTMLScanner` does the actual single-pass, quote-aware tokenization (regex is used only for bounded DOCTYPE and `<meta charset>` parsing). It also performs byte-stream encoding sniffing when parsing a byte stream/systemId: BOM (UTF-8 / UTF-16LE / UTF-16BE) outranks an explicit `InputSource` encoding, which outranks a `<meta charset>` pre-scan of the first 1024 bytes, which falls back to UTF-8; a leading U+FEFF is stripped from the decoded content
 
 ## Important Notes
 

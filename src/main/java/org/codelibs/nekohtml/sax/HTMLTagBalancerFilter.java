@@ -92,6 +92,14 @@ public class HTMLTagBalancerFilter extends XMLFilterImpl implements LexicalHandl
     protected final Deque<ElementEntry> elementStack = new ArrayDeque<>();
 
     /**
+     * Count of currently-open elements per upper-cased tag name. Kept in sync
+     * with {@link #elementStack} by {@link #pushElement}/{@link #popElement} so
+     * that {@link #isOnStack} is an O(1) lookup instead of an O(n) scan (which
+     * made stray-end-tag handling quadratic on deeply nested input).
+     */
+    protected final Map<String, Integer> openTagCounts = new HashMap<>();
+
+    /**
      * List of active formatting elements (a, b, i, strong, etc.) currently on
      * the stack. Maintained as elements are pushed and popped; consulted by the
      * balanced formatting-end reconstruction.
@@ -216,6 +224,7 @@ public class HTMLTagBalancerFilter extends XMLFilterImpl implements LexicalHandl
             logger.fine("Starting document - initializing tag balancer");
         }
         elementStack.clear();
+        openTagCounts.clear();
         activeFormattingElements.clear();
         htmlOpened = false;
         headClosed = false;
@@ -232,13 +241,13 @@ public class HTMLTagBalancerFilter extends XMLFilterImpl implements LexicalHandl
             logger.fine("Ending document - closing " + elementStack.size() + " remaining open elements");
         }
         while (!elementStack.isEmpty()) {
-            final ElementEntry entry = elementStack.pop();
+            final ElementEntry entry = popElement();
             removeFormattingElement(entry.tagName);
             if (logger.isLoggable(Level.FINER)) {
                 logger.finer("Auto-closing unclosed element at document end: " + entry.tagName);
             }
             if (handler != null) {
-                handler.endElement("", entry.tagName, entry.tagName);
+                handler.endElement(entry.uri, entry.localName, entry.qName);
             }
         }
         if (handler != null) {
@@ -324,7 +333,7 @@ public class HTMLTagBalancerFilter extends XMLFilterImpl implements LexicalHandl
             if (!headClosed && !isOnStack("HEAD")) {
                 final AttributesImpl empty = new AttributesImpl();
                 handler.startElement("", "HEAD", "HEAD", empty);
-                elementStack.push(new ElementEntry("", "HEAD", "HEAD", "HEAD", empty));
+                pushElement(new ElementEntry("", "HEAD", "HEAD", "HEAD", empty));
                 if (logger.isLoggable(Level.FINER)) {
                     logger.finer("Synthesized HEAD for head-content element " + tagName);
                 }
@@ -377,7 +386,7 @@ public class HTMLTagBalancerFilter extends XMLFilterImpl implements LexicalHandl
 
         // Standard element: close everything above, then close it.
         closeAbove(tagName);
-        final ElementEntry target = elementStack.pop();
+        final ElementEntry target = popElement();
         removeFormattingElement(target.tagName);
         if ("HEAD".equals(tagName)) {
             // An explicit </head> ends the head region; later head-only content
@@ -405,7 +414,7 @@ public class HTMLTagBalancerFilter extends XMLFilterImpl implements LexicalHandl
             handler.endElement(uri, localName, qName);
             return;
         }
-        elementStack.push(new ElementEntry(uri, localName, qName, tagName, atts));
+        pushElement(new ElementEntry(uri, localName, qName, tagName, atts));
         if (HTMLElements.isFormattingElement(tagName)) {
             addFormattingElement(tagName);
         }
@@ -429,12 +438,12 @@ public class HTMLTagBalancerFilter extends XMLFilterImpl implements LexicalHandl
         }
         final ContentHandler handler = getContentHandler();
         while (!elementStack.isEmpty() && closes.contains(elementStack.peek().tagName)) {
-            final ElementEntry entry = elementStack.pop();
+            final ElementEntry entry = popElement();
             removeFormattingElement(entry.tagName);
             if (logger.isLoggable(Level.FINER)) {
                 logger.finer("Implied close of " + entry.tagName + " before " + tagName);
             }
-            handler.endElement("", entry.tagName, entry.tagName);
+            handler.endElement(entry.uri, entry.localName, entry.qName);
         }
     }
 
@@ -448,12 +457,12 @@ public class HTMLTagBalancerFilter extends XMLFilterImpl implements LexicalHandl
     protected void closeAbove(final String tagName) throws SAXException {
         final ContentHandler handler = getContentHandler();
         while (!elementStack.isEmpty() && !elementStack.peek().tagName.equals(tagName)) {
-            final ElementEntry entry = elementStack.pop();
+            final ElementEntry entry = popElement();
             removeFormattingElement(entry.tagName);
             if (logger.isLoggable(Level.FINER)) {
                 logger.finer("Auto-closing element: " + entry.tagName);
             }
-            handler.endElement("", entry.tagName, entry.tagName);
+            handler.endElement(entry.uri, entry.localName, entry.qName);
         }
     }
 
@@ -476,21 +485,21 @@ public class HTMLTagBalancerFilter extends XMLFilterImpl implements LexicalHandl
         final List<ElementEntry> reopen = new ArrayList<>();
         // Pop entries above F, remembering non-formatting containers (bottom->top).
         while (!elementStack.peek().tagName.equals(tagName)) {
-            final ElementEntry entry = elementStack.pop();
+            final ElementEntry entry = popElement();
             removeFormattingElement(entry.tagName);
-            handler.endElement("", entry.tagName, entry.tagName);
+            handler.endElement(entry.uri, entry.localName, entry.qName);
             if (!HTMLElements.isFormattingElement(entry.tagName)) {
                 reopen.add(0, entry);
             }
         }
         // Close the formatting element itself.
-        final ElementEntry formatting = elementStack.pop();
+        final ElementEntry formatting = popElement();
         removeFormattingElement(formatting.tagName);
-        handler.endElement("", formatting.tagName, formatting.tagName);
+        handler.endElement(formatting.uri, formatting.localName, formatting.qName);
         // Reopen the non-formatting containers with their original attributes.
         for (final ElementEntry entry : reopen) {
             handler.startElement(entry.uri, entry.localName, entry.qName, entry.attrs);
-            elementStack.push(entry);
+            pushElement(entry);
             if (logger.isLoggable(Level.FINER)) {
                 logger.finer("Reopened container after formatting end: " + entry.tagName);
             }
@@ -509,9 +518,9 @@ public class HTMLTagBalancerFilter extends XMLFilterImpl implements LexicalHandl
             return;
         }
         while (!elementStack.isEmpty()) {
-            final ElementEntry entry = elementStack.pop();
+            final ElementEntry entry = popElement();
             removeFormattingElement(entry.tagName);
-            handler.endElement("", entry.tagName, entry.tagName);
+            handler.endElement(entry.uri, entry.localName, entry.qName);
             if (entry.tagName.equals(tagName)) {
                 break;
             }
@@ -544,7 +553,7 @@ public class HTMLTagBalancerFilter extends XMLFilterImpl implements LexicalHandl
         final ContentHandler handler = getContentHandler();
         final AttributesImpl empty = new AttributesImpl();
         handler.startElement("", "BODY", "BODY", empty);
-        elementStack.push(new ElementEntry("", "BODY", "BODY", "BODY", empty));
+        pushElement(new ElementEntry("", "BODY", "BODY", "BODY", empty));
         bodyOpened = true;
         if (logger.isLoggable(Level.FINER)) {
             logger.finer("Synthesized BODY");
@@ -559,12 +568,39 @@ public class HTMLTagBalancerFilter extends XMLFilterImpl implements LexicalHandl
      * @return true if it is open
      */
     protected boolean isOnStack(final String tagName) {
-        for (final ElementEntry entry : elementStack) {
-            if (entry.tagName.equals(tagName)) {
-                return true;
+        return openTagCounts.getOrDefault(tagName, 0) > 0;
+    }
+
+    /**
+     * Pushes an entry onto the element stack, keeping {@link #openTagCounts} in
+     * sync. All stack pushes must go through this helper so that
+     * {@link #isOnStack} stays correct.
+     *
+     * @param entry The entry to push
+     */
+    private void pushElement(final ElementEntry entry) {
+        elementStack.push(entry);
+        openTagCounts.merge(entry.tagName, 1, Integer::sum);
+    }
+
+    /**
+     * Pops the top entry off the element stack, keeping {@link #openTagCounts}
+     * in sync. All stack pops must go through this helper so that
+     * {@link #isOnStack} stays correct.
+     *
+     * @return The popped entry
+     */
+    private ElementEntry popElement() {
+        final ElementEntry entry = elementStack.pop();
+        final Integer count = openTagCounts.get(entry.tagName);
+        if (count != null) {
+            if (count <= 1) {
+                openTagCounts.remove(entry.tagName);
+            } else {
+                openTagCounts.put(entry.tagName, count - 1);
             }
         }
-        return false;
+        return entry;
     }
 
     @Override
@@ -687,7 +723,7 @@ public class HTMLTagBalancerFilter extends XMLFilterImpl implements LexicalHandl
             if (handler != null) {
                 final AttributesImpl empty = new AttributesImpl();
                 handler.startElement("", "HTML", "HTML", empty);
-                elementStack.push(new ElementEntry("", "HTML", "HTML", "HTML", empty));
+                pushElement(new ElementEntry("", "HTML", "HTML", "HTML", empty));
             }
         }
     }

@@ -134,7 +134,7 @@ public class HTMLTagBalancerFilterCoverageTest {
         filter.startElement("", "li", "LI", new AttributesImpl());
 
         var inOrder = inOrder(contentHandler);
-        inOrder.verify(contentHandler).endElement("", "LI", "LI");
+        inOrder.verify(contentHandler).endElement("", "li", "LI");
         inOrder.verify(contentHandler).startElement(eq(""), eq("li"), eq("LI"), any());
         // The two LI elements are siblings (UL still open).
         assertTrue(filter.isOnStack("UL"));
@@ -151,7 +151,7 @@ public class HTMLTagBalancerFilterCoverageTest {
 
         filter.startElement("", "p", "P", new AttributesImpl());
 
-        verify(contentHandler).endElement("", "P", "P");
+        verify(contentHandler).endElement("", "p", "P");
     }
 
     // ---------------------------------------------------------------
@@ -220,7 +220,7 @@ public class HTMLTagBalancerFilterCoverageTest {
         // Starting BODY should auto-close HEAD.
         filter.startElement("", "body", "BODY", new AttributesImpl());
 
-        verify(contentHandler).endElement("", "HEAD", "HEAD");
+        verify(contentHandler).endElement("", "head", "HEAD");
         assertTrue(filter.headClosed);
         assertTrue(filter.bodyOpened);
     }
@@ -487,9 +487,9 @@ public class HTMLTagBalancerFilterCoverageTest {
         filter.endDocument();
 
         assertTrue(filter.elementStack.isEmpty());
-        verify(contentHandler).endElement("", "DIV", "DIV");
-        verify(contentHandler).endElement("", "BODY", "BODY");
-        verify(contentHandler).endElement("", "HTML", "HTML");
+        verify(contentHandler).endElement("", "div", "DIV");
+        verify(contentHandler).endElement("", "body", "BODY");
+        verify(contentHandler).endElement("", "html", "HTML");
         verify(contentHandler).endDocument();
     }
 
@@ -549,7 +549,7 @@ public class HTMLTagBalancerFilterCoverageTest {
         filter.endElement("", "div", "DIV");
 
         var inOrder = inOrder(contentHandler);
-        inOrder.verify(contentHandler).endElement("", "SPAN", "SPAN");
+        inOrder.verify(contentHandler).endElement("", "span", "SPAN");
         inOrder.verify(contentHandler).endElement("", "div", "DIV");
     }
 
@@ -571,8 +571,8 @@ public class HTMLTagBalancerFilterCoverageTest {
         filter.endElement("", "b", "B");
 
         var inOrder = inOrder(contentHandler);
-        inOrder.verify(contentHandler).endElement("", "DIV", "DIV");
-        inOrder.verify(contentHandler).endElement("", "B", "B");
+        inOrder.verify(contentHandler).endElement("", "div", "DIV");
+        inOrder.verify(contentHandler).endElement("", "b", "B");
         inOrder.verify(contentHandler).startElement(eq(""), eq("div"), eq("DIV"), any());
 
         // DIV is reopened; B is one-shot and stays closed.
@@ -594,8 +594,8 @@ public class HTMLTagBalancerFilterCoverageTest {
         filter.endElement("", "b", "B");
 
         var inOrder = inOrder(contentHandler);
-        inOrder.verify(contentHandler).endElement("", "I", "I");
-        inOrder.verify(contentHandler).endElement("", "B", "B");
+        inOrder.verify(contentHandler).endElement("", "i", "I");
+        inOrder.verify(contentHandler).endElement("", "b", "B");
         verify(contentHandler, never()).startElement(eq(""), eq("i"), eq("I"), any());
 
         assertFalse(filter.isOnStack("I"));
