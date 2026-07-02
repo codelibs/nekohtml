@@ -157,8 +157,14 @@ public class DOMParserTest {
         assertNotNull(root, "Root element should not be null");
         assertEquals("HTML", root.getNodeName(), "Root element should be HTML");
 
+        // Body-level content (text/comments/anchor) lives inside the synthesized
+        // BODY element per the HTML5 tree construction algorithm.
+        final Element body = (Element) doc.getElementsByTagName("BODY").item(0);
+        assertNotNull(body, "BODY should be synthesized for body content");
+        assertEquals("HTML", body.getParentNode().getNodeName(), "BODY should be a child of HTML");
+
         // Check children
-        final NodeList children = root.getChildNodes();
+        final NodeList children = body.getChildNodes();
         int commentCount = 0;
         int elementCount = 0;
         int textCount = 0;

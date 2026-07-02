@@ -15,23 +15,41 @@
  */
 package org.codelibs.nekohtml.sax;
 
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Deque;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
-import java.util.Stack;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.codelibs.nekohtml.HTMLElements;
 import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.Locator;
 import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
 import org.xml.sax.ext.LexicalHandler;
+import org.xml.sax.helpers.AttributesImpl;
 import org.xml.sax.helpers.XMLFilterImpl;
 
 /**
  * SAX filter for HTML tag balancing.
- * Automatically closes tags and fixes HTML structure.
+ *
+ * <p>
+ * This filter guarantees a well-formed, balanced event stream regardless of how
+ * malformed the incoming HTML is: for every {@code startElement} it emits,
+ * exactly one matching {@code endElement} is emitted before its parent's
+ * {@code endElement}, and it never emits an {@code endElement} without a prior
+ * matching {@code startElement}. It also synthesizes the {@code HTML},
+ * {@code HEAD} and {@code BODY} structure implied by the HTML5 tree
+ * construction algorithm, applies implied end tags for sibling containers
+ * (list items, table cells, paragraphs, ...), and ignores stray end tags.
+ * </p>
  *
  * @author CodeLibs Project
  */
@@ -43,33 +61,60 @@ public class HTMLTagBalancerFilter extends XMLFilterImpl implements LexicalHandl
     /** Lexical handler for DTD and CDATA events. */
     protected LexicalHandler lexicalHandler;
 
-    /** Stack of open elements. */
-    protected final Stack<String> elementStack = new Stack<>();
+    /**
+     * An open element on the stack. Attributes are copied at push time so that
+     * an element can be reopened (with its attributes preserved) when a
+     * misnested formatting end tag forces its enclosing containers to be
+     * reconstructed.
+     */
+    protected static final class ElementEntry {
+        /** The namespace URI as received. */
+        final String uri;
+        /** The local name as received. */
+        final String localName;
+        /** The qualified name as received. */
+        final String qName;
+        /** The upper-cased element name used for structural matching. */
+        final String tagName;
+        /** A defensive copy of the element's attributes. */
+        final AttributesImpl attrs;
+
+        ElementEntry(final String uri, final String localName, final String qName, final String tagName, final Attributes atts) {
+            this.uri = uri;
+            this.localName = localName;
+            this.qName = qName;
+            this.tagName = tagName;
+            this.attrs = new AttributesImpl(atts);
+        }
+    }
+
+    /** Stack of open elements (top of stack is the head of the deque). */
+    protected final Deque<ElementEntry> elementStack = new ArrayDeque<>();
 
     /**
-     * List of active formatting elements for the Adoption Agency Algorithm.
-     * This list tracks formatting elements (a, b, i, strong, etc.) that are currently "open"
-     * and may need to be reconstructed when closing tags are encountered out of order.
+     * List of active formatting elements (a, b, i, strong, etc.) currently on
+     * the stack. Maintained as elements are pushed and popped; consulted by the
+     * balanced formatting-end reconstruction.
      */
-    protected final java.util.LinkedList<String> activeFormattingElements = new java.util.LinkedList<>();
+    protected final LinkedList<String> activeFormattingElements = new LinkedList<>();
 
-    /**
-     * Marker object used in the active formatting elements list.
-     * Markers are used to separate different contexts (e.g., when entering tables or lists).
-     */
-    protected static final String MARKER = new String("MARKER");
+    /** Whether the HTML root element has been opened (or synthesized). */
+    protected boolean htmlOpened = false;
 
-    /** Whether the document structure has been initialized (HTML element started). */
-    protected boolean documentInitialized = false;
+    /** Whether the HEAD element has been closed (BODY/FRAMESET seen). */
+    protected boolean headClosed = false;
 
-    /** Elements that should close HEAD when they appear. */
+    /** Whether the BODY (or FRAMESET) element has been opened. */
+    protected boolean bodyOpened = false;
+
+    /** Elements that close HEAD and open the body region when they appear. */
     protected static final Set<String> BODY_ELEMENTS = new HashSet<>();
     static {
         BODY_ELEMENTS.add("BODY");
         BODY_ELEMENTS.add("FRAMESET");
     }
 
-    /** Elements that belong in HEAD. */
+    /** Elements that belong in HEAD (SCRIPT only while the body is not open). */
     protected static final Set<String> HEAD_ELEMENTS = new HashSet<>();
     static {
         HEAD_ELEMENTS.add("TITLE");
@@ -78,74 +123,6 @@ public class HTMLTagBalancerFilter extends XMLFilterImpl implements LexicalHandl
         HEAD_ELEMENTS.add("STYLE");
         HEAD_ELEMENTS.add("SCRIPT");
         HEAD_ELEMENTS.add("BASE");
-    }
-
-    /** Generic container elements that can contain almost any child element. */
-    protected static final Set<String> GENERIC_CONTAINERS = new HashSet<>();
-    static {
-        // Basic containers
-        GENERIC_CONTAINERS.add("DIV");
-        GENERIC_CONTAINERS.add("SPAN");
-        GENERIC_CONTAINERS.add("P");
-        GENERIC_CONTAINERS.add("BLOCKQUOTE");
-        GENERIC_CONTAINERS.add("ADDRESS");
-        GENERIC_CONTAINERS.add("PRE");
-
-        // HTML5 semantic elements
-        GENERIC_CONTAINERS.add("ARTICLE");
-        GENERIC_CONTAINERS.add("SECTION");
-        GENERIC_CONTAINERS.add("NAV");
-        GENERIC_CONTAINERS.add("HEADER");
-        GENERIC_CONTAINERS.add("FOOTER");
-        GENERIC_CONTAINERS.add("ASIDE");
-        GENERIC_CONTAINERS.add("MAIN");
-        GENERIC_CONTAINERS.add("SEARCH");
-
-        // List elements
-        GENERIC_CONTAINERS.add("LI");
-        GENERIC_CONTAINERS.add("DD");
-        GENERIC_CONTAINERS.add("DT");
-        GENERIC_CONTAINERS.add("UL");
-        GENERIC_CONTAINERS.add("OL");
-        GENERIC_CONTAINERS.add("DL");
-        GENERIC_CONTAINERS.add("MENU");
-
-        // Table elements
-        GENERIC_CONTAINERS.add("TABLE");
-        GENERIC_CONTAINERS.add("TBODY");
-        GENERIC_CONTAINERS.add("THEAD");
-        GENERIC_CONTAINERS.add("TFOOT");
-        GENERIC_CONTAINERS.add("TR");
-        GENERIC_CONTAINERS.add("TD");
-        GENERIC_CONTAINERS.add("TH");
-        GENERIC_CONTAINERS.add("CAPTION");
-        GENERIC_CONTAINERS.add("COLGROUP");
-
-        // Form elements
-        GENERIC_CONTAINERS.add("FORM");
-        GENERIC_CONTAINERS.add("FIELDSET");
-        GENERIC_CONTAINERS.add("LABEL");
-        GENERIC_CONTAINERS.add("BUTTON");
-        GENERIC_CONTAINERS.add("LEGEND");
-
-        // Other semantic containers
-        GENERIC_CONTAINERS.add("FIGURE");
-        GENERIC_CONTAINERS.add("FIGCAPTION");
-        GENERIC_CONTAINERS.add("DETAILS");
-        GENERIC_CONTAINERS.add("SUMMARY");
-        GENERIC_CONTAINERS.add("DIALOG");
-        GENERIC_CONTAINERS.add("HGROUP");
-
-        // Web Components
-        GENERIC_CONTAINERS.add("SLOT");
-
-        // Legacy containers
-        GENERIC_CONTAINERS.add("CENTER");
-        GENERIC_CONTAINERS.add("MARQUEE");
-
-        // Special containers
-        GENERIC_CONTAINERS.add("NOSCRIPT");
-        GENERIC_CONTAINERS.add("A"); // HTML5 allows block elements in <a>
     }
 
     /** Self-closing elements (void elements). */
@@ -165,6 +142,35 @@ public class HTMLTagBalancerFilter extends XMLFilterImpl implements LexicalHandl
         VOID_ELEMENTS.add("SOURCE");
         VOID_ELEMENTS.add("TRACK");
         VOID_ELEMENTS.add("WBR");
+    }
+
+    /**
+     * Implied-close table. Maps a start tag to the set of open elements it
+     * implicitly closes when found at the top of the stack. Applied
+     * repeatedly against the top of the stack before the start tag is pushed.
+     */
+    protected static final Map<String, Set<String>> IMPLIED_CLOSE = new HashMap<>();
+    static {
+        // Block-level containers that close an open paragraph.
+        final Set<String> closesP = Set.of("P");
+        for (final String t : new String[] { "P", "H1", "H2", "H3", "H4", "H5", "H6", "UL", "OL", "DL", "DIV", "BLOCKQUOTE", "PRE",
+                "TABLE", "ADDRESS", "ARTICLE", "ASIDE", "DETAILS", "DIALOG", "FIELDSET", "FIGCAPTION", "FIGURE", "FOOTER", "FORM",
+                "HEADER", "HGROUP", "HR", "MAIN", "MENU", "NAV", "SEARCH", "SECTION" }) {
+            IMPLIED_CLOSE.put(t, closesP);
+        }
+        IMPLIED_CLOSE.put("LI", Set.of("LI", "P"));
+        IMPLIED_CLOSE.put("DT", Set.of("DT", "DD", "P"));
+        IMPLIED_CLOSE.put("DD", Set.of("DT", "DD", "P"));
+        IMPLIED_CLOSE.put("OPTION", Set.of("OPTION"));
+        IMPLIED_CLOSE.put("OPTGROUP", Set.of("OPTION", "OPTGROUP"));
+        IMPLIED_CLOSE.put("TR", Set.of("TR", "TD", "TH"));
+        IMPLIED_CLOSE.put("TD", Set.of("TD", "TH"));
+        IMPLIED_CLOSE.put("TH", Set.of("TD", "TH"));
+        final Set<String> closesSection = Set.of("TR", "TD", "TH", "THEAD", "TBODY", "TFOOT");
+        IMPLIED_CLOSE.put("THEAD", closesSection);
+        IMPLIED_CLOSE.put("TBODY", closesSection);
+        IMPLIED_CLOSE.put("TFOOT", closesSection);
+        IMPLIED_CLOSE.put("COLGROUP", Set.of("COLGROUP"));
     }
 
     /**
@@ -211,7 +217,9 @@ public class HTMLTagBalancerFilter extends XMLFilterImpl implements LexicalHandl
         }
         elementStack.clear();
         activeFormattingElements.clear();
-        documentInitialized = false;
+        htmlOpened = false;
+        headClosed = false;
+        bodyOpened = false;
         if (getContentHandler() != null) {
             getContentHandler().startDocument();
         }
@@ -219,21 +227,22 @@ public class HTMLTagBalancerFilter extends XMLFilterImpl implements LexicalHandl
 
     @Override
     public void endDocument() throws SAXException {
-        // Close any remaining open elements
+        final ContentHandler handler = getContentHandler();
         if (logger.isLoggable(Level.FINE)) {
             logger.fine("Ending document - closing " + elementStack.size() + " remaining open elements");
         }
         while (!elementStack.isEmpty()) {
-            final String element = elementStack.pop();
+            final ElementEntry entry = elementStack.pop();
+            removeFormattingElement(entry.tagName);
             if (logger.isLoggable(Level.FINER)) {
-                logger.finer("Auto-closing unclosed element at document end: " + element);
+                logger.finer("Auto-closing unclosed element at document end: " + entry.tagName);
             }
-            if (getContentHandler() != null) {
-                getContentHandler().endElement("", element, element);
+            if (handler != null) {
+                handler.endElement("", entry.tagName, entry.tagName);
             }
         }
-        if (getContentHandler() != null) {
-            getContentHandler().endDocument();
+        if (handler != null) {
+            handler.endDocument();
         }
     }
 
@@ -267,37 +276,66 @@ public class HTMLTagBalancerFilter extends XMLFilterImpl implements LexicalHandl
 
         final String tagName = qName.toUpperCase();
 
-        // If this is an HTML element, mark document as initialized but don't auto-add
+        // HTML: only one root; ignore any duplicate.
         if ("HTML".equals(tagName)) {
-            documentInitialized = true;
-        } else {
-            ensureDocumentInitialized();
-        }
-
-        // If starting BODY or FRAMESET, close HEAD if it's open
-        if (BODY_ELEMENTS.contains(tagName)) {
-            closeElement("HEAD");
-            closeElement("TITLE"); // Close any unclosed title
-        }
-
-        // Start the element
-        handler.startElement(uri, localName, qName, atts);
-
-        // Track non-void elements
-        if (!VOID_ELEMENTS.contains(tagName)) {
-            elementStack.push(tagName);
-            if (logger.isLoggable(Level.FINER)) {
-                logger.finer("Pushed element onto stack: " + tagName + " (stack depth: " + elementStack.size() + ")");
-            }
-
-            // Track formatting elements for AAA
-            if (org.codelibs.nekohtml.HTMLElements.isFormattingElement(tagName)) {
-                addFormattingElement(tagName);
+            if (htmlOpened) {
                 if (logger.isLoggable(Level.FINER)) {
-                    logger.finer("Added formatting element: " + tagName);
+                    logger.finer("Ignoring duplicate HTML start tag");
+                }
+                return;
+            }
+            htmlOpened = true;
+            emitStart(uri, localName, qName, tagName, atts);
+            return;
+        }
+
+        ensureDocumentInitialized();
+
+        // HEAD: only meaningful before the body region.
+        if ("HEAD".equals(tagName)) {
+            if (bodyOpened || headClosed) {
+                if (logger.isLoggable(Level.FINER)) {
+                    logger.finer("Ignoring HEAD start tag after body/head");
+                }
+                return;
+            }
+            emitStart(uri, localName, qName, tagName, atts);
+            return;
+        }
+
+        // BODY / FRAMESET: close HEAD and enter the body region.
+        if (BODY_ELEMENTS.contains(tagName)) {
+            if (bodyOpened) {
+                // Duplicate body region: HTML5 merges into the existing body
+                // rather than nesting a second one; ignore the start tag.
+                if (logger.isLoggable(Level.FINER)) {
+                    logger.finer("Ignoring duplicate " + tagName + " start tag");
+                }
+                return;
+            }
+            closeHead();
+            bodyOpened = true;
+            emitStart(uri, localName, qName, tagName, atts);
+            return;
+        }
+
+        if (HEAD_ELEMENTS.contains(tagName) && !bodyOpened) {
+            // Head content (SCRIPT counts as head content only before the body).
+            if (!headClosed && !isOnStack("HEAD")) {
+                final AttributesImpl empty = new AttributesImpl();
+                handler.startElement("", "HEAD", "HEAD", empty);
+                elementStack.push(new ElementEntry("", "HEAD", "HEAD", "HEAD", empty));
+                if (logger.isLoggable(Level.FINER)) {
+                    logger.finer("Synthesized HEAD for head-content element " + tagName);
                 }
             }
+        } else {
+            // Any other content forces the body region to open.
+            ensureBodyOpen();
         }
+
+        applyImpliedEndTags(tagName);
+        emitStart(uri, localName, qName, tagName, atts);
     }
 
     @Override
@@ -316,88 +354,250 @@ public class HTMLTagBalancerFilter extends XMLFilterImpl implements LexicalHandl
 
         final String tagName = qName.toUpperCase();
 
-        // Check if this is a formatting element - if so, run AAA
-        final boolean isFormatting = org.codelibs.nekohtml.HTMLElements.isFormattingElement(tagName);
-        if (isFormatting && findFormattingElement(tagName) >= 0) {
-            // Run Adoption Agency Algorithm
-            runAdoptionAgencyAlgorithm(tagName, uri, localName, qName);
+        // Stray end tag (never opened, void element, or already closed): ignore.
+        if (!isOnStack(tagName)) {
+            if (logger.isLoggable(Level.FINER)) {
+                logger.finer("Ignoring stray end tag: " + tagName);
+            }
             return;
         }
 
-        // Find and close the element (standard logic)
-        if (!elementStack.isEmpty()) {
-            // If the element is on the stack, close it and everything above it
-            final int index = elementStack.lastIndexOf(tagName);
-            if (index >= 0) {
-                // Close all elements above this one first (auto-close)
-                final int elementsToClose = elementStack.size() - index - 1;
-                if (elementsToClose > 0 && logger.isLoggable(Level.FINER)) {
-                    logger.finer("Auto-closing " + elementsToClose + " elements above " + tagName);
-                }
-                while (elementStack.size() > index + 1) {
-                    final String elem = elementStack.pop();
-                    if (logger.isLoggable(Level.FINER)) {
-                        logger.finer("Auto-closing element: " + elem);
-                    }
-                    // Remove from formatting elements if present
-                    removeFormattingElement(elem);
-                    handler.endElement("", elem, elem);
-                }
-                // Now close the target element
-                elementStack.pop();
-                removeFormattingElement(tagName);
-                if (logger.isLoggable(Level.FINER)) {
-                    logger.finer("Popped element from stack: " + tagName + " (stack depth: " + elementStack.size() + ")");
-                }
-                handler.endElement(uri, localName, qName);
-            } else {
-                // Element not on stack - might be a void element or already closed
-                if (logger.isLoggable(Level.FINER)) {
-                    logger.finer("End element not on stack (void or already closed): " + tagName);
-                }
-                // Just pass through the end tag
-                handler.endElement(uri, localName, qName);
-            }
-        } else {
-            // Stack is empty, just pass through
+        // BODY / HTML close at end of document; only close what is above them so
+        // that late content stays inside the body.
+        if ("BODY".equals(tagName) || "HTML".equals(tagName)) {
+            closeAbove(tagName);
+            return;
+        }
+
+        // Formatting elements: balanced reconstruction of enclosing containers.
+        if (HTMLElements.isFormattingElement(tagName)) {
+            reconstructFormattingEnd(tagName);
+            return;
+        }
+
+        // Standard element: close everything above, then close it.
+        closeAbove(tagName);
+        final ElementEntry target = elementStack.pop();
+        removeFormattingElement(target.tagName);
+        if ("HEAD".equals(tagName)) {
+            // An explicit </head> ends the head region; later head-only content
+            // is treated as body content instead of reopening a second HEAD.
+            headClosed = true;
+        }
+        if (logger.isLoggable(Level.FINER)) {
+            logger.finer("Popped element from stack: " + tagName + " (stack depth: " + elementStack.size() + ")");
+        }
+        handler.endElement(uri, localName, qName);
+    }
+
+    /**
+     * Emits a start element and, unless it is a void element, pushes it onto the
+     * stack (recording a copy of its attributes for possible reopening).
+     */
+    private void emitStart(final String uri, final String localName, final String qName, final String tagName, final Attributes atts)
+            throws SAXException {
+        final ContentHandler handler = getContentHandler();
+        handler.startElement(uri, localName, qName, atts);
+        if (VOID_ELEMENTS.contains(tagName)) {
+            // Void elements are always empty; emit their end immediately so the
+            // stream stays balanced. The upstream scanner's own (redundant) void
+            // end tag, and any stray void end tag, are ignored in endElement().
             handler.endElement(uri, localName, qName);
+            return;
+        }
+        elementStack.push(new ElementEntry(uri, localName, qName, tagName, atts));
+        if (HTMLElements.isFormattingElement(tagName)) {
+            addFormattingElement(tagName);
+        }
+        if (logger.isLoggable(Level.FINER)) {
+            logger.finer("Pushed element onto stack: " + tagName + " (stack depth: " + elementStack.size() + ")");
         }
     }
 
     /**
-     * Closes an element if it's currently open.
+     * Applies implied end tags for the given start tag: while the top of the
+     * stack is an element that {@code tagName} implicitly closes, pop and close
+     * it.
      *
-     * @param tagName The tag name to close (uppercase)
+     * @param tagName The incoming start tag (upper-cased)
      * @throws SAXException If an error occurs
      */
-    protected void closeElement(final String tagName) throws SAXException {
-        final ContentHandler handler = getContentHandler();
-        if (handler == null || elementStack.isEmpty()) {
+    protected void applyImpliedEndTags(final String tagName) throws SAXException {
+        final Set<String> closes = IMPLIED_CLOSE.get(tagName);
+        if (closes == null) {
             return;
         }
-
-        final int index = elementStack.lastIndexOf(tagName);
-        if (index >= 0) {
+        final ContentHandler handler = getContentHandler();
+        while (!elementStack.isEmpty() && closes.contains(elementStack.peek().tagName)) {
+            final ElementEntry entry = elementStack.pop();
+            removeFormattingElement(entry.tagName);
             if (logger.isLoggable(Level.FINER)) {
-                logger.finer("Closing element and " + (elementStack.size() - index - 1) + " elements above it: " + tagName);
+                logger.finer("Implied close of " + entry.tagName + " before " + tagName);
             }
-            // Close all elements from the top down to and including the target
-            while (elementStack.size() > index) {
-                final String elem = elementStack.pop();
-                if (logger.isLoggable(Level.FINER)) {
-                    logger.finer("Auto-closing element: " + elem);
-                }
-                handler.endElement("", elem, elem);
+            handler.endElement("", entry.tagName, entry.tagName);
+        }
+    }
+
+    /**
+     * Closes (emits end for and pops) every element above the innermost
+     * occurrence of {@code tagName}, leaving {@code tagName} itself on the stack.
+     *
+     * @param tagName The target tag name (upper-cased)
+     * @throws SAXException If an error occurs
+     */
+    protected void closeAbove(final String tagName) throws SAXException {
+        final ContentHandler handler = getContentHandler();
+        while (!elementStack.isEmpty() && !elementStack.peek().tagName.equals(tagName)) {
+            final ElementEntry entry = elementStack.pop();
+            removeFormattingElement(entry.tagName);
+            if (logger.isLoggable(Level.FINER)) {
+                logger.finer("Auto-closing element: " + entry.tagName);
+            }
+            handler.endElement("", entry.tagName, entry.tagName);
+        }
+    }
+
+    /**
+     * Balanced reconstruction for a misnested formatting end tag.
+     *
+     * <p>
+     * Everything above the formatting element {@code F} is closed and, for the
+     * non-formatting containers among them, reopened after {@code F} is closed
+     * (preserving their attributes). Formatting elements stay closed
+     * ("one-shot" formatting), so formatting does not leak past its end tag.
+     * This keeps the event stream balanced.
+     * </p>
+     *
+     * @param tagName The formatting element being closed (upper-cased)
+     * @throws SAXException If an error occurs
+     */
+    protected void reconstructFormattingEnd(final String tagName) throws SAXException {
+        final ContentHandler handler = getContentHandler();
+        final List<ElementEntry> reopen = new ArrayList<>();
+        // Pop entries above F, remembering non-formatting containers (bottom->top).
+        while (!elementStack.peek().tagName.equals(tagName)) {
+            final ElementEntry entry = elementStack.pop();
+            removeFormattingElement(entry.tagName);
+            handler.endElement("", entry.tagName, entry.tagName);
+            if (!HTMLElements.isFormattingElement(entry.tagName)) {
+                reopen.add(0, entry);
+            }
+        }
+        // Close the formatting element itself.
+        final ElementEntry formatting = elementStack.pop();
+        removeFormattingElement(formatting.tagName);
+        handler.endElement("", formatting.tagName, formatting.tagName);
+        // Reopen the non-formatting containers with their original attributes.
+        for (final ElementEntry entry : reopen) {
+            handler.startElement(entry.uri, entry.localName, entry.qName, entry.attrs);
+            elementStack.push(entry);
+            if (logger.isLoggable(Level.FINER)) {
+                logger.finer("Reopened container after formatting end: " + entry.tagName);
             }
         }
     }
 
+    /**
+     * Closes an element (and everything above it) if it is currently open.
+     *
+     * @param tagName The tag name to close (upper-cased)
+     * @throws SAXException If an error occurs
+     */
+    protected void closeElement(final String tagName) throws SAXException {
+        final ContentHandler handler = getContentHandler();
+        if (handler == null || !isOnStack(tagName)) {
+            return;
+        }
+        while (!elementStack.isEmpty()) {
+            final ElementEntry entry = elementStack.pop();
+            removeFormattingElement(entry.tagName);
+            handler.endElement("", entry.tagName, entry.tagName);
+            if (entry.tagName.equals(tagName)) {
+                break;
+            }
+        }
+    }
+
+    /**
+     * Closes HEAD (and any open head content) if present, and marks the head
+     * region as closed.
+     *
+     * @throws SAXException If an error occurs
+     */
+    protected void closeHead() throws SAXException {
+        if (isOnStack("HEAD")) {
+            closeElement("HEAD");
+        }
+        headClosed = true;
+    }
+
+    /**
+     * Synthesizes and opens a BODY element if the body region is not yet open.
+     *
+     * @throws SAXException If an error occurs
+     */
+    protected void ensureBodyOpen() throws SAXException {
+        if (bodyOpened) {
+            return;
+        }
+        closeHead();
+        final ContentHandler handler = getContentHandler();
+        final AttributesImpl empty = new AttributesImpl();
+        handler.startElement("", "BODY", "BODY", empty);
+        elementStack.push(new ElementEntry("", "BODY", "BODY", "BODY", empty));
+        bodyOpened = true;
+        if (logger.isLoggable(Level.FINER)) {
+            logger.finer("Synthesized BODY");
+        }
+    }
+
+    /**
+     * Returns whether an element with the given (upper-cased) name is currently
+     * on the stack.
+     *
+     * @param tagName The tag name to look for
+     * @return true if it is open
+     */
+    protected boolean isOnStack(final String tagName) {
+        for (final ElementEntry entry : elementStack) {
+            if (entry.tagName.equals(tagName)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     @Override
     public void characters(final char[] ch, final int start, final int length) throws SAXException {
-        ensureDocumentInitialized();
-        if (getContentHandler() != null) {
-            getContentHandler().characters(ch, start, length);
+        final ContentHandler handler = getContentHandler();
+        if (handler == null) {
+            return;
         }
+        if (!bodyOpened && containsNonWhitespace(ch, start, length)) {
+            ensureDocumentInitialized();
+            // Text that is the content of a head element (e.g. TITLE, STYLE, SCRIPT)
+            // belongs to that element and must not force the body open.
+            final ElementEntry top = elementStack.peek();
+            if (top == null || !HEAD_ELEMENTS.contains(top.tagName)) {
+                ensureBodyOpen();
+            }
+        }
+        handler.characters(ch, start, length);
+    }
+
+    /**
+     * Returns whether the given character run contains any non-whitespace
+     * character. A byte-order mark (U+FEFF) is treated as insignificant so that
+     * a leading BOM does not, by itself, force a body to be synthesized.
+     */
+    private static boolean containsNonWhitespace(final char[] ch, final int start, final int length) {
+        for (int i = start; i < start + length; i++) {
+            final char c = ch[i];
+            if (c != '\uFEFF' && !Character.isWhitespace(c)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
@@ -467,7 +667,8 @@ public class HTMLTagBalancerFilter extends XMLFilterImpl implements LexicalHandl
 
     @Override
     public void comment(final char[] ch, final int start, final int length) throws SAXException {
-        ensureDocumentInitialized();
+        // A comment does not force the document structure to be initialized: a
+        // comment before <html> belongs at the document level.
         if (lexicalHandler != null) {
             lexicalHandler.comment(ch, start, length);
         }
@@ -480,251 +681,39 @@ public class HTMLTagBalancerFilter extends XMLFilterImpl implements LexicalHandl
      * @throws SAXException If an error occurs
      */
     protected void ensureDocumentInitialized() throws SAXException {
-        if (!documentInitialized) {
-            documentInitialized = true;
+        if (!htmlOpened) {
+            htmlOpened = true;
             final ContentHandler handler = getContentHandler();
             if (handler != null) {
-                // Auto-add HTML root element
-                handler.startElement("", "HTML", "HTML", new org.xml.sax.helpers.AttributesImpl());
-                elementStack.push("HTML");
+                final AttributesImpl empty = new AttributesImpl();
+                handler.startElement("", "HTML", "HTML", empty);
+                elementStack.push(new ElementEntry("", "HTML", "HTML", "HTML", empty));
             }
         }
     }
 
     //
-    // Active Formatting Elements Management (for Adoption Agency Algorithm)
+    // Active formatting element bookkeeping
     //
 
     /**
      * Adds a formatting element to the active formatting elements list.
-     * This is part of the Adoption Agency Algorithm implementation.
      *
-     * @param tagName The element tag name
+     * @param tagName The element tag name (upper-cased)
      */
     protected void addFormattingElement(final String tagName) {
-        // Remove any duplicate entry of the same element (only one instance allowed)
         activeFormattingElements.remove(tagName);
-        // Add to the end of the list
         activeFormattingElements.add(tagName);
     }
 
     /**
      * Removes a formatting element from the active formatting elements list.
      *
-     * @param tagName The element tag name
+     * @param tagName The element tag name (upper-cased)
      * @return true if the element was found and removed
      */
     protected boolean removeFormattingElement(final String tagName) {
         return activeFormattingElements.remove(tagName);
-    }
-
-    /**
-     * Finds the index of a formatting element in the active formatting elements list.
-     * Searches from the end of the list (most recent elements first).
-     *
-     * @param tagName The element tag name
-     * @return The index of the element, or -1 if not found
-     */
-    protected int findFormattingElement(final String tagName) {
-        for (int i = activeFormattingElements.size() - 1; i >= 0; i--) {
-            final String element = activeFormattingElements.get(i);
-            if (tagName.equals(element)) {
-                return i;
-            }
-            // Stop at marker
-            if (element == MARKER) {
-                break;
-            }
-        }
-        return -1;
-    }
-
-    /**
-     * Clears all active formatting elements up to and including the last marker.
-     * This is called when exiting certain contexts (e.g., tables, select elements).
-     */
-    protected void clearFormattingElementsToLastMarker() {
-        while (!activeFormattingElements.isEmpty()) {
-            final String element = activeFormattingElements.removeLast();
-            if (element == MARKER) {
-                break;
-            }
-        }
-    }
-
-    /**
-     * Pushes a marker onto the active formatting elements list.
-     * Markers are used to separate different parsing contexts.
-     */
-    protected void pushFormattingMarker() {
-        activeFormattingElements.add(MARKER);
-    }
-
-    //
-    // Adoption Agency Algorithm (AAA)
-    //
-
-    /**
-     * Checks if an element is a "special" category element (block-level elements).
-     * These elements are used to find the "furthest block" in the AAA.
-     *
-     * @param tagName The element tag name
-     * @return true if the element is special/block-level
-     */
-    protected boolean isSpecialElement(final String tagName) {
-        // Block-level and special elements according to HTML Living Standard
-        return "ADDRESS".equals(tagName) || "ARTICLE".equals(tagName) || "ASIDE".equals(tagName) || "BLOCKQUOTE".equals(tagName)
-                || "DETAILS".equals(tagName) || "DIALOG".equals(tagName) || "DIV".equals(tagName) || "DL".equals(tagName)
-                || "FIELDSET".equals(tagName) || "FIGCAPTION".equals(tagName) || "FIGURE".equals(tagName) || "FOOTER".equals(tagName)
-                || "FORM".equals(tagName) || "H1".equals(tagName) || "H2".equals(tagName) || "H3".equals(tagName) || "H4".equals(tagName)
-                || "H5".equals(tagName) || "H6".equals(tagName) || "HEADER".equals(tagName) || "HGROUP".equals(tagName)
-                || "HR".equals(tagName) || "LI".equals(tagName) || "MAIN".equals(tagName) || "NAV".equals(tagName) || "OL".equals(tagName)
-                || "P".equals(tagName) || "PRE".equals(tagName) || "SEARCH".equals(tagName) || "SECTION".equals(tagName)
-                || "TABLE".equals(tagName) || "UL".equals(tagName);
-    }
-
-    /**
-     * Finds the "furthest block" for the Adoption Agency Algorithm.
-     * The furthest block is the first special/block element after the formatting element in the stack.
-     *
-     * @param formattingIndex The index of the formatting element in the element stack
-     * @return The index of the furthest block, or -1 if none found
-     */
-    protected int findFurthestBlock(final int formattingIndex) {
-        for (int i = formattingIndex + 1; i < elementStack.size(); i++) {
-            if (isSpecialElement(elementStack.get(i))) {
-                return i;
-            }
-        }
-        return -1;
-    }
-
-    /**
-     * Runs the Adoption Agency Algorithm for formatting elements.
-     * This is a simplified implementation that handles the most common cases.
-     *
-     * @param tagName   The formatting element tag name
-     * @param uri       The namespace URI
-     * @param localName The local name
-     * @param qName     The qualified name
-     * @throws SAXException If an error occurs
-     */
-    protected void runAdoptionAgencyAlgorithm(final String tagName, final String uri, final String localName, final String qName)
-            throws SAXException {
-        final ContentHandler handler = getContentHandler();
-        if (handler == null) {
-            return;
-        }
-
-        if (logger.isLoggable(Level.FINE)) {
-            logger.fine("Running Adoption Agency Algorithm for: " + tagName);
-        }
-
-        // Outer loop - run up to 8 times
-        for (int outerLoop = 0; outerLoop < 8; outerLoop++) {
-            // Step 1: Find the formatting element in active formatting elements
-            final int formattingElemIndexInList = findFormattingElement(tagName);
-            if (formattingElemIndexInList < 0) {
-                // Not in active formatting elements - use standard close logic
-                if (logger.isLoggable(Level.FINER)) {
-                    logger.finer("AAA: Formatting element not in active list, using standard close");
-                }
-                break;
-            }
-
-            // Step 2: Find the formatting element in the element stack
-            final int formattingElemIndexInStack = elementStack.lastIndexOf(tagName);
-            if (formattingElemIndexInStack < 0) {
-                // Not in stack - remove from active list and return
-                activeFormattingElements.remove(formattingElemIndexInList);
-                if (logger.isLoggable(Level.FINER)) {
-                    logger.finer("AAA: Formatting element not in stack, removed from active list");
-                }
-                return;
-            }
-
-            // Step 3: Find the furthest block
-            final int furthestBlockIndex = findFurthestBlock(formattingElemIndexInStack);
-
-            if (furthestBlockIndex < 0) {
-                // No furthest block - close elements and reopen formatting elements that were inside
-                if (logger.isLoggable(Level.FINER)) {
-                    logger.finer("AAA: No furthest block, closing and reopening formatting elements");
-                }
-
-                // Collect formatting elements that need to be reopened
-                final java.util.List<String> elementsToReopen = new java.util.ArrayList<>();
-                for (int i = formattingElemIndexInStack + 1; i < elementStack.size(); i++) {
-                    final String elem = elementStack.get(i);
-                    if (org.codelibs.nekohtml.HTMLElements.isFormattingElement(elem)) {
-                        elementsToReopen.add(elem);
-                    }
-                }
-
-                // Close all elements from top down to and including the formatting element
-                while (elementStack.size() > formattingElemIndexInStack) {
-                    final String elem = elementStack.pop();
-                    removeFormattingElement(elem);
-                    handler.endElement("", elem, elem);
-                    if (elem.equals(tagName)) {
-                        break;
-                    }
-                }
-
-                // Reopen the formatting elements that were inside
-                for (final String elem : elementsToReopen) {
-                    elementStack.push(elem);
-                    addFormattingElement(elem);
-                    handler.startElement("", elem.toLowerCase(), elem, new org.xml.sax.helpers.AttributesImpl());
-                }
-
-                return;
-            }
-
-            // Step 4: Complex case with furthest block
-            // This is a simplified version - full AAA is much more complex
-            if (logger.isLoggable(Level.FINER)) {
-                logger.finer("AAA: Furthest block found at index " + furthestBlockIndex + ", reconstructing");
-            }
-
-            // For now, we'll do a simplified reconstruction:
-            // Close elements between formatting element and furthest block,
-            // then reopen the formatting element after the furthest block
-
-            // Close elements from formatting element up to (but not including) furthest block
-            java.util.List<String> elementsToReopen = new java.util.ArrayList<>();
-            for (int i = formattingElemIndexInStack + 1; i < furthestBlockIndex; i++) {
-                elementsToReopen.add(elementStack.get(i));
-            }
-
-            // Close formatting element
-            elementStack.remove(formattingElemIndexInStack);
-            removeFormattingElement(tagName);
-            handler.endElement(uri, localName, qName);
-
-            // Reopen formatting element after furthest block (simplified)
-            // In full AAA, this would involve complex node manipulation
-            // For our purposes, the formatting has been properly closed
-
-            if (logger.isLoggable(Level.FINER)) {
-                logger.finer("AAA: Completed reconstruction for " + tagName);
-            }
-
-            return;
-        }
-
-        // If we exit the loop without returning, fall back to standard close
-        final int index = elementStack.lastIndexOf(tagName);
-        if (index >= 0) {
-            while (elementStack.size() > index) {
-                final String elem = elementStack.pop();
-                removeFormattingElement(elem);
-                handler.endElement("", elem, elem);
-                if (elem.equals(tagName)) {
-                    break;
-                }
-            }
-        }
     }
 
 } // class HTMLTagBalancerFilter
