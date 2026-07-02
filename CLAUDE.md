@@ -78,7 +78,7 @@ HTML Input → SimpleHTMLScanner → HTMLTagBalancerFilter → ContentHandler �
 | `HTMLSAXParser` | Core SAX parser implementing `XMLReader` |
 | `HTMLSAXConfiguration` | Configuration and pipeline orchestration |
 | `SimpleHTMLScanner` | Single-pass HTML tokenizer (with BOM + meta charset encoding sniffing) |
-| `HTMLTagBalancerFilter` | HTML5 tag balancing (Adoption Agency Algorithm) |
+| `HTMLTagBalancerFilter` | HTML5 tag balancing (implied end tags, head/body synthesis, balanced formatting reconstruction) |
 | `HTMLElements` | Static HTML element definitions |
 | `HTMLEntities` | HTML entity mappings |
 
