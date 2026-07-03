@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
@@ -159,11 +160,13 @@ public class HTMLTagBalancerFilter extends XMLFilterImpl implements LexicalHandl
      */
     protected static final Map<String, Set<String>> IMPLIED_CLOSE = new HashMap<>();
     static {
-        // Block-level containers that close an open paragraph.
+        // Block-level containers that close an open paragraph. Includes the legacy blocks
+        // (CENTER/DIR/LISTING/PLAINTEXT/SUMMARY/XMP) that also close <p> per HTML5.
         final Set<String> closesP = Set.of("P");
         for (final String t : new String[] { "P", "H1", "H2", "H3", "H4", "H5", "H6", "UL", "OL", "DL", "DIV", "BLOCKQUOTE", "PRE",
                 "TABLE", "ADDRESS", "ARTICLE", "ASIDE", "DETAILS", "DIALOG", "FIELDSET", "FIGCAPTION", "FIGURE", "FOOTER", "FORM",
-                "HEADER", "HGROUP", "HR", "MAIN", "MENU", "NAV", "SEARCH", "SECTION" }) {
+                "HEADER", "HGROUP", "HR", "MAIN", "MENU", "NAV", "SEARCH", "SECTION", "CENTER", "DIR", "LISTING", "PLAINTEXT", "SUMMARY",
+                "XMP" }) {
             IMPLIED_CLOSE.put(t, closesP);
         }
         IMPLIED_CLOSE.put("LI", Set.of("LI", "P"));
@@ -171,14 +174,18 @@ public class HTMLTagBalancerFilter extends XMLFilterImpl implements LexicalHandl
         IMPLIED_CLOSE.put("DD", Set.of("DT", "DD", "P"));
         IMPLIED_CLOSE.put("OPTION", Set.of("OPTION"));
         IMPLIED_CLOSE.put("OPTGROUP", Set.of("OPTION", "OPTGROUP"));
-        IMPLIED_CLOSE.put("TR", Set.of("TR", "TD", "TH"));
+        // Ruby annotation base/text markers behave like list items (siblings, not nesting).
+        IMPLIED_CLOSE.put("RP", Set.of("RP", "RT"));
+        IMPLIED_CLOSE.put("RT", Set.of("RP", "RT"));
+        // Table content: a new row/section/colgroup also closes an open CAPTION.
+        IMPLIED_CLOSE.put("TR", Set.of("TR", "TD", "TH", "CAPTION"));
         IMPLIED_CLOSE.put("TD", Set.of("TD", "TH"));
         IMPLIED_CLOSE.put("TH", Set.of("TD", "TH"));
-        final Set<String> closesSection = Set.of("TR", "TD", "TH", "THEAD", "TBODY", "TFOOT");
+        final Set<String> closesSection = Set.of("TR", "TD", "TH", "THEAD", "TBODY", "TFOOT", "CAPTION");
         IMPLIED_CLOSE.put("THEAD", closesSection);
         IMPLIED_CLOSE.put("TBODY", closesSection);
         IMPLIED_CLOSE.put("TFOOT", closesSection);
-        IMPLIED_CLOSE.put("COLGROUP", Set.of("COLGROUP"));
+        IMPLIED_CLOSE.put("COLGROUP", Set.of("COLGROUP", "CAPTION"));
     }
 
     /**
@@ -283,7 +290,7 @@ public class HTMLTagBalancerFilter extends XMLFilterImpl implements LexicalHandl
             return;
         }
 
-        final String tagName = qName.toUpperCase();
+        final String tagName = qName.toUpperCase(Locale.ROOT);
 
         // HTML: only one root; ignore any duplicate.
         if ("HTML".equals(tagName)) {
@@ -361,7 +368,7 @@ public class HTMLTagBalancerFilter extends XMLFilterImpl implements LexicalHandl
             return;
         }
 
-        final String tagName = qName.toUpperCase();
+        final String tagName = qName.toUpperCase(Locale.ROOT);
 
         // Stray end tag (never opened, void element, or already closed): ignore.
         if (!isOnStack(tagName)) {
@@ -482,22 +489,25 @@ public class HTMLTagBalancerFilter extends XMLFilterImpl implements LexicalHandl
      */
     protected void reconstructFormattingEnd(final String tagName) throws SAXException {
         final ContentHandler handler = getContentHandler();
+        // Pop entries above F, collecting non-formatting containers in pop order (top->bottom).
+        // Appending is O(1); the reopen loop below walks the list in reverse to restore the
+        // original outer->inner nesting, avoiding the O(n^2) cost of repeated head insertion.
         final List<ElementEntry> reopen = new ArrayList<>();
-        // Pop entries above F, remembering non-formatting containers (bottom->top).
         while (!elementStack.peek().tagName.equals(tagName)) {
             final ElementEntry entry = popElement();
             removeFormattingElement(entry.tagName);
             handler.endElement(entry.uri, entry.localName, entry.qName);
             if (!HTMLElements.isFormattingElement(entry.tagName)) {
-                reopen.add(0, entry);
+                reopen.add(entry);
             }
         }
         // Close the formatting element itself.
         final ElementEntry formatting = popElement();
         removeFormattingElement(formatting.tagName);
         handler.endElement(formatting.uri, formatting.localName, formatting.qName);
-        // Reopen the non-formatting containers with their original attributes.
-        for (final ElementEntry entry : reopen) {
+        // Reopen the non-formatting containers (outermost first) with their original attributes.
+        for (int k = reopen.size() - 1; k >= 0; k--) {
+            final ElementEntry entry = reopen.get(k);
             handler.startElement(entry.uri, entry.localName, entry.qName, entry.attrs);
             pushElement(entry);
             if (logger.isLoggable(Level.FINER)) {

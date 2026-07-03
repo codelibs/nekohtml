@@ -18,6 +18,7 @@ package org.codelibs.nekohtml.sax;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.StringReader;
+import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
 import org.codelibs.nekohtml.parsers.DOMParser;
@@ -170,6 +171,74 @@ public class SimpleHTMLScannerTokenizerTest {
         final long t0 = System.nanoTime();
         parse(sb.toString());
         assertTrue(TimeUnit.NANOSECONDS.toSeconds(System.nanoTime() - t0) < 20, "200k tags should parse in seconds, not minutes");
+    }
+
+    @Test
+    public void testSelfClosingScriptStillEntersRawText() throws Exception {
+        // HTML5 ignores the '/' on <script/>: it still enters script-data state, so the body
+        // is raw text and must NOT be parsed as markup (no DIV/B element fabricated).
+        final Document doc = parse("<html><body><script src=x />var a='<div>hi</div>';</script>after</body></html>");
+        assertEquals(0, doc.getElementsByTagName("DIV").getLength(), "script body must not create a DIV");
+        assertEquals(1, doc.getElementsByTagName("SCRIPT").getLength());
+        assertEquals("var a='<div>hi</div>';", doc.getElementsByTagName("SCRIPT").item(0).getTextContent());
+        assertEquals("after", doc.getElementsByTagName("BODY").item(0).getLastChild().getTextContent());
+    }
+
+    @Test
+    public void testSelfClosingStyleStillEntersRawText() throws Exception {
+        final Document doc = parse("<html><body><style/>.x{color:red}<b>bold</b></style>tail</body></html>");
+        assertEquals(0, doc.getElementsByTagName("B").getLength(), "style body must not create a B");
+        assertEquals(".x{color:red}<b>bold</b>", doc.getElementsByTagName("STYLE").item(0).getTextContent());
+    }
+
+    @Test
+    public void testSelfClosingTextareaStillRcdata() throws Exception {
+        final Document doc = parse("<html><body><textarea/>a<b>c</textarea>d</body></html>");
+        assertEquals(0, doc.getElementsByTagName("B").getLength(), "textarea body must not create a B");
+        assertEquals("a<b>c", doc.getElementsByTagName("TEXTAREA").item(0).getTextContent());
+    }
+
+    @Test
+    public void testCommentEndBangTerminatesComment() throws Exception {
+        // "--!>" is a valid comment terminator (HTML5 comment-end-bang state); the tail after it
+        // must survive rather than being swallowed to EOF.
+        final Document doc = parse("<html><body>before<!-- x --!>after</body></html>");
+        assertEquals("beforeafter", doc.getElementsByTagName("BODY").item(0).getTextContent());
+    }
+
+    @Test
+    public void testCommentEndBangPrefersEarliestTerminator() throws Exception {
+        // A normal "-->" earlier than a later "--!>" still closes first.
+        final Document doc = parse("<html><body>a<!-- c -->b --!> d</body></html>");
+        assertEquals("ab --!> d", doc.getElementsByTagName("BODY").item(0).getTextContent());
+    }
+
+    @Test
+    public void testAbruptEmptyComments() throws Exception {
+        // "<!-->" and "<!--->" are abrupt-closing empty comments; content after them is text.
+        assertEquals("ab", parse("<html><body>a<!-->b</body></html>").getElementsByTagName("BODY").item(0).getTextContent());
+        assertEquals("ab", parse("<html><body>a<!--->b</body></html>").getElementsByTagName("BODY").item(0).getTextContent());
+        // "<!---->" (already handled before the fix) remains an empty comment.
+        assertEquals("ab", parse("<html><body>a<!---->b</body></html>").getElementsByTagName("BODY").item(0).getTextContent());
+    }
+
+    @Test
+    public void testElementAndAttributeNameNormalizationIsLocaleIndependent() {
+        // Under the Turkish locale, "title".toUpperCase() yields "TİTLE" (dotted capital I) and
+        // "ID".toLowerCase() yields "ıd" (dotless i). Name normalization must use Locale.ROOT so
+        // element/attribute names stay ASCII and structural matching keeps working everywhere.
+        final Locale original = Locale.getDefault();
+        try {
+            Locale.setDefault(new Locale("tr", "TR"));
+            final SimpleHTMLScanner scanner = new SimpleHTMLScanner();
+            scanner.setElementCase("upper");
+            assertEquals("TITLE", scanner.normalizeElementName("title"));
+            assertEquals("DIV", scanner.normalizeElementName("div"));
+            scanner.setAttributeCase("lower");
+            assertEquals("id", scanner.normalizeAttributeName("ID"));
+        } finally {
+            Locale.setDefault(original);
+        }
     }
 
 } // class SimpleHTMLScannerTokenizerTest

@@ -20,7 +20,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -305,11 +307,10 @@ public class SimpleHTMLScanner implements XMLReader {
         parse(new InputSource(systemId));
     }
 
-    /** Regex used by the &lt;meta charset&gt; pre-scan; matches both the HTML5 short form
-     *  ({@code <meta charset="...">}) and the legacy {@code http-equiv="Content-Type"} form
-     *  ({@code content="text/html; charset=...">}) since both simply contain {@code charset=}. */
-    private static final Pattern META_CHARSET_PATTERN = Pattern
-            .compile("(?i)<meta[^>]*charset\\s*=\\s*[\"']?\\s*([A-Za-z0-9][A-Za-z0-9._:-]*)");
+    /** Regex that extracts the charset from a legacy {@code http-equiv="Content-Type"} tag's
+     *  {@code content} attribute value (e.g. {@code text/html; charset=Shift_JIS}). Applied only to
+     *  the value of a genuine {@code content} attribute, never to the raw markup. */
+    private static final Pattern CONTENT_CHARSET_PATTERN = Pattern.compile("(?i)charset\\s*=\\s*[\"']?\\s*([A-Za-z0-9][A-Za-z0-9._:-]*)");
 
     /**
      * Determines the Java charset name to use for decoding a byte stream, consuming any
@@ -353,7 +354,16 @@ public class SimpleHTMLScanner implements XMLReader {
 
         if (explicitEncoding != null) {
             final String mapped = EncodingMap.getIANA2JavaMapping(explicitEncoding);
-            return mapped != null ? mapped : explicitEncoding;
+            if (mapped != null) {
+                return mapped;
+            }
+            // An unsupported/invalid explicit encoding falls through to the meta-charset/UTF-8
+            // sniff below rather than being handed straight to InputStreamReader, which would
+            // throw UnsupportedEncodingException and abort the whole parse. Degrading here matches
+            // the meta-charset path (resolveSniffedEncoding also returns null for unusable names).
+            if (logger.isLoggable(Level.FINE)) {
+                logger.fine("Ignoring unsupported InputSource encoding: " + explicitEncoding);
+            }
         }
 
         final String sniffed = sniffMetaCharset(stream);
@@ -378,14 +388,184 @@ public class SimpleHTMLScanner implements XMLReader {
             final byte[] buf = new byte[1024];
             final int n = readFully(stream, buf);
             final String prefix = new String(buf, 0, n, java.nio.charset.StandardCharsets.ISO_8859_1);
-            final Matcher m = META_CHARSET_PATTERN.matcher(prefix);
-            if (m.find()) {
-                return resolveSniffedEncoding(m.group(1));
-            }
-            return null;
+            return scanPrefixForCharset(prefix);
         } finally {
             stream.reset();
         }
+    }
+
+    /**
+     * Scans the decoded byte-prefix for a charset declaration, honoring only real {@code <meta>}
+     * attributes: the HTML5 short form ({@code <meta charset=...>}) or the legacy form
+     * ({@code <meta http-equiv="content-type" content="...charset=...">}). HTML comments are
+     * skipped, and a {@code charset=} substring appearing anywhere else (e.g. inside a
+     * {@code <meta name="description" content="...charset=...">} value, or {@code <metadata>}) is
+     * ignored, so benign content cannot trigger a whole-document mis-decode. Returns the first
+     * resolvable Java charset name, or {@code null}.
+     *
+     * @param prefix The decoded document prefix (ASCII/Latin-1)
+     * @return The resolved Java charset name, or {@code null}
+     */
+    private static String scanPrefixForCharset(final String prefix) {
+        final int len = prefix.length();
+        int i = 0;
+        while (i < len) {
+            final int lt = prefix.indexOf('<', i);
+            if (lt < 0) {
+                return null;
+            }
+            // Skip a comment so a <meta> inside <!-- ... --> does not count.
+            if (prefix.regionMatches(lt, "<!--", 0, 4)) {
+                final int endComment = prefix.indexOf("-->", lt + 4);
+                i = endComment < 0 ? len : endComment + 3;
+                continue;
+            }
+            // Only a genuine "<meta" tag start (next char must not continue the name, so
+            // "<metadata"/"<meta-foo" are rejected).
+            if (!prefix.regionMatches(true, lt, "<meta", 0, 5) || lt + 5 >= len || isNameChar(prefix.charAt(lt + 5))) {
+                i = lt + 1;
+                continue;
+            }
+            final int tagEnd = findMetaTagEnd(prefix, lt + 5, len);
+            final String resolved = charsetFromMetaTag(prefix.substring(lt + 5, tagEnd));
+            if (resolved != null) {
+                return resolved;
+            }
+            i = tagEnd < len ? tagEnd + 1 : len;
+        }
+        return null;
+    }
+
+    /**
+     * Finds the index of the '&gt;' that ends a tag whose attributes begin at {@code from}, treating
+     * quoted attribute values as opaque so a '&gt;' inside a value does not terminate the tag.
+     *
+     * @param s The source content
+     * @param from The index of the first attribute character
+     * @param len The source length
+     * @return The index of the terminating '&gt;', or {@code len} if the tag is unterminated
+     */
+    private static int findMetaTagEnd(final String s, final int from, final int len) {
+        int p = from;
+        while (p < len) {
+            final char c = s.charAt(p);
+            if (c == '"' || c == '\'') {
+                p++;
+                while (p < len && s.charAt(p) != c) {
+                    p++;
+                }
+                if (p < len) {
+                    p++; // closing quote
+                }
+            } else if (c == '>') {
+                return p;
+            } else {
+                p++;
+            }
+        }
+        return len;
+    }
+
+    /**
+     * Resolves the charset for a single {@code <meta>} tag from its attribute text: a {@code charset}
+     * attribute wins; otherwise, only when {@code http-equiv} is {@code content-type}, the
+     * {@code charset=} inside the {@code content} value is used.
+     *
+     * @param attrText The tag's attribute text (between the element name and the closing '&gt;')
+     * @return The resolved Java charset name, or {@code null}
+     */
+    private static String charsetFromMetaTag(final String attrText) {
+        final Map<String, String> attrs = parseMetaAttributes(attrText);
+        final String charset = attrs.get("charset");
+        if (charset != null && !charset.isBlank()) {
+            final String resolved = resolveSniffedEncoding(charset.trim());
+            if (resolved != null) {
+                return resolved;
+            }
+        }
+        final String httpEquiv = attrs.get("http-equiv");
+        final String content = attrs.get("content");
+        if (httpEquiv != null && content != null && "content-type".equalsIgnoreCase(httpEquiv.trim())) {
+            final Matcher m = CONTENT_CHARSET_PATTERN.matcher(content);
+            if (m.find()) {
+                return resolveSniffedEncoding(m.group(1).trim());
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Parses the attributes of a single tag into a lower-cased name -&gt; value map (first occurrence
+     * of each name wins), applying the same quoting rules as the main tokenizer. Only the small set
+     * of names relevant to charset sniffing is ever consulted by the caller.
+     *
+     * @param s The tag's attribute text
+     * @return A map of lower-cased attribute names to their values
+     */
+    private static Map<String, String> parseMetaAttributes(final String s) {
+        final Map<String, String> attrs = new HashMap<>();
+        final int len = s.length();
+        int pos = 0;
+        while (pos < len) {
+            while (pos < len && isSpace(s.charAt(pos))) {
+                pos++;
+            }
+            if (pos >= len) {
+                break;
+            }
+            final char c = s.charAt(pos);
+            if (c == '/' || c == '>') {
+                pos++;
+                continue;
+            }
+            final int nameStart = pos;
+            while (pos < len) {
+                final char nc = s.charAt(pos);
+                if (isSpace(nc) || nc == '=' || nc == '/' || nc == '>') {
+                    break;
+                }
+                pos++;
+            }
+            final String name = s.substring(nameStart, pos).toLowerCase(Locale.ROOT);
+            while (pos < len && isSpace(s.charAt(pos))) {
+                pos++;
+            }
+            String value = "";
+            if (pos < len && s.charAt(pos) == '=') {
+                pos++;
+                while (pos < len && isSpace(s.charAt(pos))) {
+                    pos++;
+                }
+                if (pos < len) {
+                    final char q = s.charAt(pos);
+                    if (q == '"' || q == '\'') {
+                        pos++;
+                        final int vs = pos;
+                        while (pos < len && s.charAt(pos) != q) {
+                            pos++;
+                        }
+                        value = s.substring(vs, pos);
+                        if (pos < len) {
+                            pos++; // closing quote
+                        }
+                    } else {
+                        final int vs = pos;
+                        while (pos < len) {
+                            final char vc = s.charAt(pos);
+                            if (isSpace(vc) || vc == '>') {
+                                break;
+                            }
+                            pos++;
+                        }
+                        value = s.substring(vs, pos);
+                    }
+                }
+            }
+            if (!name.isEmpty()) {
+                attrs.putIfAbsent(name, value);
+            }
+        }
+        return attrs;
     }
 
     /**
@@ -586,7 +766,6 @@ public class SimpleHTMLScanner implements XMLReader {
 
         final AttributesImpl attrs = new AttributesImpl();
         boolean terminated = false;
-        boolean selfClosing = false;
 
         while (pos < length) {
             // Skip whitespace before the next attribute.
@@ -606,7 +785,6 @@ public class SimpleHTMLScanner implements XMLReader {
                 if (pos + 1 < length && html.charAt(pos + 1) == '>') {
                     pos += 2;
                     terminated = true;
-                    selfClosing = true;
                     break;
                 }
                 pos++; // stray slash
@@ -686,16 +864,20 @@ public class SimpleHTMLScanner implements XMLReader {
             fContentHandler.endElement("", qName, qName);
             return pos;
         }
-        if (selfClosing) {
-            // HTML5 ignores the slash on non-void HTML elements; do not enter raw-text mode.
-            return pos;
-        }
+        // Raw-text (SCRIPT/STYLE/...) and RCDATA (TEXTAREA/TITLE) elements enter their special
+        // content state even when written self-closing: HTML5 treats the '/' as a parse error and
+        // ignores it, so the element still consumes raw content up to its matching end tag. These
+        // checks must precede honoring the self-closing slash, otherwise "<script/>...</script>"
+        // (and "<style/>", "<textarea/>", ...) would have their bodies parsed as markup, leaking
+        // script/CSS source into the token stream as fabricated elements.
         if (RAWTEXT_ELEMENTS.contains(upperName)) {
             return scanRawText(html, pos, length, rawName, qName, false);
         }
         if (RCDATA_ELEMENTS.contains(upperName)) {
             return scanRawText(html, pos, length, rawName, qName, true);
         }
+        // For any other element a self-closing slash (if present) is ignored per HTML5; the element
+        // stays open and the tag balancer closes it.
         return pos;
     }
 
@@ -818,14 +1000,7 @@ public class SimpleHTMLScanner implements XMLReader {
      */
     private int scanMarkupDeclaration(final String html, final int startPos, final int length) throws SAXException {
         if (html.regionMatches(startPos, "<!--", 0, 4)) {
-            // Comment: runs to "-->", or to EOF if unterminated (HTML5 eof-in-comment).
-            final int idx = html.indexOf("-->", startPos + 4);
-            final int contentEnd = idx < 0 ? length : idx;
-            if (fLexicalHandler != null) {
-                final String content = html.substring(startPos + 4, contentEnd);
-                fLexicalHandler.comment(content.toCharArray(), 0, content.length());
-            }
-            return idx < 0 ? length : idx + 3;
+            return scanComment(html, startPos, length);
         }
         if (html.regionMatches(startPos, "<![CDATA[", 0, 9)) {
             final int idx = html.indexOf("]]>", startPos + 9);
@@ -850,6 +1025,64 @@ public class SimpleHTMLScanner implements XMLReader {
         }
         // Any other "<!..." is a bogus comment; content is everything between "<!" and '>'.
         return scanBogusComment(html, startPos + 2, length);
+    }
+
+    /**
+     * Scans a comment beginning at {@code startPos} (the '&lt;' of "&lt;!--"). The comment ends at the
+     * first "--&gt;" (comment-end state) or "--!&gt;" (comment-end-bang state), whichever comes first;
+     * the abrupt-closing forms "&lt;!--&gt;" and "&lt;!---&gt;" are empty comments; an unterminated comment
+     * runs to EOF (HTML5 eof-in-comment). Reporting a "--!&gt;" terminator is what keeps a document
+     * such as {@code &lt;!-- x --!&gt;after} from swallowing everything up to EOF.
+     *
+     * @param html The source content
+     * @param startPos The index of the opening '&lt;'
+     * @param length The source length
+     * @return The index immediately after the consumed comment
+     * @throws SAXException If a SAX error occurs
+     */
+    private int scanComment(final String html, final int startPos, final int length) throws SAXException {
+        final int dataStart = startPos + 4;
+        // Abrupt-closing empty comments: "<!-->" and "<!--->".
+        if (dataStart < length && html.charAt(dataStart) == '>') {
+            emitComment(html, dataStart, dataStart);
+            return dataStart + 1;
+        }
+        if (dataStart + 1 < length && html.charAt(dataStart) == '-' && html.charAt(dataStart + 1) == '>') {
+            emitComment(html, dataStart, dataStart);
+            return dataStart + 2;
+        }
+        // End at whichever of "-->" (advance 3) or "--!>" (advance 4) appears first.
+        final int end = html.indexOf("-->", dataStart);
+        final int endBang = html.indexOf("--!>", dataStart);
+        final int contentEnd;
+        final int resume;
+        if (end < 0 && endBang < 0) {
+            contentEnd = length; // unterminated: run to EOF
+            resume = length;
+        } else if (endBang < 0 || (end >= 0 && end <= endBang)) {
+            contentEnd = end;
+            resume = end + 3;
+        } else {
+            contentEnd = endBang;
+            resume = endBang + 4;
+        }
+        emitComment(html, dataStart, contentEnd);
+        return resume;
+    }
+
+    /**
+     * Reports a comment with content {@code html[start, end)} via the lexical handler, if one is set.
+     *
+     * @param html The source content
+     * @param start The index of the first content character
+     * @param end The index just past the last content character
+     * @throws SAXException If a SAX error occurs
+     */
+    private void emitComment(final String html, final int start, final int end) throws SAXException {
+        if (fLexicalHandler != null) {
+            final String content = html.substring(start, end);
+            fLexicalHandler.comment(content.toCharArray(), 0, content.length());
+        }
     }
 
     /**
@@ -957,7 +1190,8 @@ public class SimpleHTMLScanner implements XMLReader {
         if (!fNormalizeElements) {
             return name;
         }
-        return "upper".equals(fElementCase) ? name.toUpperCase() : "lower".equals(fElementCase) ? name.toLowerCase() : name;
+        return "upper".equals(fElementCase) ? name.toUpperCase(Locale.ROOT) : "lower".equals(fElementCase) ? name.toLowerCase(Locale.ROOT)
+                : name;
     }
 
     /**
@@ -993,7 +1227,8 @@ public class SimpleHTMLScanner implements XMLReader {
         if (!fNormalizeAttributes) {
             return name;
         }
-        return "upper".equals(fAttributeCase) ? name.toUpperCase() : "lower".equals(fAttributeCase) ? name.toLowerCase() : name;
+        return "upper".equals(fAttributeCase) ? name.toUpperCase(Locale.ROOT) : "lower".equals(fAttributeCase) ? name
+                .toLowerCase(Locale.ROOT) : name;
     }
 
     // Pattern for HTML character references: &#decimal; or &#xhex; or &name;

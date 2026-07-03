@@ -228,4 +228,46 @@ public class TagBalancerStructureTest {
         assertEquals(Integer.valueOf(n), h.ends.get("DIV"), "all DIVs closed");
         assertTrue(elapsedMs < 4_000L, "stray-end handling must not be quadratic (took " + elapsedMs + "ms)");
     }
+
+    @Test
+    public void testLegacyBlockClosesParagraph() throws Exception {
+        // <center> (and dir/listing/plaintext/summary/xmp) are block-level and close an open <p>,
+        // producing siblings rather than nesting the block inside the paragraph.
+        final Document doc = parse("<html><body><p>a<center>b</center></body></html>");
+        assertEquals("BODY", doc.getElementsByTagName("CENTER").item(0).getParentNode().getNodeName());
+        assertEquals(0, ((Element) doc.getElementsByTagName("P").item(0)).getElementsByTagName("CENTER").getLength(),
+                "CENTER must not be nested inside P");
+    }
+
+    @Test
+    public void testCaptionClosedByRow() throws Exception {
+        final Document doc = parse("<html><body><table><caption>cap<tr><td>x</table></body></html>");
+        final NodeList caption = doc.getElementsByTagName("CAPTION");
+        assertEquals(1, caption.getLength());
+        assertEquals("cap", caption.item(0).getTextContent());
+        assertEquals(0, ((Element) caption.item(0)).getElementsByTagName("TR").getLength(), "TR must not be nested inside CAPTION");
+    }
+
+    @Test
+    public void testFormattingEndReopensContainersInOriginalOrder() throws Exception {
+        // <b><div><span>text</b> closes B and reopens its enclosing containers; the reopened pair
+        // must preserve the original DIV > SPAN (outer -> inner) nesting.
+        final Document doc = parse("<html><body><b><div><span>text</b>more</body></html>");
+        final NodeList divs = doc.getElementsByTagName("DIV");
+        final NodeList spans = doc.getElementsByTagName("SPAN");
+        assertEquals(2, divs.getLength());
+        assertEquals(2, spans.getLength());
+        assertEquals("DIV", spans.item(1).getParentNode().getNodeName(), "reopened SPAN must stay inside reopened DIV");
+        assertEquals("BODY", divs.item(1).getParentNode().getNodeName());
+        assertEquals("more", spans.item(1).getTextContent());
+    }
+
+    @Test
+    public void testFormattingEndKeepsEventsBalanced() throws Exception {
+        final RecordingHandler h = record("<html><body><b><div><span>text</b>more</body></html>");
+        assertTrue(h.balanced, h.firstImbalance);
+        assertEquals(h.starts.get("DIV"), h.ends.get("DIV"), "every DIV start has a matching end");
+        assertEquals(h.starts.get("SPAN"), h.ends.get("SPAN"), "every SPAN start has a matching end");
+        assertEquals(h.starts.get("B"), h.ends.get("B"), "every B start has a matching end");
+    }
 }
