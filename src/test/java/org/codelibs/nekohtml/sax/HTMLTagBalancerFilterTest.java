@@ -635,12 +635,13 @@ public class HTMLTagBalancerFilterTest {
         // When: Closing B out of order (formatting reconstruction)
         filter.endElement("", "b", "B");
 
-        // Then: Close I then B. Formatting is one-shot: the inner formatting element I is
-        // NOT reopened (it stays closed), keeping the event stream balanced.
+        // Then: Close I, close B, and reopen I so formatting continues past the misnested </b>
+        // (Adoption-Agency-style reconstruction of the active formatting elements). The reopened
+        // element keeps its original localName casing; the event stream stays balanced.
         final InOrder inOrder = inOrder(contentHandler);
         inOrder.verify(contentHandler).endElement("", "i", "I");
         inOrder.verify(contentHandler).endElement("", "b", "B");
-        verify(contentHandler, never()).startElement(eq(""), eq("i"), eq("I"), any());
+        inOrder.verify(contentHandler).startElement(eq(""), eq("i"), eq("I"), any());
     }
 
     @Test
@@ -749,12 +750,12 @@ public class HTMLTagBalancerFilterTest {
         // When: Closing EM out of order (formatting reconstruction)
         filter.endElement("", "em", "EM");
 
-        // Then: Close STRONG then EM. Formatting is one-shot: STRONG (an inner formatting
-        // element) is NOT reopened, keeping the event stream balanced.
+        // Then: Close STRONG, close EM, and reopen STRONG so formatting continues past the
+        // misnested </em> (Adoption-Agency-style reconstruction). The event stream stays balanced.
         final InOrder inOrder = inOrder(contentHandler);
         inOrder.verify(contentHandler).endElement("", "strong", "STRONG");
         inOrder.verify(contentHandler).endElement("", "em", "EM");
-        verify(contentHandler, never()).startElement(eq(""), eq("strong"), eq("STRONG"), any());
+        inOrder.verify(contentHandler).startElement(eq(""), eq("strong"), eq("STRONG"), any());
     }
 
     @Test

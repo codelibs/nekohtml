@@ -107,6 +107,42 @@ public class SimpleHTMLScannerTokenizerTest {
     }
 
     @Test
+    public void testUnterminatedQuotedAttributeRecovers() throws Exception {
+        // An unterminated quoted attribute value (no closing quote) must not drop the tag and the
+        // rest of the document. For backward compatibility the value ends at the first '>', so the
+        // element and the text that follows are preserved.
+        final Document doc = parse("<html><body><div title=\"value'>Content</div></body></html>");
+        final NodeList divs = doc.getElementsByTagName("DIV");
+        assertEquals(1, divs.getLength(), "DIV must survive an unterminated quoted attribute value");
+        assertEquals("Content", divs.item(0).getTextContent(), "Text after the recovered tag must be preserved");
+    }
+
+    @Test
+    public void testUnclosedTitleDoesNotSwallowFollowingMarkup() throws Exception {
+        // An unclosed <title> (RCDATA) must not consume the rest of the document as text; following
+        // markup is still parsed. (HTML5/browsers would swallow to EOF; nekohtml keeps the lenient,
+        // backward-compatible behavior so content stays reachable.)
+        final Document doc = parse("<html><head><title>Hello<body><div><p>World</html>");
+        final NodeList titles = doc.getElementsByTagName("TITLE");
+        assertEquals(1, titles.getLength(), "TITLE must exist");
+        assertEquals("Hello", titles.item(0).getTextContent(), "TITLE text stops at the next tag");
+        assertEquals(1, doc.getElementsByTagName("DIV").getLength(), "Markup after an unclosed <title> must still parse");
+        assertEquals(1, doc.getElementsByTagName("P").getLength(), "Markup after an unclosed <title> must still parse");
+    }
+
+    @Test
+    public void testUnclosedScriptConsumesToEof() throws Exception {
+        // Raw-text elements (script/style) are deliberately NOT recovered like RCDATA: an unclosed
+        // <script> keeps consuming to EOF so its contents are never re-interpreted as markup (no
+        // spurious elements from JavaScript that happens to contain '<').
+        final Document doc = parse("<html><body><script>var x = '<div>a</div>';");
+        final NodeList scripts = doc.getElementsByTagName("SCRIPT");
+        assertEquals(1, scripts.getLength(), "SCRIPT must exist");
+        assertEquals(0, doc.getElementsByTagName("DIV").getLength(), "<div> inside an unclosed <script> must stay raw text");
+        assertEquals("var x = '<div>a</div>';", scripts.item(0).getTextContent(), "Unclosed script content runs to EOF as raw text");
+    }
+
+    @Test
     public void testDoctypeIdsReported() throws Exception {
         // Drive the scanner directly with a recording LexicalHandler.
         final SimpleHTMLScanner scanner = new SimpleHTMLScanner();

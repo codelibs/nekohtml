@@ -581,7 +581,7 @@ public class HTMLTagBalancerFilterCoverageTest {
     }
 
     @Test
-    public void testFormattingEnd_innerFormattingStaysClosed() throws SAXException {
+    public void testFormattingEnd_innerFormattingReopened() throws SAXException {
         filter.startDocument();
         filter.startElement("", "html", "HTML", new AttributesImpl());
         filter.startElement("", "body", "BODY", new AttributesImpl());
@@ -590,15 +590,17 @@ public class HTMLTagBalancerFilterCoverageTest {
 
         reset(contentHandler);
 
-        // </b> while I is still open: close I and B, no reopen (I is formatting).
+        // </b> while I is still open: close I and B, then reopen I so formatting continues past
+        // the misnested end tag (Adoption-Agency-style reconstruction of active formatting).
         filter.endElement("", "b", "B");
 
         var inOrder = inOrder(contentHandler);
         inOrder.verify(contentHandler).endElement("", "i", "I");
         inOrder.verify(contentHandler).endElement("", "b", "B");
-        verify(contentHandler, never()).startElement(eq(""), eq("i"), eq("I"), any());
+        inOrder.verify(contentHandler).startElement(eq(""), eq("i"), eq("I"), any());
 
-        assertFalse(filter.isOnStack("I"));
+        // I is reopened (formatting continues); B is the closed end tag and stays closed.
+        assertTrue(filter.isOnStack("I"));
         assertFalse(filter.isOnStack("B"));
     }
 }

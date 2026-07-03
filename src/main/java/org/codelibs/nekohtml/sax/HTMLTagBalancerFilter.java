@@ -116,6 +116,15 @@ public class HTMLTagBalancerFilter extends XMLFilterImpl implements LexicalHandl
     /** Whether the BODY (or FRAMESET) element has been opened. */
     protected boolean bodyOpened = false;
 
+    /**
+     * Whether any content (characters &mdash; including whitespace &mdash; or a
+     * comment) has been seen. Used so that a non-empty but element-less document
+     * (e.g. whitespace-only or comment-only input) still gets a synthesized HTML
+     * root at end of document, matching the long-standing behavior that a
+     * non-null document element is always produced for non-empty input.
+     */
+    protected boolean contentSeen = false;
+
     /** Elements that close HEAD and open the body region when they appear. */
     protected static final Set<String> BODY_ELEMENTS = new HashSet<>();
     static {
@@ -236,6 +245,7 @@ public class HTMLTagBalancerFilter extends XMLFilterImpl implements LexicalHandl
         htmlOpened = false;
         headClosed = false;
         bodyOpened = false;
+        contentSeen = false;
         if (getContentHandler() != null) {
             getContentHandler().startDocument();
         }
@@ -246,6 +256,11 @@ public class HTMLTagBalancerFilter extends XMLFilterImpl implements LexicalHandl
         final ContentHandler handler = getContentHandler();
         if (logger.isLoggable(Level.FINE)) {
             logger.fine("Ending document - closing " + elementStack.size() + " remaining open elements");
+        }
+        // Non-empty but element-less input (e.g. whitespace-only or comment-only)
+        // still gets an HTML root so callers always see a non-null document element.
+        if (!htmlOpened && contentSeen) {
+            ensureDocumentInitialized();
         }
         while (!elementStack.isEmpty()) {
             final ElementEntry entry = popElement();
@@ -474,14 +489,20 @@ public class HTMLTagBalancerFilter extends XMLFilterImpl implements LexicalHandl
     }
 
     /**
-     * Balanced reconstruction for a misnested formatting end tag.
+     * Balanced reconstruction for a misnested formatting end tag, following the
+     * spirit of the HTML5 Adoption Agency Algorithm ("reconstruct the active
+     * formatting elements").
      *
      * <p>
-     * Everything above the formatting element {@code F} is closed and, for the
-     * non-formatting containers among them, reopened after {@code F} is closed
-     * (preserving their attributes). Formatting elements stay closed
-     * ("one-shot" formatting), so formatting does not leak past its end tag.
-     * This keeps the event stream balanced.
+     * Everything above the formatting element {@code F} is closed and then
+     * reopened after {@code F} is closed (preserving each element's original
+     * attributes): both the enclosing containers <em>and</em> the inner
+     * formatting elements. Reopening the inner formatting elements means, for
+     * example, that in {@code <b><i>x</b>y} the {@code <i>} is reopened so
+     * {@code y} stays italic &mdash; matching the long-standing (pre-3.0.4)
+     * behavior that downstream consumers depend on. Every emitted
+     * {@code startElement} still has exactly one matching {@code endElement}, so
+     * the event stream stays balanced.
      * </p>
      *
      * @param tagName The formatting element being closed (upper-cased)
@@ -489,29 +510,32 @@ public class HTMLTagBalancerFilter extends XMLFilterImpl implements LexicalHandl
      */
     protected void reconstructFormattingEnd(final String tagName) throws SAXException {
         final ContentHandler handler = getContentHandler();
-        // Pop entries above F, collecting non-formatting containers in pop order (top->bottom).
-        // Appending is O(1); the reopen loop below walks the list in reverse to restore the
-        // original outer->inner nesting, avoiding the O(n^2) cost of repeated head insertion.
+        // Pop entries above F, collecting them all in pop order (top->bottom). Appending is O(1);
+        // the reopen loop below walks the list in reverse to restore the original outer->inner
+        // nesting, avoiding the O(n^2) cost of repeated head insertion.
         final List<ElementEntry> reopen = new ArrayList<>();
         while (!elementStack.peek().tagName.equals(tagName)) {
             final ElementEntry entry = popElement();
             removeFormattingElement(entry.tagName);
             handler.endElement(entry.uri, entry.localName, entry.qName);
-            if (!HTMLElements.isFormattingElement(entry.tagName)) {
-                reopen.add(entry);
-            }
+            reopen.add(entry);
         }
         // Close the formatting element itself.
         final ElementEntry formatting = popElement();
         removeFormattingElement(formatting.tagName);
         handler.endElement(formatting.uri, formatting.localName, formatting.qName);
-        // Reopen the non-formatting containers (outermost first) with their original attributes.
+        // Reopen everything that was inside F (containers and formatting elements alike, outermost
+        // first) with their original attributes, reconstructing the active formatting elements so
+        // formatting continues past the misnested end tag.
         for (int k = reopen.size() - 1; k >= 0; k--) {
             final ElementEntry entry = reopen.get(k);
             handler.startElement(entry.uri, entry.localName, entry.qName, entry.attrs);
             pushElement(entry);
+            if (HTMLElements.isFormattingElement(entry.tagName)) {
+                addFormattingElement(entry.tagName);
+            }
             if (logger.isLoggable(Level.FINER)) {
-                logger.finer("Reopened container after formatting end: " + entry.tagName);
+                logger.finer("Reopened element after formatting end: " + entry.tagName);
             }
         }
     }
@@ -619,6 +643,9 @@ public class HTMLTagBalancerFilter extends XMLFilterImpl implements LexicalHandl
         if (handler == null) {
             return;
         }
+        if (length > 0) {
+            contentSeen = true;
+        }
         if (!bodyOpened && containsNonWhitespace(ch, start, length)) {
             ensureDocumentInitialized();
             // Text that is the content of a head element (e.g. TITLE, STYLE, SCRIPT)
@@ -714,7 +741,10 @@ public class HTMLTagBalancerFilter extends XMLFilterImpl implements LexicalHandl
     @Override
     public void comment(final char[] ch, final int start, final int length) throws SAXException {
         // A comment does not force the document structure to be initialized: a
-        // comment before <html> belongs at the document level.
+        // comment before <html> belongs at the document level. It does, however,
+        // count as content so a comment-only document still gets an HTML root at
+        // end of document (see endDocument).
+        contentSeen = true;
         if (lexicalHandler != null) {
             lexicalHandler.comment(ch, start, length);
         }

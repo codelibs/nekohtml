@@ -270,4 +270,31 @@ public class TagBalancerStructureTest {
         assertEquals(h.starts.get("SPAN"), h.ends.get("SPAN"), "every SPAN start has a matching end");
         assertEquals(h.starts.get("B"), h.ends.get("B"), "every B start has a matching end");
     }
+
+    /**
+     * Misnested inline formatting reconstructs the active formatting elements
+     * (Adoption-Agency-style): closing {@code </b>} in {@code <b><i>x</b>y} closes I and B and then
+     * reopens I, so the trailing "y" stays italic. This matches the long-standing (pre-3.0.4)
+     * behavior downstream consumers depend on; all text is preserved and the stream stays balanced.
+     */
+    @Test
+    public void testMisnestedFormattingReopensInnerFormatting() throws Exception {
+        final Document doc = parse("<html><body><b><i>x</b>y</body></html>");
+        assertEquals("xy", doc.getElementsByTagName("BODY").item(0).getTextContent(), "misnested <b><i>x</b>y must preserve all text");
+        final NodeList is = doc.getElementsByTagName("I");
+        assertEquals(2, is.getLength(), "inner <i> must be reopened for the post-</b> text");
+        assertEquals("x", is.item(0).getTextContent());
+        assertEquals("y", is.item(1).getTextContent(), "trailing text stays wrapped in a reopened <i>");
+    }
+
+    /**
+     * A stray end tag (no matching open element) is suppressed rather than passed through, but the
+     * surrounding text must remain intact and contiguous.
+     */
+    @Test
+    public void testStrayEndTagPreservesAllText() throws Exception {
+        final Document doc = parse("<html><body><p>text</span>more</p></body></html>");
+        assertEquals("textmore", doc.getElementsByTagName("BODY").item(0).getTextContent(),
+                "a stray </span> must not drop surrounding text");
+    }
 }

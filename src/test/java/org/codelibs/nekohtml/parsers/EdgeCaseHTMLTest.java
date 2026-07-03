@@ -249,10 +249,7 @@ public class EdgeCaseHTMLTest {
     @Test
     public void testDoctypeWithMalformedHTML() throws Exception {
         // DOCTYPE with malformed HTML following
-        // Note: <title> is an RCDATA element per HTML5; if left unclosed it would consume the rest
-        // of the document as literal text (as browsers do), so it is closed here to exercise the
-        // intended unclosed-block-element handling.
-        final String html = "<!DOCTYPE html>" + "<html>" + "<head><title>Test</title>" + //
+        final String html = "<!DOCTYPE html>" + "<html>" + "<head><title>Test" + // unclosed title
                 "<body>" + // no closing head
                 "<div><p>Text" + // unclosed tags
                 "</html>";

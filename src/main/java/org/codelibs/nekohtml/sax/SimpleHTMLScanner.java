@@ -823,12 +823,22 @@ public class SimpleHTMLScanner implements XMLReader {
                     while (pos < length && html.charAt(pos) != q) {
                         pos++;
                     }
-                    if (pos >= length) {
-                        // Unterminated quoted value == EOF in tag: drop the partial tag.
-                        return length;
+                    if (pos < length) {
+                        value = html.substring(valueStart, pos);
+                        pos++; // closing quote
+                    } else {
+                        // Unterminated quoted value (EOF before the closing quote). HTML5 would
+                        // treat this as eof-in-tag and drop the whole tag, discarding any markup
+                        // and text that follows. For backward-compatible lenient recovery, end the
+                        // value at the first '>' so the tag is still emitted and the remainder of
+                        // the document is parsed normally.
+                        final int gt = html.indexOf('>', valueStart);
+                        if (gt < 0) {
+                            return length; // no '>' anywhere: nothing to recover, drop the partial tag
+                        }
+                        value = html.substring(valueStart, gt);
+                        pos = gt; // the outer loop consumes '>' and terminates the tag
                     }
-                    value = html.substring(valueStart, pos);
-                    pos++; // closing quote
                 } else if (q == '>') {
                     // Missing attribute value; leave the '>' for the loop to handle.
                     value = "";
@@ -896,7 +906,43 @@ public class SimpleHTMLScanner implements XMLReader {
     private int scanRawText(final String html, final int contentStart, final int length, final String rawName, final String qName,
             final boolean resolveEntities) throws SAXException {
         final int closeLt = findRawTextClose(html, contentStart, length, rawName);
+        if (closeLt < 0 && resolveEntities) {
+            // Unclosed RCDATA element (title/textarea). HTML5 would consume the remainder of the
+            // document as text, but that hides following markup (e.g. <body>...</body> after an
+            // unclosed <title>). For backward-compatible lenient recovery, end the element at the
+            // next tag-like '<' so the rest of the document is still parsed.
+            final int softStop = findNextTagLike(html, contentStart, length);
+            final int contentEnd = softStop < 0 ? length : softStop;
+            emitRawTextContent(html, contentStart, contentEnd, true);
+            fContentHandler.endElement("", qName, qName);
+            return contentEnd;
+        }
         final int contentEnd = closeLt < 0 ? length : closeLt;
+        emitRawTextContent(html, contentStart, contentEnd, resolveEntities);
+        if (closeLt < 0) {
+            // No matching end tag for a raw-text element (script/style); keep consuming to EOF so
+            // the content is never re-parsed as markup. The balancer closes the element at end of
+            // document.
+            return length;
+        }
+        // Consume the end tag up to and including its '>'.
+        final int gt = html.indexOf('>', closeLt);
+        fContentHandler.endElement("", qName, qName);
+        return gt < 0 ? length : gt + 1;
+    }
+
+    /**
+     * Emits the raw-text/RCDATA content run {@code [contentStart, contentEnd)} as a single
+     * {@code characters()} event, resolving entities for RCDATA content.
+     *
+     * @param html The source content
+     * @param contentStart The index of the first content character
+     * @param contentEnd The index just past the last content character
+     * @param resolveEntities Whether to resolve entities (RCDATA) or not (raw text)
+     * @throws SAXException If a SAX error occurs
+     */
+    private void emitRawTextContent(final String html, final int contentStart, final int contentEnd, final boolean resolveEntities)
+            throws SAXException {
         if (contentEnd > contentStart) {
             final String content = html.substring(contentStart, contentEnd);
             final String out = resolveEntities ? resolveEntities(content) : content;
@@ -904,14 +950,30 @@ public class SimpleHTMLScanner implements XMLReader {
                 fContentHandler.characters(out.toCharArray(), 0, out.length());
             }
         }
-        if (closeLt < 0) {
-            // No matching end tag; the balancer closes the element at end of document.
-            return length;
+    }
+
+    /**
+     * Finds the next '&lt;' that begins tag-like markup (a start tag, end tag, or markup
+     * declaration such as a comment or DOCTYPE), used to recover from an unclosed RCDATA element.
+     *
+     * @param html The source content
+     * @param from The index to start searching from
+     * @param length The source length
+     * @return The index of the next tag-like '&lt;', or -1 if none exists
+     */
+    private static int findNextTagLike(final String html, final int from, final int length) {
+        int searchPos = from;
+        while (true) {
+            final int lt = html.indexOf('<', searchPos);
+            if (lt < 0) {
+                return -1;
+            }
+            final char next = lt + 1 < length ? html.charAt(lt + 1) : '\0';
+            if (isAsciiLetter(next) || next == '/' || next == '!') {
+                return lt;
+            }
+            searchPos = lt + 1;
         }
-        // Consume the end tag up to and including its '>'.
-        final int gt = html.indexOf('>', closeLt);
-        fContentHandler.endElement("", qName, qName);
-        return gt < 0 ? length : gt + 1;
     }
 
     /**
