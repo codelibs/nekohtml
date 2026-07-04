@@ -30,8 +30,8 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 /**
- * Characterization tests for exact DOM child ordering, whitespace preservation, and the
- * scanner's trailing-newline behavior on VALID/well-formed HTML input.
+ * Characterization tests for exact DOM child ordering, whitespace preservation, and HTML5 head/body
+ * synthesis on VALID/well-formed HTML input (the scanner no longer fabricates a trailing newline).
  */
 public class ValidNodeOrderingTest {
 
@@ -59,9 +59,9 @@ public class ValidNodeOrderingTest {
     public void trailingNewlineIsLastChildOfRoot() throws Exception {
         final Document doc = parse("<p>x</p>");
         final List<String> sig = childSignature(doc.getDocumentElement());
-        // characterization: the scanner appends '\n' after every line including EOF, surfacing as a
-        // trailing text node at the root element
-        assertEquals("text:\n", sig.get(sig.size() - 1));
+        // characterization: no fabricated trailing newline; the P content is wrapped in a synthesized
+        // BODY (HTML5), so the root element's only/last child is BODY
+        assertEquals("elem:BODY", sig.get(sig.size() - 1));
     }
 
     @Test
@@ -162,14 +162,18 @@ public class ValidNodeOrderingTest {
     public void trailingNewlineAppearsEvenWhenRootHasAttributes() throws Exception {
         final Document doc = parse("<div id=\"x\">y</div>");
         final List<String> sig = childSignature(doc.getDocumentElement());
-        assertEquals("text:\n", sig.get(sig.size() - 1));
+        // characterization: no fabricated trailing newline; the DIV is wrapped in a synthesized BODY,
+        // so the root element's last child is BODY (attributes on DIV are irrelevant here)
+        assertEquals("elem:BODY", sig.get(sig.size() - 1));
     }
 
     @Test
     public void commentBeforeTrailingNewlineAtRoot() throws Exception {
         final Document doc = parse("<p>x</p><!--c-->");
         final List<String> sig = childSignature(doc.getDocumentElement());
-        assertEquals("text:\n", sig.get(sig.size() - 1));
+        // characterization: no fabricated trailing newline; the P and the comment are both wrapped in
+        // a synthesized BODY, so the root element's only/last child is BODY
+        assertEquals("elem:BODY", sig.get(sig.size() - 1));
     }
 
     @Test

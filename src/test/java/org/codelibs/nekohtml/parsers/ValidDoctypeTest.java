@@ -33,7 +33,7 @@ import org.w3c.dom.Document;
  * Characterization tests for {@code DOCTYPE} handling on VALID/well-formed HTML, through both the
  * {@code DOMParser} path (DOCTYPE never becomes part of the DOM) and the plain {@code SAXParser} path
  * with a {@link org.xml.sax.ext.LexicalHandler} registered (DOCTYPE reaches the handler as a
- * startDTD/endDTD pair, but always with a hardcoded name and null ids).
+ * startDTD/endDTD pair, now reporting the real DOCTYPE name and its PUBLIC/SYSTEM identifiers).
  */
 public class ValidDoctypeTest {
 
@@ -65,8 +65,9 @@ public class ValidDoctypeTest {
     public void legacyPublicDoctypeStillReportsNullPublicAndSystemIds() throws Exception {
         final List<String> events =
                 lexicalEvents("<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01//EN\" \"http://www.w3.org/TR/html4/strict.dtd\"><p>x</p>");
-        // characterization: publicId/systemId are never captured, even for a legacy doctype that has them
-        assertTrue(events.contains("startDTD:html|null|null"), events.toString());
+        // characterization: the real DTD name and PUBLIC/SYSTEM ids are now surfaced to the lexical
+        // handler (the name preserves its source case, here "HTML")
+        assertTrue(events.contains("startDTD:HTML|-//W3C//DTD HTML 4.01//EN|http://www.w3.org/TR/html4/strict.dtd"), events.toString());
         assertTrue(events.contains("endDTD"), events.toString());
     }
 
@@ -82,16 +83,18 @@ public class ValidDoctypeTest {
         final List<String> events =
                 lexicalEvents("<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\" "
                         + "\"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\"><p>x</p>");
-        assertTrue(events.contains("startDTD:html|null|null"), events.toString());
+        // characterization: the real name and PUBLIC/SYSTEM ids are surfaced to the lexical handler
+        assertTrue(events.contains("startDTD:html|-//W3C//DTD XHTML 1.0 Strict//EN|http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"),
+                events.toString());
         assertTrue(events.contains("endDTD"), events.toString());
     }
 
     @Test
     public void doctypeNameIsAlwaysHardcodedHtmlRegardlessOfActualContent() throws Exception {
-        // characterization: the DTD name reported to the lexical handler is a hardcoded literal
-        // "html", not derived from the actual DOCTYPE content
+        // characterization: the DTD name reported to the lexical handler now reflects the actual
+        // DOCTYPE content (here "foo"), not a hardcoded literal
         final List<String> events = lexicalEvents("<!DOCTYPE foo><p>x</p>");
-        assertTrue(events.contains("startDTD:html|null|null"), events.toString());
+        assertTrue(events.contains("startDTD:foo|null|null"), events.toString());
     }
 
     @Test
@@ -134,11 +137,11 @@ public class ValidDoctypeTest {
 
     @Test
     public void doctypeFollowedByBodylessContentOnlyAutoInsertsHtmlRoot() throws Exception {
-        // characterization: HEAD/BODY are never auto-created, even after a DOCTYPE
+        // characterization: content after a DOCTYPE is wrapped in a synthesized BODY (HTML5)
         final Document doc = parse("<!DOCTYPE html><p>x</p>");
         assertEquals(1, count(doc, "//HTML"));
-        assertEquals(0, count(doc, "//BODY"));
-        assertEquals(1, count(doc, "//HTML/P"));
+        assertEquals(1, count(doc, "//BODY"));
+        assertEquals(1, count(doc, "//HTML/BODY/P"));
     }
 
     @Test
@@ -152,7 +155,7 @@ public class ValidDoctypeTest {
         final List<String> events =
                 lexicalEvents("<!DOCTYPE html PUBLIC\n\"-//W3C//DTD HTML 4.01//EN\"\n"
                         + "\"http://www.w3.org/TR/html4/strict.dtd\"><p>x</p>");
-        assertTrue(events.contains("startDTD:html|null|null"), events.toString());
+        assertTrue(events.contains("startDTD:html|-//W3C//DTD HTML 4.01//EN|http://www.w3.org/TR/html4/strict.dtd"), events.toString());
         assertTrue(events.contains("endDTD"), events.toString());
     }
 }

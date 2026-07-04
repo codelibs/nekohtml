@@ -126,9 +126,10 @@ public class BrokenMisnestedTagsTest {
     @Test
     public void saxEventsForMisnestedFormattingAreLocked() throws Exception {
         final List<String> events = saxEvents("<b><i>x</b></i>");
-        // characterization: exact SAX event sequence for the current AAA implementation
-        assertEquals(List.of("start:HTML", "start:B", "start:I", "chars:x", "end:I", "end:B", "start:I", "end:I", "end:HTML"), events
-                .stream().filter(e -> !e.equals("chars:\n")).toList());
+        // characterization: exact SAX event sequence for the current AAA implementation; the
+        // formatting reconstruction sub-sequence is unchanged, only a synthesized BODY now wraps it
+        assertEquals(List.of("start:HTML", "start:BODY", "start:B", "start:I", "chars:x", "end:I", "end:B", "start:I", "end:I", "end:BODY",
+                "end:HTML"), events.stream().filter(e -> !e.equals("chars:\n")).toList());
     }
 
     @Test
@@ -208,8 +209,9 @@ public class BrokenMisnestedTagsTest {
 
     @Test
     public void saxStartElementsOrderForOverlapIsLocked() throws Exception {
-        // characterization: no explicit <body> is given, and BODY is NOT auto-created
+        // characterization: no explicit <body> is given, so BODY is synthesized around the body
+        // content (HTML5) before DIV/SPAN
         final List<String> starts = saxStartElements("<div><span></div></span>");
-        assertEquals(List.of("HTML", "DIV", "SPAN"), starts);
+        assertEquals(List.of("HTML", "BODY", "DIV", "SPAN"), starts);
     }
 }

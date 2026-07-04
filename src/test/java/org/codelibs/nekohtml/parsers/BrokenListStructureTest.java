@@ -60,20 +60,22 @@ public class BrokenListStructureTest {
 
     @Test
     public void unclosedListItemsNestInsteadOfSibling() throws Exception {
-        // characterization: without </li>, the second <li> nests inside the first (no sibling auto-close)
+        // characterization: without </li>, the second <li> implies the end of the first (HTML5), so
+        // both become siblings directly under UL
         final Document doc = parse("<ul><li>a<li>b</ul>");
         assertEquals(2, count(doc, "//LI"));
-        assertEquals(1, count(doc, "//UL/LI"));
-        assertEquals(1, count(doc, "//LI/LI"));
+        assertEquals(2, count(doc, "//UL/LI"));
+        assertEquals(0, count(doc, "//LI/LI"));
     }
 
     @Test
     public void threeConsecutiveUnclosedLiFormChain() throws Exception {
-        // characterization: three consecutive unclosed <li> form a nesting chain, not three siblings
+        // characterization: three consecutive unclosed <li> become three siblings under UL (HTML5
+        // implied end tag), not a nesting chain
         final Document doc = parse("<ul><li>a<li>b<li>c</ul>");
         assertEquals(3, count(doc, "//LI"));
-        assertEquals(1, count(doc, "//UL/LI"));
-        assertEquals(2, count(doc, "//LI/LI"));
+        assertEquals(3, count(doc, "//UL/LI"));
+        assertEquals(0, count(doc, "//LI/LI"));
     }
 
     @Test
@@ -88,12 +90,14 @@ public class BrokenListStructureTest {
 
     @Test
     public void dlDtDdNestWithoutClosingTags() throws Exception {
-        // characterization: <dd> is not auto-completed as a sibling of the open <dt>; it nests inside it
+        // characterization: <dd> implies the end of the open <dt> (HTML5), so DT and DD become
+        // siblings under DL rather than DD nesting inside DT
         final Document doc = parse("<dl><dt>t<dd>d</dl>");
         assertEquals(1, count(doc, "//DL"));
         assertEquals(1, count(doc, "//DL/DT"));
-        assertEquals(1, count(doc, "//DT/DD"));
-        assertTrue(firstText(doc, "//DT").contains("d"));
+        assertEquals(0, count(doc, "//DT/DD"));
+        assertEquals(1, count(doc, "//DL/DD"));
+        assertTrue(firstText(doc, "//DD").contains("d"));
     }
 
     @Test
@@ -108,12 +112,13 @@ public class BrokenListStructureTest {
 
     @Test
     public void orphanLiOutsideList() throws Exception {
-        // characterization: <li> with no <ul>/<ol> ancestor is still created (only HTML root is implicit)
+        // characterization: <li> with no <ul>/<ol> ancestor is still created and wrapped in a
+        // synthesized BODY (HTML5)
         final Document doc = parse("<li>orphan</li>");
         assertEquals(1, count(doc, "//LI"));
         assertEquals("orphan", firstText(doc, "//LI"));
         assertEquals(0, count(doc, "//UL"));
-        assertEquals(0, count(doc, "//BODY"));
+        assertEquals(1, count(doc, "//BODY"));
     }
 
     @Test

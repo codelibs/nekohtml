@@ -224,15 +224,16 @@ public class BrokenVoidAndSelfClosingTest {
 
     @Test
     public void saxEventsForVoidBrShowImmediateEndBeforeFollowingText() throws Exception {
-        // characterization: SAX event order confirms end:BR fires immediately after
-        // start:BR, before the following characters event. The final event is the
-        // implicit HTML root being closed at EOF (no explicit <html> was given).
+        // characterization: SAX event order confirms end:BR fires immediately after start:BR, before
+        // the following characters event. BR and the text are wrapped in a synthesized BODY (HTML5),
+        // and "after" is emitted with no fabricated trailing newline; the implicit HTML root is closed
+        // at EOF (no explicit <html> was given).
         final List<String> events = saxEvents("<br>after");
         final int startIdx = events.indexOf("start:BR");
         final int endIdx = events.indexOf("end:BR");
         assertTrue(startIdx >= 0);
         assertEquals(startIdx + 1, endIdx);
-        assertEquals(List.of("start:HTML", "start:BR", "end:BR", "chars:after\n", "end:HTML"), events);
+        assertEquals(List.of("start:HTML", "start:BODY", "start:BR", "end:BR", "chars:after", "end:BODY", "end:HTML"), events);
     }
 
     @Test

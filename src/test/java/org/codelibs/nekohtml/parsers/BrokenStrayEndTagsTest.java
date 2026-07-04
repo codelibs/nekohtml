@@ -29,10 +29,9 @@ import org.w3c.dom.Document;
  * <p>
  * These tests lock in the current (characterization) behavior when an end tag has no
  * matching open start tag (or closes an element that isn't the current top of stack). The
- * tag balancer passes such end tags straight through to the content handler, but the
- * DOM-building layer ({@code SAXToDOMHandler}) only pops its own element stack when the tag
- * name matches the currently open element -- so a stray end tag never produces or removes an
- * element in the resulting DOM.
+ * tag balancer now SUPPRESSES such stray end tags -- it never forwards an {@code endElement}
+ * without a prior matching {@code startElement} -- so a stray end tag never produces or removes
+ * an element in the resulting DOM and never appears in the SAX event stream.
  * </p>
  */
 public class BrokenStrayEndTagsTest {
@@ -106,17 +105,19 @@ public class BrokenStrayEndTagsTest {
 
     @Test
     public void saxEventsStillReportStrayEndTagEvenThoughDomIgnoresIt() throws Exception {
-        // characterization: the tag balancer passes the stray end tag through at the SAX level,
-        // even though the DOM builder discards it -- the SAX event stream still records it.
+        // characterization: the tag balancer suppresses a stray end tag (no matching open start) at
+        // the SAX level too, so the event stream does NOT record end:B -- the stream stays balanced.
         final List<String> events = saxEvents("</b>");
-        assertTrue(events.contains("end:B"));
+        assertFalse(events.contains("end:B"));
     }
 
     @Test
     public void saxEventsForInnerMismatchedEndAreLocked() throws Exception {
+        // characterization: BODY is synthesized around the DIV, and the stray </span> (no matching
+        // open SPAN) is suppressed, so no end:SPAN appears and the stream stays balanced.
         final List<String> events = saxEvents("<div>a</span>b</div>");
-        assertEquals(List.of("start:HTML", "start:DIV", "chars:a", "end:SPAN", "chars:b", "end:DIV", "end:HTML"),
-                events.stream().filter(e -> !e.equals("chars:\n")).toList());
+        assertEquals(List.of("start:HTML", "start:BODY", "start:DIV", "chars:a", "chars:b", "end:DIV", "end:BODY", "end:HTML"), events
+                .stream().filter(e -> !e.equals("chars:\n")).toList());
     }
 
     @Test
@@ -164,9 +165,9 @@ public class BrokenStrayEndTagsTest {
     public void saxEventsDoubleEndTagOnlyClosesOnce() throws Exception {
         final List<String> events = saxEvents("<p>x</p></p>");
         final long endPCount = events.stream().filter(e -> e.equals("end:P")).count();
-        // characterization: the balancer passes both end tags through at the SAX level (it has
-        // already popped P on the first one, so the second is "not on stack" and just forwarded)
-        assertEquals(2, endPCount);
+        // characterization: the second </p> has no matching open P (already popped by the first), so
+        // it is suppressed and not forwarded; only one balanced end:P is emitted.
+        assertEquals(1, endPCount);
     }
 
     @Test

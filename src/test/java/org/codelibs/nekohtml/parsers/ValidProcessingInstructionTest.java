@@ -31,10 +31,11 @@ import org.w3c.dom.Document;
 
 /**
  * Characterization tests for processing instructions and the XML declaration on VALID/well-formed
- * HTML. The current {@code SimpleHTMLScanner} never recognizes {@code <?...?>} constructs: nothing
- * ever calls {@code ContentHandler.processingInstruction}. Instead, the leading {@code '<'} is
- * silently dropped (treated as an unrecognized tag) and the remainder of the construct leaks into
- * the surrounding text as ordinary characters.
+ * HTML. The current {@code SimpleHTMLScanner} treats {@code <?...?>} constructs as HTML5 "bogus
+ * comments": nothing ever calls {@code ContentHandler.processingInstruction}; instead the payload is
+ * reported via {@code LexicalHandler.comment} (a DOM Comment node whose content runs from the
+ * {@code '?'} up to but excluding the closing {@code '>'}), so it no longer leaks into surrounding
+ * text.
  */
 public class ValidProcessingInstructionTest {
 
@@ -46,16 +47,18 @@ public class ValidProcessingInstructionTest {
 
     @Test
     public void xmlDeclarationLeaksAsCharactersContainingDeclarationText() throws Exception {
+        // characterization: the XML declaration becomes a bogus comment (HTML5), reported via the
+        // lexical handler, not leaked as characters
         final List<String> events = lexicalEvents("<?xml version=\"1.0\" encoding=\"UTF-8\"?><p>x</p>");
-        assertTrue(events.stream().anyMatch(e -> e.startsWith("chars:") && e.contains("xml version")), events.toString());
+        assertTrue(events.stream().anyMatch(e -> e.startsWith("comment:") && e.contains("xml version")), events.toString());
     }
 
     @Test
     public void xmlDeclarationLeakedTextDropsOnlyLeadingAngleBracket() throws Exception {
-        // characterization: only the leading '<' is dropped; the rest, including the closing "?>",
-        // survives verbatim in the leaked characters
+        // characterization: the construct becomes a bogus comment whose content runs from the '?' up
+        // to (but excluding) the closing '>', so it is reported as "comment:?xml ... ?"
         final List<String> events = lexicalEvents("<?xml version=\"1.0\" encoding=\"UTF-8\"?><p>x</p>");
-        assertTrue(events.contains("chars:?xml version=\"1.0\" encoding=\"UTF-8\"?>"), events.toString());
+        assertTrue(events.contains("comment:?xml version=\"1.0\" encoding=\"UTF-8\"?"), events.toString());
     }
 
     @Test
@@ -74,9 +77,11 @@ public class ValidProcessingInstructionTest {
 
     @Test
     public void domXmlDeclarationLeaksAsStrayTextNodeAtRoot() throws Exception {
+        // characterization: the XML declaration becomes a document-level Comment node (before the
+        // first element), so the HTML root's only child is the synthesized BODY -- no stray text node
         final Document doc = parse("<?xml version=\"1.0\" encoding=\"UTF-8\"?><p>x</p>");
         final List<String> sig = childSignature(doc.getDocumentElement());
-        assertTrue(sig.stream().anyMatch(s -> s.startsWith("text:") && s.contains("xml version")), sig.toString());
+        assertEquals(List.of("elem:BODY"), sig);
     }
 
     @Test
@@ -87,31 +92,36 @@ public class ValidProcessingInstructionTest {
 
     @Test
     public void phpProcessingInstructionLeaksAsCharactersText() throws Exception {
+        // characterization: the PHP construct becomes a bogus comment (HTML5), reported via the
+        // lexical handler; the following <p> still parses normally
         final List<String> events = lexicalEvents("<?php echo 1; ?><p>x</p>");
-        assertTrue(events.contains("chars:?php echo 1; ?>"), events.toString());
+        assertTrue(events.contains("comment:?php echo 1; ?"), events.toString());
         assertTrue(events.contains("start:P"), events.toString());
     }
 
     @Test
     public void phpProcessingInstructionSaxStartElementsShowOnlyRealElements() throws Exception {
-        // characterization: no pseudo-element is ever started for the "<?php ...?>" construct
+        // characterization: no pseudo-element is ever started for the "<?php ...?>" construct; only the
+        // real elements appear (plus the HTML5 synthesized BODY)
         final List<String> names = saxStartElements("<?php echo 1; ?><p>x</p>");
-        assertEquals(List.of("HTML", "P"), names);
+        assertEquals(List.of("HTML", "BODY", "P"), names);
     }
 
     @Test
     public void piInMiddleOfDivLeaksIntoTextMergedWithFollowingContent() throws Exception {
-        // characterization: '<' is dropped, "?target data?>" leaks as text, and it merges with the
-        // following "after" text into a single characters run (no tag boundary between them)
+        // characterization: the PI becomes a bogus comment (HTML5), so it is reported as a separate
+        // comment event and the following "after" text is a separate characters run
         final List<String> events = lexicalEvents("<div><?target data?>after</div>");
-        assertTrue(events.contains("chars:?target data?>after"), events.toString());
+        assertTrue(events.contains("comment:?target data?"), events.toString());
+        assertTrue(events.contains("chars:after"), events.toString());
     }
 
     @Test
     public void piInMiddleOfDivDomChildSignatureLocksExactText() throws Exception {
+        // characterization: the PI becomes a Comment node inside DIV, followed by the "after" text
         final Document doc = parse("<div><?target data?>after</div>");
         final List<String> sig = childSignature(doc.getElementsByTagName("DIV").item(0));
-        assertEquals(List.of("text:?target data?>after"), sig);
+        assertEquals(List.of("comment:?target data?", "text:after"), sig);
     }
 
     @Test
@@ -128,14 +138,13 @@ public class ValidProcessingInstructionTest {
 
     @Test
     public void multiplePiLikeConstructsInSequenceEachLeakAsSeparateTextRuns() throws Exception {
-        // characterization: each "<?...?>" construct starts with its own dropped '<', which resets
-        // the text-scanning boundary; two adjacent PI-like constructs therefore leak as TWO separate
-        // "chars:" events rather than merging into one, unlike a single PI followed by plain text
+        // characterization: each "<?...?>" construct becomes its own bogus comment (HTML5), so two
+        // adjacent PI-like constructs are reported as TWO separate "comment:" events
         final List<String> events = lexicalEvents("<?a?><?b?><p>x</p>");
-        assertTrue(events.contains("chars:?a?>"), events.toString());
-        assertTrue(events.contains("chars:?b?>"), events.toString());
-        assertTrue(events.indexOf("chars:?a?>") < events.indexOf("chars:?b?>"), events.toString());
-        assertTrue(events.indexOf("chars:?b?>") < events.indexOf("start:P"), events.toString());
+        assertTrue(events.contains("comment:?a?"), events.toString());
+        assertTrue(events.contains("comment:?b?"), events.toString());
+        assertTrue(events.indexOf("comment:?a?") < events.indexOf("comment:?b?"), events.toString());
+        assertTrue(events.indexOf("comment:?b?") < events.indexOf("start:P"), events.toString());
     }
 
     @Test

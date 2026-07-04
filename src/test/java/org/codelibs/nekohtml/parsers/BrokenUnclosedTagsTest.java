@@ -77,11 +77,11 @@ public class BrokenUnclosedTagsTest {
 
     @Test
     public void unclosedListItemsNestInsteadOfSibling() throws Exception {
-        // characterization: NO sibling auto-close (dead metadata) -- consecutive unclosed <li>
-        // elements nest rather than becoming siblings.
+        // characterization: consecutive unclosed <li> imply-close each other (HTML5), becoming
+        // siblings under UL rather than nesting.
         final Document doc = parse("<ul><li>a<li>b");
         assertEquals(2, count(doc, "//LI"));
-        assertEquals(1, count(doc, "//LI/LI"));
+        assertEquals(0, count(doc, "//LI/LI"));
     }
 
     @Test
@@ -125,8 +125,10 @@ public class BrokenUnclosedTagsTest {
     public void saxEndEventFiresAtEofForUnclosedElement() throws Exception {
         final List<String> events = saxEvents("<b>x");
         assertTrue(events.contains("end:B"));
-        // characterization: the implicit HTML root is auto-closed at EOF too, after B
-        assertEquals(List.of("start:HTML", "start:B", "end:B", "end:HTML"), events.stream().filter(e -> !e.startsWith("chars:")).toList());
+        // characterization: the implicit HTML root and the synthesized BODY are auto-closed at EOF
+        // too, after B
+        assertEquals(List.of("start:HTML", "start:BODY", "start:B", "end:B", "end:BODY", "end:HTML"),
+                events.stream().filter(e -> !e.startsWith("chars:")).toList());
     }
 
     @Test
@@ -143,10 +145,10 @@ public class BrokenUnclosedTagsTest {
         final Document doc = parse("<ul><li>a<li>b<li>c</ul>");
         assertEquals(1, count(doc, "//UL"));
         assertEquals(3, count(doc, "//LI"));
-        // characterization: unclosed LIs nest rather than becoming UL's direct siblings
-        assertEquals(1, count(doc, "//UL/LI"));
-        assertEquals(1, count(doc, "//UL/LI/LI"));
-        assertEquals(1, count(doc, "//UL/LI/LI/LI"));
+        // characterization: unclosed LIs imply-close each other (HTML5), becoming UL's direct children
+        assertEquals(3, count(doc, "//UL/LI"));
+        assertEquals(0, count(doc, "//UL/LI/LI"));
+        assertEquals(0, count(doc, "//UL/LI/LI/LI"));
     }
 
     @Test
@@ -202,12 +204,13 @@ public class BrokenUnclosedTagsTest {
 
     @Test
     public void unclosedDtDdNestRatherThanSibling() throws Exception {
-        // characterization: no sibling auto-close for DD/DT either -- DD nests inside DT
+        // characterization: <dd> implies the end of <dt> (HTML5), so DD becomes a sibling of DT rather
+        // than nesting inside it.
         final Document doc = parse("<dl><dt>a<dd>b");
         assertEquals(1, count(doc, "//DL"));
         assertEquals(1, count(doc, "//DT"));
         assertEquals(1, count(doc, "//DD"));
-        assertEquals(1, count(doc, "//DT/DD"));
+        assertEquals(0, count(doc, "//DT/DD"));
     }
 
     @Test

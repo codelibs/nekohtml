@@ -156,14 +156,18 @@ public class BrokenHtmlConfigModesTest {
 
     @Test
     public void strictModeThrowsOnSecondTopLevelHtmlRoot() throws Exception {
-        // characterization: once the balancer's implicit-HTML tracking flag has already fired and
-        // the DOM element stack has unwound back to the Document node, a second top-level <html>
-        // tries to append a second document-element child and Document rejects it. In strict mode
-        // that DOM hierarchy violation is propagated as a SAXException.
+        // characterization: the rewritten balancer keeps a single root and ignores a duplicate
+        // top-level <html>, merging its content into the one root, so no DOM hierarchy violation
+        // occurs. Strict DOM mode therefore no longer throws; both "a" and "b" are preserved under
+        // the single HTML>BODY. (Strict mode still throws on genuine DOM-integrity failures.)
         final String prev = System.getProperty(PROPERTY_DOM_STRICT);
         try {
             System.setProperty(PROPERTY_DOM_STRICT, "true");
-            assertThrows(SAXException.class, () -> parse("<html>a</html><html>b</html>"));
+            final Document doc = assertDoesNotThrow(() -> parse("<html>a</html><html>b</html>"));
+            assertEquals(1, count(doc, "//HTML"));
+            // both "a" and "b" are preserved under the single HTML root (a in BODY, b appended to HTML)
+            assertTrue(firstText(doc, "//HTML").contains("a"));
+            assertTrue(firstText(doc, "//HTML").contains("b"));
         } finally {
             restoreProperty(prev);
         }
@@ -171,12 +175,15 @@ public class BrokenHtmlConfigModesTest {
 
     @Test
     public void strictModeThrowsOnElementAfterHtmlRootFullyClosed() throws Exception {
-        // characterization: same DOM hierarchy violation as above, triggered by any element (not
-        // just another <html>) arriving after the root has already fully closed
+        // characterization: content after a fully-closed </html> is reparented into the single body
+        // instead of creating a second document-element, so there is no DOM hierarchy violation and
+        // strict mode does not throw; "x" is preserved under HTML>BODY>P.
         final String prev = System.getProperty(PROPERTY_DOM_STRICT);
         try {
             System.setProperty(PROPERTY_DOM_STRICT, "true");
-            assertThrows(SAXException.class, () -> parse("<html></html><p>x</p>"));
+            final Document doc = assertDoesNotThrow(() -> parse("<html></html><p>x</p>"));
+            assertEquals(1, count(doc, "//HTML"));
+            assertEquals("x", firstText(doc, "//P"));
         } finally {
             restoreProperty(prev);
         }

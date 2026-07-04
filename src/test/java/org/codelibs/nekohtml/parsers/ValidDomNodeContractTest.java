@@ -256,9 +256,10 @@ public class ValidDomNodeContractTest {
     @Test
     public void brElementParsedAloneIsUnderAutoInsertedHtmlOnly() throws Exception {
         final Document doc = parse("<br>");
-        // characterization: only HTML is auto-inserted; HEAD/BODY are never auto-created
+        // characterization: HTML is auto-inserted and BR (a void body element) triggers BODY
+        // synthesis (HTML5), producing HTML > BODY > BR
         assertEquals("HTML", doc.getDocumentElement().getNodeName());
-        assertEquals(0, count(doc, "//BODY"));
+        assertEquals(1, count(doc, "//BODY"));
     }
 
     // -----------------------------------------------------------------
