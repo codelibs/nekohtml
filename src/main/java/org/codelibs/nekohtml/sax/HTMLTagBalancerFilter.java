@@ -459,14 +459,56 @@ public class HTMLTagBalancerFilter extends XMLFilterImpl implements LexicalHandl
             return;
         }
         final ContentHandler handler = getContentHandler();
-        while (!elementStack.isEmpty() && closes.contains(elementStack.peek().tagName)) {
-            final ElementEntry entry = popElement();
-            removeFormattingElement(entry.tagName);
-            if (logger.isLoggable(Level.FINER)) {
-                logger.finer("Implied close of " + entry.tagName + " before " + tagName);
+        while (!elementStack.isEmpty()) {
+            final String top = elementStack.peek().tagName;
+            if (closes.contains(top)) {
+                final ElementEntry entry = popElement();
+                removeFormattingElement(entry.tagName);
+                if (logger.isLoggable(Level.FINER)) {
+                    logger.finer("Implied close of " + entry.tagName + " before " + tagName);
+                }
+                handler.endElement(entry.uri, entry.localName, entry.qName);
+                continue;
             }
-            handler.endElement(entry.uri, entry.localName, entry.qName);
+            // A sibling container (a previous <li>/<p>/<td>/...) can be hidden behind a run of
+            // still-open inline formatting elements (<b>, <i>, ...), e.g. <ul><li><b>x<li>y. HTML5
+            // closes through those formatting elements to reach and close the sibling, so the second
+            // list item becomes a sibling of the first rather than nesting inside the stray <b> (which
+            // previously left an empty duplicate <li> behind after formatting reconstruction). Only
+            // step through formatting elements; stop at any other (block/container) element.
+            if (HTMLElements.isFormattingElement(top) && impliedCloseTargetBehindFormatting(closes)) {
+                final ElementEntry entry = popElement();
+                removeFormattingElement(entry.tagName);
+                if (logger.isLoggable(Level.FINER)) {
+                    logger.finer("Closing formatting element " + entry.tagName + " to reach implied-close target before " + tagName);
+                }
+                handler.endElement(entry.uri, entry.localName, entry.qName);
+                continue;
+            }
+            break;
         }
+    }
+
+    /**
+     * Scans from the top of the stack past a run of open inline formatting
+     * elements and reports whether the first non-formatting element below them
+     * is one that {@code closes} implicitly closes. Lets an implied end tag
+     * close a sibling container that is separated from the top of the stack
+     * only by stray formatting elements.
+     *
+     * @param closes The set of tag names the incoming start tag implicitly closes
+     * @return {@code true} if such a target sits just below a run of formatting elements
+     */
+    private boolean impliedCloseTargetBehindFormatting(final Set<String> closes) {
+        for (final ElementEntry entry : elementStack) {
+            if (closes.contains(entry.tagName)) {
+                return true;
+            }
+            if (!HTMLElements.isFormattingElement(entry.tagName)) {
+                return false;
+            }
+        }
+        return false;
     }
 
     /**
