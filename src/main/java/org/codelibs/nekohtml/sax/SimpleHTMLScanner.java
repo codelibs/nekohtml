@@ -15,12 +15,14 @@
  */
 package org.codelibs.nekohtml.sax;
 
-import java.io.BufferedReader;
+import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
-import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -83,13 +85,13 @@ public class SimpleHTMLScanner implements XMLReader {
     /** Attribute name case. */
     protected String fAttributeCase = "lower";
 
-    // HTML element patterns
-    private static final Pattern START_TAG = Pattern.compile("<([a-zA-Z][a-zA-Z0-9-:]*)([^>]*)>");
-    private static final Pattern END_TAG = Pattern.compile("</([a-zA-Z][a-zA-Z0-9-:]*)\\s*>");
-    private static final Pattern COMMENT = Pattern.compile("<!--(.*?)-->", Pattern.DOTALL);
-    private static final Pattern DOCTYPE = Pattern.compile("<!DOCTYPE\\s+([^>]+)>", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
-    private static final Pattern ATTRIBUTE = Pattern.compile("([a-zA-Z][a-zA-Z0-9:._-]*)(?:=(\"([^\"]*)\"|'([^']*)'|([^\\s>]+)))?");
-    private static final Pattern CDATA = Pattern.compile("<!\\[CDATA\\[(.*?)\\]\\]>", Pattern.DOTALL);
+    /**
+     * DOCTYPE declaration parser applied to the bounded declaration string only.
+     * Captures the root name, and either a PUBLIC (publicId [systemId]) or SYSTEM (systemId) identifier.
+     */
+    private static final Pattern DOCTYPE_DECL = Pattern.compile("<!DOCTYPE\\s+([^\\s>]+)"
+            + "(?:\\s+PUBLIC\\s+(\"[^\"]*\"|'[^']*')(?:\\s+(\"[^\"]*\"|'[^']*'))?" + "|\\s+SYSTEM\\s+(\"[^\"]*\"|'[^']*'))?",
+            Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
 
     // Void elements (self-closing in HTML5)
     private static final java.util.Set<String> VOID_ELEMENTS = new java.util.HashSet<>();
@@ -108,6 +110,24 @@ public class SimpleHTMLScanner implements XMLReader {
         VOID_ELEMENTS.add("SOURCE");
         VOID_ELEMENTS.add("TRACK");
         VOID_ELEMENTS.add("WBR");
+    }
+
+    // Raw-text elements: content is taken verbatim (no markup, no entity resolution) until the matching end tag.
+    private static final java.util.Set<String> RAWTEXT_ELEMENTS = new java.util.HashSet<>();
+    static {
+        RAWTEXT_ELEMENTS.add("SCRIPT");
+        RAWTEXT_ELEMENTS.add("STYLE");
+        RAWTEXT_ELEMENTS.add("XMP");
+        RAWTEXT_ELEMENTS.add("IFRAME");
+        RAWTEXT_ELEMENTS.add("NOEMBED");
+        RAWTEXT_ELEMENTS.add("NOFRAMES");
+    }
+
+    // RCDATA elements: content is taken as text (no markup) until the matching end tag, but entities are resolved.
+    private static final java.util.Set<String> RCDATA_ELEMENTS = new java.util.HashSet<>();
+    static {
+        RCDATA_ELEMENTS.add("TEXTAREA");
+        RCDATA_ELEMENTS.add("TITLE");
     }
 
     @Override
@@ -182,15 +202,20 @@ public class SimpleHTMLScanner implements XMLReader {
             return;
         }
 
-        // Get reader from input source
+        // Get reader from input source. Track whether this method opened the
+        // underlying resource so that it can be closed afterwards; caller-provided
+        // streams/readers are left open per the SAX convention.
         Reader reader = input.getCharacterStream();
+        Reader readerToClose = null;
         if (reader == null) {
             InputStream stream = input.getByteStream();
+            boolean opened = false;
             if (stream == null && input.getSystemId() != null) {
                 // Open stream from systemId
                 try {
                     final java.net.URI uri = new java.net.URI(input.getSystemId());
                     stream = uri.toURL().openStream();
+                    opened = true;
                     if (logger.isLoggable(Level.FINE)) {
                         logger.fine("Opened input stream from SystemId: " + input.getSystemId());
                     }
@@ -198,6 +223,7 @@ public class SimpleHTMLScanner implements XMLReader {
                     // Try as a file path
                     try {
                         stream = new java.io.FileInputStream(input.getSystemId());
+                        opened = true;
                         if (logger.isLoggable(Level.FINE)) {
                             logger.fine("Opened file input stream from SystemId: " + input.getSystemId());
                         }
@@ -210,11 +236,31 @@ public class SimpleHTMLScanner implements XMLReader {
                 }
             }
             if (stream != null) {
-                String encoding = input.getEncoding();
-                if (encoding == null) {
-                    encoding = "UTF-8";
+                // Ensure the stream supports mark/reset so encoding sniffing can rewind it
+                // without losing any bytes for the document reader that follows.
+                final InputStream markableStream = stream.markSupported() ? stream : new BufferedInputStream(stream);
+                try {
+                    final String javaEncoding = sniffEncoding(markableStream, input.getEncoding());
+                    reader = new InputStreamReader(markableStream, javaEncoding);
+                } catch (final IOException | RuntimeException e) {
+                    // Encoding sniffing or reader construction failed (e.g. an unsupported
+                    // explicit encoding). If we opened the underlying stream, close it here so
+                    // it does not leak; readerToClose is only assigned once the reader exists.
+                    if (opened) {
+                        try {
+                            markableStream.close();
+                        } catch (final IOException closeError) {
+                            if (logger.isLoggable(Level.FINE)) {
+                                logger.fine("Failed to close self-opened stream after reader failure: " + closeError.getMessage());
+                            }
+                        }
+                    }
+                    throw e;
                 }
-                reader = new InputStreamReader(stream, encoding);
+                if (opened) {
+                    // We opened the underlying stream, so we are responsible for closing it.
+                    readerToClose = reader;
+                }
             }
         }
 
@@ -222,25 +268,363 @@ public class SimpleHTMLScanner implements XMLReader {
             throw new SAXException("No input source available");
         }
 
-        // Read all content
-        final StringBuilder content = new StringBuilder();
-        final BufferedReader br = new BufferedReader(reader);
-        String line;
-        while ((line = br.readLine()) != null) {
-            content.append(line).append('\n');
-        }
+        try {
+            // Read all content via a fixed-size buffer (no trailing newline appended).
+            final StringBuilder content = new StringBuilder();
+            final char[] buffer = new char[8192];
+            int read;
+            while ((read = reader.read(buffer)) != -1) {
+                content.append(buffer, 0, read);
+            }
 
-        // Parse HTML
-        final String htmlContent = content.toString();
-        if (logger.isLoggable(Level.FINE)) {
-            logger.fine("Parsing HTML content (" + htmlContent.length() + " characters)");
+            // A leading U+FEFF (byte-order mark) that survived decoding - e.g. from a
+            // caller-supplied Reader - is stripped so it never appears in the token stream.
+            if (content.length() > 0 && content.charAt(0) == '\uFEFF') {
+                content.deleteCharAt(0);
+            }
+
+            // Parse HTML
+            final String htmlContent = content.toString();
+            if (logger.isLoggable(Level.FINE)) {
+                logger.fine("Parsing HTML content (" + htmlContent.length() + " characters)");
+            }
+            parseHTML(htmlContent);
+        } finally {
+            if (readerToClose != null) {
+                try {
+                    readerToClose.close();
+                } catch (final IOException e) {
+                    if (logger.isLoggable(Level.FINE)) {
+                        logger.fine("Failed to close input stream: " + e.getMessage());
+                    }
+                }
+            }
         }
-        parseHTML(htmlContent);
     }
 
     @Override
     public void parse(final String systemId) throws IOException, SAXException {
         parse(new InputSource(systemId));
+    }
+
+    /** Regex that extracts the charset from a legacy {@code http-equiv="Content-Type"} tag's
+     *  {@code content} attribute value (e.g. {@code text/html; charset=Shift_JIS}). Applied only to
+     *  the value of a genuine {@code content} attribute, never to the raw markup. */
+    private static final Pattern CONTENT_CHARSET_PATTERN = Pattern.compile("(?i)charset\\s*=\\s*[\"']?\\s*([A-Za-z0-9][A-Za-z0-9._:-]*)");
+
+    /**
+     * Determines the Java charset name to use for decoding a byte stream, consuming any
+     * byte-order mark from the stream in the process. Precedence: a UTF-8/UTF-16 BOM outranks
+     * everything (matching browser behavior); otherwise an explicit {@link InputSource} encoding
+     * wins; otherwise a {@code <meta charset>} pre-scan of the first 1024 bytes is used; otherwise
+     * UTF-8 is assumed. The stream is always left positioned so that a subsequent full read (via
+     * an {@link InputStreamReader} using the returned encoding) sees the complete document,
+     * BOM bytes excepted.
+     *
+     * @param stream A byte stream that supports {@code mark}/{@code reset}
+     * @param explicitEncoding The {@code InputSource.getEncoding()} value, or {@code null}
+     * @return The Java charset name to decode {@code stream} with
+     * @throws IOException If an I/O error occurs while sniffing the stream
+     */
+    private static String sniffEncoding(final InputStream stream, final String explicitEncoding) throws IOException {
+        stream.mark(1024);
+        final byte[] prefix = new byte[3];
+        final int n = readFully(stream, prefix);
+
+        if (n >= 3 && (prefix[0] & 0xFF) == 0xEF && (prefix[1] & 0xFF) == 0xBB && (prefix[2] & 0xFF) == 0xBF) {
+            // UTF-8 BOM: the 3-byte read above already consumed it from the stream.
+            return "UTF8";
+        }
+        if (n >= 2 && (prefix[0] & 0xFF) == 0xFE && (prefix[1] & 0xFF) == 0xFF) {
+            // UTF-16BE BOM: rewind and re-consume only the 2 BOM bytes.
+            stream.reset();
+            skipFully(stream, 2);
+            return "UnicodeBigUnmarked";
+        }
+        if (n >= 2 && (prefix[0] & 0xFF) == 0xFF && (prefix[1] & 0xFF) == 0xFE) {
+            // UTF-16LE BOM: rewind and re-consume only the 2 BOM bytes.
+            stream.reset();
+            skipFully(stream, 2);
+            return "UnicodeLittleUnmarked";
+        }
+
+        // No BOM present: rewind fully so the explicit-encoding/meta-sniff/default paths below
+        // all see the document from the beginning.
+        stream.reset();
+
+        if (explicitEncoding != null) {
+            final String mapped = EncodingMap.getIANA2JavaMapping(explicitEncoding);
+            if (mapped != null) {
+                return mapped;
+            }
+            // An unsupported/invalid explicit encoding falls through to the meta-charset/UTF-8
+            // sniff below rather than being handed straight to InputStreamReader, which would
+            // throw UnsupportedEncodingException and abort the whole parse. Degrading here matches
+            // the meta-charset path (resolveSniffedEncoding also returns null for unusable names).
+            if (logger.isLoggable(Level.FINE)) {
+                logger.fine("Ignoring unsupported InputSource encoding: " + explicitEncoding);
+            }
+        }
+
+        final String sniffed = sniffMetaCharset(stream);
+        return sniffed != null ? sniffed : "UTF8";
+    }
+
+    /**
+     * Scans up to the first 1024 bytes of {@code stream} for a {@code <meta charset>} (or
+     * {@code <meta http-equiv="Content-Type" content="...charset=...">}) declaration, decoding
+     * the prefix as ISO-8859-1 (a superset of ASCII, sufficient since charset declarations
+     * themselves are always ASCII). The stream is always reset back to its original position.
+     *
+     * @param stream A byte stream that supports {@code mark}/{@code reset}, positioned at the
+     *               start of the document
+     * @return The Java charset name for the sniffed encoding, or {@code null} if none was found
+     *         (no declaration present, or the declared name is unsupported/unrecognized)
+     * @throws IOException If an I/O error occurs while sniffing the stream
+     */
+    private static String sniffMetaCharset(final InputStream stream) throws IOException {
+        stream.mark(1024);
+        try {
+            final byte[] buf = new byte[1024];
+            final int n = readFully(stream, buf);
+            final String prefix = new String(buf, 0, n, java.nio.charset.StandardCharsets.ISO_8859_1);
+            return scanPrefixForCharset(prefix);
+        } finally {
+            stream.reset();
+        }
+    }
+
+    /**
+     * Scans the decoded byte-prefix for a charset declaration, honoring only real {@code <meta>}
+     * attributes: the HTML5 short form ({@code <meta charset=...>}) or the legacy form
+     * ({@code <meta http-equiv="content-type" content="...charset=...">}). HTML comments are
+     * skipped, and a {@code charset=} substring appearing anywhere else (e.g. inside a
+     * {@code <meta name="description" content="...charset=...">} value, or {@code <metadata>}) is
+     * ignored, so benign content cannot trigger a whole-document mis-decode. Returns the first
+     * resolvable Java charset name, or {@code null}.
+     *
+     * @param prefix The decoded document prefix (ASCII/Latin-1)
+     * @return The resolved Java charset name, or {@code null}
+     */
+    private static String scanPrefixForCharset(final String prefix) {
+        final int len = prefix.length();
+        int i = 0;
+        while (i < len) {
+            final int lt = prefix.indexOf('<', i);
+            if (lt < 0) {
+                return null;
+            }
+            // Skip a comment so a <meta> inside <!-- ... --> does not count.
+            if (prefix.regionMatches(lt, "<!--", 0, 4)) {
+                final int endComment = prefix.indexOf("-->", lt + 4);
+                i = endComment < 0 ? len : endComment + 3;
+                continue;
+            }
+            // Only a genuine "<meta" tag start (next char must not continue the name, so
+            // "<metadata"/"<meta-foo" are rejected).
+            if (!prefix.regionMatches(true, lt, "<meta", 0, 5) || lt + 5 >= len || isNameChar(prefix.charAt(lt + 5))) {
+                i = lt + 1;
+                continue;
+            }
+            final int tagEnd = findMetaTagEnd(prefix, lt + 5, len);
+            final String resolved = charsetFromMetaTag(prefix.substring(lt + 5, tagEnd));
+            if (resolved != null) {
+                return resolved;
+            }
+            i = tagEnd < len ? tagEnd + 1 : len;
+        }
+        return null;
+    }
+
+    /**
+     * Finds the index of the '&gt;' that ends a tag whose attributes begin at {@code from}, treating
+     * quoted attribute values as opaque so a '&gt;' inside a value does not terminate the tag.
+     *
+     * @param s The source content
+     * @param from The index of the first attribute character
+     * @param len The source length
+     * @return The index of the terminating '&gt;', or {@code len} if the tag is unterminated
+     */
+    private static int findMetaTagEnd(final String s, final int from, final int len) {
+        int p = from;
+        while (p < len) {
+            final char c = s.charAt(p);
+            if (c == '"' || c == '\'') {
+                p++;
+                while (p < len && s.charAt(p) != c) {
+                    p++;
+                }
+                if (p < len) {
+                    p++; // closing quote
+                }
+            } else if (c == '>') {
+                return p;
+            } else {
+                p++;
+            }
+        }
+        return len;
+    }
+
+    /**
+     * Resolves the charset for a single {@code <meta>} tag from its attribute text: a {@code charset}
+     * attribute wins; otherwise, only when {@code http-equiv} is {@code content-type}, the
+     * {@code charset=} inside the {@code content} value is used.
+     *
+     * @param attrText The tag's attribute text (between the element name and the closing '&gt;')
+     * @return The resolved Java charset name, or {@code null}
+     */
+    private static String charsetFromMetaTag(final String attrText) {
+        final Map<String, String> attrs = parseMetaAttributes(attrText);
+        final String charset = attrs.get("charset");
+        if (charset != null && !charset.isBlank()) {
+            final String resolved = resolveSniffedEncoding(charset.trim());
+            if (resolved != null) {
+                return resolved;
+            }
+        }
+        final String httpEquiv = attrs.get("http-equiv");
+        final String content = attrs.get("content");
+        if (httpEquiv != null && content != null && "content-type".equalsIgnoreCase(httpEquiv.trim())) {
+            final Matcher m = CONTENT_CHARSET_PATTERN.matcher(content);
+            if (m.find()) {
+                return resolveSniffedEncoding(m.group(1).trim());
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Parses the attributes of a single tag into a lower-cased name -&gt; value map (first occurrence
+     * of each name wins), applying the same quoting rules as the main tokenizer. Only the small set
+     * of names relevant to charset sniffing is ever consulted by the caller.
+     *
+     * @param s The tag's attribute text
+     * @return A map of lower-cased attribute names to their values
+     */
+    private static Map<String, String> parseMetaAttributes(final String s) {
+        final Map<String, String> attrs = new HashMap<>();
+        final int len = s.length();
+        int pos = 0;
+        while (pos < len) {
+            while (pos < len && isSpace(s.charAt(pos))) {
+                pos++;
+            }
+            if (pos >= len) {
+                break;
+            }
+            final char c = s.charAt(pos);
+            if (c == '/' || c == '>') {
+                pos++;
+                continue;
+            }
+            final int nameStart = pos;
+            while (pos < len) {
+                final char nc = s.charAt(pos);
+                if (isSpace(nc) || nc == '=' || nc == '/' || nc == '>') {
+                    break;
+                }
+                pos++;
+            }
+            final String name = s.substring(nameStart, pos).toLowerCase(Locale.ROOT);
+            while (pos < len && isSpace(s.charAt(pos))) {
+                pos++;
+            }
+            String value = "";
+            if (pos < len && s.charAt(pos) == '=') {
+                pos++;
+                while (pos < len && isSpace(s.charAt(pos))) {
+                    pos++;
+                }
+                if (pos < len) {
+                    final char q = s.charAt(pos);
+                    if (q == '"' || q == '\'') {
+                        pos++;
+                        final int vs = pos;
+                        while (pos < len && s.charAt(pos) != q) {
+                            pos++;
+                        }
+                        value = s.substring(vs, pos);
+                        if (pos < len) {
+                            pos++; // closing quote
+                        }
+                    } else {
+                        final int vs = pos;
+                        while (pos < len) {
+                            final char vc = s.charAt(pos);
+                            if (isSpace(vc) || vc == '>') {
+                                break;
+                            }
+                            pos++;
+                        }
+                        value = s.substring(vs, pos);
+                    }
+                }
+            }
+            if (!name.isEmpty()) {
+                attrs.putIfAbsent(name, value);
+            }
+        }
+        return attrs;
+    }
+
+    /**
+     * Resolves a charset name sniffed from a {@code <meta charset>} declaration to a Java
+     * charset name, applying the WHATWG {@code x-user-defined -> windows-1252} alias and
+     * rejecting anything Java cannot decode.
+     *
+     * @param rawName The charset name as written in the document (e.g. {@code "Shift_JIS"})
+     * @return The Java charset name, or {@code null} if the sniffed name is unsupported
+     */
+    private static String resolveSniffedEncoding(final String rawName) {
+        final String name = "x-user-defined".equalsIgnoreCase(rawName) ? "windows-1252" : rawName;
+        if (!EncodingMap.isSupported(name)) {
+            return null;
+        }
+        final String mapped = EncodingMap.getIANA2JavaMapping(name);
+        return mapped != null ? mapped : name;
+    }
+
+    /**
+     * Reads from {@code in} until {@code buf} is full or the stream is exhausted.
+     *
+     * @param in The stream to read from
+     * @param buf The destination buffer
+     * @return The number of bytes actually read (may be less than {@code buf.length} at EOF)
+     * @throws IOException If an I/O error occurs
+     */
+    private static int readFully(final InputStream in, final byte[] buf) throws IOException {
+        int total = 0;
+        while (total < buf.length) {
+            final int r = in.read(buf, total, buf.length - total);
+            if (r < 0) {
+                break;
+            }
+            total += r;
+        }
+        return total;
+    }
+
+    /**
+     * Skips exactly {@code count} bytes from {@code in}, falling back to single-byte reads if
+     * {@code skip} returns fewer bytes than requested. Stops early at EOF.
+     *
+     * @param in The stream to skip bytes on
+     * @param count The number of bytes to skip
+     * @throws IOException If an I/O error occurs
+     */
+    private static void skipFully(final InputStream in, final int count) throws IOException {
+        int remaining = count;
+        while (remaining > 0) {
+            final long skipped = in.skip(remaining);
+            if (skipped > 0) {
+                remaining -= skipped;
+            } else if (in.read() < 0) {
+                break;
+            } else {
+                remaining--;
+            }
+        }
     }
 
     /**
@@ -258,118 +642,59 @@ public class SimpleHTMLScanner implements XMLReader {
             logger.fine("Begin HTML parsing");
         }
 
+        // Normalize line endings once: CRLF and lone CR both become LF.
+        final String source = normalizeLineEndings(html);
+
         fContentHandler.startDocument();
 
+        final int length = source.length();
+        final StringBuilder text = new StringBuilder();
         int pos = 0;
-        final int length = html.length();
 
         while (pos < length) {
-            final char ch = html.charAt(pos);
+            final char ch = source.charAt(pos);
+            if (ch != '<') {
+                // Accumulate a text run up to the next '<'.
+                final int lt = source.indexOf('<', pos);
+                final int end = lt < 0 ? length : lt;
+                text.append(source, pos, end);
+                pos = end;
+                continue;
+            }
 
-            if (ch == '<') {
-                // Check for CDATA section
-                if (html.startsWith("<![CDATA[", pos)) {
-                    final Matcher m = CDATA.matcher(html.substring(pos));
-                    if (m.find() && m.start() == 0) {
-                        if (fLexicalHandler != null) {
-                            fLexicalHandler.startCDATA();
-                            final String cdataText = m.group(1);
-                            if (cdataText.length() > 0) {
-                                fContentHandler.characters(cdataText.toCharArray(), 0, cdataText.length());
-                            }
-                            fLexicalHandler.endCDATA();
-                        } else {
-                            // If no lexical handler, just emit the CDATA content as text
-                            final String cdataText = m.group(1);
-                            if (cdataText.length() > 0) {
-                                fContentHandler.characters(cdataText.toCharArray(), 0, cdataText.length());
-                            }
-                        }
-                        pos += m.end();
-                        continue;
-                    }
+            // ch == '<': dispatch on the following character.
+            final char next = pos + 1 < length ? source.charAt(pos + 1) : '\0';
+            if (isAsciiLetter(next)) {
+                flushText(text);
+                pos = scanStartTag(source, pos, length);
+            } else if (next == '/') {
+                final char afterSlash = pos + 2 < length ? source.charAt(pos + 2) : '\0';
+                if (isAsciiLetter(afterSlash)) {
+                    flushText(text);
+                    pos = scanEndTag(source, pos, length);
+                } else if (afterSlash == '>') {
+                    // "</>" is ignored entirely (surrounding text stays contiguous).
+                    pos += 3;
+                } else {
+                    // Bogus comment starting after "</".
+                    flushText(text);
+                    pos = scanBogusComment(source, pos + 2, length);
                 }
-
-                // Check for comment
-                if (html.startsWith("<!--", pos)) {
-                    final Matcher m = COMMENT.matcher(html.substring(pos));
-                    if (m.find() && m.start() == 0) {
-                        if (fLexicalHandler != null) {
-                            final String commentText = m.group(1);
-                            fLexicalHandler.comment(commentText.toCharArray(), 0, commentText.length());
-                        }
-                        pos += m.end();
-                        continue;
-                    }
-                }
-
-                // Check for DOCTYPE
-                if (html.startsWith("<!DOCTYPE", pos) || html.startsWith("<!doctype", pos)) {
-                    final Matcher m = DOCTYPE.matcher(html.substring(pos));
-                    if (m.find() && m.start() == 0) {
-                        if (fLexicalHandler != null) {
-                            fLexicalHandler.startDTD("html", null, null);
-                            fLexicalHandler.endDTD();
-                        }
-                        pos += m.end();
-                        continue;
-                    }
-                }
-
-                // Check for end tag
-                final Matcher endMatcher = END_TAG.matcher(html.substring(pos));
-                if (endMatcher.find() && endMatcher.start() == 0) {
-                    final String tagName = normalizeElementName(endMatcher.group(1));
-                    if (logger.isLoggable(Level.FINER)) {
-                        logger.finer("End element: " + tagName);
-                    }
-                    fContentHandler.endElement("", tagName, tagName);
-                    pos += endMatcher.end();
-                    continue;
-                }
-
-                // Check for start tag
-                final Matcher startMatcher = START_TAG.matcher(html.substring(pos));
-                if (startMatcher.find() && startMatcher.start() == 0) {
-                    final String tagName = normalizeElementName(startMatcher.group(1));
-                    final String attrString = startMatcher.group(2);
-
-                    final AttributesImpl attrs = parseAttributes(attrString);
-                    if (logger.isLoggable(Level.FINER)) {
-                        logger.finer("Start element: " + tagName + " (attributes: " + attrs.getLength() + ")");
-                    }
-                    fContentHandler.startElement("", tagName, tagName, attrs);
-
-                    // Immediately close void elements
-                    if (VOID_ELEMENTS.contains(tagName.toUpperCase())) {
-                        if (logger.isLoggable(Level.FINER)) {
-                            logger.finer("Auto-closing void element: " + tagName);
-                        }
-                        fContentHandler.endElement("", tagName, tagName);
-                    }
-
-                    pos += startMatcher.end();
-                    continue;
-                }
-
-                // Unknown tag, skip character
-                pos++;
+            } else if (next == '!') {
+                flushText(text);
+                pos = scanMarkupDeclaration(source, pos, length);
+            } else if (next == '?') {
+                // Processing instruction -> bogus comment (content from '?').
+                flushText(text);
+                pos = scanBogusComment(source, pos + 1, length);
             } else {
-                // Text content
-                final int nextTag = html.indexOf('<', pos);
-                final int endPos = nextTag >= 0 ? nextTag : length;
-                final String rawText = html.substring(pos, endPos);
-
-                // Always emit text content, including whitespace
-                // This preserves spacing between elements for proper text extraction
-                if (rawText.length() > 0) {
-                    final String text = resolveEntities(rawText);
-                    fContentHandler.characters(text.toCharArray(), 0, text.length());
-                }
-
-                pos = endPos;
+                // Not a tag start: treat '<' as literal text.
+                text.append('<');
+                pos++;
             }
         }
+
+        flushText(text);
 
         fContentHandler.endDocument();
         if (logger.isLoggable(Level.FINE)) {
@@ -378,36 +703,540 @@ public class SimpleHTMLScanner implements XMLReader {
     }
 
     /**
-     * Parses attributes from a string.
+     * Normalizes CRLF and lone CR line endings to LF. Returns the input unchanged when no CR is present.
      *
-     * @param attrString The attribute string
-     * @return The parsed attributes
+     * @param html The raw HTML content
+     * @return The content with normalized line endings
      */
-    protected AttributesImpl parseAttributes(final String attrString) {
+    private static String normalizeLineEndings(final String html) {
+        if (html.indexOf('\r') < 0) {
+            return html;
+        }
+        final int length = html.length();
+        final StringBuilder sb = new StringBuilder(length);
+        for (int i = 0; i < length; i++) {
+            final char c = html.charAt(i);
+            if (c == '\r') {
+                sb.append('\n');
+                if (i + 1 < length && html.charAt(i + 1) == '\n') {
+                    i++;
+                }
+            } else {
+                sb.append(c);
+            }
+        }
+        return sb.toString();
+    }
+
+    /**
+     * Flushes the accumulated text run, resolving entities, as a single {@code characters()} event.
+     *
+     * @param text The accumulated text buffer (cleared on return)
+     * @throws SAXException If a SAX error occurs
+     */
+    private void flushText(final StringBuilder text) throws SAXException {
+        if (text.length() == 0) {
+            return;
+        }
+        final String resolved = resolveEntities(text.toString());
+        text.setLength(0);
+        if (!resolved.isEmpty()) {
+            fContentHandler.characters(resolved.toCharArray(), 0, resolved.length());
+        }
+    }
+
+    /**
+     * Scans a start tag beginning at {@code startPos} (the '&lt;'), emitting the corresponding
+     * {@code startElement} (and, for void/self-closing/raw-text elements, additional events).
+     *
+     * @param html The source content
+     * @param startPos The index of the opening '&lt;'
+     * @param length The source length
+     * @return The index immediately after the consumed markup
+     * @throws SAXException If a SAX error occurs
+     */
+    private int scanStartTag(final String html, final int startPos, final int length) throws SAXException {
+        int pos = startPos + 1;
+        final int nameStart = pos;
+        pos++; // first character is a guaranteed ASCII letter
+        while (pos < length && isNameChar(html.charAt(pos))) {
+            pos++;
+        }
+        final String rawName = html.substring(nameStart, pos);
+
         final AttributesImpl attrs = new AttributesImpl();
+        boolean terminated = false;
 
-        if (attrString == null || attrString.trim().isEmpty()) {
-            return attrs;
+        while (pos < length) {
+            // Skip whitespace before the next attribute.
+            while (pos < length && isSpace(html.charAt(pos))) {
+                pos++;
+            }
+            if (pos >= length) {
+                break; // EOF in tag
+            }
+            final char c = html.charAt(pos);
+            if (c == '>') {
+                pos++;
+                terminated = true;
+                break;
+            }
+            if (c == '/') {
+                if (pos + 1 < length && html.charAt(pos + 1) == '>') {
+                    pos += 2;
+                    terminated = true;
+                    break;
+                }
+                pos++; // stray slash
+                continue;
+            }
+
+            // Attribute name (HTML5 attribute-name state).
+            final int attrNameStart = pos;
+            while (pos < length) {
+                final char nc = html.charAt(pos);
+                if (isSpace(nc) || nc == '=' || nc == '/' || nc == '>') {
+                    break;
+                }
+                pos++;
+            }
+            final String attrName = html.substring(attrNameStart, pos);
+
+            // Skip whitespace between name and '='.
+            while (pos < length && isSpace(html.charAt(pos))) {
+                pos++;
+            }
+
+            String value = "";
+            if (pos < length && html.charAt(pos) == '=') {
+                pos++; // consume '='
+                while (pos < length && isSpace(html.charAt(pos))) {
+                    pos++;
+                }
+                if (pos >= length) {
+                    break; // EOF in tag
+                }
+                final char q = html.charAt(pos);
+                if (q == '"' || q == '\'') {
+                    pos++; // opening quote
+                    final int valueStart = pos;
+                    while (pos < length && html.charAt(pos) != q) {
+                        pos++;
+                    }
+                    if (pos < length) {
+                        value = html.substring(valueStart, pos);
+                        pos++; // closing quote
+                    } else {
+                        // Unterminated quoted value (EOF before the closing quote). HTML5 would
+                        // treat this as eof-in-tag and drop the whole tag, discarding any markup
+                        // and text that follows. For backward-compatible lenient recovery, end the
+                        // value at the first '>' so the tag is still emitted and the remainder of
+                        // the document is parsed normally.
+                        final int gt = html.indexOf('>', valueStart);
+                        if (gt < 0) {
+                            return length; // no '>' anywhere: nothing to recover, drop the partial tag
+                        }
+                        value = html.substring(valueStart, gt);
+                        pos = gt; // the outer loop consumes '>' and terminates the tag
+                    }
+                } else if (q == '>') {
+                    // Missing attribute value; leave the '>' for the loop to handle.
+                    value = "";
+                } else {
+                    final int valueStart = pos;
+                    while (pos < length) {
+                        final char vc = html.charAt(pos);
+                        if (isSpace(vc) || vc == '>') {
+                            break;
+                        }
+                        pos++;
+                    }
+                    value = html.substring(valueStart, pos);
+                }
+            }
+
+            addAttribute(attrs, attrName, value);
         }
 
-        final Matcher m = ATTRIBUTE.matcher(attrString);
-        while (m.find()) {
-            final String name = normalizeAttributeName(m.group(1));
-            String value = m.group(3); // Double quoted
-            if (value == null) {
-                value = m.group(4); // Single quoted
-            }
-            if (value == null) {
-                value = m.group(5); // Unquoted
-            }
-            if (value == null) {
-                value = ""; // No value
-            }
-
-            attrs.addAttribute("", name, name, "CDATA", resolveEntities(value, true));
+        if (!terminated) {
+            // HTML5 eof-in-tag: emit nothing for the partial tag.
+            return length;
         }
 
-        return attrs;
+        final String qName = normalizeElementName(rawName);
+        if (logger.isLoggable(Level.FINER)) {
+            logger.finer("Start element: " + qName + " (attributes: " + attrs.getLength() + ")");
+        }
+        fContentHandler.startElement("", qName, qName, attrs);
+
+        final String upperName = rawName.toUpperCase(Locale.ROOT);
+        if (VOID_ELEMENTS.contains(upperName)) {
+            fContentHandler.endElement("", qName, qName);
+            return pos;
+        }
+        // Raw-text (SCRIPT/STYLE/...) and RCDATA (TEXTAREA/TITLE) elements enter their special
+        // content state even when written self-closing: HTML5 treats the '/' as a parse error and
+        // ignores it, so the element still consumes raw content up to its matching end tag. These
+        // checks must precede honoring the self-closing slash, otherwise "<script/>...</script>"
+        // (and "<style/>", "<textarea/>", ...) would have their bodies parsed as markup, leaking
+        // script/CSS source into the token stream as fabricated elements.
+        if (RAWTEXT_ELEMENTS.contains(upperName)) {
+            return scanRawText(html, pos, length, rawName, qName, false);
+        }
+        if (RCDATA_ELEMENTS.contains(upperName)) {
+            return scanRawText(html, pos, length, rawName, qName, true);
+        }
+        // For any other element a self-closing slash (if present) is ignored per HTML5; the element
+        // stays open and the tag balancer closes it.
+        return pos;
+    }
+
+    /**
+     * Scans raw-text (or RCDATA) element content up to the matching end tag.
+     *
+     * @param html The source content
+     * @param contentStart The index of the first content character
+     * @param length The source length
+     * @param rawName The element name as written
+     * @param qName The normalized element name to report
+     * @param resolveEntities Whether to resolve entities in the content (RCDATA) or not (RAWTEXT)
+     * @return The index immediately after the consumed content and end tag
+     * @throws SAXException If a SAX error occurs
+     */
+    private int scanRawText(final String html, final int contentStart, final int length, final String rawName, final String qName,
+            final boolean resolveEntities) throws SAXException {
+        final int closeLt = findRawTextClose(html, contentStart, length, rawName);
+        if (closeLt < 0 && resolveEntities) {
+            // Unclosed RCDATA element (title/textarea). HTML5 would consume the remainder of the
+            // document as text, but that hides following markup (e.g. <body>...</body> after an
+            // unclosed <title>). For backward-compatible lenient recovery, end the element at the
+            // next tag-like '<' so the rest of the document is still parsed.
+            final int softStop = findNextTagLike(html, contentStart, length);
+            final int contentEnd = softStop < 0 ? length : softStop;
+            emitRawTextContent(html, contentStart, contentEnd, true);
+            fContentHandler.endElement("", qName, qName);
+            return contentEnd;
+        }
+        final int contentEnd = closeLt < 0 ? length : closeLt;
+        emitRawTextContent(html, contentStart, contentEnd, resolveEntities);
+        if (closeLt < 0) {
+            // No matching end tag for a raw-text element (script/style); keep consuming to EOF so
+            // the content is never re-parsed as markup. The balancer closes the element at end of
+            // document.
+            return length;
+        }
+        // Consume the end tag up to and including its '>'.
+        final int gt = html.indexOf('>', closeLt);
+        fContentHandler.endElement("", qName, qName);
+        return gt < 0 ? length : gt + 1;
+    }
+
+    /**
+     * Emits the raw-text/RCDATA content run {@code [contentStart, contentEnd)} as a single
+     * {@code characters()} event, resolving entities for RCDATA content.
+     *
+     * @param html The source content
+     * @param contentStart The index of the first content character
+     * @param contentEnd The index just past the last content character
+     * @param resolveEntities Whether to resolve entities (RCDATA) or not (raw text)
+     * @throws SAXException If a SAX error occurs
+     */
+    private void emitRawTextContent(final String html, final int contentStart, final int contentEnd, final boolean resolveEntities)
+            throws SAXException {
+        if (contentEnd > contentStart) {
+            final String content = html.substring(contentStart, contentEnd);
+            final String out = resolveEntities ? resolveEntities(content) : content;
+            if (!out.isEmpty()) {
+                fContentHandler.characters(out.toCharArray(), 0, out.length());
+            }
+        }
+    }
+
+    /**
+     * Finds the next '&lt;' that begins tag-like markup (a start tag, end tag, or markup
+     * declaration such as a comment or DOCTYPE), used to recover from an unclosed RCDATA element.
+     *
+     * @param html The source content
+     * @param from The index to start searching from
+     * @param length The source length
+     * @return The index of the next tag-like '&lt;', or -1 if none exists
+     */
+    private static int findNextTagLike(final String html, final int from, final int length) {
+        int searchPos = from;
+        while (true) {
+            final int lt = html.indexOf('<', searchPos);
+            if (lt < 0) {
+                return -1;
+            }
+            final char next = lt + 1 < length ? html.charAt(lt + 1) : '\0';
+            if (isAsciiLetter(next) || next == '/' || next == '!') {
+                return lt;
+            }
+            searchPos = lt + 1;
+        }
+    }
+
+    /**
+     * Finds the index of the '&lt;' that begins the matching {@code &lt;/name} end tag for a
+     * raw-text/RCDATA element, or -1 if none exists.
+     *
+     * @param html The source content
+     * @param from The index to start searching from
+     * @param length The source length
+     * @param name The element name to match (case-insensitive)
+     * @return The index of the closing tag's '&lt;', or -1
+     */
+    private static int findRawTextClose(final String html, final int from, final int length, final String name) {
+        final int nameLen = name.length();
+        int searchPos = from;
+        while (true) {
+            final int lt = html.indexOf('<', searchPos);
+            if (lt < 0) {
+                return -1;
+            }
+            if (lt + 1 < length && html.charAt(lt + 1) == '/' && html.regionMatches(true, lt + 2, name, 0, nameLen)) {
+                final int after = lt + 2 + nameLen;
+                final char term = after < length ? html.charAt(after) : '\0';
+                if (term == '\0' || isSpace(term) || term == '/' || term == '>') {
+                    return lt;
+                }
+            }
+            searchPos = lt + 1;
+        }
+    }
+
+    /**
+     * Scans an end tag beginning at {@code startPos} (the '&lt;'), emitting {@code endElement}.
+     * The scan is quote-aware: a '&gt;' inside a quoted value does not close the tag.
+     *
+     * @param html The source content
+     * @param startPos The index of the opening '&lt;'
+     * @param length The source length
+     * @return The index immediately after the consumed markup
+     * @throws SAXException If a SAX error occurs
+     */
+    private int scanEndTag(final String html, final int startPos, final int length) throws SAXException {
+        int pos = startPos + 2; // skip "</"
+        final int nameStart = pos;
+        pos++; // first character is a guaranteed ASCII letter
+        while (pos < length && isNameChar(html.charAt(pos))) {
+            pos++;
+        }
+        final String rawName = html.substring(nameStart, pos);
+
+        // Skip the remainder of the tag (including attributes) up to '>', quote-aware.
+        while (pos < length) {
+            final char c = html.charAt(pos);
+            if (c == '"' || c == '\'') {
+                pos++;
+                while (pos < length && html.charAt(pos) != c) {
+                    pos++;
+                }
+                if (pos < length) {
+                    pos++; // closing quote
+                }
+            } else if (c == '>') {
+                pos++;
+                break;
+            } else {
+                pos++;
+            }
+        }
+
+        final String qName = normalizeElementName(rawName);
+        if (logger.isLoggable(Level.FINER)) {
+            logger.finer("End element: " + qName);
+        }
+        fContentHandler.endElement("", qName, qName);
+        return pos;
+    }
+
+    /**
+     * Handles a markup declaration ({@code &lt;!...}): comment, CDATA section, DOCTYPE or bogus comment.
+     *
+     * @param html The source content
+     * @param startPos The index of the opening '&lt;'
+     * @param length The source length
+     * @return The index immediately after the consumed markup
+     * @throws SAXException If a SAX error occurs
+     */
+    private int scanMarkupDeclaration(final String html, final int startPos, final int length) throws SAXException {
+        if (html.regionMatches(startPos, "<!--", 0, 4)) {
+            return scanComment(html, startPos, length);
+        }
+        if (html.regionMatches(startPos, "<![CDATA[", 0, 9)) {
+            final int idx = html.indexOf("]]>", startPos + 9);
+            final int contentEnd = idx < 0 ? length : idx;
+            final String content = html.substring(startPos + 9, contentEnd);
+            if (fLexicalHandler != null) {
+                fLexicalHandler.startCDATA();
+                if (!content.isEmpty()) {
+                    fContentHandler.characters(content.toCharArray(), 0, content.length());
+                }
+                fLexicalHandler.endCDATA();
+            } else if (!content.isEmpty()) {
+                fContentHandler.characters(content.toCharArray(), 0, content.length());
+            }
+            return idx < 0 ? length : idx + 3;
+        }
+        if (html.regionMatches(true, startPos, "<!DOCTYPE", 0, 9)) {
+            final int gt = html.indexOf('>', startPos);
+            final int declEnd = gt < 0 ? length : gt;
+            parseDoctype(html.substring(startPos, declEnd));
+            return gt < 0 ? length : gt + 1;
+        }
+        // Any other "<!..." is a bogus comment; content is everything between "<!" and '>'.
+        return scanBogusComment(html, startPos + 2, length);
+    }
+
+    /**
+     * Scans a comment beginning at {@code startPos} (the '&lt;' of "&lt;!--"). The comment ends at the
+     * first "--&gt;" (comment-end state) or "--!&gt;" (comment-end-bang state), whichever comes first;
+     * the abrupt-closing forms "&lt;!--&gt;" and "&lt;!---&gt;" are empty comments; an unterminated comment
+     * runs to EOF (HTML5 eof-in-comment). Reporting a "--!&gt;" terminator is what keeps a document
+     * such as {@code &lt;!-- x --!&gt;after} from swallowing everything up to EOF.
+     *
+     * @param html The source content
+     * @param startPos The index of the opening '&lt;'
+     * @param length The source length
+     * @return The index immediately after the consumed comment
+     * @throws SAXException If a SAX error occurs
+     */
+    private int scanComment(final String html, final int startPos, final int length) throws SAXException {
+        final int dataStart = startPos + 4;
+        // Abrupt-closing empty comments: "<!-->" and "<!--->".
+        if (dataStart < length && html.charAt(dataStart) == '>') {
+            emitComment(html, dataStart, dataStart);
+            return dataStart + 1;
+        }
+        if (dataStart + 1 < length && html.charAt(dataStart) == '-' && html.charAt(dataStart + 1) == '>') {
+            emitComment(html, dataStart, dataStart);
+            return dataStart + 2;
+        }
+        // End at whichever of "-->" (advance 3) or "--!>" (advance 4) appears first.
+        final int end = html.indexOf("-->", dataStart);
+        final int endBang = html.indexOf("--!>", dataStart);
+        final int contentEnd;
+        final int resume;
+        if (end < 0 && endBang < 0) {
+            contentEnd = length; // unterminated: run to EOF
+            resume = length;
+        } else if (endBang < 0 || (end >= 0 && end <= endBang)) {
+            contentEnd = end;
+            resume = end + 3;
+        } else {
+            contentEnd = endBang;
+            resume = endBang + 4;
+        }
+        emitComment(html, dataStart, contentEnd);
+        return resume;
+    }
+
+    /**
+     * Reports a comment with content {@code html[start, end)} via the lexical handler, if one is set.
+     *
+     * @param html The source content
+     * @param start The index of the first content character
+     * @param end The index just past the last content character
+     * @throws SAXException If a SAX error occurs
+     */
+    private void emitComment(final String html, final int start, final int end) throws SAXException {
+        if (fLexicalHandler != null) {
+            final String content = html.substring(start, end);
+            fLexicalHandler.comment(content.toCharArray(), 0, content.length());
+        }
+    }
+
+    /**
+     * Consumes a bogus comment: content from {@code contentStart} up to the next '&gt;' (or EOF),
+     * reporting it via the lexical handler if one is set.
+     *
+     * @param html The source content
+     * @param contentStart The index of the first content character
+     * @param length The source length
+     * @return The index immediately after the consumed markup
+     * @throws SAXException If a SAX error occurs
+     */
+    private int scanBogusComment(final String html, final int contentStart, final int length) throws SAXException {
+        final int gt = html.indexOf('>', contentStart);
+        final int contentEnd = gt < 0 ? length : gt;
+        if (fLexicalHandler != null) {
+            final String content = html.substring(contentStart, contentEnd);
+            fLexicalHandler.comment(content.toCharArray(), 0, content.length());
+        }
+        return gt < 0 ? length : gt + 1;
+    }
+
+    /**
+     * Parses a bounded DOCTYPE declaration string and reports it via {@code startDTD}/{@code endDTD}.
+     *
+     * @param decl The bounded declaration, from '&lt;!DOCTYPE' up to (not including) '&gt;'
+     * @throws SAXException If a SAX error occurs
+     */
+    private void parseDoctype(final String decl) throws SAXException {
+        if (fLexicalHandler == null) {
+            return;
+        }
+        String name = null;
+        String publicId = null;
+        String systemId = null;
+        final Matcher m = DOCTYPE_DECL.matcher(decl);
+        if (m.lookingAt()) {
+            name = m.group(1);
+            if (m.group(2) != null) {
+                publicId = stripQuotes(m.group(2));
+                if (m.group(3) != null) {
+                    systemId = stripQuotes(m.group(3));
+                }
+            } else if (m.group(4) != null) {
+                systemId = stripQuotes(m.group(4));
+            }
+        }
+        fLexicalHandler.startDTD(name, publicId, systemId);
+        fLexicalHandler.endDTD();
+    }
+
+    /**
+     * Adds an attribute to the collection, normalizing the name, resolving entities in the value,
+     * and dropping duplicates (first occurrence wins) and names that are not valid XML names.
+     *
+     * @param attrs The attribute collection
+     * @param rawName The attribute name as written
+     * @param value The raw attribute value
+     */
+    private void addAttribute(final AttributesImpl attrs, final String rawName, final String value) {
+        if (rawName.isEmpty()) {
+            return;
+        }
+        final String name = normalizeAttributeName(rawName);
+        if (!XMLChar.isValidName(name)) {
+            // Cannot be represented as a DOM/XML attribute name (HTML5 parse error); skip it.
+            return;
+        }
+        if (attrs.getIndex(name) >= 0) {
+            return; // duplicate: first occurrence wins
+        }
+        attrs.addAttribute("", name, name, "CDATA", resolveEntities(value, true));
+    }
+
+    /** Returns true for ASCII letters (tag-name start characters). */
+    private static boolean isAsciiLetter(final char c) {
+        return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
+    }
+
+    /** Returns true for characters allowed after the first character of an element name. */
+    private static boolean isNameChar(final char c) {
+        return isAsciiLetter(c) || (c >= '0' && c <= '9') || c == ':' || c == '_' || c == '.' || c == '-';
+    }
+
+    /** Returns true for HTML whitespace characters. */
+    private static boolean isSpace(final char c) {
+        return c == ' ' || c == '\t' || c == '\n' || c == '\f' || c == '\r';
+    }
+
+    /** Removes the surrounding single or double quote characters from a quoted token. */
+    private static String stripQuotes(final String quoted) {
+        return quoted.substring(1, quoted.length() - 1);
     }
 
     /**
@@ -423,7 +1252,28 @@ public class SimpleHTMLScanner implements XMLReader {
         if (!fNormalizeElements) {
             return name;
         }
-        return "upper".equals(fElementCase) ? name.toUpperCase() : "lower".equals(fElementCase) ? name.toLowerCase() : name;
+        return "upper".equals(fElementCase) ? name.toUpperCase(Locale.ROOT) : "lower".equals(fElementCase) ? name.toLowerCase(Locale.ROOT)
+                : name;
+    }
+
+    /**
+     * Sets the element name case normalization mode.
+     *
+     * @param c {@code "upper"}, {@code "lower"}, or {@code "match"}/{@code "default"}/{@code "no-change"}
+     *          (all of the latter meaning keep the name as written)
+     */
+    public void setElementCase(final String c) {
+        fElementCase = c;
+    }
+
+    /**
+     * Sets the attribute name case normalization mode.
+     *
+     * @param c {@code "upper"}, {@code "lower"}, or {@code "match"}/{@code "default"}/{@code "no-change"}
+     *          (all of the latter meaning keep the name as written)
+     */
+    public void setAttributeCase(final String c) {
+        fAttributeCase = c;
     }
 
     /**
@@ -439,7 +1289,8 @@ public class SimpleHTMLScanner implements XMLReader {
         if (!fNormalizeAttributes) {
             return name;
         }
-        return "upper".equals(fAttributeCase) ? name.toUpperCase() : "lower".equals(fAttributeCase) ? name.toLowerCase() : name;
+        return "upper".equals(fAttributeCase) ? name.toUpperCase(Locale.ROOT) : "lower".equals(fAttributeCase) ? name
+                .toLowerCase(Locale.ROOT) : name;
     }
 
     // Pattern for HTML character references: &#decimal; or &#xhex; or &name;
@@ -514,9 +1365,9 @@ public class SimpleHTMLScanner implements XMLReader {
                     }
                 }
 
-                final int c = HTMLEntities.get(m.group(3));
-                if (c != -1) {
-                    sb.appendCodePoint(c);
+                final String entityValue = HTMLEntities.getEntityValue(m.group(3));
+                if (entityValue != null) {
+                    sb.append(entityValue);
                 } else {
                     sb.append(matched);
                 }
@@ -561,14 +1412,31 @@ public class SimpleHTMLScanner implements XMLReader {
         return new String(Character.toChars(codePoint));
     }
 
+    /** SAX2 standard "namespaces" feature name. */
+    private static final String FEATURE_NAMESPACES = "http://xml.org/sax/features/namespaces";
+
+    /** SAX2 standard "namespace-prefixes" feature name. */
+    private static final String FEATURE_NAMESPACE_PREFIXES = "http://xml.org/sax/features/namespace-prefixes";
+
     @Override
     public boolean getFeature(final String name) throws SAXNotRecognizedException, SAXNotSupportedException {
+        if (FEATURE_NAMESPACES.equals(name) || FEATURE_NAMESPACE_PREFIXES.equals(name)) {
+            // Neither feature is actually implemented by this scanner; report false.
+            return false;
+        }
         throw new SAXNotRecognizedException("Feature not recognized: " + name);
     }
 
     @Override
     public void setFeature(final String name, final boolean value) throws SAXNotRecognizedException, SAXNotSupportedException {
-        // Features not yet implemented
+        if (FEATURE_NAMESPACES.equals(name) || FEATURE_NAMESPACE_PREFIXES.equals(name)) {
+            if (value) {
+                // Enabling either feature is not supported; disabling (the default) is a no-op.
+                throw new SAXNotSupportedException("Feature not supported: " + name);
+            }
+            return;
+        }
+        throw new SAXNotRecognizedException("Feature not recognized: " + name);
     }
 
     @Override

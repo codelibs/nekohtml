@@ -187,8 +187,10 @@ public class ValidNamespacePrefixTest {
 
     @Test
     public void saxUriIsEmptyForEveryOrdinaryElement() throws Exception {
+        // characterization: HTML5 body synthesis inserts a BODY, so there are four start elements
+        // (HTML, BODY, DIV, P); every one still reports an empty namespace uri
         final List<String> out = saxQNameUriLocal("<div><p>x</p></div>");
-        assertEquals(3, out.size(), out.toString());
+        assertEquals(4, out.size(), out.toString());
         for (final String entry : out) {
             assertTrue(entry.contains("|uri=|"), entry);
         }

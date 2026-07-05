@@ -27,12 +27,11 @@ import org.w3c.dom.Document;
  * Category L: malformed tag names/syntax characterization tests.
  *
  * <p>
- * characterization: {@code SimpleHTMLScanner}'s start-tag pattern is
- * {@code <([a-zA-Z][a-zA-Z0-9-:]*)([^>]*)>} - a tag name must start with a letter, and only
- * letters/digits/'-'/':' may follow. Whenever '<' is not immediately followed by a valid tag-name
- * start (and isn't part of a comment/DOCTYPE/CDATA/end-tag), the scanner falls into its "unknown tag"
- * branch, which drops just that single '<' character and resumes plain-text scanning from the very
- * next character - it never consumes or hides the rest of the bogus markup.
+ * characterization: {@code SimpleHTMLScanner} is a single-pass HTML5-leaning tokenizer. A tag name
+ * must start with a letter; letters/digits/'-'/':'/'_'/'.' may follow. Whenever '<' is not
+ * immediately followed by a valid tag-name start (and isn't part of a comment/DOCTYPE/CDATA/end-tag),
+ * the scanner PRESERVES the '<' as a literal text character (HTML5 "invalid-first-character-of-tag-
+ * name") and resumes plain-text scanning from the next character - nothing is dropped.
  * </p>
  */
 public class BrokenTagSyntaxTest {
@@ -91,10 +90,10 @@ public class BrokenTagSyntaxTest {
 
     @Test
     public void consecutiveMalformedNumericTagsBecomeLiteralText() throws Exception {
-        // characterization: each bogus '<' is dropped independently; the surrounding fragments merge
-        // into one contiguous text run.
+        // characterization: each bogus '<' is preserved as literal text (HTML5); the fragments merge
+        // into one contiguous text run "<1><2><3>".
         final Document doc = parse("<p><1><2><3></p>");
-        assertTrue(firstText(doc, "//P").contains("1>2>3>"));
+        assertTrue(firstText(doc, "//P").contains("<1><2><3>"));
     }
 
     // ------------------------------------------------------------------
@@ -103,29 +102,31 @@ public class BrokenTagSyntaxTest {
 
     @Test
     public void unterminatedTagWithNoClosingAngleDropsLessThan() throws Exception {
-        // characterization: "<b" at EOF - START_TAG requires a literal '>', which never appears, so
-        // it can never match; '<' is dropped and "b" survives as text. No B element is created.
+        // "<b" at EOF is an incomplete start tag: per HTML5 the tokenizer discards an unfinished tag
+        // at end-of-input, so no B element is created and, with no other content, the document has no
+        // root element (consistent with truly-empty input).
         final Document doc = parse("<b");
         assertEquals(0, count(doc, "//B"));
-        assertTrue(firstText(doc, "//HTML").contains("b"));
+        assertNull(doc.getDocumentElement());
     }
 
     @Test
     public void unterminatedTagWithAttributeLikeTextNoClosingAngle() throws Exception {
+        // "<b attr" at EOF is likewise an unfinished start tag, discarded at end-of-input, leaving an
+        // empty document with no root element.
         final Document doc = parse("<b attr");
         assertEquals(0, count(doc, "//B"));
-        assertTrue(firstText(doc, "//HTML").contains("b attr"));
+        assertNull(doc.getDocumentElement());
     }
 
     @Test
     public void lessThanAtEndOfDocumentIsDroppedSilently() throws Exception {
-        // characterization: a single trailing '<' never becomes an element; but the scanner's line
-        // reader always appends a trailing '\n' to the raw content, and that lone newline is emitted
-        // as a characters() event, which is enough to bootstrap the implicit HTML root - so the
-        // document ends up with exactly one (empty) HTML element and nothing else.
+        // characterization: a single trailing '<' never becomes an element, but it is preserved as a
+        // literal text character (HTML5). That text is wrapped in a synthesized BODY, so the document
+        // has exactly two elements: HTML and BODY.
         final Document doc = parse("<");
         assertNotNull(doc);
-        assertEquals(1, count(doc, "//*"));
+        assertEquals(2, count(doc, "//*"));
         assertEquals(1, count(doc, "//HTML"));
     }
 
@@ -175,24 +176,22 @@ public class BrokenTagSyntaxTest {
 
     @Test
     public void underscoreInTagNameBreaksNameAtUnderscore() throws Exception {
-        // characterization: '_' is not a legal tag-name character, so the name group stops at "my"
-        // and "_tag" is left over to be (mis-)parsed as the attribute string.
+        // characterization: '_' IS a legal tag-name character (HTML5), so the element name is the full
+        // "MY_TAG" (the name is not split at the underscore).
         final Document doc = parse("<my_tag>content");
-        assertEquals(1, count(doc, "//MY"));
-        assertTrue(firstText(doc, "//MY").contains("content"));
+        assertEquals(1, count(doc, "//*[local-name()='MY_TAG']"));
+        assertTrue(firstText(doc, "//*[local-name()='MY_TAG']").contains("content"));
     }
 
     @Test
     public void underscoreTagEndTagNeverMatchesRemainsOpenUntilEof() throws Exception {
-        // characterization: the corresponding "</my_tag>" fails the END_TAG pattern for the same
-        // reason (the underscore isn't a legal name character and no backtrack succeeds), so it is
-        // never recognized as a closing tag either; its '<' is dropped and the rest leaks as text
-        // inside the still-open MY element, which only gets closed implicitly at end of document.
+        // characterization: '_' is a legal name character, so the element is "MY_TAG" and the matching
+        // "</my_tag>" closes it cleanly; "x" is its content and nothing leaks as text.
         final Document doc = parse("<my_tag>x</my_tag>");
-        assertEquals(1, count(doc, "//MY"));
-        final String text = firstText(doc, "//MY");
+        assertEquals(1, count(doc, "//*[local-name()='MY_TAG']"));
+        final String text = firstText(doc, "//*[local-name()='MY_TAG']");
         assertTrue(text.contains("x"));
-        assertTrue(text.contains("/my_tag>"));
+        assertFalse(text.contains("/my_tag>"));
     }
 
     // ------------------------------------------------------------------
@@ -211,25 +210,24 @@ public class BrokenTagSyntaxTest {
 
     @Test
     public void tripleAngleBracketsProduceNothing() throws Exception {
-        // characterization: "<<<" - every character is '<', so the scanner just drops each one in
-        // turn and never emits a characters() event for any of them. The only reason the document
-        // isn't completely empty is the scanner's line reader appending a trailing '\n', which is
-        // itself emitted as a characters() event and bootstraps the implicit HTML root.
+        // characterization: "<<<" - each '<' that cannot start a tag is preserved as a literal text
+        // character (HTML5). The "<<<" text run is wrapped in a synthesized BODY, so the document has
+        // two elements: HTML and BODY.
         final Document doc = parse("<<<");
         assertNotNull(doc);
-        assertEquals(1, count(doc, "//*"));
+        assertEquals(2, count(doc, "//*"));
         assertEquals(1, count(doc, "//HTML"));
     }
 
     @Test
     public void mathLikeLessThanBetweenSpacesBecomesLiteralText() throws Exception {
-        // characterization: "a < b" - the '<' is not followed by a letter, so it is dropped; "a " and
-        // " b" merge into one text run around the gap left by the missing '<'.
+        // characterization: "a < b" - the '<' is not followed by a letter, so it is preserved as a
+        // literal text character (HTML5); the text stays "a < b".
         final Document doc = parse("<p>a < b</p>");
         final String text = firstText(doc, "//P");
         assertTrue(text.contains("a"));
         assertTrue(text.contains("b"));
-        assertTrue(text.contains("a  b") || text.contains("a b"));
+        assertTrue(text.contains("a < b"));
     }
 
     // ------------------------------------------------------------------
@@ -247,11 +245,11 @@ public class BrokenTagSyntaxTest {
 
     @Test
     public void saxEventsForDigitStartedTagShowNoElementJustText() throws Exception {
-        // characterization: only the implicit HTML root ever gets a start event; "<123>" never
-        // produces one of its own.
+        // characterization: "<123>" never produces an element of its own; only the implicit HTML root
+        // and the synthesized BODY get start events (the leading '<' is preserved as text).
         final List<String> events = saxEvents("<123>text");
         final long startEventCount = events.stream().filter(e -> e.startsWith("start:")).count();
-        assertEquals(1, startEventCount);
+        assertEquals(2, startEventCount);
         assertEquals("start:HTML", events.get(0));
         assertTrue(events.stream().anyMatch(e -> e.startsWith("chars:") && e.contains("123>text")));
     }

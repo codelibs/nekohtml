@@ -159,14 +159,13 @@ public class BrokenTableStructureTest {
 
     @Test
     public void consecutiveTdWithoutClosingNestInsideTr() throws Exception {
-        // characterization: current behavior (non-standard) - the same "no sibling
-        // auto-close" quirk (category D) applies inside a table row: a second <td>
-        // nests inside the still-open first <td> instead of becoming its sibling.
+        // characterization: HTML5 implied close applies inside a table row: a second <td> implies the
+        // end of the first, so the two TD become siblings under TR rather than nested.
         final Document doc = parse("<table><tr><td>a<td>b</tr></table>");
         assertEquals(1, count(doc, "//TABLE"));
         assertEquals(1, count(doc, "//TR"));
         assertEquals(2, count(doc, "//TD"));
-        assertEquals(1, count(doc, "//TD/TD"));
+        assertEquals(0, count(doc, "//TD/TD"));
     }
 
     @Test
@@ -195,14 +194,14 @@ public class BrokenTableStructureTest {
 
     @Test
     public void unclosedTbodyStaysOpenAcrossFollowingTheadNoAutoClose() throws Exception {
-        // characterization: current behavior (non-standard) - with no table-specific
-        // logic, an unclosed <tbody> is never implicitly closed by a following
-        // <thead>; THEAD instead nests inside the still-open TBODY.
+        // characterization: a table section (THEAD) implicitly closes an open <tbody> (HTML5 table
+        // sections are mutually-exclusive siblings), so THEAD becomes a sibling of TBODY under TABLE
+        // rather than nesting inside the still-open TBODY.
         final Document doc = parse("<table><tbody><tr><td>a</td></tr><thead><tr><th>h</th></tr></thead></table>");
         assertEquals(1, count(doc, "//TBODY"));
         assertEquals(1, count(doc, "//THEAD"));
-        assertEquals(1, count(doc, "//TBODY/THEAD"));
-        assertEquals(0, count(doc, "//TABLE/THEAD"));
+        assertEquals(0, count(doc, "//TBODY/THEAD"));
+        assertEquals(1, count(doc, "//TABLE/THEAD"));
         assertEquals(1, count(doc, "//TBODY/TR"));
     }
 
@@ -224,10 +223,10 @@ public class BrokenTableStructureTest {
 
     @Test
     public void saxEventsShowNoSyntheticTbodyEvents() throws Exception {
-        // characterization: SAX-level proof (not just the DOM projection) that no
-        // synthetic start:TBODY/end:TBODY events are ever emitted.
+        // characterization: SAX-level proof (not just the DOM projection) that no synthetic
+        // start:TBODY/end:TBODY events are ever emitted; only the HTML5 synthetic BODY is added.
         final List<String> events = saxStartElements("<table><tr><td>Cell</td></tr></table>");
         assertFalse(events.contains("TBODY"));
-        assertEquals(List.of("HTML", "TABLE", "TR", "TD"), events);
+        assertEquals(List.of("HTML", "BODY", "TABLE", "TR", "TD"), events);
     }
 }

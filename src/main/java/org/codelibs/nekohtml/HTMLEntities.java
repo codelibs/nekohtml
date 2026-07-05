@@ -59,23 +59,42 @@ public class HTMLEntities {
     //
 
     static {
-        final Properties props = new Properties();
-        // load entities
-        load0(props, "res/HTMLlat1.properties");
-        load0(props, "res/HTMLspecial.properties");
-        load0(props, "res/HTMLsymbol.properties");
-        load0(props, "res/XMLbuiltin.properties");
+        final Properties legacyProps = new Properties();
+        // load legacy (HTML4/XML) entities
+        load0(legacyProps, "res/HTMLlat1.properties");
+        load0(legacyProps, "res/HTMLspecial.properties");
+        load0(legacyProps, "res/HTMLsymbol.properties");
+        load0(legacyProps, "res/XMLbuiltin.properties");
 
-        // store reverse mappings
-        final Enumeration<?> keys = props.propertyNames();
-        while (keys.hasMoreElements()) {
-            final String key = (String) keys.nextElement();
-            final String value = props.getProperty(key);
+        // Store reverse mappings for the legacy entities first. Within the legacy set each
+        // single-character value has exactly one name, so this reproduces the original
+        // (pre-HTML5) reverse-mapping behavior exactly.
+        final Enumeration<?> legacyKeys = legacyProps.propertyNames();
+        while (legacyKeys.hasMoreElements()) {
+            final String key = (String) legacyKeys.nextElement();
+            final String value = legacyProps.getProperty(key);
             if (value.length() == 1) {
-                final int ivalue = value.charAt(0);
-                SEITITNE.put(ivalue, key);
+                SEITITNE.put(value.charAt(0), key);
             }
         }
+
+        final Properties props = new Properties();
+        props.putAll(legacyProps);
+        // Load HTML5 named character references last so that any values that differ from the
+        // legacy HTML4 tables (e.g. "lang"/"rang") resolve per the current WHATWG spec.
+        load0(props, "res/HTML5named.properties");
+
+        // Add reverse mappings for HTML5-only single-character entities (names not present in
+        // the legacy tables), but only for code points not already covered by a legacy name, so
+        // established legacy names (e.g. "nbsp") remain canonical over newer WHATWG aliases
+        // (e.g. "NonBreakingSpace") that resolve to the same character. Iterate in sorted order
+        // so any remaining duplicate HTML5-only aliases resolve deterministically.
+        props.stringPropertyNames().stream().filter(key -> !legacyProps.containsKey(key)).sorted().forEach(key -> {
+            final String value = props.getProperty(key);
+            if (value.length() == 1 && SEITITNE.get(value.charAt(0)) == null) {
+                SEITITNE.put(value.charAt(0), key);
+            }
+        });
 
         ENTITIES =
                 Collections.unmodifiableMap(props.entrySet().stream()
@@ -98,6 +117,19 @@ public class HTMLEntities {
     } // get(String):char
 
     /**
+     * Returns the full string value associated with the given entity name, or {@code null} if
+     * the name is not known. Unlike {@link #get(String)}, this returns the complete value,
+     * which may span multiple characters (e.g. HTML5 named entities such as
+     * {@code &NotEqualTilde;} that resolve to a base character plus a combining mark).
+     *
+     * @param name The entity name to lookup
+     * @return The full string value associated with the entity name, or null if not found
+     */
+    public static String getEntityValue(final String name) {
+        return ENTITIES.get(name);
+    } // getEntityValue(String):String
+
+    /**
      * Returns the name associated to the given character or null if
      * the character is not known.
      * @param c The character value to lookup
@@ -111,12 +143,18 @@ public class HTMLEntities {
     // Private static methods
     //
 
-    /** Loads the entity values in the specified resource. */
-    private static void load0(final Properties props, final String filename) {
-        try {
-            final InputStream stream = HTMLEntities.class.getResourceAsStream(filename);
+    /**
+     * Loads the entity values in the specified resource.
+     * Package-private (rather than {@code private}) so that tests can exercise the
+     * missing-resource path directly.
+     */
+    static void load0(final Properties props, final String filename) {
+        try (InputStream stream = HTMLEntities.class.getResourceAsStream(filename)) {
+            if (stream == null) {
+                logger.warning("Resource not found: \"" + filename + "\"");
+                return;
+            }
             props.load(stream);
-            stream.close();
         } catch (final IOException e) {
             logger.warning("Unable to load resource \"" + filename + "\": " + e.getMessage());
         }

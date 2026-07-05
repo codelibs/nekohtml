@@ -52,30 +52,31 @@ public class BrokenCommentDoctypeCdataTest {
 
     @Test
     public void unclosedCommentLeaksAsText() throws Exception {
-        // characterization: an unterminated comment never matches the COMMENT pattern;
-        // the leading '<' is dropped and the rest (including "!--") leaks as text
+        // characterization: an unterminated comment runs to EOF as a comment (eof-in-comment, HTML5);
+        // its content (including "unclosed") is preserved inside the comment node, not leaked as text
         final Document doc = parse("<div><!-- unclosed</div>");
-        assertEquals(0, count(doc, "//comment()"));
+        assertEquals(1, count(doc, "//comment()"));
         assertEquals(1, count(doc, "//DIV"));
-        assertTrue(firstText(doc, "//DIV").contains("!--"));
-        assertTrue(firstText(doc, "//DIV").contains("unclosed"));
+        assertEquals(1, count(doc, "//DIV/comment()"));
+        assertTrue(firstText(doc, "//comment()").contains("unclosed"));
     }
 
     @Test
     public void shortFormBangDashDashGreaterDoesNotMatchLeaksAsText() throws Exception {
-        // characterization: "<!-->" is too short to satisfy "<!--" + "-->" (needs "<!---->" minimum),
-        // so it does not match COMMENT and leaks as text
+        // characterization: "<!-->" is HTML5 "abrupt-closing of an empty comment" -> an empty
+        // comment node (not leaked text)
         final Document doc = parse("<div><!--></div>");
-        assertEquals(0, count(doc, "//comment()"));
-        assertTrue(firstText(doc, "//DIV").contains("!-->"));
+        assertEquals(1, count(doc, "//comment()"));
+        assertEquals("", firstText(doc, "//comment()"));
     }
 
     @Test
     public void tooShortDashCommentLeaksAsText() throws Exception {
-        // characterization: "<!--->" (6 chars) is still one character short of matching; it leaks as text
+        // characterization: "<!--->" is also HTML5 "abrupt-closing of an empty comment" -> an empty
+        // comment node (not leaked text)
         final Document doc = parse("<!--->");
-        assertEquals(0, count(doc, "//comment()"));
-        assertEquals(1, count(doc, "//text()[contains(.,'!--->')]"));
+        assertEquals(1, count(doc, "//comment()"));
+        assertEquals("", firstText(doc, "//comment()"));
     }
 
     @Test
@@ -123,13 +124,12 @@ public class BrokenCommentDoctypeCdataTest {
 
     @Test
     public void mixedCaseDoctypeKeywordIsNotRecognizedAndLeaksAsText() throws Exception {
-        // characterization (gotcha): the scanner only special-cases the exact strings "<!DOCTYPE"
-        // and "<!doctype"; any other case mix (e.g. "<!DocType") fails that gate entirely and
-        // the whole construct leaks as text instead of being suppressed
+        // characterization: the DOCTYPE keyword is ASCII case-insensitive (HTML5), so "<!DocType"
+        // is recognized as a DOCTYPE and consumed, not leaked as text
         final Document doc = parse("<!DocType html><p>x</p>");
         assertEquals(1, count(doc, "//P"));
         assertEquals("x", firstText(doc, "//P"));
-        assertEquals(1, count(doc, "//text()[contains(.,'DocType')]"));
+        assertEquals(0, count(doc, "//text()[contains(.,'DocType')]"));
     }
 
     @Test
@@ -149,35 +149,36 @@ public class BrokenCommentDoctypeCdataTest {
 
     @Test
     public void unterminatedCdataDropsAngleBracketLeaksRestAsText() throws Exception {
-        // characterization: an unterminated CDATA section never matches; only the leading '<' is
-        // dropped and the rest (including "![CDATA[") leaks as text
+        // characterization: an unterminated CDATA section recovers by emitting its inner content as
+        // characters (the "x" content is preserved); the "![CDATA[" syntax is not leaked as text
         final Document doc = parse("<div><![CDATA[ x</div>");
         assertEquals(1, count(doc, "//DIV"));
-        assertTrue(firstText(doc, "//DIV").contains("![CDATA["));
+        assertFalse(firstText(doc, "//DIV").contains("![CDATA["));
         assertTrue(firstText(doc, "//DIV").contains("x"));
     }
 
     @Test
     public void xmlProcessingInstructionLeaksAsText() throws Exception {
-        // characterization: processing instructions are not recognized at all; '<' is dropped and
-        // "?xml ...?>" becomes ordinary text
+        // characterization: processing instructions become bogus comments (HTML5); "?xml ...?" is a
+        // comment node, not ordinary text
         final Document doc = parse("<?xml version=\"1.0\"?><p>x</p>");
         assertEquals(1, count(doc, "//P"));
         assertEquals("x", firstText(doc, "//P"));
-        assertEquals(1, count(doc, "//text()[contains(.,'?xml')]"));
+        assertEquals(0, count(doc, "//text()[contains(.,'?xml')]"));
     }
 
     @Test
     public void phpProcessingInstructionLeaksAsText() throws Exception {
+        // characterization: a PHP processing instruction becomes a bogus comment (HTML5), not leaked text
         final Document doc = parse("<?php echo 1 ?>");
-        assertEquals(1, count(doc, "//text()[contains(.,'php')]"));
+        assertEquals(0, count(doc, "//text()[contains(.,'php')]"));
     }
 
     @Test
     public void entityDeclarationLeaksAsText() throws Exception {
-        // characterization: other "<!" constructs (e.g. <!ENTITY>) are not special-cased and leak as text
+        // characterization: other "<!" constructs (e.g. <!ENTITY>) become bogus comments (HTML5), not text
         final Document doc = parse("<!ENTITY foo>");
-        assertEquals(1, count(doc, "//text()[contains(.,'ENTITY')]"));
+        assertEquals(0, count(doc, "//text()[contains(.,'ENTITY')]"));
     }
 
     @Test
@@ -193,10 +194,10 @@ public class BrokenCommentDoctypeCdataTest {
 
     @Test
     public void saxStartElementsUnaffectedByComments() throws Exception {
-        // characterization: the tag balancer synthesizes an implicit HTML start element even
-        // though nothing about it is affected by the interleaved comment
+        // characterization: the tag balancer synthesizes implicit HTML and BODY start elements around
+        // the body content; the interleaved comment does not affect the start-element stream
         final List<String> names = saxStartElements("<div><!--c--><p>x</p></div>");
-        assertEquals(List.of("HTML", "DIV", "P"), names);
+        assertEquals(List.of("HTML", "BODY", "DIV", "P"), names);
     }
 
     @Test

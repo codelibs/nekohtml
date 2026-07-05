@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -65,10 +66,10 @@ public class HTMLSAXConfiguration implements XMLReader {
     /** Balance tags feature identifier. */
     public static final String BALANCE_TAGS = "http://cyberneko.org/html/features/balance-tags";
 
-    /** Normalize element names feature identifier. */
+    /** Normalize element names feature identifier (legacy name, actually a property; see {@link #NAMES_ELEMS_PROPERTY}). */
     public static final String NAMES_ELEMS = "http://cyberneko.org/html/features/scanner/normalize-elements";
 
-    /** Normalize attribute names feature identifier. */
+    /** Normalize attribute names feature identifier (legacy name, actually a property; see {@link #NAMES_ATTRS_PROPERTY}). */
     public static final String NAMES_ATTRS = "http://cyberneko.org/html/features/scanner/normalize-attrs";
 
     /** HTML5 mode feature identifier. */
@@ -81,6 +82,15 @@ public class HTMLSAXConfiguration implements XMLReader {
 
     /** Error reporter property identifier. */
     public static final String ERROR_REPORTER = "http://cyberneko.org/html/properties/error-reporter";
+
+    /** Element name case property identifier (cyberneko-compatible spelling of {@link #NAMES_ELEMS}). */
+    public static final String NAMES_ELEMS_PROPERTY = "http://cyberneko.org/html/properties/names/elems";
+
+    /** Attribute name case property identifier (cyberneko-compatible spelling of {@link #NAMES_ATTRS}). */
+    public static final String NAMES_ATTRS_PROPERTY = "http://cyberneko.org/html/properties/names/attrs";
+
+    /** Valid values for the {@code names/elems} and {@code names/attrs} properties. */
+    private static final Set<String> VALID_NAME_CASE_VALUES = Set.of("upper", "lower", "match", "no-change", "default");
 
     // Protected fields
 
@@ -140,9 +150,13 @@ public class HTMLSAXConfiguration implements XMLReader {
         fFeatures.put(BALANCE_TAGS, true);
         fFeatures.put(HTML5_MODE, false);
 
-        // Set default properties (note: NAMES_ELEMS and NAMES_ATTRS are properties, not features)
+        // Set default properties (note: NAMES_ELEMS and NAMES_ATTRS are properties, not features).
+        // Both the legacy cyberneko "features/scanner/normalize-*" spelling and the cyberneko
+        // "properties/names/*" spelling are seeded so that getProperty() round-trips either URI.
         fProperties.put(NAMES_ELEMS, "upper");
+        fProperties.put(NAMES_ELEMS_PROPERTY, "upper");
         fProperties.put(NAMES_ATTRS, "lower");
+        fProperties.put(NAMES_ATTRS_PROPERTY, "lower");
 
         // Build the default pipeline: Scanner -> TagBalancer
         buildPipeline();
@@ -195,6 +209,9 @@ public class HTMLSAXConfiguration implements XMLReader {
                 lastFilter.setContentHandler(fContentHandler);
             }
         }
+
+        // Re-route lexical events (comments, DTD) through the current pipeline shape.
+        routeLexicalHandler();
 
         if (logger.isLoggable(Level.FINE)) {
             logger.fine("Pipeline built with " + fPipeline.size() + " filters");
@@ -296,14 +313,7 @@ public class HTMLSAXConfiguration implements XMLReader {
      */
     public void setLexicalHandler(final LexicalHandler handler) {
         fLexicalHandler = handler;
-        // Set on filters that support LexicalHandler
-        for (final XMLReader filter : fPipeline) {
-            if (filter instanceof HTMLTagBalancerFilter) {
-                ((HTMLTagBalancerFilter) filter).setLexicalHandler(handler);
-            } else if (filter instanceof HTMLSAXScanner) {
-                ((HTMLSAXScanner) filter).setLexicalHandler(handler);
-            }
-        }
+        routeLexicalHandler();
     }
 
     /**
@@ -313,6 +323,25 @@ public class HTMLSAXConfiguration implements XMLReader {
      */
     public LexicalHandler getLexicalHandler() {
         return fLexicalHandler;
+    }
+
+    /**
+     * Routes lexical events (comments, DTD) through the current pipeline shape so that they
+     * observe the same tag-balancing semantics as element events: scanner &rarr; tag balancer
+     * &rarr; registered lexical handler when the balancer is in the pipeline, or scanner &rarr;
+     * registered lexical handler directly otherwise. Called whenever the pipeline is (re)built
+     * and whenever the registered lexical handler changes.
+     */
+    protected void routeLexicalHandler() {
+        if (fScanner == null) {
+            return;
+        }
+        if (fTagBalancer != null && fPipeline.contains(fTagBalancer)) {
+            fScanner.setLexicalHandler(fTagBalancer);
+            fTagBalancer.setLexicalHandler(fLexicalHandler);
+        } else {
+            fScanner.setLexicalHandler(fLexicalHandler);
+        }
     }
 
     @Override
@@ -405,6 +434,24 @@ public class HTMLSAXConfiguration implements XMLReader {
             return;
         }
 
+        // Handle the element/attribute name-case properties (both the legacy
+        // "features/scanner/normalize-*" spelling and the cyberneko "properties/names/*"
+        // spelling), wiring the validated value through to the scanner.
+        if (NAMES_ELEMS.equals(name) || NAMES_ELEMS_PROPERTY.equals(name)) {
+            final String caseValue = validateNameCaseValue(name, value);
+            fProperties.put(NAMES_ELEMS, caseValue);
+            fProperties.put(NAMES_ELEMS_PROPERTY, caseValue);
+            fScanner.setElementCase(caseValue);
+            return;
+        }
+        if (NAMES_ATTRS.equals(name) || NAMES_ATTRS_PROPERTY.equals(name)) {
+            final String caseValue = validateNameCaseValue(name, value);
+            fProperties.put(NAMES_ATTRS, caseValue);
+            fProperties.put(NAMES_ATTRS_PROPERTY, caseValue);
+            fScanner.setAttributeCase(caseValue);
+            return;
+        }
+
         fProperties.put(name, value);
 
         // Handle properties that affect pipeline
@@ -423,6 +470,23 @@ public class HTMLSAXConfiguration implements XMLReader {
                 // Filter doesn't recognize this property, ignore
             }
         }
+    }
+
+    /**
+     * Validates a value supplied for the {@code names/elems} or {@code names/attrs} property.
+     *
+     * @param name The property name (used only for the exception message)
+     * @param value The value to validate; must be one of {@code upper}, {@code lower},
+     *              {@code match}, {@code no-change}, or {@code default}
+     * @return The validated value, cast to {@code String}
+     * @throws SAXNotSupportedException If the value is not a recognized name-case value
+     */
+    private static String validateNameCaseValue(final String name, final Object value) throws SAXNotSupportedException {
+        if (!(value instanceof String) || !VALID_NAME_CASE_VALUES.contains(value)) {
+            throw new SAXNotSupportedException("Invalid value for property " + name + ": " + value + " (expected one of "
+                    + VALID_NAME_CASE_VALUES + ")");
+        }
+        return (String) value;
     }
 
     /**

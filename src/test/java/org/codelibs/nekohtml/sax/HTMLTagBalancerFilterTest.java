@@ -170,8 +170,8 @@ public class HTMLTagBalancerFilterTest {
 
         // Then: Should close open elements
         final InOrder inOrder = inOrder(contentHandler);
-        inOrder.verify(contentHandler).endElement("", "BODY", "BODY");
-        inOrder.verify(contentHandler).endElement("", "HTML", "HTML");
+        inOrder.verify(contentHandler).endElement("", "body", "BODY");
+        inOrder.verify(contentHandler).endElement("", "html", "HTML");
         inOrder.verify(contentHandler).endDocument();
     }
 
@@ -228,8 +228,8 @@ public class HTMLTagBalancerFilterTest {
 
         // Then: Should close TITLE and HEAD first, then start BODY
         final InOrder inOrder = inOrder(contentHandler);
-        inOrder.verify(contentHandler).endElement("", "TITLE", "TITLE");
-        inOrder.verify(contentHandler).endElement("", "HEAD", "HEAD");
+        inOrder.verify(contentHandler).endElement("", "title", "TITLE");
+        inOrder.verify(contentHandler).endElement("", "head", "HEAD");
         inOrder.verify(contentHandler).startElement("", "body", "BODY", bodyAttrs);
     }
 
@@ -247,7 +247,7 @@ public class HTMLTagBalancerFilterTest {
 
         // Then: Should close HEAD first, then start FRAMESET
         final InOrder inOrder = inOrder(contentHandler);
-        inOrder.verify(contentHandler).endElement("", "HEAD", "HEAD");
+        inOrder.verify(contentHandler).endElement("", "head", "HEAD");
         inOrder.verify(contentHandler).startElement("", "frameset", "FRAMESET", framesetAttrs);
     }
 
@@ -287,10 +287,10 @@ public class HTMLTagBalancerFilterTest {
         // When: Ending DIV (closing over SPAN and P)
         filter.endElement("", "div", "DIV");
 
-        // Then: Should auto-close SPAN and P first
+        // Then: Should auto-close SPAN and P first (auto-close preserves the original localName)
         final InOrder inOrder = inOrder(contentHandler);
-        inOrder.verify(contentHandler).endElement("", "SPAN", "SPAN");
-        inOrder.verify(contentHandler).endElement("", "P", "P");
+        inOrder.verify(contentHandler).endElement("", "span", "SPAN");
+        inOrder.verify(contentHandler).endElement("", "p", "P");
         inOrder.verify(contentHandler).endElement("", "div", "DIV");
     }
 
@@ -304,8 +304,8 @@ public class HTMLTagBalancerFilterTest {
         // When: Ending element not on stack
         filter.endElement("", "span", "SPAN");
 
-        // Then: Should pass through end tag
-        verify(contentHandler).endElement("", "span", "SPAN");
+        // Then: Stray end tag should be ignored (HTML5 spec: never pass through unbalanced ends)
+        verify(contentHandler, never()).endElement(eq(""), eq("span"), eq("SPAN"));
     }
 
     @Test
@@ -314,8 +314,8 @@ public class HTMLTagBalancerFilterTest {
         // When: Ending element
         filter.endElement("", "div", "DIV");
 
-        // Then: Should pass through end tag
-        verify(contentHandler).endElement("", "div", "DIV");
+        // Then: Stray end tag should be ignored (nothing is open)
+        verify(contentHandler, never()).endElement(anyString(), anyString(), anyString());
     }
 
     @Test
@@ -328,8 +328,8 @@ public class HTMLTagBalancerFilterTest {
         // When: Ending void element (shouldn't be on stack)
         filter.endElement("", "br", "BR");
 
-        // Then: Should pass through end tag
-        verify(contentHandler).endElement("", "br", "BR");
+        // Then: The end tag for a void element is ignored (never on the stack)
+        verify(contentHandler, never()).endElement(eq(""), eq("br"), eq("BR"));
     }
 
     @Test
@@ -482,11 +482,13 @@ public class HTMLTagBalancerFilterTest {
         inOrder.verify(contentHandler).startElement(eq(""), eq("title"), eq("TITLE"), any());
         inOrder.verify(contentHandler).characters(any(), anyInt(), anyInt());
         inOrder.verify(contentHandler).endElement("", "title", "TITLE"); // explicit close
-        inOrder.verify(contentHandler).endElement("", "HEAD", "HEAD"); // auto-closed by BODY
+        inOrder.verify(contentHandler).endElement("", "head", "HEAD"); // auto-closed by BODY (original localName preserved)
         inOrder.verify(contentHandler).startElement(eq(""), eq("body"), eq("BODY"), any());
         inOrder.verify(contentHandler).startElement(eq(""), eq("div"), eq("DIV"), any());
         inOrder.verify(contentHandler).characters(any(), anyInt(), anyInt());
-        inOrder.verify(contentHandler).endElement("", "DIV", "DIV"); // auto-closed by BODY end (uses uppercase from stack)
+        inOrder.verify(contentHandler).endElement("", "div", "DIV"); // auto-closed above BODY (original localName preserved)
+        // BODY/HTML end tags defer their own close to end-of-document, so BODY is closed
+        // (as an entry above HTML) when </html> arrives, and HTML is closed at endDocument.
         inOrder.verify(contentHandler).endElement("", "body", "BODY");
         inOrder.verify(contentHandler).endElement("", "html", "HTML");
         inOrder.verify(contentHandler).endDocument();
@@ -581,7 +583,7 @@ public class HTMLTagBalancerFilterTest {
 
         // Then: Should auto-close SPAN before P
         final InOrder inOrder = inOrder(contentHandler);
-        inOrder.verify(contentHandler).endElement("", "SPAN", "SPAN");
+        inOrder.verify(contentHandler).endElement("", "span", "SPAN");
         inOrder.verify(contentHandler).endElement("", "p", "P");
     }
 
@@ -630,13 +632,15 @@ public class HTMLTagBalancerFilterTest {
 
         reset(contentHandler);
 
-        // When: Closing B (AAA should handle misnesting)
+        // When: Closing B out of order (formatting reconstruction)
         filter.endElement("", "b", "B");
 
-        // Then: Should close I, close B, and reopen I (uses uppercase from stack)
+        // Then: Close I, close B, and reopen I so formatting continues past the misnested </b>
+        // (Adoption-Agency-style reconstruction of the active formatting elements). The reopened
+        // element keeps its original localName casing; the event stream stays balanced.
         final InOrder inOrder = inOrder(contentHandler);
-        inOrder.verify(contentHandler).endElement("", "I", "I");
-        inOrder.verify(contentHandler).endElement("", "B", "B");
+        inOrder.verify(contentHandler).endElement("", "i", "I");
+        inOrder.verify(contentHandler).endElement("", "b", "B");
         inOrder.verify(contentHandler).startElement(eq(""), eq("i"), eq("I"), any());
     }
 
@@ -655,11 +659,11 @@ public class HTMLTagBalancerFilterTest {
         filter.endElement("", "i", "I");
         filter.endElement("", "b", "B");
 
-        // Then: Should close in reverse order (uses uppercase from stack)
+        // Then: Should close in reverse order (each close preserves the original localName)
         final InOrder inOrder = inOrder(contentHandler);
-        inOrder.verify(contentHandler).endElement("", "U", "U");
-        inOrder.verify(contentHandler).endElement("", "I", "I");
-        inOrder.verify(contentHandler).endElement("", "B", "B");
+        inOrder.verify(contentHandler).endElement("", "u", "U");
+        inOrder.verify(contentHandler).endElement("", "i", "I");
+        inOrder.verify(contentHandler).endElement("", "b", "B");
     }
 
     @Test
@@ -728,8 +732,8 @@ public class HTMLTagBalancerFilterTest {
         // When: Closing B that was never opened
         filter.endElement("", "b", "B");
 
-        // Then: Should pass through without triggering full AAA
-        verify(contentHandler).endElement("", "b", "B");
+        // Then: A formatting end tag with no matching open element is ignored
+        verify(contentHandler, never()).endElement(eq(""), eq("b"), eq("B"));
     }
 
     @Test
@@ -743,13 +747,14 @@ public class HTMLTagBalancerFilterTest {
 
         reset(contentHandler);
 
-        // When: Closing EM (AAA should handle)
+        // When: Closing EM out of order (formatting reconstruction)
         filter.endElement("", "em", "EM");
 
-        // Then: Should restructure properly (uses uppercase from stack)
+        // Then: Close STRONG, close EM, and reopen STRONG so formatting continues past the
+        // misnested </em> (Adoption-Agency-style reconstruction). The event stream stays balanced.
         final InOrder inOrder = inOrder(contentHandler);
-        inOrder.verify(contentHandler).endElement("", "STRONG", "STRONG");
-        inOrder.verify(contentHandler).endElement("", "EM", "EM");
+        inOrder.verify(contentHandler).endElement("", "strong", "STRONG");
+        inOrder.verify(contentHandler).endElement("", "em", "EM");
         inOrder.verify(contentHandler).startElement(eq(""), eq("strong"), eq("STRONG"), any());
     }
 
@@ -767,11 +772,11 @@ public class HTMLTagBalancerFilterTest {
 
         reset(contentHandler);
 
-        // When: Closing I from new document (should not affect old list)
+        // When: Closing I from new document (I from the previous document was cleared)
         filter.endElement("", "i", "I");
 
-        // Then: Should handle gracefully without old formatting elements
-        verify(contentHandler).endElement("", "i", "I");
+        // Then: I is not open in the new document, so the stray end tag is ignored
+        verify(contentHandler, never()).endElement(eq(""), eq("i"), eq("I"));
     }
 
 } // class HTMLTagBalancerFilterTest

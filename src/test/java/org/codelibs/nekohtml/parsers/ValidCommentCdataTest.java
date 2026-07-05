@@ -50,8 +50,12 @@ public class ValidCommentCdataTest {
     public void commentAppearsAsDomCommentNodeWithExactValue() throws Exception {
         final Document doc = parse("<p>a</p><!-- hi --><p>b</p>");
         assertEquals(1, count(doc, "//comment()"));
+        // characterization: the comment is nested under the synthesized BODY along with the two P's,
+        // so the HTML root's only child is BODY; the comment keeps its exact value " hi ".
         final List<String> sig = childSignature(doc.getDocumentElement());
-        assertTrue(sig.contains("comment: hi "), sig.toString());
+        assertEquals(List.of("elem:BODY"), sig);
+        final List<String> bodySig = childSignature(first(doc, "//BODY"));
+        assertTrue(bodySig.contains("comment: hi "), bodySig.toString());
     }
 
     @Test

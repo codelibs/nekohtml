@@ -157,8 +157,14 @@ public class DOMParserTest {
         assertNotNull(root, "Root element should not be null");
         assertEquals("HTML", root.getNodeName(), "Root element should be HTML");
 
+        // Body-level content (text/comments/anchor) lives inside the synthesized
+        // BODY element per the HTML5 tree construction algorithm.
+        final Element body = (Element) doc.getElementsByTagName("BODY").item(0);
+        assertNotNull(body, "BODY should be synthesized for body content");
+        assertEquals("HTML", body.getParentNode().getNodeName(), "BODY should be a child of HTML");
+
         // Check children
-        final NodeList children = root.getChildNodes();
+        final NodeList children = body.getChildNodes();
         int commentCount = 0;
         int elementCount = 0;
         int textCount = 0;
@@ -586,6 +592,34 @@ public class DOMParserTest {
 
         final String title = link.getAttribute("title");
         assertEquals("Link", title, "Title should be 'Link'");
+    }
+
+    @Test
+    public void testHtml5NamedEntities() throws Exception {
+        final String html = "<html><body>&lpar;&excl;&hearts;&NotEqualTilde;</body></html>";
+
+        final DOMParser parser = new DOMParser();
+        parser.parse(new InputSource(new StringReader(html)));
+
+        final Document doc = parser.getDocument();
+        final NodeList bodyElements = doc.getElementsByTagName("BODY");
+        assertEquals(1, bodyElements.getLength(), "Should have one BODY element");
+
+        final String content = bodyElements.item(0).getTextContent();
+        assertEquals("(!♥≂̸", content, "HTML5 named entities should resolve to their WHATWG values");
+    }
+
+    @Test
+    public void testHtml5EntityInAttribute() throws Exception {
+        final String html = "<html><body><a href=\"?a=1&lpar;2\">Link</a></body></html>";
+
+        final DOMParser parser = new DOMParser();
+        parser.parse(new InputSource(new StringReader(html)));
+
+        final Document doc = parser.getDocument();
+        final Element link = (Element) doc.getElementsByTagName("A").item(0);
+        final String href = link.getAttribute("href");
+        assertEquals("?a=1(2", href, "Semicolon-terminated HTML5 named entity should resolve in an attribute value");
     }
 
     // ========== Malformed HTML Auto-correction ==========

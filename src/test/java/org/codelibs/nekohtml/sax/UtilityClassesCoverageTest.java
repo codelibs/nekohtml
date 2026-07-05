@@ -252,11 +252,15 @@ public class UtilityClassesCoverageTest {
     }
 
     @Test
-    public void testGetFeatureReturnValue() {
+    public void testGetFeatureReturnValue() throws Exception {
         final HTMLSAXScanner scanner = new HTMLSAXScanner();
 
-        // SimpleHTMLScanner.getFeature throws for any feature name
-        assertThrows(SAXNotRecognizedException.class, () -> scanner.getFeature("http://xml.org/sax/features/namespaces"));
+        // The standard SAX2 "namespaces" feature name is recognized (symmetric with setFeature)
+        // and reported as false, since namespace processing is not implemented.
+        assertFalse(scanner.getFeature("http://xml.org/sax/features/namespaces"));
+
+        // A genuinely unknown feature name still throws.
+        assertThrows(SAXNotRecognizedException.class, () -> scanner.getFeature("http://example.com/unknown-feature"));
     }
 
     @Test

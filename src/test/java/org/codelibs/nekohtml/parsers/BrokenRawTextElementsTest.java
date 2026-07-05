@@ -27,11 +27,10 @@ import org.w3c.dom.Document;
  * Category J: raw text elements (script/style/textarea/title/xmp/plaintext) characterization tests.
  *
  * <p>
- * characterization: the current implementation has NO raw-text tokenizer mode at all. SimpleHTMLScanner
- * scans the whole document with the same generic start-tag/end-tag/text regex loop regardless of the
- * enclosing element, so content inside script/style/textarea/title/xmp/plaintext is entity-decoded
- * (non-standard for script/style/xmp) and any '&lt;letter' sequence inside it is parsed as a real tag
- * (non-standard for all of these elements, which are raw text or RCDATA in the HTML5 spec).
+ * characterization: SimpleHTMLScanner implements HTML5 raw-text/RCDATA modes. RAWTEXT elements
+ * (script/style/xmp) keep their content verbatim -- entities are NOT decoded and tag-like text is
+ * NOT parsed into child elements. RCDATA elements (textarea/title) keep tag-like text literal but
+ * DO decode entities. PLAINTEXT is not in either set, so it is still generically parsed.
  * </p>
  */
 public class BrokenRawTextElementsTest {
@@ -49,13 +48,13 @@ public class BrokenRawTextElementsTest {
 
     @Test
     public void scriptEntitiesAreDecodedNonStandard() throws Exception {
-        // characterization: current implementation decodes entities inside <script> (non-standard;
-        // real HTML5 script content is raw text and entities are never decoded).
+        // characterization: SCRIPT is a raw-text element (HTML5), so entities are NOT decoded; the
+        // literal "a &amp; b" is preserved verbatim.
         final Document doc = parse("<script>a &amp; b</script>");
         assertEquals(1, count(doc, "//SCRIPT"));
         final String text = firstText(doc, "//SCRIPT");
         assertNotNull(text);
-        assertTrue(text.contains("a & b"));
+        assertTrue(text.contains("a &amp; b"));
     }
 
     @Test
@@ -67,27 +66,26 @@ public class BrokenRawTextElementsTest {
 
     @Test
     public void scriptWithTagLikeContentCreatesRealChildElement() throws Exception {
-        // characterization (non-standard): since there is no raw-text mode, a '<div>' inside <script>
-        // is parsed as an actual child DIV element rather than remaining literal script text.
+        // characterization: SCRIPT is a raw-text element (HTML5), so a '<div>' inside it stays literal
+        // script text; no child DIV element is created.
         final Document doc = parse("<script>var x = '<div>not a tag</div>';</script>");
         assertEquals(1, count(doc, "//SCRIPT"));
-        assertEquals(1, count(doc, "//SCRIPT/DIV"));
-        assertTrue(firstText(doc, "//SCRIPT/DIV").contains("not a tag"));
-        // the text before/after the bogus <div> remains as text of SCRIPT itself
+        assertEquals(0, count(doc, "//SCRIPT/DIV"));
+        assertTrue(firstText(doc, "//SCRIPT").contains("<div>not a tag</div>"));
+        // the whole script body, including the tag-like text, remains as text of SCRIPT itself
         final String scriptText = firstText(doc, "//SCRIPT");
         assertTrue(scriptText.contains("var x = '"));
     }
 
     @Test
     public void scriptWithNonTagLikeLessThanDropsTheAngleBracket() throws Exception {
-        // characterization: '<' not followed by a letter (here a digit) matches neither START_TAG nor
-        // END_TAG, so the scanner falls into the "unknown tag, skip character" branch and silently
-        // drops the lone '<'; the surrounding text merges without it.
+        // characterization: SCRIPT is raw text (HTML5), so the '<' is preserved verbatim and "x<5"
+        // stays intact (the old generic tokenizer dropped the '<', corrupting "x<5" to "x5").
         final Document doc = parse("<script>if (x<5) foo();</script>");
         assertEquals(1, count(doc, "//SCRIPT"));
         assertEquals(0, count(doc, "//SCRIPT/*"));
         final String text = firstText(doc, "//SCRIPT");
-        assertTrue(text.contains("if (x5) foo();"));
+        assertTrue(text.contains("if (x<5) foo();"));
     }
 
     @Test
@@ -109,10 +107,10 @@ public class BrokenRawTextElementsTest {
 
     @Test
     public void styleEntitiesAreDecodedNonStandard() throws Exception {
-        // characterization: same non-standard entity decoding applies to <style> content.
+        // characterization: STYLE is a raw-text element (HTML5), so entities are NOT decoded.
         final Document doc = parse("<style>a &amp; b</style>");
         assertEquals(1, count(doc, "//STYLE"));
-        assertTrue(firstText(doc, "//STYLE").contains("a & b"));
+        assertTrue(firstText(doc, "//STYLE").contains("a &amp; b"));
     }
 
     @Test
@@ -135,12 +133,12 @@ public class BrokenRawTextElementsTest {
 
     @Test
     public void textareaWithTagLikeContentCreatesRealChildElement() throws Exception {
-        // characterization (non-standard): <p> inside <textarea> becomes a real child P element
-        // instead of literal RCDATA text.
+        // characterization: TEXTAREA is RCDATA (HTML5), so <p> inside it stays literal text; no child
+        // P element is created (entities would still decode, but there are none here).
         final Document doc = parse("<textarea><p>This is not a paragraph</p></textarea>");
         assertEquals(1, count(doc, "//TEXTAREA"));
-        assertEquals(1, count(doc, "//TEXTAREA/P"));
-        assertTrue(firstText(doc, "//TEXTAREA/P").contains("This is not a paragraph"));
+        assertEquals(0, count(doc, "//TEXTAREA/P"));
+        assertTrue(firstText(doc, "//TEXTAREA").contains("<p>This is not a paragraph</p>"));
     }
 
     // ------------------------------------------------------------------
@@ -167,21 +165,20 @@ public class BrokenRawTextElementsTest {
 
     @Test
     public void xmpEntitiesAreDecodedNonStandard() throws Exception {
-        // characterization: real <xmp> is raw text (no entity decoding); current implementation
-        // decodes entities like everywhere else.
+        // characterization: XMP is a raw-text element (HTML5), so entities are NOT decoded.
         final Document doc = parse("<xmp>a &amp; b</xmp>");
         assertEquals(1, count(doc, "//XMP"));
-        assertTrue(firstText(doc, "//XMP").contains("a & b"));
+        assertTrue(firstText(doc, "//XMP").contains("a &amp; b"));
     }
 
     @Test
     public void xmpWithTagLikeContentCreatesRealChildElement() throws Exception {
-        // characterization (non-standard): <b> inside <xmp> becomes a real child B element instead of
-        // literal text ("This is not bold" should never actually become bold per the HTML5 spec).
+        // characterization: XMP is a raw-text element (HTML5), so <b> inside it stays literal text; no
+        // child B element is created ("This is not bold" never actually becomes bold).
         final Document doc = parse("<xmp><b>This is not bold</b></xmp>");
         assertEquals(1, count(doc, "//XMP"));
-        assertEquals(1, count(doc, "//XMP/B"));
-        assertTrue(firstText(doc, "//XMP/B").contains("This is not bold"));
+        assertEquals(0, count(doc, "//XMP/B"));
+        assertTrue(firstText(doc, "//XMP").contains("<b>This is not bold</b>"));
     }
 
     // ------------------------------------------------------------------
@@ -215,21 +212,22 @@ public class BrokenRawTextElementsTest {
 
     @Test
     public void saxEventsShowScriptEntityDecodedAsCharacters() throws Exception {
+        // characterization: SCRIPT is raw text (HTML5), so the entity is NOT decoded; the chars run is
+        // emitted verbatim as "a &amp; b".
         final List<String> events = saxEvents("<script>a &amp; b</script>");
         assertTrue(events.contains("start:SCRIPT"));
         assertTrue(events.contains("end:SCRIPT"));
-        assertTrue(events.stream().anyMatch(e -> e.startsWith("chars:") && e.contains("a & b")));
+        assertTrue(events.stream().anyMatch(e -> e.startsWith("chars:") && e.contains("a &amp; b")));
     }
 
     @Test
-    public void saxEventsShowTagLikeScriptContentAsNestedElement() throws Exception {
-        // characterization: the SAX stream for a bogus tag inside <script> shows a genuine
-        // start/end pair for the nested element rather than a single chars event for the whole script.
-        // Also locks in that an implicit HTML root wraps the fragment, auto-closed at EOF.
+    public void saxEventsShowTagLikeScriptContentAsRawText() throws Exception {
+        // <script> is a raw-text element: a tag-like construct inside it (<div>) is NOT parsed as
+        // markup but preserved verbatim as a single chars run, so no phantom nested element appears.
+        // An implicit HTML/HEAD structure wraps the fragment, auto-closed at EOF.
         final List<String> events = saxEvents("<script>x<div>y</div>z</script>");
-        assertEquals("start:HTML", events.get(0));
-        assertEquals(List.of("start:SCRIPT", "chars:x", "start:DIV", "chars:y", "end:DIV", "chars:z", "end:SCRIPT"), events.subList(1, 8));
-        assertEquals("end:HTML", events.get(events.size() - 1));
+        assertEquals(List.of("start:HTML", "start:HEAD", "start:SCRIPT", "chars:x<div>y</div>z", "end:SCRIPT", "end:HEAD", "end:HTML"),
+                events);
     }
 
 }

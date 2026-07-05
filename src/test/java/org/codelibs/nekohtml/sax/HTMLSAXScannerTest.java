@@ -170,11 +170,30 @@ public class HTMLSAXScannerTest {
     }
 
     @Test
-    public void testSetFeatureDoesNotThrow() {
-        // When: Setting feature
-        // Then: Should not throw (delegated to SimpleHTMLScanner which doesn't throw)
-        assertDoesNotThrow(() -> {
+    public void testSetFeatureUnrecognizedThrows() {
+        // When: Setting an unrecognized feature
+        // Then: Should throw SAXNotRecognizedException (delegated to SimpleHTMLScanner,
+        // symmetric with getFeature)
+        assertThrows(SAXNotRecognizedException.class, () -> {
             scanner.setFeature("any-feature", true);
+        });
+    }
+
+    @Test
+    public void testSetFeatureNamespacesFalseDoesNotThrow() {
+        // When: Disabling the standard "namespaces" feature (its default state)
+        // Then: Should not throw
+        assertDoesNotThrow(() -> {
+            scanner.setFeature("http://xml.org/sax/features/namespaces", false);
+        });
+    }
+
+    @Test
+    public void testSetFeatureNamespacesTrueThrowsNotSupported() {
+        // When: Enabling the standard "namespaces" feature (not implemented)
+        // Then: Should throw SAXNotSupportedException
+        assertThrows(org.xml.sax.SAXNotSupportedException.class, () -> {
+            scanner.setFeature("http://xml.org/sax/features/namespaces", true);
         });
     }
 
@@ -334,8 +353,8 @@ public class HTMLSAXScannerTest {
         // When: Parsing
         scanner.parse(input);
 
-        // Then: Should handle DTD (SimpleHTMLScanner extracts only element name, publicId/systemId are null)
-        verify(lexicalHandler).startDTD(eq("html"), isNull(), isNull());
+        // Then: Should report the DOCTYPE name along with the PUBLIC and SYSTEM identifiers
+        verify(lexicalHandler).startDTD(eq("html"), eq("-//W3C//DTD HTML 4.01//EN"), eq("http://www.w3.org/TR/html4/strict.dtd"));
         verify(lexicalHandler).endDTD();
     }
 

@@ -22,18 +22,19 @@ import org.junit.jupiter.api.Test;
 import org.w3c.dom.Document;
 
 /**
- * Category M: implicit document structure characterization tests. Locks in the current
- * behavior that only the HTML root is implicitly created; HEAD/BODY are never auto-generated.
+ * Category M: implicit document structure characterization tests. The balancer synthesizes
+ * HTML5-style structure: a HEAD wrapping head metadata elements and a BODY wrapping body content.
  */
 public class BrokenImplicitStructureTest {
 
     @Test
     public void onlyHtmlRootIsImplicitlyCreated() throws Exception {
-        // characterization: leading text triggers only an implicit HTML root; HEAD/BODY are never auto-created
+        // characterization: leading text is body content, wrapped in a synthesized BODY (HTML5);
+        // no HEAD is created for pure body content
         final Document doc = parse("Hello<b>x</b>");
         assertEquals(1, count(doc, "//HTML"));
         assertEquals(0, count(doc, "//HEAD"));
-        assertEquals(0, count(doc, "//BODY"));
+        assertEquals(1, count(doc, "//BODY"));
         assertEquals(1, count(doc, "//B"));
     }
 
@@ -49,11 +50,12 @@ public class BrokenImplicitStructureTest {
 
     @Test
     public void simpleBodyOnlyContentUnderHtmlRoot() throws Exception {
-        // characterization: bare body content sits directly under the implicit HTML root; no HEAD/BODY wrapper
+        // characterization: bare body content is wrapped in a synthesized BODY under the implicit
+        // HTML root (HTML5); no HEAD is created
         final Document doc = parse("<p>x");
         assertEquals(1, count(doc, "//HTML"));
         assertEquals(0, count(doc, "//HEAD"));
-        assertEquals(0, count(doc, "//BODY"));
+        assertEquals(1, count(doc, "//BODY"));
         assertEquals(1, count(doc, "//P"));
         assertTrue(firstText(doc, "//P").contains("x"));
     }
@@ -83,11 +85,11 @@ public class BrokenImplicitStructureTest {
 
     @Test
     public void titleThenTrailingTextGoesToHtmlDirectly() throws Exception {
-        // characterization: without an explicit HEAD wrapper, text following </title> becomes a
-        // direct child of the implicit HTML root (no HEAD/BODY exist at all)
+        // characterization: TITLE is head metadata wrapped in a synthesized HEAD, and the trailing
+        // text following </title> is body content wrapped in a synthesized BODY (HTML5)
         final Document doc = parse("<title>t</title>x");
-        assertEquals(0, count(doc, "//HEAD"));
-        assertEquals(0, count(doc, "//BODY"));
+        assertEquals(1, count(doc, "//HEAD"));
+        assertEquals(1, count(doc, "//BODY"));
         assertEquals(1, count(doc, "//TITLE"));
         assertTrue(firstText(doc, "//TITLE").contains("t"));
         assertTrue(firstText(doc, "//HTML").contains("x"));
@@ -95,10 +97,11 @@ public class BrokenImplicitStructureTest {
 
     @Test
     public void headElementsNotRelocatedIntoBody() throws Exception {
-        // characterization: head-ish elements (META/LINK) are left where they are; no implicit HEAD wrapper
+        // characterization: META is head metadata wrapped in a synthesized HEAD (HTML5) and kept OUT
+        // of BODY (not relocated into body); only the following P goes into the synthesized BODY
         final Document doc = parse("<meta charset=utf-8><p>x");
         assertEquals(1, count(doc, "//HTML"));
-        assertEquals(0, count(doc, "//HEAD"));
+        assertEquals(1, count(doc, "//HEAD"));
         assertEquals(1, count(doc, "//META"));
         assertEquals(1, count(doc, "//P"));
         assertTrue(firstText(doc, "//P").contains("x"));
@@ -106,9 +109,9 @@ public class BrokenImplicitStructureTest {
 
     @Test
     public void multipleVoidHeadElementsStayUnwrapped() throws Exception {
-        // characterization: several void head-ish elements in a row still get no implicit HEAD wrapper
+        // characterization: several void head-ish elements in a row are wrapped in a single synthesized HEAD (HTML5)
         final Document doc = parse("<meta a=1><link rel=x><p>y");
-        assertEquals(0, count(doc, "//HEAD"));
+        assertEquals(1, count(doc, "//HEAD"));
         assertEquals(1, count(doc, "//META"));
         assertEquals(1, count(doc, "//LINK"));
         assertEquals(1, count(doc, "//P"));
@@ -134,11 +137,12 @@ public class BrokenImplicitStructureTest {
 
     @Test
     public void htmlRootAttributesArePreserved() throws Exception {
-        // characterization: the implicit-vs-explicit root distinction doesn't strip attributes on an explicit <html>
+        // characterization: attributes on an explicit <html> are preserved; the P content is wrapped
+        // in a synthesized BODY (HTML5), and no HEAD is created for pure body content
         final Document doc = parse("<html lang=en><p>x</p></html>");
         assertEquals(1, count(doc, "//HTML"));
         assertEquals(0, count(doc, "//HEAD"));
-        assertEquals(0, count(doc, "//BODY"));
+        assertEquals(1, count(doc, "//BODY"));
         assertEquals("en", first(doc, "//HTML").getAttribute("lang"));
     }
 

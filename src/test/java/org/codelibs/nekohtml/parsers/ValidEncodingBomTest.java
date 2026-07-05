@@ -148,17 +148,16 @@ public class ValidEncodingBomTest {
 
     @Test
     public void utf8BomIsNotStrippedAndSurvivesAsLeadingTextCharacter() throws Exception {
-        // characterization: SimpleHTMLScanner does not detect or strip a leading UTF-8 BOM; decoded as
-        // UTF-8, the three BOM bytes (EF BB BF) become a single U+FEFF character that shows up as a
-        // leading text node sibling of <P>, not merged into <P>'s own text.
+        // characterization: SimpleHTMLScanner strips a leading U+FEFF BOM (HTML5 mandates it be
+        // ignored); the content is wrapped in a synthesized BODY, so HTML's first child is the BODY
+        // element, not a leading BOM text node.
         final byte[] bom = concat(new byte[] { (byte) 0xEF, (byte) 0xBB, (byte) 0xBF }, "<p>x</p>".getBytes("UTF-8"));
         final Document doc = parseBytes(bom, "UTF-8");
 
         assertEquals("x", firstText(doc, "//P"));
         final Node htmlFirstChild = first(doc, "//HTML").getFirstChild();
-        assertEquals(Node.TEXT_NODE, htmlFirstChild.getNodeType());
-        assertEquals(1, htmlFirstChild.getNodeValue().length());
-        assertEquals(0xFEFF, (int) htmlFirstChild.getNodeValue().charAt(0));
+        assertEquals(Node.ELEMENT_NODE, htmlFirstChild.getNodeType());
+        assertEquals("BODY", htmlFirstChild.getNodeName());
     }
 
     @Test
@@ -166,10 +165,12 @@ public class ValidEncodingBomTest {
         final byte[] bom = concat(new byte[] { (byte) 0xEF, (byte) 0xBB, (byte) 0xBF }, "<p>x</p>".getBytes("UTF-8"));
         final Document doc = parseBytes(bom, null);
 
+        // characterization: with a null encoding the BOM is still detected and stripped (HTML5); HTML's
+        // first child is the synthesized BODY element, not a BOM text node.
         assertEquals("x", firstText(doc, "//P"));
         final Node htmlFirstChild = first(doc, "//HTML").getFirstChild();
-        assertEquals(Node.TEXT_NODE, htmlFirstChild.getNodeType());
-        assertEquals(0xFEFF, (int) htmlFirstChild.getNodeValue().charAt(0));
+        assertEquals(Node.ELEMENT_NODE, htmlFirstChild.getNodeType());
+        assertEquals("BODY", htmlFirstChild.getNodeName());
     }
 
     @Test

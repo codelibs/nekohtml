@@ -87,10 +87,10 @@ public class ValidEntityDecodingTest {
 
     @Test
     public void upperCaseAmpEntityIsCaseSensitiveAndNotDecoded() throws Exception {
-        // characterization: entity name lookup is case-sensitive; "AMP" is not a known entity name
-        // (only lower-case "amp" is), so "&AMP;" is left completely literal.
+        // characterization: the HTML5 named-character-reference table includes "AMP;" (uppercase) as a
+        // legitimate reference for U+0026, so "&AMP;" decodes to "&".
         final Document doc = parse("<p>&AMP;</p>");
-        assertEquals("&AMP;", firstText(doc, "//P"));
+        assertEquals("&", firstText(doc, "//P"));
     }
 
     @Test

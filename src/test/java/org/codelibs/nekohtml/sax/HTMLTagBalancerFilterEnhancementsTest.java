@@ -125,9 +125,11 @@ public class HTMLTagBalancerFilterEnhancementsTest {
         // Then normal element
         filter.startElement("", "div", "DIV", new AttributesImpl());
 
-        assertEquals(2, startElements.size(), "HTML and DIV should be added");
+        // DIV is body content, so a BODY is synthesized between HTML and DIV (HTML5).
+        assertEquals(3, startElements.size(), "HTML, synthesized BODY, and DIV should be added");
         assertEquals("HTML", startElements.get(0), "First element should be HTML");
-        assertEquals("DIV", startElements.get(1), "Second element should be DIV");
+        assertEquals("BODY", startElements.get(1), "Second element should be synthesized BODY");
+        assertEquals("DIV", startElements.get(2), "Third element should be DIV");
     }
 
     /**
@@ -255,12 +257,14 @@ public class HTMLTagBalancerFilterEnhancementsTest {
 
         filter.endDocument();
 
-        // Verify proper balancing despite null qName
-        assertEquals(3, startElements.size(), "Should have HTML, DIV, P");
-        assertEquals(3, endElements.size(), "Should have P, DIV, HTML");
+        // A BODY is synthesized for the body content (HTML5), so the structure is
+        // HTML > BODY > DIV > P. </html> defers HTML's own close to endDocument.
+        assertEquals(4, startElements.size(), "Should have HTML, BODY, DIV, P");
+        assertEquals(4, endElements.size(), "Should have P, DIV, BODY, HTML");
         assertEquals("P", endElements.get(0), "First end should be P");
         assertEquals("DIV", endElements.get(1), "Second end should be DIV");
-        assertEquals("HTML", endElements.get(2), "Third end should be HTML");
+        assertEquals("BODY", endElements.get(2), "Third end should be BODY");
+        assertEquals("HTML", endElements.get(3), "Fourth end should be HTML");
     }
 
     /**
@@ -281,11 +285,12 @@ public class HTMLTagBalancerFilterEnhancementsTest {
 
         filter.endDocument();
 
-        // Stack should be properly maintained
+        // Stack should be properly maintained (a BODY is synthesized for the body content).
         assertTrue(startElements.contains("HTML"), "HTML should be in start elements");
+        assertTrue(startElements.contains("BODY"), "synthesized BODY should be in start elements");
         assertTrue(startElements.contains("DIV"), "DIV should be in start elements");
         assertTrue(startElements.contains("SPAN"), "SPAN should be in start elements");
-        assertEquals(3, startElements.size(), "Should have exactly 3 start elements");
+        assertEquals(4, startElements.size(), "Should have exactly 4 start elements (incl. synthesized BODY)");
     }
 
     /**
@@ -303,9 +308,11 @@ public class HTMLTagBalancerFilterEnhancementsTest {
         filter.startElement("", "", "", new AttributesImpl()); // ignored
         filter.startElement("", "span", "SPAN", new AttributesImpl());
 
-        assertEquals(3, startElements.size(), "Should only have valid elements");
+        // Invalid (null/empty) qNames are dropped; a BODY is synthesized for the body content.
+        assertEquals(4, startElements.size(), "Should only have valid elements (incl. synthesized BODY)");
         assertEquals("HTML", startElements.get(0));
-        assertEquals("DIV", startElements.get(1));
-        assertEquals("SPAN", startElements.get(2));
+        assertEquals("BODY", startElements.get(1));
+        assertEquals("DIV", startElements.get(2));
+        assertEquals("SPAN", startElements.get(3));
     }
 }

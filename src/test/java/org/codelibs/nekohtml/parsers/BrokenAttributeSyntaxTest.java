@@ -40,33 +40,32 @@ public class BrokenAttributeSyntaxTest {
 
     @Test
     public void quotedGreaterThanEndsTagEarlyLeaksText() throws Exception {
-        // characterization: a '>' inside a quoted value ends the START_TAG match early;
-        // the quote character itself becomes part of the (unquoted) attribute value,
-        // and the remaining "y">" leaks as sibling text
+        // characterization: the scanner is quote-aware, so a '>' inside a quoted value does NOT end
+        // the tag early; the full value "x>y" is captured and no text leaks as sibling text
         final Document doc = parse("<a title=\"x>y\">");
         final Element a = first(doc, "//A");
         assertNotNull(a);
-        assertEquals("\"x", a.getAttribute("title"));
-        assertTrue(firstText(doc, "//HTML").contains("y\">"));
+        assertEquals("x>y", a.getAttribute("title"));
+        assertEquals("", firstText(doc, "//HTML"));
     }
 
     @Test
     public void unterminatedQuoteAttributeValueKeepsLeadingQuote() throws Exception {
-        // characterization: an unterminated quoted value falls back to the unquoted alternative,
-        // so the leading quote character is preserved literally in the attribute value
+        // characterization: an unterminated quoted value recovers to the value without the leading
+        // quote (the quote is the delimiter, not part of the value = author intent)
         final Document doc = parse("<a href=\"x>");
         final Element a = first(doc, "//A");
         assertNotNull(a);
-        assertEquals("\"x", a.getAttribute("href"));
+        assertEquals("x", a.getAttribute("href"));
     }
 
     @Test
     public void duplicateAttributeLastValueWins() throws Exception {
-        // characterization: duplicate attribute names are all parsed, but DOM Element.setAttribute()
-        // is called once per occurrence in order, so the last occurrence wins
+        // characterization: duplicate attribute names keep the FIRST occurrence (HTML5 rule: a
+        // duplicate-attribute parse error drops later duplicates)
         final Document doc = parse("<a id=1 id=2>x</a>");
         final Element a = first(doc, "//A");
-        assertEquals("2", a.getAttribute("id"));
+        assertEquals("1", a.getAttribute("id"));
     }
 
     @Test
@@ -79,13 +78,13 @@ public class BrokenAttributeSyntaxTest {
 
     @Test
     public void bareEqualsSignIsSkippedAndNextTokenBecomesAttribute() throws Exception {
-        // characterization: a stray leading '=' does not match the attribute-name pattern and is
-        // simply skipped; the following bare token is parsed as a normal valueless attribute
+        // characterization: a stray leading '=' yields an empty attribute name, which is dropped;
+        // the malformed token produces no attribute at all (no phantom "x" attribute)
         final Document doc = parse("<a =x>y</a>");
         final Element a = first(doc, "//A");
         assertNotNull(a);
         assertEquals("", a.getAttribute("x"));
-        assertEquals(1, a.getAttributes().getLength());
+        assertEquals(0, a.getAttributes().getLength());
     }
 
     @Test
@@ -139,11 +138,11 @@ public class BrokenAttributeSyntaxTest {
 
     @Test
     public void numericAttributeNamePrefixIsDropped() throws Exception {
-        // characterization: an attribute "name" cannot start with a digit; "123=" is silently skipped
-        // and only the trailing bare "x" is recognized as a valueless attribute
+        // characterization: the name "123" is read but is not a valid XML Name, so the whole
+        // attribute is dropped; no phantom valueless "x" attribute is fabricated
         final Document doc = parse("<a 123=x>y</a>");
         final Element a = first(doc, "//A");
-        assertEquals(1, a.getAttributes().getLength());
+        assertEquals(0, a.getAttributes().getLength());
         assertEquals("", a.getAttribute("x"));
         assertFalse(a.hasAttribute("123"));
     }
@@ -189,32 +188,33 @@ public class BrokenAttributeSyntaxTest {
 
     @Test
     public void unterminatedSingleQuoteAttributeValueKeepsLeadingQuote() throws Exception {
-        // characterization: same fallback as double quotes, but for a single quote character
+        // characterization: same recovery as double quotes — the leading single quote is the
+        // delimiter and is not part of the recovered value
         final Document doc = parse("<a href='x>");
         final Element a = first(doc, "//A");
         assertNotNull(a);
-        assertEquals("'x", a.getAttribute("href"));
+        assertEquals("x", a.getAttribute("href"));
     }
 
     @Test
     public void leadingHyphenOnAttributeNameIsDroppedAndNextLetterStartsName() throws Exception {
-        // characterization: an attribute "name" cannot start with '-'; the parser resyncs on the next
-        // letter, so "-foo=\"bar\"" is parsed as attribute "foo" with value "bar"
+        // characterization: the name "-foo" is read but is not a valid XML Name, so the attribute is
+        // dropped entirely; no "foo" attribute is fabricated (drop, not rename)
         final Document doc = parse("<div -foo=\"bar\">x</div>");
         final Element div = first(doc, "//DIV");
         assertFalse(div.hasAttribute("-foo"));
-        assertEquals("bar", div.getAttribute("foo"));
+        assertEquals("", div.getAttribute("foo"));
     }
 
     @Test
     public void greaterThanInsideSingleQuotedValueEndsTagEarly() throws Exception {
-        // characterization: mirrors the double-quote case; the tag ends at the first raw '>' regardless
-        // of the (single) quote character, leaking the remainder as text
+        // characterization: mirrors the double-quote case; the scanner is quote-aware, so the '>'
+        // inside the single-quoted value does not end the tag and nothing leaks as text
         final Document doc = parse("<a title='x>y'>");
         final Element a = first(doc, "//A");
         assertNotNull(a);
-        assertEquals("'x", a.getAttribute("title"));
-        assertTrue(firstText(doc, "//HTML").contains("y'>"));
+        assertEquals("x>y", a.getAttribute("title"));
+        assertEquals("", firstText(doc, "//HTML"));
     }
 
     @Test
